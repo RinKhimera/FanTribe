@@ -46,7 +46,7 @@ export const UserProfileLayout = ({
   const canSubscribe = canSubscribeCheck?.canSubscribe || false
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-l border-r max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
+    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
       <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
         {userProfile?.name}
       </h1>
@@ -105,7 +105,7 @@ export const UserProfileLayout = ({
 
       <>
         {currentUser?.username === userProfile.username ? (
-          <div className="mr-5 mt-4 flex justify-end">
+          <div className="mt-4 mr-5 flex justify-end">
             <Button
               asChild
               variant={"outline"}
@@ -117,7 +117,7 @@ export const UserProfileLayout = ({
             </Button>
           </div>
         ) : (
-          <div className="mr-5 mt-4 flex justify-end gap-2">
+          <div className="mt-4 mr-5 flex justify-end gap-2">
             <UserReportButton
               userId={userProfile._id}
               username={userProfile.username}
@@ -160,7 +160,7 @@ export const UserProfileLayout = ({
       <>
         {currentUser?.username !== userProfile.username && canSubscribe && (
           <div className="border-muted border-b px-4 py-4">
-            <div className="text-2xl font-semibold leading-none tracking-tight">
+            <div className="text-2xl leading-none font-semibold tracking-tight">
               Abonnement
             </div>
             <div className="mb-1">
@@ -169,7 +169,7 @@ export const UserProfileLayout = ({
                   switch (subscriptionStatus.status) {
                     case "expired":
                       return <RenewDialog userProfile={userProfile} />
-                    case "cancelled":
+                    case "canceled":
                       return <SubscribeDialog userProfile={userProfile} />
                     case "active":
                       return <UnsubscribeDialog userProfile={userProfile} />

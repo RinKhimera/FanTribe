@@ -34,13 +34,14 @@ export const UserInfoPopover = ({
 }) => {
   const router = useRouter()
 
-  const getFollowers = useQuery(api.follows.getFollowers, {
-    userId: currentUser._id,
-  })
-
-  const getFollowings = useQuery(api.follows.getFollowings, {
-    userId: currentUser._id,
-  })
+  const mySubsStats = useQuery(
+    api.subscriptions.getMyContentAccessSubscriptionsStats,
+    {},
+  )
+  const mySubscribersStats = useQuery(
+    api.subscriptions.getMySubscribersStats,
+    {},
+  )
 
   const handleNavigation = (href: string) => {
     if (onNavigate) {
@@ -113,7 +114,8 @@ export const UserInfoPopover = ({
             </div>
           </div>
           <div className="mt-2 px-2 text-sm">
-            {getFollowers?.length} fans | {getFollowings?.length} abonnements
+            {mySubscribersStats?.subscribersCount || 0} fans |{" "}
+            {mySubsStats?.creatorsCount || 0} abonnements
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

@@ -33,7 +33,7 @@ import { Doc } from "@/convex/_generated/dataModel"
 // It's created by taking the original Doc<"posts"> type and omitting the 'author' field.
 // Then, we add back the 'author' field but this time it's of type Doc<"users"> or null.
 type ExtendedPost = Omit<Doc<"posts">, "author"> & {
-  author: Doc<"users"> | null
+  author: Doc<"users"> | null | undefined
 }
 
 type PostCardProps = {
@@ -42,11 +42,20 @@ type PostCardProps = {
 }
 
 export const PostCard = ({ post, currentUser }: PostCardProps) => {
+  const likeCountData = useQuery(api.likes.countLikes, { postId: post._id })
+  const likeCount = likeCountData?.count || 0
+
+  const commentCountData = useQuery(api.comments.countForPost, {
+    postId: post._id,
+  })
+  const commentCount = commentCountData?.count || 0
+
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false)
   const [carouselApi, setCarouselApi] = useState<CarouselApi>()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [slideCount, setSlideCount] = useState(0)
+
   const router = useRouter()
 
   // Gérer l'API du carousel
@@ -312,12 +321,7 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
             <div className="mt-2 -ml-[5px] flex w-full items-center justify-between">
               <div className="flex w-full items-center space-x-2">
                 <div onClick={(e) => e.stopPropagation()}>
-                  <LikeButton
-                    postId={post._id}
-                    postLikes={post.likes}
-                    currentUserId={currentUser._id}
-                    disabled={!canViewMedia}
-                  />
+                  <LikeButton postId={post._id} disabled={!canViewMedia} />
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
                   <CommentButton
@@ -328,26 +332,18 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
                 </div>
               </div>
               <div onClick={(e) => e.stopPropagation()}>
-                <BookmarkButton
-                  postId={post._id}
-                  currentUserBookmark={currentUser.bookmarks || []}
-                  disabled={!canViewMedia}
-                />
+                <BookmarkButton postId={post._id} disabled={!canViewMedia} />
               </div>
             </div>
 
             <div>
               <div className="mb-1.5 flex items-center gap-2 text-sm font-semibold tracking-tight">
-                {post.likes.length > 0 && (
-                  <span>{post.likes.length} j&apos;aime</span>
-                )}
-
-                {post.comments && post.comments.length > 0 && (
+                {likeCount > 0 && <span>{likeCount} j&apos;aime</span>}
+                {commentCount > 0 && (
                   <>
-                    {post.likes.length > 0 && <span>•</span>}
+                    {likeCount > 0 && <span>•</span>}
                     <span>
-                      {post.comments.length} commentaire
-                      {post.comments.length > 1 ? "s" : ""}
+                      {commentCount} commentaire{commentCount > 1 ? "s" : ""}
                     </span>
                   </>
                 )}

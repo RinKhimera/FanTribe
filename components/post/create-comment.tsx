@@ -28,7 +28,7 @@ export const CreateComment = ({
   postId: Id<"posts">
 }) => {
   const [isPending, startTransition] = useTransition()
-  const createComment = useMutation(api.comments.createComment)
+  const addComment = useMutation(api.comments.addComment)
   const form = useForm<z.infer<typeof commentFormSchema>>({
     resolver: zodResolver(commentFormSchema),
     defaultValues: {
@@ -39,7 +39,7 @@ export const CreateComment = ({
   const onSubmit = async (data: z.infer<typeof commentFormSchema>) => {
     startTransition(async () => {
       try {
-        await createComment({
+        await addComment({
           postId: postId,
           content: data.content,
         })
@@ -102,7 +102,7 @@ export const CreateComment = ({
                   <div className="flex h-full w-full flex-col">
                     <TextareaAutosize
                       placeholder="Poster votre réponse"
-                      className="outline-hidden mt-1 h-full w-full resize-none border-none bg-transparent text-xl max-sm:text-base"
+                      className="mt-1 h-full w-full resize-none border-none bg-transparent text-xl outline-hidden max-sm:text-base"
                       minRows={2}
                       maxRows={8}
                       {...field}

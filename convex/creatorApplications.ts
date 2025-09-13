@@ -60,21 +60,6 @@ export const submitApplication = mutation({
       submittedAt: Date.now(),
     })
 
-    // Mettre à jour le statut utilisateur
-    await ctx.db.patch(args.userId, {
-      creatorApplicationStatus: "pending",
-    })
-
-    // Nettoyer les drafts pour ce user (les documents sont maintenant officiellement soumis)
-    const userDrafts = await ctx.db
-      .query("validationDocumentsDraft")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .collect()
-
-    for (const draft of userDrafts) {
-      await ctx.db.delete(draft._id)
-    }
-
     return { success: true }
   },
 })
@@ -222,16 +207,9 @@ export const reviewApplication = mutation({
       reviewedAt: Date.now(),
     })
 
-    // Si approuvé, mettre à niveau l'utilisateur
     if (args.decision === "approved") {
       await ctx.db.patch(application.userId, {
         accountType: "CREATOR",
-        creatorApplicationStatus: "approved",
-      })
-    } else {
-      await ctx.db.patch(application.userId, {
-        accountType: "USER",
-        creatorApplicationStatus: "rejected",
       })
     }
 

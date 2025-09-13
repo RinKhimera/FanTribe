@@ -126,8 +126,6 @@ export const NewPostLayout = () => {
         await createPost({
           content: data.content,
           medias: data.media,
-          likes: [],
-          comments: [],
           visibility: visibility,
         })
 

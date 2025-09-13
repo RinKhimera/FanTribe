@@ -27,21 +27,20 @@ const UserProfilePage = ({
     api.subscriptions.canUserSubscribe,
     userProfile?._id ? { creatorId: userProfile._id } : "skip",
   )
+  const canSubscribe = !!canSubscribeCheck?.canSubscribe
+  // Variable reason disponible (cannotReason) pour gestion UI
+  // const cannotReason = canSubscribeCheck?.reason
 
   if (userProfile === undefined) {
     return (
-      <div className="flex h-screen w-[50%] flex-col items-center justify-center border-l border-r border-muted max-lg:w-[50%] max-sm:w-full max-[500px]:pb-16">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">Chargement...</p>
+      <div className="border-muted flex h-screen w-[50%] flex-col items-center justify-center border-r border-l max-[500px]:pb-16 max-lg:w-[50%] max-sm:w-full">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground mt-4 text-sm">Chargement...</p>
       </div>
     )
   }
 
-  if (userProfile === null) {
-    notFound()
-  }
-
-  const canSubscribe = canSubscribeCheck?.canSubscribe || false
+  if (userProfile === null) notFound()
 
   return (
     <>

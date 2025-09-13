@@ -8,33 +8,23 @@ export const UserCollections = ({
 }: {
   currentUser: Doc<"users">
 }) => {
-  const userBookmarks = useQuery(api.posts.getUserBookmark)
+  const bookmarksData = useQuery(api.bookmarks.getUserBookmarks)
+  const posts = bookmarksData?.posts || []
 
-  const filteredUserBookmarks = userBookmarks?.filter(
-    (bookmark) => bookmark !== null,
-  )
+  if (posts.length === 0) {
+    return (
+      <div className="text-muted-foreground mt-16 h-full px-4 text-center text-xl">
+        Aucune collection trouvée. Ajoutez des collections en cliquant sur le
+        bouton de signet pour les retrouver ici.
+      </div>
+    )
+  }
 
   return (
-    <>
-      {filteredUserBookmarks?.length === 0 ? (
-        <div className="mt-16 h-full px-4 text-center text-xl text-muted-foreground">
-          Aucune collection trouvée. Ajoutez des collections en cliquant sur le
-          bouton de signet pour les retrouver ici.
-        </div>
-      ) : (
-        <div className="flex flex-col">
-          {filteredUserBookmarks?.map(
-            (post) =>
-              post && (
-                <PostCard
-                  post={post}
-                  currentUser={currentUser}
-                  key={post._id}
-                />
-              ),
-          )}
-        </div>
-      )}
-    </>
+    <div className="flex flex-col">
+      {posts.map((post) => (
+        <PostCard post={post} currentUser={currentUser} key={post._id} />
+      ))}
+    </div>
   )
 }

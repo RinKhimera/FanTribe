@@ -220,3 +220,57 @@ const extractPublicIdFromUrl = (url: string): string | null => {
     return null
   }
 }
+
+export const fanoutNewPostNotifications = action({
+  args: {
+    authorId: v.id("users"),
+    postId: v.id("posts"),
+    recipientIds: v.array(v.id("users")),
+    chunkSize: v.optional(v.number()),
+    delayMsBetweenChunks: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const chunkSize = args.chunkSize ?? 200
+    const delay = args.delayMsBetweenChunks ?? 1000
+
+    let inserted = 0
+    let chunks = 0
+
+    for (let i = 0; i < args.recipientIds.length; i += chunkSize) {
+      const slice = args.recipientIds.slice(i, i + chunkSize)
+      chunks++
+
+      await Promise.all(
+        slice.map((recipientId) =>
+          ctx
+            .runMutation(internal.notifications.insertNewPostNotification, {
+              recipientId,
+              sender: args.authorId,
+              postId: args.postId,
+            })
+            .catch((err) => {
+              console.error("fanout newPost notification failed", {
+                recipientId,
+                postId: args.postId,
+                err,
+              })
+            }),
+        ),
+      )
+
+      inserted += slice.length
+
+      if (delay > 0 && i + chunkSize < args.recipientIds.length) {
+        await new Promise((res) => setTimeout(res, delay))
+      }
+    }
+
+    return {
+      total: args.recipientIds.length,
+      inserted,
+      chunks,
+      chunkSize,
+      delayed: delay > 0,
+    }
+  },
+})

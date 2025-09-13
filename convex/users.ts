@@ -66,33 +66,14 @@ export const createUser = internalMutation({
       name: args.name,
       email: args.email,
       image: args.image,
+      lastSeenAt: Date.now(),
+      isOnline: true,
       imageBanner:
         "https://res.cloudinary.com/onlyscam/image/upload/v1745084406/banner-profile/placeholder.jpg",
       accountType: "USER",
-      isOnline: true,
     })
   },
 })
-
-// export const updateUser = internalMutation({
-//   args: { tokenIdentifier: v.string(), image: v.string() },
-//   async handler(ctx, args) {
-//     const user = await ctx.db
-//       .query("users")
-//       .withIndex("by_tokenIdentifier", (q) =>
-//         q.eq("tokenIdentifier", args.tokenIdentifier),
-//       )
-//       .unique()
-
-//     if (!user) {
-//       throw new ConvexError("User not found")
-//     }
-
-//     await ctx.db.patch(user._id, {
-//       image: args.image,
-//     })
-//   },
-// })
 
 export const getCurrentUser = query({
   args: {},
@@ -100,15 +81,18 @@ export const getCurrentUser = query({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
 
-    return await ctx.db
+    const user = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
         q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
+
+    return user
   },
 })
 
+// A modifier
 export const getUsers = query({
   args: {},
   handler: async (ctx, args) => {
@@ -126,49 +110,20 @@ export const getUsers = query({
   },
 })
 
-export const getValidatedCreators = query({
-  args: {},
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError("Not authenticated")
-    }
-
-    const creators = await ctx.db
-      .query("users")
-      .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
-      .collect()
-
-    return creators.filter(
-      (user) =>
-        user.tokenIdentifier !== identity.tokenIdentifier &&
-        user.creatorApplicationStatus === "approved",
-    )
-  },
-})
-
 export const getSuggestedCreators = query({
   // Le refreshKey permet de forcer une nouvelle randomisation
   args: { refreshKey: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError("Not authenticated")
-    }
+    if (!identity) throw new ConvexError("Not authenticated")
 
     const creators = await ctx.db
       .query("users")
       .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
       .collect()
 
-    const validatedCreators = creators.filter(
-      (user) =>
-        user.tokenIdentifier !== identity.tokenIdentifier &&
-        user.creatorApplicationStatus === "approved",
-    )
-
     // Mélanger aléatoirement et prendre les 48 premiers
-    const shuffled = validatedCreators.sort(() => 0.5 - Math.random())
+    const shuffled = creators.sort(() => 0.5 - Math.random())
     return shuffled.slice(0, 48)
   },
 })
@@ -183,9 +138,7 @@ export const setUserOnline = internalMutation({
       )
       .unique()
 
-    if (!user) {
-      throw new ConvexError("User not found")
-    }
+    if (!user) throw new ConvexError("User not found")
 
     await ctx.db.patch(user._id, { isOnline: true })
   },
@@ -201,9 +154,7 @@ export const setUserOffline = internalMutation({
       )
       .unique()
 
-    if (!user) {
-      throw new ConvexError("User not found")
-    }
+    if (!user) throw new ConvexError("User not found")
 
     await ctx.db.patch(user._id, { isOnline: false })
   },
@@ -250,8 +201,6 @@ export const updateUserProfile = mutation({
     await ctx.db.patch(user._id, {
       name: args.name,
       username: args.username,
-      // image: args.image,
-      // imageBanner: args.imageBanner,
       bio: args.bio,
       location: args.location,
       socials: args.socials,
@@ -328,38 +277,6 @@ export const getAvailableUsername = query({
       .unique()
 
     return !existingUsername
-  },
-})
-
-export const upgradeToCreator = mutation({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Unauthorized")
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser._id !== args.userId) {
-      throw new Error("Unauthorized")
-    }
-
-    if (
-      currentUser.accountType === "CREATOR" ||
-      currentUser.accountType === "SUPERUSER"
-    ) {
-      throw new Error("User is already a creator")
-    }
-
-    await ctx.db.patch(args.userId, {
-      accountType: "CREATOR",
-    })
-
-    return { success: true }
   },
 })
 

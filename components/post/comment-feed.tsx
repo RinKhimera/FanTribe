@@ -10,16 +10,14 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 
 export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
-  const postComments = useQuery(api.comments.getPostComments, {
-    postId,
-  })
+  const postComments = useQuery(api.comments.listPostComments, { postId })
 
   return (
     <div className="flex flex-col">
       {postComments?.map((comment) => (
         <div
           key={comment._id}
-          className="flex space-x-4 border-b px-4 pb-2 pt-4"
+          className="flex space-x-4 border-b px-4 pt-4 pb-2"
         >
           <div className="flex w-full flex-col">
             <div className="flex items-center justify-between">
@@ -36,7 +34,6 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
                       <div className="animate-pulse rounded-full bg-gray-500"></div>
                     </AvatarFallback>
                   </Avatar>
-
                   <div className="text-left max-sm:text-sm">
                     <div className="font-bold">{comment.author?.name}</div>
                     <div className="text-muted-foreground">
@@ -45,15 +42,16 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
                   </div>
                 </div>
               </Link>
-
-              <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-3">
                 <>
                   {format(new Date(comment._creationTime), "d MMMM", {
                     locale: fr,
                   })}
                 </>
-
-                <CommentEllipsis commentId={comment._id} />
+                <CommentEllipsis
+                  commentId={comment._id}
+                  author={comment.author}
+                />
               </div>
             </div>
             <div className="mt-1 flex flex-col sm:ml-[52px]">

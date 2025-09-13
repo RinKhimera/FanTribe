@@ -1,4 +1,3 @@
-import { fetchAction } from "convex/nextjs"
 import { v } from "convex/values"
 import { api } from "./_generated/api"
 import { internalMutation, mutation } from "./_generated/server"
@@ -43,10 +42,7 @@ export const deleteDraftAsset = mutation({
 
 export const cleanUpDraftAssets = internalMutation({
   handler: async (ctx) => {
-    // Récupérer tous les brouillons d'assets (posts)
     const draftAssets = await ctx.db.query("assetsDraft").collect()
-
-    // Récupérer tous les brouillons de documents de validation
     const draftDocuments = await ctx.db
       .query("validationDocumentsDraft")
       .collect()
@@ -56,46 +52,58 @@ export const cleanUpDraftAssets = internalMutation({
       `Found ${totalAssets} draft items to clean up (${draftAssets.length} post assets + ${draftDocuments.length} validation documents)`,
     )
 
-    let successCount = 0
-    let errorCount = 0
+    let scheduled = 0
+    let deleted = 0
+    let errors = 0
 
-    // Traiter les assets de posts
-    for (const asset of draftAssets) {
+    // Utilitaire de planification (ignore erreurs de scheduling individuelles)
+    const scheduleDeletion = async (publicId: string) => {
       try {
-        await fetchAction(api.internalActions.deleteCloudinaryAsset, {
-          publicId: asset.publicId,
-        })
-
-        await ctx.db.delete(asset._id)
-        successCount++
-      } catch (error) {
-        console.error(`Failed to delete post asset ${asset.publicId}:`, error)
-        errorCount++
-      }
-    }
-
-    // Traiter les documents de validation
-    for (const document of draftDocuments) {
-      try {
-        await fetchAction(api.internalActions.deleteCloudinaryAsset, {
-          publicId: document.publicId,
-        })
-
-        await ctx.db.delete(document._id)
-        successCount++
-      } catch (error) {
-        console.error(
-          `Failed to delete validation document ${document.publicId}:`,
-          error,
+        await ctx.scheduler.runAfter(
+          0,
+          api.internalActions.deleteCloudinaryAsset,
+          { publicId },
         )
-        errorCount++
+        scheduled++
+      } catch (e) {
+        console.error("Failed to schedule Cloudinary deletion:", publicId, e)
+        errors++
       }
     }
+
+    // Traiter assets de posts
+    for (const asset of draftAssets) {
+      await scheduleDeletion(asset.publicId)
+      try {
+        await ctx.db.delete(asset._id)
+        deleted++
+      } catch (e) {
+        console.error("Failed to delete draft asset record:", asset._id, e)
+        errors++
+      }
+    }
+
+    // Traiter documents de validation
+    for (const doc of draftDocuments) {
+      await scheduleDeletion(doc.publicId)
+      try {
+        await ctx.db.delete(doc._id)
+        deleted++
+      } catch (e) {
+        console.error("Failed to delete draft validation record:", doc._id, e)
+        errors++
+      }
+    }
+
+    console.log(
+      `Cleaned up draft assets: total=${totalAssets}, scheduled=${scheduled}, dbDeleted=${deleted}, errors=${errors}`,
+    )
 
     return {
       total: totalAssets,
-      success: successCount,
-      error: errorCount,
+      scheduledCloudinaryDeletes: scheduled,
+      dbDeleted: deleted,
+      errors,
     }
   },
 })

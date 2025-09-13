@@ -56,6 +56,16 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
     currentUser?.accountType === "SUPERUSER" ? { reportId } : "skip",
   )
 
+  // Compteurs dynamiques pour le post signalé (si présent)
+  const postLikeCount = useQuery(
+    api.likes.countLikes,
+    report?.reportedPost ? { postId: report.reportedPost._id } : "skip",
+  )
+  const postCommentCount = useQuery(
+    api.comments.countForPost,
+    report?.reportedPost ? { postId: report.reportedPost._id } : "skip",
+  )
+
   const updateReportStatus = useMutation(api.reports.updateReportStatus)
   const deleteContentAndResolve = useMutation(
     api.reports.deleteReportedContentAndResolve,
@@ -220,7 +230,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-4">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted flex h-16 w-16 items-center justify-center overflow-hidden rounded-full">
               {report.reportedUser.image ? (
                 <ProfileImage
                   src={report.reportedUser.image}
@@ -240,7 +250,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
               <p className="text-muted-foreground">
                 @{report.reportedUser.username || "N/A"}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {report.reportedUser.email}
               </p>
               {report.reportedUser.bio && (
@@ -275,7 +285,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
         <CardContent className="space-y-4">
           {/* Auteur du post */}
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted flex h-10 w-10 items-center justify-center overflow-hidden rounded-full">
               {report.reportedPost.author?.image ? (
                 <ProfileImage
                   src={report.reportedPost.author.image}
@@ -290,7 +300,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
             </div>
             <div>
               <p className="font-medium">{report.reportedPost.author?.name}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 @{report.reportedPost.author?.username} •{" "}
                 {formatDate(report.reportedPost._creationTime)}
               </p>
@@ -298,12 +308,10 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
           </div>
 
           {/* Contenu du post */}
-          <div className="rounded-lg bg-muted/50 p-4">
-            <p className="whitespace-pre-wrap text-sm">
+          <div className="bg-muted/50 rounded-lg p-4">
+            <p className="text-sm whitespace-pre-wrap">
               {report.reportedPost.content}
             </p>
-
-            {/* Médias du post */}
             {report.reportedPost.medias &&
               report.reportedPost.medias.length > 0 && (
                 <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -324,12 +332,10 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
               )}
           </div>
 
-          {/* Statistiques du post */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{report.reportedPost.likes?.length || 0} j&apos;aime</span>
-            <span>
-              {report.reportedPost.comments?.length || 0} commentaires
-            </span>
+          {/* Statistiques du post (issues des tables likes / comments) */}
+          <div className="text-muted-foreground flex items-center gap-4 text-sm">
+            <span>{postLikeCount?.count ?? 0} j&apos;aime</span>
+            <span>{postCommentCount?.count ?? 0} commentaires</span>
             <Badge variant="outline">
               {report.reportedPost.visibility === "subscribers_only"
                 ? "Abonnés seulement"
@@ -355,7 +361,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
         <CardContent className="space-y-4">
           {/* Auteur du commentaire */}
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted flex h-10 w-10 items-center justify-center overflow-hidden rounded-full">
               {report.reportedComment.author?.image ? (
                 <ProfileImage
                   src={report.reportedComment.author.image}
@@ -372,40 +378,34 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
               <p className="font-medium">
                 {report.reportedComment.author?.name}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 @{report.reportedComment.author?.username} •{" "}
                 {formatDate(report.reportedComment._creationTime)}
               </p>
             </div>
           </div>
 
-          {/* Contenu du commentaire */}
-          <div className="rounded-lg bg-muted/50 p-4">
-            <p className="whitespace-pre-wrap text-sm">
+          <div className="bg-muted/50 rounded-lg p-4">
+            <p className="text-sm whitespace-pre-wrap">
               {report.reportedComment.content}
             </p>
           </div>
 
           {/* Informations sur le post parent */}
           {report.reportedComment.post && (
-            <div className="rounded-lg border bg-muted/30 p-3">
-              <p className="mb-2 text-sm font-medium text-muted-foreground">
+            <div className="bg-muted/30 rounded-lg border p-3">
+              <p className="text-muted-foreground mb-2 text-sm font-medium">
                 Commentaire sur le post :
               </p>
               <p className="line-clamp-2 text-sm">
                 {report.reportedComment.post.content}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Post créé le{" "}
                 {formatDate(report.reportedComment.post._creationTime)}
               </p>
             </div>
           )}
-
-          {/* Statistiques du commentaire */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{report.reportedComment.likes?.length || 0} j&apos;aime</span>
-          </div>
         </CardContent>
       </Card>
     )
@@ -419,8 +419,8 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
   if (!report) {
     if (report === null) {
       return (
-        <main className="flex h-full min-h-screen w-full flex-col border-l border-r border-muted sm:w-[80%] lg:w-[60%]">
-          <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+        <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l sm:w-[80%] lg:w-[60%]">
+          <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
             <div className="flex items-center gap-4">
               <Link href="/superuser/reports">
                 <Button variant="ghost" size="sm">
@@ -463,9 +463,9 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
     (report.status === "pending" || report.status === "reviewing")
 
   return (
-    <main className="flex h-full min-h-screen w-full flex-col border-l border-r border-muted max-lg:pb-12 sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-12 sm:w-[80%] lg:w-[60%]">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <Link href="/superuser/reports">
             <Button variant="ghost" size="sm">
@@ -475,7 +475,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
           </Link>
           <div className="flex-1">
             <h1 className="text-xl font-bold">Détails du signalement</h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Signalé le {formatDate(report.createdAt)}
               {report.reviewedAt && (
                 <span className="ml-2">
@@ -502,25 +502,25 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Motif du signalement
               </p>
               <p className="font-medium">{getReasonLabel(report.reason)}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Type de contenu
               </p>
               <div>{getTypeBadge(report.type)}</div>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Signalé par
               </p>
               {report.reporter?.username ? (
                 <Link
                   href={`/${report.reporter.username}`}
-                  className="font-medium text-primary hover:underline"
+                  className="text-primary font-medium hover:underline"
                 >
                   {report.reporter.name}
                 </Link>
@@ -529,7 +529,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
               )}
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Date de signalement
               </p>
               <div className="flex items-center gap-1">
@@ -541,10 +541,10 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
             </div>
             {report.description && (
               <div className="md:col-span-2">
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-sm font-medium">
                   Description
                 </p>
-                <p className="rounded-lg bg-muted p-3 text-sm">
+                <p className="bg-muted rounded-lg p-3 text-sm">
                   {report.description}
                 </p>
               </div>
@@ -565,7 +565,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
               {(report.status === "pending" ||
                 report.status === "reviewing" ||
                 isEditingStatus) && (
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                <span className="text-muted-foreground ml-2 text-sm font-normal">
                   (Modifiable)
                 </span>
               )}
@@ -582,8 +582,8 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
                 className="min-h-20"
               />
             ) : (
-              <div className="rounded-lg bg-muted p-4">
-                <p className="whitespace-pre-wrap text-sm">
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-sm whitespace-pre-wrap">
                   {report.adminNotes || "Aucune note administrative"}
                 </p>
               </div>
@@ -629,10 +629,10 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
 
                 {canDeleteContent && (
                   <>
-                    <div className="my-4 border-t border-muted" />
+                    <div className="border-muted my-4 border-t" />
                     <div className="space-y-3">
                       <Alert className="border-destructive bg-destructive/10">
-                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                        <AlertTriangle className="text-destructive h-4 w-4" />
                         <AlertTitle className="text-destructive">
                           Action destructive
                         </AlertTitle>
@@ -658,16 +658,16 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">
+                    <p className="text-muted-foreground text-sm font-medium">
                       Statut actuel
                     </p>
                     <div className="mt-1 flex items-center gap-2">
                       {getStatusBadge(report.status)}
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         • Traité le {formatDate(report.reviewedAt!)}
                       </span>
                       {report.reviewedByUser && (
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-muted-foreground text-sm">
                           par {report.reviewedByUser.name}
                         </span>
                       )}
@@ -684,7 +684,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
                 </div>
 
                 {isEditingStatus && (
-                  <div className="space-y-3 rounded-lg border bg-muted/50 p-4">
+                  <div className="bg-muted/50 space-y-3 rounded-lg border p-4">
                     <p className="text-sm font-medium">
                       Modifier le statut du signalement
                     </p>
@@ -735,7 +735,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
+            <DialogTitle className="text-destructive flex items-center gap-2">
               <Trash2 className="h-5 w-5" />
               Supprimer le contenu
             </DialogTitle>
@@ -747,7 +747,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
           </DialogHeader>
           <div className="space-y-4">
             <Alert className="border-destructive bg-destructive/10">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <AlertTriangle className="text-destructive h-4 w-4" />
               <AlertTitle className="text-destructive">Attention</AlertTitle>
               <AlertDescription>
                 {report.type === "post" &&

@@ -27,7 +27,7 @@ export const CommentSection = ({
   const [commentText, setCommentText] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const createComment = useMutation(api.comments.createComment)
+  const addComment = useMutation(api.comments.addComment)
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +37,7 @@ export const CommentSection = ({
     setIsSubmitting(true)
 
     try {
-      await createComment({
+      await addComment({
         postId,
         content: commentText.trim(),
       })
@@ -58,7 +58,7 @@ export const CommentSection = ({
     <div className="mt-3 border-t pt-3" onClick={(e) => e.stopPropagation()}>
       {disabled ? (
         <div className="flex items-center justify-center py-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Abonnez-vous pour commenter ce post
           </p>
         </div>
@@ -89,7 +89,7 @@ export const CommentSection = ({
               onChange={(e) => setCommentText(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               placeholder="Écrivez un commentaire..."
-              className="min-h-[60px] resize-none border-muted-foreground/20 text-sm"
+              className="border-muted-foreground/20 min-h-[60px] resize-none text-sm"
               disabled={isSubmitting}
             />
 

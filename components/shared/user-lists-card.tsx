@@ -31,8 +31,8 @@ export const UserListsCard = ({
   isBlockedPage = false,
 }: UserCardProps) => {
   const [isBlocking, setIsBlocking] = useState(false)
-  const blockUser = useMutation(api.follows.blockUser)
-  const unblockUser = useMutation(api.follows.unblockUser)
+  const blockUser = useMutation(api.blocks.blockUser)
+  const unblockUser = useMutation(api.blocks.unblockUser)
 
   const profileUrl = `/${user.username}`
 
@@ -41,14 +41,14 @@ export const UserListsCard = ({
     try {
       if (isBlockedPage) {
         // Débloquer l'utilisateur
-        await unblockUser({ blockedUserId: user.id })
+        await unblockUser({ targetUserId: user.id })
         toast.success("Utilisateur débloqué", {
           description: `Vous avez débloqué ${user.name}`,
         })
         if (onSubscribe) onSubscribe()
       } else {
         // Bloquer l'utilisateur
-        await blockUser({ blockedUserId: user.id })
+        await blockUser({ targetUserId: user.id })
         toast.error("Utilisateur bloqué", {
           description: `Vous avez bloqué ${user.name}`,
         })
@@ -74,7 +74,7 @@ export const UserListsCard = ({
             className="object-cover"
           />
         ) : (
-          <div className="bg-linear-to-r h-full w-full from-purple-500 to-blue-500" />
+          <div className="h-full w-full bg-linear-to-r from-purple-500 to-blue-500" />
         )}
       </Link>
 

@@ -11,17 +11,14 @@ export const NewsFeed = ({
 }: {
   currentUser: Doc<"users"> | undefined
 }) => {
-  const getPosts = useQuery(
-    api.posts.getHomePosts,
-    currentUser ? { currentUserId: currentUser._id } : "skip",
-  )
+  const getPosts = useQuery(api.posts.getHomePosts)
 
   // Afficher un loader si currentUser n'est pas encore défini
   if (!currentUser) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground mt-4 text-sm">
           Chargement du fil d&apos;actualité...
         </p>
       </div>
@@ -32,8 +29,8 @@ export const NewsFeed = ({
   if (getPosts === undefined) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground mt-4 text-sm">
           Chargement des publications...
         </p>
       </div>
@@ -44,10 +41,10 @@ export const NewsFeed = ({
   if (getPosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-lg font-medium text-muted-foreground">
+        <p className="text-muted-foreground text-lg font-medium">
           Aucune publication disponible
         </p>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-2 text-sm">
           Suivez des créateurs pour voir leurs publications ici
         </p>
       </div>

@@ -24,8 +24,8 @@ const BlockedPage = () => {
   // Récupération des utilisateurs bloqués depuis Convex
   const { isAuthenticated } = useConvexAuth()
   const blockedUsers = useQuery(
-    api.follows.getCurrentUserBlockedUsers,
-    isAuthenticated ? undefined : "skip",
+    api.blocks.getBlockedUsers,
+    isAuthenticated ? {} : "skip",
   )
 
   const tabs = [
@@ -72,7 +72,7 @@ const BlockedPage = () => {
     if (blockedUsers === undefined) {
       return (
         <div className="flex justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
         </div>
       )
     }
@@ -81,8 +81,8 @@ const BlockedPage = () => {
 
     if (filteredUsers.length === 0) {
       return (
-        <div className="rounded-lg border border-muted p-4">
-          <p className="text-center text-muted-foreground">
+        <div className="border-muted rounded-lg border p-4">
+          <p className="text-muted-foreground text-center">
             Aucun utilisateur bloqué pour le moment
           </p>
         </div>
@@ -91,9 +91,8 @@ const BlockedPage = () => {
 
     return (
       <div className="@container">
-        <div className="@lg:grid-cols-2 grid gap-3">
-          {filteredUsers.map((blockedUser) => {
-            // Le filtrage précédent garantit que blockedUserDetails n'est pas null ici
+        <div className="grid gap-3 @lg:grid-cols-2">
+          {filteredUsers.map((blockedUser: any) => {
             const details = blockedUser.blockedUserDetails!
 
             return (
@@ -129,7 +128,7 @@ const BlockedPage = () => {
                 key={tab.path}
                 value={tab.path}
                 asChild
-                className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex-1"
               >
                 <Link href={tab.path}>{tab.label}</Link>
               </TabsTrigger>

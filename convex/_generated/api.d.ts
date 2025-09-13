@@ -14,14 +14,16 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as assetsDraft from "../assetsDraft.js";
+import type * as blocks from "../blocks.js";
+import type * as bookmarks from "../bookmarks.js";
 import type * as comments from "../comments.js";
 import type * as conversations from "../conversations.js";
 import type * as creatorApplications from "../creatorApplications.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
-import type * as follows from "../follows.js";
 import type * as http from "../http.js";
 import type * as internalActions from "../internalActions.js";
+import type * as likes from "../likes.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as posts from "../posts.js";
@@ -40,14 +42,16 @@ import type * as validationDocuments from "../validationDocuments.js";
  */
 declare const fullApi: ApiFromModules<{
   assetsDraft: typeof assetsDraft;
+  blocks: typeof blocks;
+  bookmarks: typeof bookmarks;
   comments: typeof comments;
   conversations: typeof conversations;
   creatorApplications: typeof creatorApplications;
   crons: typeof crons;
   files: typeof files;
-  follows: typeof follows;
   http: typeof http;
   internalActions: typeof internalActions;
+  likes: typeof likes;
   messages: typeof messages;
   notifications: typeof notifications;
   posts: typeof posts;

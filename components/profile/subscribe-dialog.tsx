@@ -36,9 +36,19 @@ export const SubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
     if (!currentUser || !userProfile) return
 
     if (!canSubscribe?.canSubscribe) {
-      toast.error(
-        canSubscribe?.message || "Impossible de s'abonner à cet utilisateur",
-      )
+      const reasonMap: Record<string, string> = {
+        self: "Vous ne pouvez pas vous abonner à vous-même",
+        already_active: "Abonnement déjà actif",
+        pending: "Abonnement en attente de validation",
+        still_valid_until_expiry:
+          "Abonnement encore valide jusqu'à son expiration",
+        not_authenticated: "Veuillez vous connecter pour vous abonner",
+      }
+      const msg = canSubscribe?.reason
+        ? reasonMap[canSubscribe.reason] ||
+          "Impossible de s'abonner à cet utilisateur"
+        : "Impossible de s'abonner à cet utilisateur"
+      toast.error(msg)
       return
     }
 
@@ -58,7 +68,7 @@ export const SubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="mt-3 w-full justify-between rounded-2xl bg-linear-to-r from-primary to-primary/80 text-lg font-semibold shadow-lg transition-all hover:shadow-xl">
+        <Button className="from-primary to-primary/80 mt-3 w-full justify-between rounded-2xl bg-linear-to-r text-lg font-semibold shadow-lg transition-all hover:shadow-xl">
           <div className="flex items-center gap-2">
             <Crown className="h-5 w-5" />
             S&apos;ABONNER
@@ -86,56 +96,56 @@ export const SubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
           {/* Avatar centré */}
           <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
             <div className="relative">
-              <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
+              <Avatar className="border-background h-24 w-24 border-4 shadow-xl">
                 <AvatarImage
                   src={userProfile?.image}
                   className="object-cover"
                 />
                 <AvatarFallback className="bg-muted">
-                  <div className="h-full w-full animate-pulse rounded-full bg-muted-foreground/20" />
+                  <div className="bg-muted-foreground/20 h-full w-full animate-pulse rounded-full" />
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1">
-                <Crown className="h-4 w-4 text-primary-foreground" />
+              <div className="bg-primary absolute -right-1 -bottom-1 rounded-full p-1">
+                <Crown className="text-primary-foreground h-4 w-4" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Contenu principal */}
-        <div className="px-6 pb-6 pt-16">
+        <div className="px-6 pt-16 pb-6">
           <div className="text-center">
             <DialogTitle className="text-xl font-bold">
               Rejoignez {userProfile?.name}
             </DialogTitle>
-            <DialogDescription className="mt-2 text-muted-foreground">
+            <DialogDescription className="text-muted-foreground mt-2">
               Débloquez un contenu exclusif et bien plus encore
             </DialogDescription>
           </div>
 
           {/* Avantages avec icônes modernes */}
           <div className="mt-6 space-y-4">
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                <Star className="h-4 w-4 text-primary" />
+            <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+              <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                <Star className="text-primary h-4 w-4" />
               </div>
               <div className="text-sm font-medium">
                 Contenu exclusif et premium
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                <MessageCircle className="h-4 w-4 text-primary" />
+            <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+              <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                <MessageCircle className="text-primary h-4 w-4" />
               </div>
               <div className="text-sm font-medium">
                 Accès à la communauté privée
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                <Check className="h-4 w-4 text-primary" />
+            <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+              <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                <Check className="text-primary h-4 w-4" />
               </div>
               <div className="text-sm font-medium">
                 Résiliation à tout moment
@@ -147,12 +157,12 @@ export const SubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
           <div className="mt-6">
             <div className="mb-4 text-center">
               <div className="text-3xl font-bold">1000 XAF</div>
-              <div className="text-sm text-muted-foreground">par mois</div>
+              <div className="text-muted-foreground text-sm">par mois</div>
             </div>
 
             <Button
               className={cn(
-                "w-full rounded-xl bg-linear-to-r from-primary to-primary/80 text-lg font-semibold shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl",
+                "from-primary to-primary/80 w-full rounded-xl bg-linear-to-r text-lg font-semibold shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl",
                 {
                   "pointer-events-none opacity-70": isPending,
                 },
@@ -174,7 +184,7 @@ export const SubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
               )}
             </Button>
 
-            <p className="mt-3 text-center text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-3 text-center text-xs">
               Paiement sécurisé • Annulation facile
             </p>
           </div>

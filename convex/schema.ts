@@ -11,22 +11,14 @@ export default defineSchema({
     bio: v.optional(v.string()),
     location: v.optional(v.string()),
     socials: v.optional(v.array(v.string())),
-    bookmarks: v.optional(v.array(v.id("posts"))),
     isOnline: v.boolean(),
+    lastSeenAt: v.optional(v.number()),
     tokenIdentifier: v.string(),
     externalId: v.optional(v.string()),
     accountType: v.union(
       v.literal("USER"),
       v.literal("CREATOR"),
       v.literal("SUPERUSER"),
-    ),
-    creatorApplicationStatus: v.optional(
-      v.union(
-        v.literal("none"),
-        v.literal("pending"),
-        v.literal("approved"),
-        v.literal("rejected"),
-      ),
     ),
   })
     .index("by_tokenIdentifier", ["tokenIdentifier"])
@@ -68,41 +60,37 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_status", ["status"]),
 
-  validationDocumentsDraft: defineTable({
-    userId: v.id("users"),
-    publicId: v.string(),
-    documentType: v.union(v.literal("identity_card"), v.literal("selfie")),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_publicId", ["publicId"]),
-
   posts: defineTable({
     author: v.id("users"),
     content: v.string(),
     medias: v.array(v.string()),
-    likes: v.array(v.id("users")),
-    comments: v.array(v.id("comments")),
-    visibility: v.optional(
-      v.union(v.literal("public"), v.literal("subscribers_only")),
-    ),
+    visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
   })
     .index("by_author", ["author"])
     .index("by_visibility", ["visibility"]),
 
-  assetsDraft: defineTable({
-    author: v.id("users"),
-    publicId: v.string(),
-    assetType: v.string(),
+  bookmarks: defineTable({
+    userId: v.id("users"),
+    postId: v.id("posts"),
   })
-    .index("by_author", ["author"])
-    .index("by_publicId", ["publicId"]),
+    .index("by_user", ["userId"])
+    .index("by_post", ["postId"])
+    .index("by_user_post", ["userId", "postId"]),
+
+  likes: defineTable({
+    userId: v.id("users"),
+    postId: v.id("posts"),
+  })
+    .index("by_post", ["postId"])
+    .index("by_user", ["userId"]),
 
   comments: defineTable({
     author: v.id("users"),
     post: v.id("posts"),
     content: v.string(),
-    likes: v.array(v.id("users")),
-  }).index("by_post", ["post"]),
+  })
+    .index("by_post", ["post"])
+    .index("by_author", ["author"]),
 
   conversations: defineTable({
     participants: v.array(v.id("users")),
@@ -124,33 +112,48 @@ export default defineSchema({
     ),
   }).index("by_conversation", ["conversation"]),
 
-  follows: defineTable({
-    followerId: v.id("users"),
-    followingId: v.id("users"),
-    subscriptionId: v.id("subscriptions"),
-  })
-    .index("by_follower", ["followerId"])
-    .index("by_following", ["followingId"])
-    .index("by_subscriptionId", ["subscriptionId"])
-    .index("by_follower_following", ["followerId", "followingId"]),
-
   subscriptions: defineTable({
-    startDate: v.number(),
-    endDate: v.number(),
-    serviceType: v.string(),
-    amountPaid: v.number(),
     subscriber: v.id("users"),
     creator: v.id("users"),
-    status: v.string(),
-    transactionId: v.optional(v.string()),
+    startDate: v.number(),
+    endDate: v.number(),
+    amountPaid: v.number(),
+    currency: v.string(),
     renewalCount: v.number(),
     lastUpdateTime: v.number(),
+    type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("expired"),
+      v.literal("canceled"),
+      v.literal("pending"),
+    ),
   })
     .index("by_subscriber", ["subscriber"])
     .index("by_creator", ["creator"])
     .index("by_creator_subscriber", ["creator", "subscriber"])
     .index("by_status", ["status"])
-    .index("by_endDate", ["endDate"]),
+    .index("by_creator_type", ["creator", "type"])
+    .index("by_subscriber_type", ["subscriber", "type"]),
+
+  transactions: defineTable({
+    subscriptionId: v.id("subscriptions"),
+    subscriberId: v.id("users"),
+    creatorId: v.id("users"),
+    amount: v.number(),
+    currency: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("succeeded"),
+      v.literal("failed"),
+      v.literal("refunded"),
+    ),
+    provider: v.string(), // ex: stripe, paypal
+    providerTransactionId: v.string(),
+  })
+    .index("by_subscription", ["subscriptionId"])
+    .index("by_subscriber", ["subscriberId"])
+    .index("by_creator", ["creatorId"]),
 
   notifications: defineTable({
     type: v.string(),
@@ -160,6 +163,7 @@ export default defineSchema({
     post: v.optional(v.id("posts")),
     comment: v.optional(v.id("comments")),
   })
+    .index("by_post", ["post"])
     .index("by_recipient", ["recipientId"])
     .index("by_type_post_sender", ["type", "post", "sender"])
     .index("by_type_comment_sender", ["type", "comment", "sender"]),
@@ -206,4 +210,20 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_type", ["type"])
     .index("by_created_at", ["createdAt"]),
+
+  validationDocumentsDraft: defineTable({
+    userId: v.id("users"),
+    publicId: v.string(),
+    documentType: v.union(v.literal("identity_card"), v.literal("selfie")),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_publicId", ["publicId"]),
+
+  assetsDraft: defineTable({
+    author: v.id("users"),
+    publicId: v.string(),
+    assetType: v.string(),
+  })
+    .index("by_author", ["author"])
+    .index("by_publicId", ["publicId"]),
 })

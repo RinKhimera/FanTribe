@@ -6,15 +6,11 @@ export const createPost = mutation({
   args: {
     content: v.string(),
     medias: v.array(v.string()),
-    likes: v.array(v.id("users")),
-    comments: v.array(v.id("comments")),
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError("Not authenticated")
-    }
+    if (!identity) throw new ConvexError("Not authenticated")
 
     const user = await ctx.db
       .query("users")
@@ -22,36 +18,103 @@ export const createPost = mutation({
         q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
+    if (!user) throw new ConvexError("User not found")
 
-    if (!user) {
-      throw new ConvexError("User not found")
-    }
-
-    // Insérer le post dans la base de données
     const postId = await ctx.db.insert("posts", {
       author: user._id,
       content: args.content,
       medias: args.medias,
-      likes: [],
-      comments: [],
       visibility: args.visibility,
     })
 
-    // Envoyer une notification à tous les followers
-    const userFollowers = await ctx.db
-      .query("follows")
-      .withIndex("by_following", (q) => q.eq("followingId", user._id))
+    // Récupération des abonnés avec statuts active ou expired
+    const allSubs = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_creator_type", (q) =>
+        q.eq("creator", user._id).eq("type", "content_access"),
+      )
       .collect()
 
-    for (const follower of userFollowers) {
-      await ctx.db.insert("notifications", {
-        type: "newPost",
-        recipientId: follower.followerId,
-        sender: user._id,
-        post: postId,
-        read: false,
-      })
+    const relevantSubs = allSubs.filter(
+      (s) => s.status === "active" || s.status === "expired",
+    )
+
+    if (relevantSubs.length === 0) {
+      return { postId }
     }
+
+    // Déduplication des subscribers & exclusion de soi
+    const followerIds = [
+      ...new Set(
+        relevantSubs
+          .map((s) => s.subscriber)
+          .filter((subscriberId) => subscriberId !== user._id),
+      ),
+    ]
+
+    if (followerIds.length === 0) {
+      return { postId }
+    }
+
+    // Exclure relations de blocage (auteur a bloqué / est bloqué)
+    const blockedByAuthor = await ctx.db
+      .query("blocks")
+      .withIndex("by_blocker", (q) => q.eq("blockerId", user._id))
+      .collect()
+    const blockingAuthor = await ctx.db
+      .query("blocks")
+      .withIndex("by_blocked", (q) => q.eq("blockedId", user._id))
+      .collect()
+
+    const blockedSet = new Set([
+      ...blockedByAuthor.map((b) => b.blockedId),
+      ...blockingAuthor.map((b) => b.blockerId),
+    ])
+
+    const finalRecipientIds = followerIds.filter((id) => !blockedSet.has(id))
+
+    if (finalRecipientIds.length === 0) {
+      return { postId }
+    }
+
+    // Seuil pour fan-out différé si volumineux
+    const FANOUT_THRESHOLD = 200
+    if (finalRecipientIds.length > FANOUT_THRESHOLD) {
+      // Action interne fanoutNewPostNotifications pour batcher
+      await ctx.scheduler.runAfter(
+        0,
+        api.internalActions?.fanoutNewPostNotifications,
+        {
+          authorId: user._id,
+          postId,
+          recipientIds: finalRecipientIds,
+        },
+      )
+      return { postId, deferred: true }
+    }
+
+    // Insertion parallèle contrôlée, suffisant tant que volume raisonnable
+    await Promise.all(
+      finalRecipientIds.map((recipientId) =>
+        ctx.db
+          .insert("notifications", {
+            type: "newPost",
+            recipientId,
+            sender: user._id,
+            post: postId,
+            read: false,
+          })
+          .catch((err) => {
+            console.error("Notification insert failed", {
+              postId,
+              recipientId,
+              err,
+            })
+          }),
+      ),
+    )
+
+    return { postId }
   },
 })
 
@@ -70,88 +133,89 @@ export const deletePost = mutation({
 
     if (!user) throw new ConvexError("User not found")
 
-    // Trouver le post à supprimer
-    const post = await ctx.db
-      .query("posts")
-      .withIndex("by_id", (q) => q.eq("_id", args.postId))
-      .unique()
-
+    // Récupérer le post à supprimer
+    const post = await ctx.db.get(args.postId)
     if (!post) throw new ConvexError("Post not found")
 
-    // Vérifier si l'utilisateur est autorisé à supprimer le post
     if (post.author !== user._id && user.accountType !== "SUPERUSER") {
       throw new ConvexError("User not authorized to delete this post")
     }
 
-    // Supprimer les médias Cloudinary de manière asynchrone
+    // Suppression des médias Cloudinary en parallèle
     if (post.medias && post.medias.length > 0) {
-      for (const mediaUrl of post.medias) {
-        try {
-          await ctx.scheduler.runAfter(
-            0,
-            api.internalActions.deleteCloudinaryAssetFromUrl,
-            {
+      const uniqueMedias = [...new Set(post.medias)]
+      await Promise.all(
+        uniqueMedias.map((mediaUrl) =>
+          ctx.scheduler
+            .runAfter(0, api.internalActions.deleteCloudinaryAssetFromUrl, {
               url: mediaUrl,
-            },
-          )
-        } catch (error) {
-          console.error(
-            `Failed to schedule deletion for media ${mediaUrl}:`,
-            error,
-          )
-        }
-      }
+            })
+            .catch((error) => {
+              console.error(
+                `Failed to schedule deletion for media ${mediaUrl}:`,
+                error,
+              )
+            }),
+        ),
+      )
     }
 
-    // Supprimer tous les commentaires associés au post
-    const comments = await ctx.db
-      .query("comments")
-      .withIndex("by_post", (q) => q.eq("post", args.postId))
-      .collect()
+    // Récupérations parallèles des entités associées (comments, likes, bookmarks, notifications)
+    const [comments, likes, bookmarks, notifications] = await Promise.all([
+      ctx.db
+        .query("comments")
+        .withIndex("by_post", (q) => q.eq("post", args.postId))
+        .collect(),
+      ctx.db
+        .query("likes")
+        .withIndex("by_post", (q) => q.eq("postId", args.postId))
+        .collect(),
+      ctx.db
+        .query("bookmarks")
+        .withIndex("by_post", (q) => q.eq("postId", args.postId))
+        .collect(),
+      ctx.db
+        .query("notifications")
+        .withIndex("by_post", (q) => q.eq("post", args.postId))
+        .collect(),
+    ])
 
-    for (const comment of comments) {
-      await ctx.db.delete(comment._id)
-    }
+    // Suppressions en parallèle contrôlée
+    await Promise.all([
+      ...comments.map((c) => ctx.db.delete(c._id)),
+      ...likes.map((l) => ctx.db.delete(l._id)),
+      ...bookmarks.map((b) => ctx.db.delete(b._id)),
+      ...notifications.map((n) => ctx.db.delete(n._id)),
+    ])
 
-    // Supprimer le post de tous les bookmarks
-    const users = await ctx.db.query("users").collect()
-    for (const userDoc of users) {
-      if (userDoc.bookmarks?.includes(args.postId)) {
-        await ctx.db.patch(userDoc._id, {
-          bookmarks: userDoc.bookmarks.filter((id) => id !== args.postId),
-        })
-      }
-    }
-
-    // Supprimer toutes les notifications associées à ce post
-    const notifications = await ctx.db
-      .query("notifications")
-      .filter((q) => q.eq(q.field("post"), args.postId))
-      .collect()
-
-    for (const notification of notifications) {
-      await ctx.db.delete(notification._id)
-    }
-
-    // Supprimer le post de la base de données
+    // Suppression finale du post
     await ctx.db.delete(args.postId)
 
-    return { success: true }
+    return {
+      success: true,
+      deleted: {
+        comments: comments.length,
+        likes: likes.length,
+        bookmarks: bookmarks.length,
+        notifications: notifications.length,
+        medias: post.medias?.length || 0,
+      },
+    }
   },
 })
 
 export const getPost = query({
-  args: {
-    // username: v.string(),
-    postId: v.id("posts"),
-  },
+  args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
     const post = await ctx.db
       .query("posts")
       .withIndex("by_id", (q) => q.eq("_id", args.postId))
       .unique()
 
-    if (!post) return
+    if (!post) {
+      console.error("Post not found for ID:", args.postId)
+      return null
+    }
 
     const author = await ctx.db
       .query("users")
@@ -160,26 +224,17 @@ export const getPost = query({
 
     if (!author) throw new ConvexError("Author not found")
 
-    // if (author.username !== args.username)
-    //   throw new ConvexError("Author does not match username")
-
-    const postWithAuthor = {
+    return {
       ...post,
       author,
     }
-
-    return postWithAuthor
   },
 })
 
 export const getUserPosts = query({
   args: { authorId: v.id("users") },
   handler: async (ctx, args) => {
-    const author = await ctx.db
-      .query("users")
-      .withIndex("by_id", (q) => q.eq("_id", args.authorId))
-      .unique()
-
+    const author = await ctx.db.get(args.authorId)
     if (!author) throw new ConvexError("User not found")
 
     const posts = await ctx.db
@@ -188,19 +243,10 @@ export const getUserPosts = query({
       .order("desc")
       .collect()
 
-    const postsWithAuthor = await Promise.all(
-      posts.map(async (post) => {
-        // const author = await ctx.db
-        //   .query("users")
-        //   .filter((q) => q.eq(q.field("_id"), post.author))
-        //   .unique()
-
-        return {
-          ...post,
-          author,
-        }
-      }),
-    )
+    const postsWithAuthor = posts.map((post) => ({
+      ...post,
+      author,
+    }))
 
     return postsWithAuthor
   },
@@ -241,46 +287,6 @@ export const getUserGallery = query({
   },
 })
 
-export const getUserBookmark = query({
-  args: {},
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    const bookmarksWithAuthor = await Promise.all(
-      user.bookmarks?.map(async (bookmark) => {
-        const post = await ctx.db
-          .query("posts")
-          .withIndex("by_id", (q) => q.eq("_id", bookmark))
-          .unique()
-
-        if (!post) return null
-
-        const author = await ctx.db
-          .query("users")
-          .withIndex("by_id", (q) => q.eq("_id", post.author))
-          .unique()
-
-        return {
-          ...post,
-          author,
-        }
-      }) || [],
-    )
-
-    return bookmarksWithAuthor
-  },
-})
-
 export const getAllPosts = query({
   args: {},
   handler: async (ctx, args) => {
@@ -305,246 +311,73 @@ export const getAllPosts = query({
 })
 
 export const getHomePosts = query({
-  args: {
-    currentUserId: v.id("users"),
-  },
+  args: {},
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
     const currentUser = await ctx.db
       .query("users")
-      .withIndex("by_id", (q) => q.eq("_id", args.currentUserId))
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
       .unique()
-
     if (!currentUser) throw new ConvexError("User not found")
 
-    // Si l'utilisateur est un superuser, retourner tous les posts
+    const POST_FETCH_LIMIT = 80
+
+    // Cas SUPERUSER: lecture brute + enrichissement auteurs
     if (currentUser.accountType === "SUPERUSER") {
-      const allPosts = await ctx.db.query("posts").order("desc").take(100)
-
-      const postsWithAuthor = await Promise.all(
-        allPosts.map(async (post) => {
-          const author = await ctx.db
-            .query("users")
-            .filter((q) => q.eq(q.field("_id"), post.author))
-            .unique()
-
-          return {
-            ...post,
-            author,
-          }
-        }),
-      )
-
-      return postsWithAuthor
+      const posts = await ctx.db
+        .query("posts")
+        .order("desc")
+        .take(POST_FETCH_LIMIT)
+      const authorIds = [...new Set(posts.map((p) => p.author))]
+      const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
+      const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
+      return posts.map((p) => ({
+        ...p,
+        author: authorsMap.get(p.author),
+      }))
     }
 
-    // Pour les utilisateurs normaux:
-    // 1. Récupérer tous les utilisateurs que l'utilisateur courant suit avec une souscription active
-    const activeSubscriptions = await ctx.db
-      .query("follows")
-      .withIndex("by_follower", (q) => q.eq("followerId", args.currentUserId))
+    // Récupérer toutes les souscriptions de l'utilisateur (une seule requête)
+    const subs = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_subscriber_type", (q) =>
+        q.eq("subscriber", currentUser._id).eq("type", "content_access"),
+      )
       .collect()
 
-    // Créer un Set pour une recherche efficace
-    const followedCreatorsWithSubs = new Set()
+    const activeCreatorIds = new Set(
+      subs.filter((s) => s.status === "active").map((s) => s.creator),
+    )
 
-    // Vérifier quelles souscriptions sont actives
-    for (const follow of activeSubscriptions) {
-      const subscription = await ctx.db.get(follow.subscriptionId)
-      if (subscription && subscription.status === "active") {
-        followedCreatorsWithSubs.add(follow.followingId)
+    // Récupérer un lot de posts récents
+    const rawPosts = await ctx.db
+      .query("posts")
+      .order("desc")
+      .take(POST_FETCH_LIMIT)
+
+    // Filtrage visibilité
+    const filtered = rawPosts.filter((post) => {
+      if (!post.visibility || post.visibility === "public") return true
+      if (post.visibility === "subscribers_only") {
+        if (post.author === currentUser._id) return true
+        if (activeCreatorIds.has(post.author)) return true
       }
-    }
-
-    // 2. Récupérer tous les posts (limités à 100 pour des raisons de performance)
-    const posts = await ctx.db.query("posts").order("desc").take(100)
-
-    // 3. Filtrer les posts en fonction de la visibilité
-    const filteredPosts = posts.filter((post) => {
-      // Inclure tous les posts publics
-      if (!post.visibility || post.visibility === "public") {
-        return true
-      }
-
-      // Inclure les posts privés des créateurs que l'utilisateur suit avec un abonnement actif
-      if (
-        post.visibility === "subscribers_only" &&
-        followedCreatorsWithSubs.has(post.author)
-      ) {
-        return true
-      }
-
-      // Inclure les posts privés de l'utilisateur lui-même
-      if (
-        post.visibility === "subscribers_only" &&
-        post.author === args.currentUserId
-      ) {
-        return true
-      }
-
       return false
     })
 
-    // 4. Ajouter les informations d'auteur à chaque post
-    const postsWithAuthor = await Promise.all(
-      filteredPosts.map(async (post) => {
-        const author = await ctx.db
-          .query("users")
-          .filter((q) => q.eq(q.field("_id"), post.author))
-          .unique()
+    // Enrichissement auteurs (batch)
+    const authorIds = [...new Set(filtered.map((p) => p.author))]
+    const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
+    const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
 
-        return {
-          ...post,
-          author,
-        }
-      }),
-    )
-
-    return postsWithAuthor
-  },
-})
-
-export const likePost = mutation({
-  args: { postId: v.id("posts") },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    // Trouver le post à liker
-    const post = await ctx.db
-      .query("posts")
-      .filter((q) => q.eq(q.field("_id"), args.postId))
-      .unique()
-
-    if (!post) throw new ConvexError("Post not found")
-
-    // Vérifier l'accès au contenu restreint
-    if (post.visibility === "subscribers_only" && post.author !== user._id) {
-      const subscription = await ctx.db
-        .query("follows")
-        .withIndex("by_follower_following", (q) =>
-          q.eq("followerId", user._id).eq("followingId", post.author),
-        )
-        .unique()
-
-      if (!subscription) {
-        throw new ConvexError("Access denied: subscription required")
-      }
-
-      const subscriptionDetails = await ctx.db.get(subscription.subscriptionId)
-      if (!subscriptionDetails || subscriptionDetails.status !== "active") {
-        throw new ConvexError("Access denied: active subscription required")
-      }
-    }
-
-    // Ajouter l'utilisateur à la liste des likes
-    await ctx.db.patch(args.postId, {
-      likes: [...(post.likes || []), user._id],
-    })
-
-    // Envoyer une notification au propriétaire du post
-    if (post.author !== user._id) {
-      await ctx.db.insert("notifications", {
-        type: "like",
-        recipientId: post.author,
-        sender: user._id,
-        post: args.postId,
-        read: false,
-      })
-    }
-  },
-})
-
-export const unlikePost = mutation({
-  args: { postId: v.id("posts") },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    const post = await ctx.db
-      .query("posts")
-      .filter((q) => q.eq(q.field("_id"), args.postId))
-      .unique()
-
-    if (!post) throw new ConvexError("Post not found")
-
-    // Supprimer l'utilisateur de la liste des likes
-    await ctx.db.patch(args.postId, {
-      likes: post.likes?.filter((id) => id !== user._id) || [],
-    })
-
-    // Supprimer la notification de like s'il existe
-    const existingLikeNotification = await ctx.db
-      .query("notifications")
-      .withIndex("by_type_post_sender", (q) =>
-        q.eq("type", "like").eq("post", args.postId).eq("sender", user._id),
-      )
-      .unique()
-
-    if (existingLikeNotification !== null) {
-      await ctx.db.delete(existingLikeNotification._id)
-    }
-  },
-})
-
-export const addBookmark = mutation({
-  args: { postId: v.id("posts") },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    if (!user.bookmarks?.includes(args.postId)) {
-      await ctx.db.patch(user._id, {
-        bookmarks: [args.postId, ...(user.bookmarks || [])],
-      })
-    }
-  },
-})
-
-export const removeBookmark = mutation({
-  args: { postId: v.id("posts") },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    await ctx.db.patch(user._id, {
-      bookmarks: user.bookmarks?.filter((id) => id !== args.postId) || [],
-    })
+    return filtered.map((p) => ({
+      ...p,
+      author: authorsMap.get(p.author),
+    }))
   },
 })
 
@@ -563,7 +396,6 @@ export const updatePost = mutation({
         q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
-
     if (!user) throw new ConvexError("User not found")
 
     // Récupérer le post

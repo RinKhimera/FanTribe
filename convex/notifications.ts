@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { internalMutation, mutation, query } from "./_generated/server"
 
 export const getUserNotifications = query({
   args: {},
@@ -144,5 +144,23 @@ export const getUnreadCounts = query({
       unreadNotificationsCount,
       unreadMessagesCount,
     }
+  },
+})
+
+export const insertNewPostNotification = internalMutation({
+  args: {
+    recipientId: v.id("users"),
+    sender: v.id("users"),
+    postId: v.id("posts"),
+  },
+  handler: async (ctx, args) => {
+    if (args.recipientId === args.sender) return
+    await ctx.db.insert("notifications", {
+      type: "newPost",
+      recipientId: args.recipientId,
+      sender: args.sender,
+      post: args.postId,
+      read: false,
+    })
   },
 })
