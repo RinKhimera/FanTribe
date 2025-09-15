@@ -1,5 +1,5 @@
 import { useQuery } from "convex/react"
-import { PostCard } from "@/components/shared/post-card"
+import { PostCard } from "@/components/shared/PostCard"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 

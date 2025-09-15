@@ -52,28 +52,17 @@ export const cleanUpDraftAssets = internalMutation({
       `Found ${totalAssets} draft items to clean up (${draftAssets.length} post assets + ${draftDocuments.length} validation documents)`,
     )
 
-    let scheduled = 0
     let deleted = 0
     let errors = 0
 
-    // Utilitaire de planification (ignore erreurs de scheduling individuelles)
-    const scheduleDeletion = async (publicId: string) => {
-      try {
-        await ctx.scheduler.runAfter(
-          0,
-          api.internalActions.deleteCloudinaryAsset,
-          { publicId },
-        )
-        scheduled++
-      } catch (e) {
-        console.error("Failed to schedule Cloudinary deletion:", publicId, e)
-        errors++
-      }
-    }
+    // Collecter toutes les URLs de médias pour suppression en lot
+    const mediaUrls: string[] = []
 
-    // Traiter assets de posts
+    // Les assets de posts contiennent maintenant des URLs complètes Bunny.net
     for (const asset of draftAssets) {
-      await scheduleDeletion(asset.publicId)
+      // Le publicId est maintenant une URL complète pour Bunny.net
+      mediaUrls.push(asset.publicId)
+
       try {
         await ctx.db.delete(asset._id)
         deleted++
@@ -83,9 +72,9 @@ export const cleanUpDraftAssets = internalMutation({
       }
     }
 
-    // Traiter documents de validation
+    // Les documents de validation peuvent encore utiliser Cloudinary (à migrer plus tard)
     for (const doc of draftDocuments) {
-      await scheduleDeletion(doc.publicId)
+      mediaUrls.push(doc.publicId)
       try {
         await ctx.db.delete(doc._id)
         deleted++
@@ -95,13 +84,28 @@ export const cleanUpDraftAssets = internalMutation({
       }
     }
 
+    // Planifier la suppression des médias Bunny.net en lot
+    if (mediaUrls.length > 0) {
+      try {
+        await ctx.scheduler.runAfter(0, api.internalActions.deleteBunnyAssets, {
+          mediaUrls,
+        })
+        console.log(
+          `Scheduled deletion of ${mediaUrls.length} Bunny.net assets`,
+        )
+      } catch (e) {
+        console.error("Failed to schedule Bunny.net assets deletion:", e)
+        errors++
+      }
+    }
+
     console.log(
-      `Cleaned up draft assets: total=${totalAssets}, scheduled=${scheduled}, dbDeleted=${deleted}, errors=${errors}`,
+      `Cleaned up draft assets: total=${totalAssets}, dbDeleted=${deleted}, errors=${errors}`,
     )
 
     return {
       total: totalAssets,
-      scheduledCloudinaryDeletes: scheduled,
+      scheduledBunnyDeletes: mediaUrls.length,
       dbDeleted: deleted,
       errors,
     }

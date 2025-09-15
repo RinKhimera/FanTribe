@@ -324,22 +324,19 @@ export const deleteReportedContentAndResolve = mutation({
       const reportedPost = await ctx.db.get(report.reportedPostId)
       if (!reportedPost) throw new ConvexError("Post not found")
 
+      // Suppression des médias Bunny.net en parallèle
       if (reportedPost.medias && reportedPost.medias.length > 0) {
         const uniqueMedias = [...new Set(reportedPost.medias)]
-        await Promise.all(
-          uniqueMedias.map((mediaUrl) =>
-            ctx.scheduler
-              .runAfter(0, api.internalActions.deleteCloudinaryAssetFromUrl, {
-                url: mediaUrl,
-              })
-              .catch((error) => {
-                console.error(
-                  `Failed to schedule deletion for media ${mediaUrl}:`,
-                  error,
-                )
-              }),
-          ),
-        )
+        await ctx.scheduler
+          .runAfter(0, api.internalActions.deleteBunnyAssets, {
+            mediaUrls: uniqueMedias,
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to schedule Bunny assets deletion for reported post ${reportedPost._id}:`,
+              error,
+            )
+          })
       }
 
       // Récupérations parallèles des entités associées (comments, likes, bookmarks, notifications)

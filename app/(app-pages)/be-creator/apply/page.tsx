@@ -12,7 +12,6 @@ import { useEffect, useRef, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { deleteAsset } from "@/actions/upload-cloudinary"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -35,6 +34,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { deleteValidationDocument } from "@/lib/bunny-utils"
 import { generateRandomString } from "@/utils/generateRandomString"
 
 const applicationSchema = z.object({
@@ -157,15 +157,17 @@ const ApplyCreatorPage = () => {
         const currentDocs = uploadedDocumentsRef.current
         Object.values(currentDocs).forEach((doc) => {
           if (doc?.publicId) {
-            deleteAsset(doc.publicId).catch((error) => {
+            deleteValidationDocument(doc.publicId).catch((error: unknown) => {
               console.error("Erreur lors de la suppression du document:", error)
             })
-            deleteDraftDocument({ publicId: doc.publicId }).catch((error) => {
-              console.error(
-                "Erreur lors de la suppression du brouillon:",
-                error,
-              )
-            })
+            deleteDraftDocument({ publicId: doc.publicId }).catch(
+              (error: unknown) => {
+                console.error(
+                  "Erreur lors de la suppression du brouillon:",
+                  error,
+                )
+              },
+            )
           }
         })
       }
@@ -220,7 +222,7 @@ const ApplyCreatorPage = () => {
     if (!document) return
 
     try {
-      await deleteAsset(document.publicId)
+      await deleteValidationDocument(document.publicId)
       await deleteDraftDocument({ publicId: document.publicId })
       setUploadedDocuments((prev) => ({
         ...prev,
@@ -311,7 +313,7 @@ const ApplyCreatorPage = () => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-l border-r max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
+    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <h1 className="text-2xl font-bold">Candidature Créateur</h1>
       </div>
@@ -558,7 +560,7 @@ const ApplyCreatorPage = () => {
                                 <div className="grid flex-1 gap-1.5 leading-none">
                                   <Label
                                     htmlFor={option.value}
-                                    className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                   >
                                     {option.label}
                                   </Label>

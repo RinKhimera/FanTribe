@@ -1,7 +1,5 @@
-import { fetchAction } from "convex/nextjs"
 import { v } from "convex/values"
-import { api } from "./_generated/api"
-import { internalMutation, mutation } from "./_generated/server"
+import { mutation } from "./_generated/server"
 
 export const createDraftDocument = mutation({
   args: {
@@ -40,47 +38,5 @@ export const deleteDraftDocument = mutation({
     }
 
     return { success: false, error: "Document not found" }
-  },
-})
-
-export const cleanUpDraftDocuments = internalMutation({
-  handler: async (ctx) => {
-    // Récupérer tous les brouillons de documents
-    const draftDocuments = await ctx.db
-      .query("validationDocumentsDraft")
-      .collect()
-
-    console.log(
-      `Found ${draftDocuments.length} draft validation documents to clean up`,
-    )
-
-    let successCount = 0
-    let errorCount = 0
-
-    // Traiter chaque document
-    for (const document of draftDocuments) {
-      try {
-        await fetchAction(api.internalActions.deleteCloudinaryAsset, {
-          publicId: document.publicId,
-        })
-
-        // Supprimer l'entrée de la base de données
-        await ctx.db.delete(document._id)
-
-        successCount++
-      } catch (error) {
-        console.error(
-          `Failed to delete validation document ${document.publicId}:`,
-          error,
-        )
-        errorCount++
-      }
-    }
-
-    return {
-      total: draftDocuments.length,
-      success: successCount,
-      error: errorCount,
-    }
   },
 })

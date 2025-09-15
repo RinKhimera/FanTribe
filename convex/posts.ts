@@ -141,23 +141,19 @@ export const deletePost = mutation({
       throw new ConvexError("User not authorized to delete this post")
     }
 
-    // Suppression des médias Cloudinary en parallèle
+    // Suppression des médias Bunny.net en parallèle
     if (post.medias && post.medias.length > 0) {
       const uniqueMedias = [...new Set(post.medias)]
-      await Promise.all(
-        uniqueMedias.map((mediaUrl) =>
-          ctx.scheduler
-            .runAfter(0, api.internalActions.deleteCloudinaryAssetFromUrl, {
-              url: mediaUrl,
-            })
-            .catch((error) => {
-              console.error(
-                `Failed to schedule deletion for media ${mediaUrl}:`,
-                error,
-              )
-            }),
-        ),
-      )
+      await ctx.scheduler
+        .runAfter(0, api.internalActions.deleteBunnyAssets, {
+          mediaUrls: uniqueMedias,
+        })
+        .catch((error) => {
+          console.error(
+            `Failed to schedule Bunny assets deletion for post ${args.postId}:`,
+            error,
+          )
+        })
     }
 
     // Récupérations parallèles des entités associées (comments, likes, bookmarks, notifications)
