@@ -92,6 +92,15 @@ export const NewPostLayout = () => {
     const files = event.target.files
     if (!files || files.length === 0) return
 
+    // Vérifier la limite de 5 médias
+    const totalMediasAfterUpload = medias.length + files.length
+    if (totalMediasAfterUpload > 5) {
+      toast.error(
+        `Limite de 5 médias par post. Vous avez ${medias.length} média(s) et essayez d'ajouter ${files.length} média(s).`,
+      )
+      return
+    }
+
     setIsUploading(true)
 
     try {
@@ -340,11 +349,15 @@ export const NewPostLayout = () => {
                                 "border-muted flex items-center gap-2 rounded-full",
                                 {
                                   "cursor-not-allowed":
-                                    isPending || isUploading,
+                                    isPending ||
+                                    isUploading ||
+                                    medias.length >= 5,
                                 },
                               )}
                               onClick={() => fileInputRef.current?.click()}
-                              disabled={isPending || isUploading}
+                              disabled={
+                                isPending || isUploading || medias.length >= 5
+                              }
                             >
                               {isUploading ? (
                                 <LoaderCircle
@@ -355,7 +368,11 @@ export const NewPostLayout = () => {
                                 <ImagePlus size={18} />
                               )}
                               <span className="hidden sm:inline">
-                                {isUploading ? "Upload..." : "Média"}
+                                {isUploading
+                                  ? "Upload..."
+                                  : medias.length >= 5
+                                    ? "Limite atteinte"
+                                    : `Média (${medias.length}/5)`}
                               </span>
                             </Button>
                           )}
