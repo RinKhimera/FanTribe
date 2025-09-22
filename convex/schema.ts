@@ -221,9 +221,11 @@ export default defineSchema({
 
   assetsDraft: defineTable({
     author: v.id("users"),
+    mediaId: v.string(),
     mediaUrl: v.string(),
-    assetType: v.string(),
+    assetType: v.union(v.literal("image"), v.literal("video")),
   })
     .index("by_author", ["author"])
-    .index("by_mediaUrl", ["mediaUrl"]),
+    .index("by_mediaUrl", ["mediaUrl"])
+    .index("by_mediaId", ["mediaId"]),
 })

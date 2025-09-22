@@ -60,10 +60,7 @@ export const NewPostLayout = () => {
       if (medias.length > 0 && !isPostCreatedRef.current) {
         medias.forEach(async (media) => {
           try {
-            await axios.delete(
-              `/api/bunny/delete?publicId=${media.publicId}&type=${media.type}`,
-            )
-            await deleteDraftAsset({ publicId: media.publicId })
+            await deleteDraftAsset({ mediaId: media.publicId })
           } catch (error) {
             console.error("Erreur lors de la suppression de l'asset:", error)
           }
@@ -168,6 +165,7 @@ export const NewPostLayout = () => {
             if (currentUser) {
               await createDraftAsset({
                 author: currentUser._id,
+                mediaId: result.mediaId,
                 mediaUrl: result.url,
                 assetType: result.type,
               })
@@ -202,14 +200,7 @@ export const NewPostLayout = () => {
     setMedias((prev) => prev.filter((_, i) => i !== index))
 
     try {
-      // Supprimer l'asset de Bunny via l'API
-      await axios.delete(
-        `/api/bunny/delete?publicId=${media.publicId}&type=${media.type}`,
-      )
-
-      // Supprimer le draft asset
-      await deleteDraftAsset({ publicId: media.publicId })
-
+      await deleteDraftAsset({ mediaId: media.publicId })
       toast.success("Média supprimé avec succès")
     } catch (error) {
       console.error("Erreur lors de la suppression:", error)
@@ -233,7 +224,7 @@ export const NewPostLayout = () => {
 
         // Supprimer tous les draft assets après création du post
         for (const media of medias) {
-          await deleteDraftAsset({ publicId: media.publicId })
+          await deleteDraftAsset({ mediaId: media.publicId })
         }
 
         toast.success("Votre publication a été partagée")

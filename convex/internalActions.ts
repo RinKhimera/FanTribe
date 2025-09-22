@@ -1,9 +1,10 @@
 "use node"
 
 import { v } from "convex/values"
+import { deleteBunnyAsset } from "@/lib/bunny"
 import { internal } from "./_generated/api"
 import { Doc, Id } from "./_generated/dataModel"
-import { action } from "./_generated/server"
+import { action, internalAction } from "./_generated/server"
 
 type ProcessPaymentResult = {
   success: boolean
@@ -169,7 +170,32 @@ export const fanoutNewPostNotifications = action({
   },
 })
 
-export const deleteBunnyAssets = action({
+export const deleteSingleBunnyAsset = internalAction({
+  args: {
+    mediaId: v.string(),
+    assetType: v.union(v.literal("image"), v.literal("video")),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const result = await deleteBunnyAsset(args.mediaId, args.assetType)
+
+      return {
+        success: result.success,
+        message: result.message,
+        statusCode: result.statusCode,
+      }
+    } catch (error) {
+      console.error("❌ Erreur dans deleteSingleBunnyAsset:", error)
+      return {
+        success: false,
+        message: "Erreur interne lors de la suppression",
+        statusCode: 500,
+      }
+    }
+  },
+})
+
+export const deleteMultipleBunnyAssets = action({
   args: {
     mediaUrls: v.array(v.string()),
   },

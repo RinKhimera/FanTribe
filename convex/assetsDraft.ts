@@ -1,18 +1,20 @@
 import { v } from "convex/values"
-import { api } from "./_generated/api"
+import { api, internal } from "./_generated/api"
 import { internalMutation, mutation } from "./_generated/server"
 
 export const createDraftAsset = mutation({
   args: {
     author: v.id("users"),
+    mediaId: v.string(),
     mediaUrl: v.string(),
-    assetType: v.string(),
+    assetType: v.union(v.literal("image"), v.literal("video")),
   },
   handler: async (ctx, args) => {
-    const { author, mediaUrl, assetType } = args
+    const { author, mediaId, mediaUrl, assetType } = args
 
     const draftAsset = await ctx.db.insert("assetsDraft", {
       author,
+      mediaId,
       mediaUrl,
       assetType,
     })
@@ -22,21 +24,44 @@ export const createDraftAsset = mutation({
 })
 
 export const deleteDraftAsset = mutation({
-  args: { publicId: v.string() },
+  args: { mediaId: v.string() },
   handler: async (ctx, args) => {
-    const { publicId } = args
+    const { mediaId } = args
 
     const asset = await ctx.db
       .query("assetsDraft")
-      .withIndex("by_mediaUrl", (q) => q.eq("mediaUrl", publicId))
+      .withIndex("by_mediaId", (q) => q.eq("mediaId", mediaId))
       .first()
 
-    if (asset) {
-      await ctx.db.delete(asset._id)
-      return { success: true }
+    if (!asset) {
+      return { success: false, error: "Asset not found" }
     }
 
-    return { success: false, error: "Asset not found" }
+    try {
+      // Supprimer l'asset de Bunny.net via une action interne
+      await ctx.scheduler.runAfter(
+        0,
+        internal.internalActions.deleteSingleBunnyAsset,
+        {
+          mediaId: asset.mediaId,
+          assetType: asset.assetType,
+        },
+      )
+
+      // Supprimer de la DB Convex immédiatement
+      await ctx.db.delete(asset._id)
+      return {
+        success: true,
+        message: "Asset supprimé de la DB, suppression Bunny en cours",
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors de la suppression:", error)
+      return {
+        success: false,
+        message: "Erreur serveur lors de la suppression",
+        statusCode: 500,
+      }
+    }
   },
 })
 
@@ -60,7 +85,6 @@ export const cleanUpDraftAssets = internalMutation({
 
     for (const asset of draftAssets) {
       mediaUrls.push(asset.mediaUrl)
-
       try {
         await ctx.db.delete(asset._id)
         deleted++
@@ -84,9 +108,13 @@ export const cleanUpDraftAssets = internalMutation({
     // Planifier la suppression des médias Bunny.net en lot
     if (mediaUrls.length > 0) {
       try {
-        await ctx.scheduler.runAfter(0, api.internalActions.deleteBunnyAssets, {
-          mediaUrls,
-        })
+        await ctx.scheduler.runAfter(
+          0,
+          api.internalActions.deleteMultipleBunnyAssets,
+          {
+            mediaUrls,
+          },
+        )
         console.log(
           `Scheduled deletion of ${mediaUrls.length} Bunny.net assets`,
         )

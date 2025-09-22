@@ -145,7 +145,7 @@ export const deletePost = mutation({
     if (post.medias && post.medias.length > 0) {
       const uniqueMedias = [...new Set(post.medias)]
       await ctx.scheduler
-        .runAfter(0, api.internalActions.deleteBunnyAssets, {
+        .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
           mediaUrls: uniqueMedias,
         })
         .catch((error) => {
