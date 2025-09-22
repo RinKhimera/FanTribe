@@ -11,10 +11,10 @@ export async function getVideo(
 ): Promise<BunnyVideoGetResponse> {
   try {
     const response = await axios.get<BunnyVideoGetResponse>(
-      `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${videoId}`,
+      `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoId}`,
       {
         headers: {
-          AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+          AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
         },
       },
     )

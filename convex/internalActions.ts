@@ -202,10 +202,10 @@ export const deleteMultipleBunnyAssets = action({
   handler: async (ctx, args) => {
     const axios = require("axios")
 
-    const storageAccessKey = process.env.BUNNY_STORAGE_ACCESS_KEY
-    const storageZoneName = process.env.BUNNY_STORAGE_ZONE_NAME
-    const videoLibraryId = process.env.BUNNY_VIDEO_LIBRARY_ID
-    const videoAccessKey = process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY
+    const storageAccessKey = process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY
+    const storageZoneName = process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME
+    const videoLibraryId = process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID
+    const videoAccessKey = process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY
 
     if (
       !storageAccessKey ||

@@ -12,11 +12,11 @@ export const deleteBunnyAsset = async (
   if (type === "video") {
     try {
       const response = await fetch(
-        `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
+        `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
           },
         },
       )
@@ -53,11 +53,11 @@ export const deleteBunnyAsset = async (
   if (type === "image") {
     try {
       const response = await fetch(
-        `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
+        `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: process.env.BUNNY_STORAGE_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
           },
         },
       )
@@ -133,11 +133,11 @@ export const uploadBunnyAsset = async ({
 
         // Créer la vidéo dans la collection de l'utilisateur
         const videoResponse = await fetch(
-          `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos`,
+          `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos`,
           {
             method: "POST",
             headers: {
-              AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+              AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -168,11 +168,11 @@ export const uploadBunnyAsset = async ({
 
       // Upload de la vidéo
       const uploadResponse = await fetch(
-        `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
+        `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
         {
           method: "PUT",
           headers: {
-            AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
             "Content-Type": file.type,
           },
           body: buffer,
@@ -185,18 +185,18 @@ export const uploadBunnyAsset = async ({
 
       return {
         success: true,
-        url: `https://iframe.mediadelivery.net/embed/${process.env.BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
+        url: `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
         mediaId: videoData.guid,
         type: "video",
       }
     } else {
       // Gestion des images
       const uploadResponse = await fetch(
-        `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
+        `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
         {
           method: "PUT",
           headers: {
-            AccessKey: process.env.BUNNY_STORAGE_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
             "Content-Type": file.type,
           },
           body: buffer,
@@ -212,7 +212,7 @@ export const uploadBunnyAsset = async ({
 
       return {
         success: true,
-        url: `${process.env.BUNNY_PULL_ZONE_URL}/${fileName}`,
+        url: `${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL}/${fileName}`,
         mediaId: fileName,
         type: "image",
       }
@@ -245,10 +245,10 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     // Récupérer toutes les collections pour voir si celle de l'utilisateur existe
     const collectionsResponse = await fetch(
-      `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       {
         headers: {
-          AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+          AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
         },
       },
     )
@@ -275,11 +275,11 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     // Créer une nouvelle collection si elle n'existe pas
     const createResponse = await fetch(
-      `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       {
         method: "POST",
         headers: {
-          AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+          AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name: userCollectionName }),
