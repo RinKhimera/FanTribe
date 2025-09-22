@@ -6,8 +6,7 @@ import { useForm } from "react-hook-form"
 import TextareaAutosize from "react-textarea-autosize"
 import { toast } from "sonner"
 import { z } from "zod"
-import { ProfileImage } from "@/components/shared/profile-image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -28,7 +27,7 @@ export const CreateComment = ({
   postId: Id<"posts">
 }) => {
   const [isPending, startTransition] = useTransition()
-  const createComment = useMutation(api.comments.createComment)
+  const addComment = useMutation(api.comments.addComment)
   const form = useForm<z.infer<typeof commentFormSchema>>({
     resolver: zodResolver(commentFormSchema),
     defaultValues: {
@@ -39,7 +38,7 @@ export const CreateComment = ({
   const onSubmit = async (data: z.infer<typeof commentFormSchema>) => {
     startTransition(async () => {
       try {
-        await createComment({
+        await addComment({
           postId: postId,
           content: data.content,
         })
@@ -64,7 +63,7 @@ export const CreateComment = ({
       {/* Avatar version desktop et tablette */}
       <div className="hidden sm:block">
         <Avatar className="overflow-hidden">
-          <ProfileImage
+          <AvatarImage
             src={currentUser?.image}
             alt={currentUser?.username || "Avatar"}
             width={44}
@@ -79,7 +78,7 @@ export const CreateComment = ({
       {/* Avatar version mobile (plus petit) */}
       <div className="block sm:hidden">
         <Avatar className="size-8 overflow-hidden">
-          <ProfileImage
+          <AvatarImage
             src={currentUser?.image}
             alt={currentUser?.username || "Avatar"}
             width={32}
@@ -102,7 +101,7 @@ export const CreateComment = ({
                   <div className="flex h-full w-full flex-col">
                     <TextareaAutosize
                       placeholder="Poster votre réponse"
-                      className="outline-hidden mt-1 h-full w-full resize-none border-none bg-transparent text-xl max-sm:text-base"
+                      className="mt-1 h-full w-full resize-none border-none bg-transparent text-xl outline-hidden max-sm:text-base"
                       minRows={2}
                       maxRows={8}
                       {...field}

@@ -2,8 +2,8 @@
 
 import { useQuery } from "convex/react"
 import { AlertTriangle, Calendar, Eye, User } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
-import { ProfileImage } from "@/components/shared/profile-image"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -58,9 +58,9 @@ const CreatorApplicationsPage = () => {
         <CardHeader className="@container">
           <div className="@md:flex @md:items-center @md:justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted flex h-10 w-10 items-center justify-center overflow-hidden rounded-full">
                 {application.user?.image ? (
-                  <ProfileImage
+                  <Image
                     src={application.user.image}
                     alt={application.user.name}
                     width={40}
@@ -118,8 +118,8 @@ const CreatorApplicationsPage = () => {
             </div>
 
             {/* Informations de base */}
-            <div className="flex flex-col space-y-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div className="flex flex-col space-y-1 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
+            <div className="text-muted-foreground flex flex-col space-y-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              <div className="flex flex-col space-y-1 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
                 <span className="flex items-center">
                   <Calendar className="mr-1 h-4 w-4" />
                   {formatDate(application.submittedAt)}
@@ -141,7 +141,7 @@ const CreatorApplicationsPage = () => {
             {/* Informations supplémentaires */}
             <div className="space-y-1">
               {application.reviewedAt && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   Traitée le {formatDate(application.reviewedAt)}
                 </div>
               )}
@@ -189,8 +189,8 @@ const CreatorApplicationsPage = () => {
   ).length
 
   return (
-    <main className="flex h-full min-h-screen w-full flex-col border-l border-r border-muted sm:w-[80%] lg:w-[60%]">
-      <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l sm:w-[80%] lg:w-[60%]">
+      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Candidatures Créateur</h1>
           <div className="flex items-center space-x-2">
@@ -220,7 +220,7 @@ const CreatorApplicationsPage = () => {
               {pendingApplications.length > 0 && (
                 <Badge
                   variant="destructive"
-                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center border-red-500 bg-red-600 p-0 text-xs text-red-100"
+                  className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center border-red-500 bg-red-600 p-0 text-xs text-red-100"
                 >
                   {pendingApplications.length}
                 </Badge>

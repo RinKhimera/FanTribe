@@ -4,8 +4,7 @@ import { useMutation } from "convex/react"
 import { Loader2, Send } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
-import { ProfileImage } from "@/components/shared/profile-image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
@@ -27,7 +26,7 @@ export const CommentSection = ({
   const [commentText, setCommentText] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const createComment = useMutation(api.comments.createComment)
+  const addComment = useMutation(api.comments.addComment)
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +36,7 @@ export const CommentSection = ({
     setIsSubmitting(true)
 
     try {
-      await createComment({
+      await addComment({
         postId,
         content: commentText.trim(),
       })
@@ -58,7 +57,7 @@ export const CommentSection = ({
     <div className="mt-3 border-t pt-3" onClick={(e) => e.stopPropagation()}>
       {disabled ? (
         <div className="flex items-center justify-center py-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Abonnez-vous pour commenter ce post
           </p>
         </div>
@@ -69,18 +68,15 @@ export const CommentSection = ({
           onClick={(e) => e.stopPropagation()}
         >
           <Avatar className="h-8 w-8 shrink-0">
-            {currentUser.image ? (
-              <ProfileImage
-                src={currentUser.image}
-                width={32}
-                height={32}
-                alt={currentUser.username || "Profile image"}
-              />
-            ) : (
-              <AvatarFallback className="text-xs">
-                {currentUser.name?.charAt(0) || "U"}
-              </AvatarFallback>
-            )}
+            <AvatarImage
+              src={currentUser.image}
+              width={32}
+              height={32}
+              alt={currentUser.username || "Profile image"}
+            />
+            <AvatarFallback className="text-xs">
+              {currentUser.name?.charAt(0) || "U"}
+            </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 space-y-2">
@@ -89,7 +85,7 @@ export const CommentSection = ({
               onChange={(e) => setCommentText(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               placeholder="Écrivez un commentaire..."
-              className="min-h-[60px] resize-none border-muted-foreground/20 text-sm"
+              className="border-muted-foreground/20 min-h-[60px] resize-none text-sm"
               disabled={isSubmitting}
             />
 

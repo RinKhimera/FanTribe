@@ -1,4 +1,5 @@
-import { v } from "convex/values"
+import { ConvexError, v } from "convex/values"
+import { api } from "./_generated/api"
 import { mutation, query } from "./_generated/server"
 
 // Créer un signalement
@@ -320,67 +321,63 @@ export const deleteReportedContentAndResolve = mutation({
 
     // Supprimer le contenu selon le type
     if (report.type === "post" && report.reportedPostId) {
-      const post = await ctx.db.get(report.reportedPostId)
-      if (post) {
-        // Supprimer tous les commentaires associés
-        const comments = await ctx.db
-          .query("comments")
-          .withIndex("by_post", (q) => q.eq("post", report.reportedPostId!))
-          .collect()
+      const reportedPost = await ctx.db.get(report.reportedPostId)
+      if (!reportedPost) throw new ConvexError("Post not found")
 
-        for (const comment of comments) {
-          await ctx.db.delete(comment._id)
-        }
-
-        // Supprimer le post des bookmarks
-        const users = await ctx.db.query("users").collect()
-        for (const user of users) {
-          if (user.bookmarks?.includes(report.reportedPostId)) {
-            await ctx.db.patch(user._id, {
-              bookmarks: user.bookmarks.filter(
-                (id) => id !== report.reportedPostId,
-              ),
-            })
-          }
-        }
-
-        // Supprimer les notifications associées
-        const notifications = await ctx.db
-          .query("notifications")
-          .filter((q) => q.eq(q.field("post"), report.reportedPostId))
-          .collect()
-
-        for (const notification of notifications) {
-          await ctx.db.delete(notification._id)
-        }
-
-        // Supprimer le post
-        await ctx.db.delete(report.reportedPostId)
+      // Suppression des médias Bunny.net en parallèle
+      if (reportedPost.medias && reportedPost.medias.length > 0) {
+        const uniqueMedias = [...new Set(reportedPost.medias)]
+        await ctx.scheduler
+          .runAfter(0, api.internalActions.deleteBunnyAssets, {
+            mediaUrls: uniqueMedias,
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to schedule Bunny assets deletion for reported post ${reportedPost._id}:`,
+              error,
+            )
+          })
       }
+
+      // Récupérations parallèles des entités associées (comments, likes, bookmarks, notifications)
+      const [comments, likes, bookmarks, notifications] = await Promise.all([
+        ctx.db
+          .query("comments")
+          .withIndex("by_post", (q) => q.eq("post", reportedPost._id))
+          .collect(),
+        ctx.db
+          .query("likes")
+          .withIndex("by_post", (q) => q.eq("postId", reportedPost._id))
+          .collect(),
+        ctx.db
+          .query("bookmarks")
+          .withIndex("by_post", (q) => q.eq("postId", reportedPost._id))
+          .collect(),
+        ctx.db
+          .query("notifications")
+          .withIndex("by_post", (q) => q.eq("post", reportedPost._id))
+          .collect(),
+      ])
+
+      // Suppressions en parallèle contrôlée
+      await Promise.all([
+        ...comments.map((c) => ctx.db.delete(c._id)),
+        ...likes.map((l) => ctx.db.delete(l._id)),
+        ...bookmarks.map((b) => ctx.db.delete(b._id)),
+        ...notifications.map((n) => ctx.db.delete(n._id)),
+      ])
     } else if (report.type === "comment" && report.reportedCommentId) {
       const comment = await ctx.db.get(report.reportedCommentId)
       if (comment) {
-        // Supprimer le commentaire des notifications associées
+        // Supprimer les notifications liées à ce commentaire
         const notifications = await ctx.db
           .query("notifications")
           .filter((q) => q.eq(q.field("comment"), report.reportedCommentId))
           .collect()
-
         for (const notification of notifications) {
           await ctx.db.delete(notification._id)
         }
-
-        // Retirer le commentaire de la liste des commentaires du post parent
-        const parentPost = await ctx.db.get(comment.post)
-        if (parentPost) {
-          await ctx.db.patch(comment.post, {
-            comments: parentPost.comments.filter(
-              (id) => id !== report.reportedCommentId,
-            ),
-          })
-        }
-
-        // Supprimer le commentaire
+        // Supprimer le commentaire (pas de patch sur le post: champ comments inexistant)
         await ctx.db.delete(report.reportedCommentId)
       }
     }

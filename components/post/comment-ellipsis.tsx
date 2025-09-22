@@ -21,28 +21,26 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 
 export const CommentEllipsis = ({
   commentId,
+  author,
 }: {
   commentId: Id<"comments">
+  author: Doc<"users"> | null | undefined
 }) => {
   const [isPending, startTransition] = useTransition()
 
   const deleteComment = useMutation(api.comments.deleteComment)
-
-  // Récupérer les informations du commentaire pour vérifier le propriétaire
-  const comment = useQuery(api.comments.getComment, { commentId })
   const currentUser = useQuery(api.users.getCurrentUser, {})
 
-  const isOwner = comment?.author?._id === currentUser?._id
+  const isOwner = currentUser && author?._id === currentUser._id
 
   const deleteHandler = async () => {
     startTransition(async () => {
       try {
         await deleteComment({ commentId })
-
         toast.success("Votre commentaire a été supprimé")
       } catch (error) {
         console.error(error)
@@ -93,13 +91,13 @@ export const CommentEllipsis = ({
         )}
 
         {/* Option de signalement */}
-        {!isOwner && comment && (
+        {!isOwner && author && (
           <ReportDialog
-            reportedUserId={comment.author?._id}
+            reportedUserId={author._id}
             reportedCommentId={commentId}
             type="comment"
             triggerText="Signaler le commentaire"
-            username={comment.author?.username}
+            username={author.username || undefined}
           />
         )}
       </PopoverContent>

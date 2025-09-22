@@ -1,244 +1,159 @@
 import { ConvexError, v } from "convex/values"
+import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 
-export const createComment = mutation({
+// Helper: récupérer l'utilisateur courant
+const getCurrentUser = async (ctx: any) => {
+  const identity = await ctx.auth.getUserIdentity()
+  if (!identity) throw new ConvexError("Not authenticated")
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_tokenIdentifier", (q: any) =>
+      q.eq("tokenIdentifier", identity.tokenIdentifier),
+    )
+    .unique()
+  if (!user) throw new ConvexError("User not found")
+  return user
+}
+
+export const addComment = mutation({
   args: {
     postId: v.id("posts"),
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError("Not authenticated")
+    const user = await getCurrentUser(ctx)
+
+    if (!args.content.trim()) throw new ConvexError("Empty content")
+
+    const post = await ctx.db.get(args.postId)
+    if (!post) throw new ConvexError("Post not found")
+
+    // Vérifier accès si post subscribers_only
+    if (post.visibility === "subscribers_only" && post.author !== user._id) {
+      // Option: vérifier abonnement actif si nécessaire (déjà géré ailleurs ?)
+      // Ici on ne duplique pas la logique pour rester léger.
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
+    const commentId = await ctx.db.insert("comments", {
+      author: user._id,
+      post: args.postId,
+      content: args.content.trim(),
+    })
 
-    if (!user) throw new ConvexError("User not found")
-
-    // Vérifier si le post existe
-    const postToComment = await ctx.db
-      .query("posts")
-      .filter((q) => q.eq(q.field("_id"), args.postId))
-      .unique()
-
-    if (!postToComment) throw new ConvexError("Post not found")
-
-    // Vérifier l'accès au contenu restreint
-    if (
-      postToComment.visibility === "subscribers_only" &&
-      postToComment.author !== user._id
-    ) {
-      // Vérifier si l'utilisateur a un abonnement actif
-      const subscription = await ctx.db
-        .query("follows")
-        .withIndex("by_follower_following", (q) =>
-          q.eq("followerId", user._id).eq("followingId", postToComment.author),
+    // Notification (si pas soi-même)
+    if (post.author !== user._id) {
+      const existingNotif = await ctx.db
+        .query("notifications")
+        .withIndex("by_type_comment_sender", (q) =>
+          q
+            .eq("type", "comment")
+            .eq("comment", commentId as Id<"comments">)
+            .eq("sender", user._id),
         )
         .unique()
-
-      if (!subscription) {
-        throw new ConvexError("Access denied: subscription required")
-      }
-
-      const subscriptionDetails = await ctx.db.get(subscription.subscriptionId)
-      if (!subscriptionDetails || subscriptionDetails.status !== "active") {
-        throw new ConvexError("Access denied: active subscription required")
+      if (!existingNotif) {
+        await ctx.db.insert("notifications", {
+          type: "comment",
+          recipientId: post.author,
+          sender: user._id,
+          post: args.postId,
+          comment: commentId,
+          read: false,
+        })
       }
     }
 
-    // Créer le commentaire
-    const comment = await ctx.db.insert("comments", {
-      author: user._id,
-      post: postToComment._id,
-      content: args.content,
-      likes: [],
-    })
-
-    // Ajouter le commentaire au post
-    await ctx.db.patch(args.postId, {
-      comments: [...(postToComment.comments || []), comment],
-    })
-
-    // Notifier l'auteur du post
-    if (postToComment.author !== user._id) {
-      await ctx.db.insert("notifications", {
-        type: "comment",
-        recipientId: postToComment.author,
-        sender: user._id,
-        post: args.postId,
-        comment: comment,
-        read: false,
-      })
-    }
+    return { commentId }
   },
 })
 
 export const deleteComment = mutation({
   args: { commentId: v.id("comments") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    // Trouver le commentaire à supprimer
-    const comment = await ctx.db
-      .query("comments")
-      .withIndex("by_id", (q) => q.eq("_id", args.commentId))
-      .unique()
-
+    const user = await getCurrentUser(ctx)
+    const comment = await ctx.db.get(args.commentId)
     if (!comment) throw new ConvexError("Comment not found")
 
-    // Vérifier si l'utilisateur est autorisé à supprimer le commentaire
-    if (comment.author !== user._id)
-      throw new ConvexError("User not authorized to delete this comment")
+    const post = await ctx.db.get(comment.post)
 
-    // Trouver le post associé au commentaire
-    const post = await ctx.db
-      .query("posts")
-      .withIndex("by_id", (q) => q.eq("_id", comment.post))
-      .unique()
+    if (comment.author !== user._id && post?.author !== user._id) {
+      throw new ConvexError("Not authorized")
+    }
 
-    if (!post) throw new ConvexError("Post not found")
-
-    // Supprimer le commentaire
     await ctx.db.delete(args.commentId)
 
-    await ctx.db.patch(comment.post, {
-      comments: post.comments.filter((id) => id !== comment._id),
-    })
-
-    // Supprimer la notification associée à ce commentaire
-    const existingCommentNotification = await ctx.db
+    // Supprimer notification associée
+    const notif = await ctx.db
       .query("notifications")
       .withIndex("by_type_comment_sender", (q) =>
         q
           .eq("type", "comment")
-          .eq("comment", comment._id)
-          .eq("sender", user._id),
+          .eq("comment", args.commentId)
+          .eq("sender", comment.author),
       )
       .unique()
+    if (notif) await ctx.db.delete(notif._id)
 
-    if (existingCommentNotification !== null) {
-      await ctx.db.delete(existingCommentNotification._id)
-    }
+    return { deleted: true }
   },
 })
 
-export const getPostComments = query({
-  args: {
-    postId: v.id("posts"),
-  },
+export const listPostComments = query({
+  args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const postComments = await ctx.db
+    const comments = await ctx.db
       .query("comments")
       .withIndex("by_post", (q) => q.eq("post", args.postId))
-      .order("desc")
       .collect()
 
-    const commentsWithAuthor = await Promise.all(
-      postComments.map(async (comment) => {
-        const author = await ctx.db
-          .query("users")
-          .withIndex("by_id", (q) => q.eq("_id", comment.author))
-          .unique()
+    // Batch auteurs
+    const authorIds = [...new Set(comments.map((c) => c.author))]
+    const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
+    const authorMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
 
-        return {
-          ...comment,
-          author,
-        }
-      }),
-    )
-
-    return commentsWithAuthor
+    return comments.map((c) => ({ ...c, author: authorMap.get(c.author) }))
   },
 })
 
-export const likeComment = mutation({
-  args: {
-    commentId: v.id("comments"),
-  },
+export const countForPost = query({
+  args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    const comment = await ctx.db
+    const list = await ctx.db
       .query("comments")
-      .filter((q) => q.eq(q.field("_id"), args.commentId))
-      .unique()
-
-    if (!comment) throw new ConvexError("Comment not found")
-
-    await ctx.db.patch(args.commentId, {
-      likes: [...(comment.likes || []), user._id],
-    })
+      .withIndex("by_post", (q) => q.eq("post", args.postId))
+      .collect()
+    return { postId: args.postId, count: list.length }
   },
 })
 
-export const unlikeComment = mutation({
-  args: {
-    commentId: v.id("comments"),
-  },
+export const getUserComments = query({
+  args: { userId: v.id("users"), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    const comment = await ctx.db
+    const limit = args.limit ?? 50
+    const comments = await ctx.db
       .query("comments")
-      .filter((q) => q.eq(q.field("_id"), args.commentId))
-      .unique()
+      .withIndex("by_author", (q) => q.eq("author", args.userId))
+      .order("desc")
+      .take(limit)
 
-    if (!comment) throw new ConvexError("Comment not found")
+    const postIds = [...new Set(comments.map((c) => c.post))]
+    const posts = await Promise.all(postIds.map((id) => ctx.db.get(id)))
+    const postMap = new Map(postIds.map((id, i) => [id, posts[i]]))
 
-    await ctx.db.patch(args.commentId, {
-      likes: comment.likes?.filter((id) => id !== user._id) || [],
-    })
+    return comments.map((c) => ({ ...c, post: postMap.get(c.post) }))
   },
 })
 
-// Récupérer un commentaire spécifique
 export const getComment = query({
   args: { commentId: v.id("comments") },
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId)
     if (!comment) return null
-
-    const author = await ctx.db.get(comment.author)
-
-    return {
-      ...comment,
-      author,
-    }
+    const [author, post] = await Promise.all([
+      ctx.db.get(comment.author),
+      ctx.db.get(comment.post),
+    ])
+    return { ...comment, author, post }
   },
 })

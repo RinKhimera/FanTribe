@@ -1,18 +1,14 @@
 "use client"
 
-import {
-  CloudinaryUploadWidget,
-  CloudinaryUploadWidgetResults,
-} from "@cloudinary-util/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "convex/react"
 import { Camera, FileText, Upload, X } from "lucide-react"
-import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { deleteAsset } from "@/actions/upload-cloudinary"
+import { deleteValidationDocument } from "@/actions/bunny-actions"
+import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -35,7 +31,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { generateRandomString } from "@/utils/generateRandomString"
 
 const applicationSchema = z.object({
   fullName: z.string().min(2, "Le nom complet est requis"),
@@ -67,7 +62,7 @@ type ApplicationForm = z.infer<typeof applicationSchema>
 
 interface UploadedDocument {
   url: string
-  publicId: string
+  mediaId: string
   uploadedAt: number
 }
 
@@ -129,7 +124,6 @@ const ApplyCreatorPage = () => {
     identityCard?: UploadedDocument
     selfie?: UploadedDocument
   }>({})
-  const [randomString] = useState(() => generateRandomString(6))
 
   const submitApplication = useMutation(
     api.creatorApplications.submitApplication,
@@ -156,16 +150,18 @@ const ApplyCreatorPage = () => {
       if (!isApplicationSubmittedRef.current) {
         const currentDocs = uploadedDocumentsRef.current
         Object.values(currentDocs).forEach((doc) => {
-          if (doc?.publicId) {
-            deleteAsset(doc.publicId).catch((error) => {
+          if (doc?.mediaId) {
+            deleteValidationDocument(doc.mediaId).catch((error: unknown) => {
               console.error("Erreur lors de la suppression du document:", error)
             })
-            deleteDraftDocument({ publicId: doc.publicId }).catch((error) => {
-              console.error(
-                "Erreur lors de la suppression du brouillon:",
-                error,
-              )
-            })
+            deleteDraftDocument({ mediaUrl: doc.mediaId }).catch(
+              (error: unknown) => {
+                console.error(
+                  "Erreur lors de la suppression du brouillon:",
+                  error,
+                )
+              },
+            )
           }
         })
       }
@@ -186,14 +182,11 @@ const ApplyCreatorPage = () => {
 
   const handleUploadSuccess = (
     type: "identityCard" | "selfie",
-    result: CloudinaryUploadWidgetResults,
-    widget: CloudinaryUploadWidget,
+    result: { url: string; mediaId: string; type: "image" | "video" },
   ) => {
-    const data = result.info as CloudinaryUploadWidgetInfo
-
     const uploadedDoc: UploadedDocument = {
-      url: data.secure_url,
-      publicId: data.public_id,
+      url: result.url,
+      mediaId: result.mediaId,
       uploadedAt: Date.now(),
     }
 
@@ -202,14 +195,13 @@ const ApplyCreatorPage = () => {
     if (currentUser) {
       createDraftDocument({
         userId: currentUser._id,
-        publicId: data.public_id,
+        mediaUrl: result.url,
         documentType: type === "identityCard" ? "identity_card" : "selfie",
       }).catch((error) => {
         console.error("Erreur lors de l'enregistrement du brouillon:", error)
       })
     }
 
-    widget.close()
     toast.success(
       `${type === "identityCard" ? "Pièce d'identité" : "Selfie"} ajouté`,
     )
@@ -220,8 +212,8 @@ const ApplyCreatorPage = () => {
     if (!document) return
 
     try {
-      await deleteAsset(document.publicId)
-      await deleteDraftDocument({ publicId: document.publicId })
+      await deleteValidationDocument(document.mediaId)
+      await deleteDraftDocument({ mediaUrl: document.mediaId })
       setUploadedDocuments((prev) => ({
         ...prev,
         [type]: undefined,
@@ -253,13 +245,13 @@ const ApplyCreatorPage = () => {
           {
             type: "identity_card" as const,
             url: uploadedDocuments.identityCard!.url,
-            publicId: uploadedDocuments.identityCard!.publicId,
+            publicId: uploadedDocuments.identityCard!.mediaId,
             uploadedAt: uploadedDocuments.identityCard!.uploadedAt,
           },
           {
             type: "selfie" as const,
             url: uploadedDocuments.selfie!.url,
-            publicId: uploadedDocuments.selfie!.publicId,
+            publicId: uploadedDocuments.selfie!.mediaId,
             uploadedAt: uploadedDocuments.selfie!.uploadedAt,
           },
         ]
@@ -311,7 +303,7 @@ const ApplyCreatorPage = () => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-l border-r max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
+    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <h1 className="text-2xl font-bold">Candidature Créateur</h1>
       </div>
@@ -439,18 +431,12 @@ const ApplyCreatorPage = () => {
                           </Button>
                         </div>
                       ) : (
-                        <CldUploadWidget
-                          uploadPreset="id-validation"
-                          signatureEndpoint="/api/sign-cloudinary-params"
-                          options={{
-                            sources: ["local", "camera"],
-                            publicId: `id-${currentUser._id}-${randomString}`,
-                            multiple: false,
-                            maxFileSize: 10 * 1024 * 1024,
-                            clientAllowedFormats: ["image"],
-                          }}
-                          onSuccess={(result, { widget }) =>
-                            handleUploadSuccess("identityCard", result, widget)
+                        <BunnyUploadWidget
+                          userId={currentUser._id}
+                          uploadType="image"
+                          fileName={`creatorApplications/id-${currentUser._id}`}
+                          onSuccess={(result) =>
+                            handleUploadSuccess("identityCard", result)
                           }
                         >
                           {({ open }) => (
@@ -465,7 +451,7 @@ const ApplyCreatorPage = () => {
                               </button>
                             </div>
                           )}
-                        </CldUploadWidget>
+                        </BunnyUploadWidget>
                       )}
                     </div>
                   </div>
@@ -491,18 +477,12 @@ const ApplyCreatorPage = () => {
                           </Button>
                         </div>
                       ) : (
-                        <CldUploadWidget
-                          uploadPreset="selfie-validation"
-                          signatureEndpoint="/api/sign-cloudinary-params"
-                          options={{
-                            sources: ["local", "camera"],
-                            publicId: `selfie-${currentUser._id}-${randomString}`,
-                            multiple: false,
-                            maxFileSize: 10 * 1024 * 1024,
-                            clientAllowedFormats: ["image"],
-                          }}
-                          onSuccess={(result, { widget }) =>
-                            handleUploadSuccess("selfie", result, widget)
+                        <BunnyUploadWidget
+                          userId={currentUser._id}
+                          uploadType="image"
+                          fileName={`creatorApplications/selfie-${currentUser._id}`}
+                          onSuccess={(result) =>
+                            handleUploadSuccess("selfie", result)
                           }
                         >
                           {({ open }) => (
@@ -517,7 +497,7 @@ const ApplyCreatorPage = () => {
                               </button>
                             </div>
                           )}
-                        </CldUploadWidget>
+                        </BunnyUploadWidget>
                       )}
                     </div>
                   </div>
@@ -558,7 +538,7 @@ const ApplyCreatorPage = () => {
                                 <div className="grid flex-1 gap-1.5 leading-none">
                                   <Label
                                     htmlFor={option.value}
-                                    className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                   >
                                     {option.label}
                                   </Label>

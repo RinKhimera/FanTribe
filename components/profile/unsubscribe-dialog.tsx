@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { LoaderCircle } from "lucide-react"
 import Image from "next/image"
 import { useTransition } from "react"
@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { api } from "@/convex/_generated/api"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { UserProps } from "@/types"
 
 type SubscribeDialogProps = {
@@ -25,17 +26,23 @@ type SubscribeDialogProps = {
 
 export const UnsubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
   const [isPending, startTransition] = useTransition()
+  const { currentUser } = useCurrentUser()
 
-  const unfollowUser = useMutation(api.subscriptions.unfollowUser)
+  const subscription = useQuery(
+    api.subscriptions.getFollowSubscription,
+    currentUser && userProfile
+      ? { creatorId: userProfile._id, subscriberId: currentUser._id }
+      : "skip",
+  )
+
+  const cancelSubscription = useMutation(api.subscriptions.cancelSubscription)
 
   const handleUnfollow = () => {
+    if (!subscription?._id) return
     startTransition(async () => {
       try {
-        await unfollowUser({
-          creatorId: userProfile!._id,
-        })
-
-        toast.success("Vous vous êtes désabonné ce createur")
+        await cancelSubscription({ subscriptionId: subscription._id })
+        toast.success("Abonnement annulé")
       } catch (error) {
         console.error(error)
         toast.error("Une erreur s'est produite !", {
@@ -93,18 +100,6 @@ export const UnsubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
           </DialogTitle>
 
           <DialogDescription className="text-base">
-            {/* <div className="flex gap-1">
-              <Check className="shrink-0 text-primary" />
-              <div>Accès complet au contenu de cet utilisateur</div>
-            </div>
-            <div className="flex gap-1">
-              <Check className="shrink-0 text-primary" />
-              <div>Message direct avec cet utilisateur</div>
-            </div>
-            <div className="flex gap-1">
-              <Check className="shrink-0 text-primary" />
-              <div>Annuler votre abonnement à tout moment</div>
-            </div> */}
             <div>
               Cela mettra fin à votre abonnement à {userProfile?.name}. Vous
               devrez vous abonner à nouveau pour accéder à son contenu.
@@ -112,7 +107,11 @@ export const UnsubscribeDialog = ({ userProfile }: SubscribeDialogProps) => {
           </DialogDescription>
 
           <DialogFooter>
-            <Button className="w-full text-lg" onClick={handleUnfollow}>
+            <Button
+              className="w-full text-lg"
+              onClick={handleUnfollow}
+              disabled={isPending || !subscription}
+            >
               {isPending ? (
                 <LoaderCircle className="animate-spin" />
               ) : (

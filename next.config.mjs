@@ -20,7 +20,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "files.edgestore.dev",
+        hostname: "fantribe.b-cdn.net",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.fantribe.io",
       },
     ],
   },

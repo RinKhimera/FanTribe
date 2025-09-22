@@ -4,7 +4,7 @@ import { useQuery } from "convex/react"
 import { Loader } from "lucide-react"
 import { notFound } from "next/navigation"
 import React from "react"
-import { PostCard } from "@/components/shared/post-card"
+import { PostCard } from "@/components/shared/PostCard"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import { CommentFeed } from "./comment-feed"
@@ -23,13 +23,13 @@ export const PostLayout = ({
 
   if (post === undefined || currentUser === undefined)
     return (
-      <main className="flex h-full min-h-screen w-[50%] flex-col border-l border-r border-muted max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
-        <h1 className="sticky top-0 z-20 border-b border-muted p-4 text-2xl font-bold backdrop-blur-sm">
+      <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
+        <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
           Publication
         </h1>
 
         <div className="flex flex-1 flex-col items-center justify-center">
-          <Loader className="animate-spin text-primary" size={60} />
+          <Loader className="text-primary animate-spin" size={60} />
         </div>
       </main>
     )
@@ -37,8 +37,8 @@ export const PostLayout = ({
   if (post === null) notFound()
 
   return (
-    <main className="flex h-full min-h-screen w-[50%] flex-col border-l border-r border-muted max-lg:w-[80%] max-sm:w-full">
-      <h1 className="sticky top-0 z-20 border-b border-muted p-4 text-2xl font-bold backdrop-blur-sm">
+    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-lg:w-[80%] max-sm:w-full">
+      <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
         Publication
       </h1>
 

@@ -4,11 +4,10 @@ import { useMutation, useQuery } from "convex/react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { Camera, Check, Edit, FileText, Shield, User, X } from "lucide-react"
-import { CldImage } from "next-cloudinary"
+import Image from "next/image"
 import Link from "next/link"
 import { use, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { ProfileImage } from "@/components/shared/profile-image"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -112,7 +111,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
   // Cas où l'application n'existe pas (ID invalide ou application supprimée)
   if (application === null) {
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col border-l border-r sm:w-[80%] lg:w-[60%]">
+      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l sm:w-[80%] lg:w-[60%]">
         <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
           <h1 className="text-xl font-bold">Candidature introuvable</h1>
         </div>
@@ -145,7 +144,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-l border-r max-lg:pb-12 sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-12 sm:w-[80%] lg:w-[60%]">
       {/* Header avec bouton retour */}
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">
@@ -205,7 +204,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
               <div className="hover:bg-muted/50 flex cursor-pointer items-center space-x-4 rounded-lg p-2 transition-colors">
                 <div className="bg-muted flex h-12 w-12 items-center justify-center overflow-hidden rounded-full">
                   {application.user?.image ? (
-                    <ProfileImage
+                    <Image
                       src={application.user.image}
                       alt={application.user.name}
                       width={48}
@@ -300,7 +299,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
                       })
                     }
                   >
-                    <CldImage
+                    <Image
                       src={doc.url}
                       alt={getDocumentTypeLabel(doc.type)}
                       fill
@@ -319,7 +318,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
             <CardTitle className="text-lg">Motivations</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {application.applicationReason}
             </p>
           </CardContent>
@@ -347,7 +346,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
               />
             ) : (
               <div className="bg-muted rounded-lg p-4">
-                <p className="whitespace-pre-wrap text-sm">
+                <p className="text-sm whitespace-pre-wrap">
                   {application.adminNotes || "Aucune note administrative"}
                 </p>
               </div>
@@ -362,7 +361,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
           </CardHeader>
           <CardContent>
             {application.status === "pending" ? (
-              <div className="@md:flex-row flex flex-col gap-3">
+              <div className="flex flex-col gap-3 @md:flex-row">
                 <Button
                   onClick={() => handleReview("approved")}
                   disabled={isPending}
@@ -383,7 +382,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="@md:flex-row @md:items-center @md:justify-between flex flex-col gap-3">
+                <div className="flex flex-col gap-3 @md:flex-row @md:items-center @md:justify-between">
                   <div>
                     <p className="text-muted-foreground text-sm font-medium">
                       Statut actuel
@@ -399,7 +398,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsEditingStatus(true)}
-                    className="@md:mt-0 gap-2"
+                    className="gap-2 @md:mt-0"
                   >
                     <Edit className="h-4 w-4" />
                     Modifier
@@ -411,7 +410,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
                     <p className="text-sm font-medium">
                       Modifier le statut de la candidature
                     </p>
-                    <div className="@md:flex-row flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 @md:flex-row">
                       <Button
                         onClick={() => {
                           handleReview("approved")
@@ -464,7 +463,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
           <div className="flex items-center justify-center">
             <div className="relative max-h-[80vh] max-w-full overflow-hidden rounded-lg">
               {selectedImage && (
-                <CldImage
+                <Image
                   src={selectedImage.url}
                   alt={selectedImage.alt}
                   width={800}

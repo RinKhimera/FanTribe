@@ -1,4 +1,3 @@
-import { fetchAction } from "convex/nextjs"
 import { v } from "convex/values"
 import { api } from "./_generated/api"
 import { internalMutation, mutation } from "./_generated/server"
@@ -6,15 +5,15 @@ import { internalMutation, mutation } from "./_generated/server"
 export const createDraftAsset = mutation({
   args: {
     author: v.id("users"),
-    publicId: v.string(),
+    mediaUrl: v.string(),
     assetType: v.string(),
   },
   handler: async (ctx, args) => {
-    const { author, publicId, assetType } = args
+    const { author, mediaUrl, assetType } = args
 
     const draftAsset = await ctx.db.insert("assetsDraft", {
       author,
-      publicId,
+      mediaUrl,
       assetType,
     })
 
@@ -29,7 +28,7 @@ export const deleteDraftAsset = mutation({
 
     const asset = await ctx.db
       .query("assetsDraft")
-      .withIndex("by_publicId", (q) => q.eq("publicId", publicId))
+      .withIndex("by_mediaUrl", (q) => q.eq("mediaUrl", publicId))
       .first()
 
     if (asset) {
@@ -43,10 +42,7 @@ export const deleteDraftAsset = mutation({
 
 export const cleanUpDraftAssets = internalMutation({
   handler: async (ctx) => {
-    // Récupérer tous les brouillons d'assets (posts)
     const draftAssets = await ctx.db.query("assetsDraft").collect()
-
-    // Récupérer tous les brouillons de documents de validation
     const draftDocuments = await ctx.db
       .query("validationDocumentsDraft")
       .collect()
@@ -56,46 +52,59 @@ export const cleanUpDraftAssets = internalMutation({
       `Found ${totalAssets} draft items to clean up (${draftAssets.length} post assets + ${draftDocuments.length} validation documents)`,
     )
 
-    let successCount = 0
-    let errorCount = 0
+    let deleted = 0
+    let errors = 0
 
-    // Traiter les assets de posts
+    // Collecter toutes les URLs de médias pour suppression en lot
+    const mediaUrls: string[] = []
+
     for (const asset of draftAssets) {
-      try {
-        await fetchAction(api.internalActions.deleteCloudinaryAsset, {
-          publicId: asset.publicId,
-        })
+      mediaUrls.push(asset.mediaUrl)
 
+      try {
         await ctx.db.delete(asset._id)
-        successCount++
-      } catch (error) {
-        console.error(`Failed to delete post asset ${asset.publicId}:`, error)
-        errorCount++
+        deleted++
+      } catch (e) {
+        console.error("Failed to delete draft asset record:", asset._id, e)
+        errors++
       }
     }
 
-    // Traiter les documents de validation
-    for (const document of draftDocuments) {
+    for (const doc of draftDocuments) {
+      mediaUrls.push(doc.mediaUrl)
       try {
-        await fetchAction(api.internalActions.deleteCloudinaryAsset, {
-          publicId: document.publicId,
-        })
-
-        await ctx.db.delete(document._id)
-        successCount++
-      } catch (error) {
-        console.error(
-          `Failed to delete validation document ${document.publicId}:`,
-          error,
-        )
-        errorCount++
+        await ctx.db.delete(doc._id)
+        deleted++
+      } catch (e) {
+        console.error("Failed to delete draft validation record:", doc._id, e)
+        errors++
       }
     }
+
+    // Planifier la suppression des médias Bunny.net en lot
+    if (mediaUrls.length > 0) {
+      try {
+        await ctx.scheduler.runAfter(0, api.internalActions.deleteBunnyAssets, {
+          mediaUrls,
+        })
+        console.log(
+          `Scheduled deletion of ${mediaUrls.length} Bunny.net assets`,
+        )
+      } catch (e) {
+        console.error("Failed to schedule Bunny.net assets deletion:", e)
+        errors++
+      }
+    }
+
+    console.log(
+      `Cleaned up draft assets: total=${totalAssets}, dbDeleted=${deleted}, errors=${errors}`,
+    )
 
     return {
       total: totalAssets,
-      success: successCount,
-      error: errorCount,
+      scheduledBunnyDeletes: mediaUrls.length,
+      dbDeleted: deleted,
+      errors,
     }
   },
 })

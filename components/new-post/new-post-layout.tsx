@@ -1,24 +1,16 @@
 "use client"
 
-import {
-  CloudinaryUploadWidget,
-  CloudinaryUploadWidgetResults,
-} from "@cloudinary-util/types"
 import { zodResolver } from "@hookform/resolvers/zod"
+import axios, { AxiosProgressEvent } from "axios"
 import { useMutation } from "convex/react"
 import { CircleX, Globe, ImagePlus, LoaderCircle, Lock } from "lucide-react"
-import {
-  CldImage,
-  CldUploadWidget,
-  CloudinaryUploadWidgetInfo,
-} from "next-cloudinary"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import TextareaAutosize from "react-textarea-autosize"
 import { toast } from "sonner"
 import { z } from "zod"
-import { deleteAsset } from "@/actions/upload-cloudinary"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,12 +30,11 @@ import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
-import { ProfileImage } from "../shared/profile-image"
+import { BunnyApiResponse } from "@/types"
 
 export const NewPostLayout = () => {
   const router = useRouter()
-
-  const { currentUser } = useCurrentUser()
+  const { currentUser, isLoading } = useCurrentUser()
 
   const createDraftAsset = useMutation(api.assetsDraft.createDraftAsset)
   const deleteDraftAsset = useMutation(api.assetsDraft.deleteDraftAsset)
@@ -52,26 +43,30 @@ export const NewPostLayout = () => {
     { url: string; publicId: string; type: "image" | "video" }[]
   >([])
   const [isPending, startTransition] = useTransition()
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {},
+  )
   const [visibility, setVisibility] = useState<"public" | "subscribers_only">(
     "public",
   )
 
   const isPostCreatedRef = useRef(false)
-
-  if (currentUser?.accountType === "USER") router.push("/")
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     return () => {
       // Nettoie tous les assets si le post n'a pas été créé
       if (medias.length > 0 && !isPostCreatedRef.current) {
-        medias.forEach((media) => {
-          deleteAsset(media.publicId, media.type).catch((error) => {
+        medias.forEach(async (media) => {
+          try {
+            await axios.delete(
+              `/api/bunny/delete?publicId=${media.publicId}&type=${media.type}`,
+            )
+            await deleteDraftAsset({ publicId: media.publicId })
+          } catch (error) {
             console.error("Erreur lors de la suppression de l'asset:", error)
-          })
-
-          deleteDraftAsset({ publicId: media.publicId }).catch((error) => {
-            console.error("Erreur lors de la suppression du brouillon:", error)
-          })
+          }
         })
       }
     }
@@ -88,33 +83,137 @@ export const NewPostLayout = () => {
     },
   })
 
-  const handleUploadSuccess = (
-    result: CloudinaryUploadWidgetResults,
-    widget: CloudinaryUploadWidget,
+  if (isLoading || !currentUser) return null
+  if (currentUser.accountType === "USER") router.push("/")
+
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const data = result.info as CloudinaryUploadWidgetInfo
-    console.log("Upload réussi:", data)
+    const files = event.target.files
+    if (!files || files.length === 0) return
 
-    const isVideo = data.secure_url.startsWith(
-      "https://res.cloudinary.com/onlyscam/video/",
-    )
-
-    const newMedia = {
-      url: data.secure_url,
-      publicId: data.public_id,
-      type: (isVideo ? "video" : "image") as "image" | "video",
+    // Vérifier la limite de 5 médias
+    const totalMediasAfterUpload = medias.length + files.length
+    if (totalMediasAfterUpload > 5) {
+      toast.error(
+        `Limite de 5 médias par post. Vous avez ${medias.length} média(s) et essayez d'ajouter ${files.length} média(s).`,
+      )
+      return
     }
 
-    setMedias((prev) => [...prev, newMedia])
+    setIsUploading(true)
 
-    if (currentUser) {
-      createDraftAsset({
-        author: currentUser._id,
-        publicId: data.public_id,
-        assetType: data.resource_type,
-      }).catch((error) => {
-        console.error("Erreur lors de l'enregistrement du brouillon:", error)
-      })
+    try {
+      for (const file of Array.from(files)) {
+        if (
+          !file.type.startsWith("image/") &&
+          !file.type.startsWith("video/")
+        ) {
+          toast.error(`Format non supporté: ${file.name}`)
+          continue
+        }
+        if (file.size > 300 * 1024 * 1024) {
+          toast.error(`Fichier trop volumineux: ${file.name} (max 300MB)`)
+          continue
+        }
+
+        const formData = new FormData()
+        const randomSuffix = crypto
+          .randomUUID()
+          .replace(/-/g, "")
+          .substring(0, 13)
+        const fileExtension = file.name.split(".").pop()
+
+        formData.append("userId", currentUser._id)
+        formData.append("file", file)
+        formData.append(
+          "fileName",
+          `${currentUser._id}/${randomSuffix}.${fileExtension}`,
+        )
+
+        const fileKey = `${file.name}_${Date.now()}`
+        setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
+
+        let lastLogged = 0
+        try {
+          const response = await axios.post("/api/bunny/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+            onUploadProgress: (pe: AxiosProgressEvent) => {
+              if (pe.total) {
+                const progress = Math.round((pe.loaded * 100) / pe.total)
+                setUploadProgress((prev) => ({ ...prev, [fileKey]: progress }))
+                if (progress - lastLogged >= 10 || progress === 100) {
+                  lastLogged = progress
+                  console.log(`Upload ${file.name}: ${progress}%`)
+                }
+              }
+            },
+          })
+
+          const result: BunnyApiResponse = response.data
+          console.log("Upload result:", result)
+          setUploadProgress((prev) => {
+            const np = { ...prev }
+            delete np[fileKey]
+            return np
+          })
+
+          if (result.success) {
+            const newMedia = {
+              url: result.url,
+              publicId: result.mediaId,
+              type: result.type,
+            }
+            setMedias((prev) => [...prev, newMedia])
+            if (currentUser) {
+              await createDraftAsset({
+                author: currentUser._id,
+                mediaUrl: result.url,
+                assetType: result.type,
+              })
+            }
+            toast.success("Le média a été ajouté avec succès")
+          } else {
+            toast.error(`Erreur upload ${file.name}: ${result.error}`)
+          }
+        } catch (e: any) {
+          setUploadProgress((prev) => {
+            const np = { ...prev }
+            delete np[fileKey]
+            return np
+          })
+          console.error(e)
+          toast.error(`Erreur upload ${file.name}`)
+        }
+      }
+    } catch (error) {
+      console.error("Upload error:", error)
+      toast.error("Erreur lors de l'upload")
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  const handleRemoveMedia = async (index: number) => {
+    const media = medias[index]
+
+    // Supprimer le média du tableau
+    setMedias((prev) => prev.filter((_, i) => i !== index))
+
+    try {
+      // Supprimer l'asset de Bunny via l'API
+      await axios.delete(
+        `/api/bunny/delete?publicId=${media.publicId}&type=${media.type}`,
+      )
+
+      // Supprimer le draft asset
+      await deleteDraftAsset({ publicId: media.publicId })
+
+      toast.success("Média supprimé avec succès")
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error)
+      toast.error("Erreur lors de la suppression du média")
     }
   }
 
@@ -126,18 +225,16 @@ export const NewPostLayout = () => {
         await createPost({
           content: data.content,
           medias: data.media,
-          likes: [],
-          comments: [],
           visibility: visibility,
         })
 
-        // Marquer le post comme créé en utilisant la référence
+        // Marquer le post comme créé
         isPostCreatedRef.current = true
 
         // Supprimer tous les draft assets après création du post
-        medias.forEach(async (media) => {
+        for (const media of medias) {
           await deleteDraftAsset({ publicId: media.publicId })
-        })
+        }
 
         toast.success("Votre publication a été partagée")
         router.push("/")
@@ -150,6 +247,7 @@ export const NewPostLayout = () => {
       }
     })
   }
+
   return (
     <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-lg:w-[80%] max-sm:w-full">
       <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
@@ -159,7 +257,7 @@ export const NewPostLayout = () => {
       <div className="border-muted relative flex items-stretch space-x-3 border-b px-4 py-5">
         <Avatar>
           {currentUser?.image ? (
-            <ProfileImage
+            <Image
               src={currentUser.image}
               width={100}
               height={100}
@@ -197,20 +295,7 @@ export const NewPostLayout = () => {
                                 type="button"
                                 size={"icon"}
                                 className="bg-muted absolute top-3 right-[10px] z-10 size-8"
-                                onClick={async () => {
-                                  // Supprimer le média du tableau
-                                  setMedias((prev) =>
-                                    prev.filter((_, i) => i !== index),
-                                  )
-
-                                  // Supprimer l'asset de Cloudinary
-                                  await deleteAsset(media.publicId, media.type)
-
-                                  // Supprimer le draft asset
-                                  await deleteDraftAsset({
-                                    publicId: media.publicId,
-                                  })
-                                }}
+                                onClick={() => handleRemoveMedia(index)}
                               >
                                 <CircleX size={22} />
                               </Button>
@@ -218,26 +303,21 @@ export const NewPostLayout = () => {
                               {/* Affichage conditionnel selon le type de média */}
                               {media.type === "video" ? (
                                 <div className="mt-2">
-                                  <video
+                                  <iframe
                                     src={media.url}
-                                    controls
+                                    loading="lazy"
                                     width={500}
                                     height={300}
-                                    className="max-h-[300px] w-full rounded-md object-cover"
-                                  >
-                                    Votre navigateur ne supporte pas la lecture
-                                    vidéo.
-                                  </video>
+                                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                                    allowFullScreen
+                                  ></iframe>
                                 </div>
                               ) : (
-                                <CldImage
-                                  src={media.publicId}
-                                  alt={""}
+                                <Image
+                                  src={media.url}
+                                  alt=""
                                   width={500}
                                   height={300}
-                                  sizes="(max-width: 768px) 100vw,
-                          (max-width: 1200px) 50vw,
-                          33vw"
                                   className="mt-2 max-h-[300px] w-full rounded-md object-cover"
                                 />
                               )}
@@ -245,11 +325,16 @@ export const NewPostLayout = () => {
                           ))}
                         </div>
                       )}
-
                       <div className="mt-2 flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Actions de gauche (upload + visibilité) */}
                         <div className="flex flex-wrap items-center gap-3">
-                          {/* Bouton upload */}
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            accept="image/*,video/*"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                          />
                           {!currentUser ? (
                             <Button
                               type="button"
@@ -265,46 +350,39 @@ export const NewPostLayout = () => {
                               <span className="hidden sm:inline">Média</span>
                             </Button>
                           ) : (
-                            <CldUploadWidget
-                              uploadPreset="post-assets"
-                              signatureEndpoint="/api/sign-cloudinary-params"
-                              options={{
-                                sources: [
-                                  "local",
-                                  "camera",
-                                  "google_drive",
-                                  "url",
-                                ],
-                                multiple: true,
-                                maxFiles: 5,
-                                maxFileSize: 50 * 1024 * 1024,
-                                clientAllowedFormats: ["image", "video"],
-                              }}
-                              onSuccess={(result, { widget }) =>
-                                handleUploadSuccess(result, widget)
-                              }
-                              onQueuesEnd={(result, { widget }) => {
-                                widget.close()
-                              }}
-                            >
-                              {({ open }) => (
-                                <Button
-                                  type="button"
-                                  variant="default"
-                                  className={cn(
-                                    "border-muted flex items-center gap-2 rounded-full",
-                                    { "cursor-not-allowed": isPending },
-                                  )}
-                                  onClick={() => open()}
-                                  disabled={isPending}
-                                >
-                                  <ImagePlus size={18} />
-                                  <span className="hidden sm:inline">
-                                    Média
-                                  </span>
-                                </Button>
+                            <Button
+                              type="button"
+                              variant="default"
+                              className={cn(
+                                "border-muted flex items-center gap-2 rounded-full",
+                                {
+                                  "cursor-not-allowed":
+                                    isPending ||
+                                    isUploading ||
+                                    medias.length >= 5,
+                                },
                               )}
-                            </CldUploadWidget>
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={
+                                isPending || isUploading || medias.length >= 5
+                              }
+                            >
+                              {isUploading ? (
+                                <LoaderCircle
+                                  className="animate-spin"
+                                  size={18}
+                                />
+                              ) : (
+                                <ImagePlus size={18} />
+                              )}
+                              <span className="hidden sm:inline">
+                                {isUploading
+                                  ? "Upload..."
+                                  : medias.length >= 5
+                                    ? "Limite atteinte"
+                                    : `Média (${medias.length}/5)`}
+                              </span>
+                            </Button>
                           )}
 
                           {/* Sélecteur de visibilité */}
@@ -349,11 +427,9 @@ export const NewPostLayout = () => {
                             </SelectContent>
                           </Select>
                         </div>
-
-                        {/* Bouton de publication */}
                         <Button
                           type="submit"
-                          disabled={isPending}
+                          disabled={isPending || isUploading}
                           className="w-full rounded-full px-4 py-2 font-bold sm:w-auto"
                         >
                           {isPending ? (
@@ -362,6 +438,29 @@ export const NewPostLayout = () => {
                           <span>Publier</span>
                         </Button>
                       </div>
+                      {isUploading &&
+                        Object.keys(uploadProgress).length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            {Object.entries(uploadProgress).map(
+                              ([key, prog]) => (
+                                <div
+                                  key={key}
+                                  className="flex items-center gap-2 text-xs"
+                                >
+                                  <div className="bg-muted h-2 w-full rounded-full">
+                                    <div
+                                      className="bg-primary h-2 rounded-full transition-all"
+                                      style={{ width: `${prog}%` }}
+                                    />
+                                  </div>
+                                  <span className="w-10 text-right tabular-nums">
+                                    {prog}%
+                                  </span>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
                     </div>
                   </FormControl>
                   {field.value && <FormMessage />}

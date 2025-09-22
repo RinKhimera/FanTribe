@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { PostCard } from "@/components/shared/post-card"
+import { PostCard } from "@/components/shared/PostCard"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 
@@ -17,7 +17,7 @@ export const UserPosts = ({
   return (
     <>
       {userPosts?.length === 0 ? (
-        <div className="mt-16 h-full px-4 text-center text-xl text-muted-foreground">
+        <div className="text-muted-foreground mt-16 h-full px-4 text-center text-xl">
           Pas de posts pour le moment
         </div>
       ) : (

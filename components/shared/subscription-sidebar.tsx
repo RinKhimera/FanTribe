@@ -28,7 +28,7 @@ export const SubscriptionSidebar = ({
     subscriberId: currentUserId!,
   })
   return (
-    <section className="sticky top-0 h-screen w-[30%] items-stretch overflow-auto pl-6 pr-2 max-lg:hidden">
+    <section className="sticky top-0 h-screen w-[30%] items-stretch overflow-auto pr-2 pl-6 max-lg:hidden">
       <Card className="mt-4 w-[350px] bg-transparent">
         <CardHeader>
           <CardTitle>Abonnement</CardTitle>
@@ -42,7 +42,7 @@ export const SubscriptionSidebar = ({
               switch (subscriptionStatus.status) {
                 case "expired":
                   return <RenewDialog userProfile={userProfile} />
-                case "cancelled":
+                case "canceled":
                   return <SubscribeDialog userProfile={userProfile} />
                 case "active":
                   return <UnsubscribeDialog userProfile={userProfile} />

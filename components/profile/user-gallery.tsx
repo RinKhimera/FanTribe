@@ -1,13 +1,12 @@
 "use client"
 
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
 import { useQuery } from "convex/react"
 import { Lock, Play } from "lucide-react"
-import { CldImage } from "next-cloudinary"
-import "next-cloudinary/dist/cld-video-player.css"
 import Image from "next/image"
 import { useState } from "react"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
@@ -33,22 +32,12 @@ export const UserGallery = ({
   const isOwnProfile = authorId === currentUser._id
 
   const handleMediaClick = (media: string) => {
-    console.log("Media cliqué:", media) // Affiche la valeur immédiatement
     setSelectedMedia(media)
     setIsDialogOpen(true)
   }
 
   const isVideo = (media: string) =>
-    media.startsWith("https://res.cloudinary.com/onlyscam/video/")
-
-  // Fonction pour générer une URL de thumbnail à partir d'une URL de vidéo Cloudinary
-  const getVideoThumbnail = (videoUrl: string) => {
-    if (videoUrl.includes(".")) {
-      return videoUrl.replace(/\.[^/.]+$/, ".jpg")
-    } else {
-      return `${videoUrl}.jpg`
-    }
-  }
+    media.startsWith("https://iframe.mediadelivery.net/embed/")
 
   return (
     <>
@@ -89,16 +78,15 @@ export const UserGallery = ({
                             <div className="bg-primary/80 absolute z-10 flex h-12 w-12 items-center justify-center rounded-full">
                               <Play className="h-6 w-6 fill-white text-white" />
                             </div>
-                            <Image
-                              src={getVideoThumbnail(mediaUrl)}
-                              alt="Thumbnail"
-                              width={400}
-                              height={400}
-                              className="h-full w-full object-cover opacity-80"
+                            <iframe
+                              src={`${mediaUrl}${mediaUrl.includes("?") ? "&" : "?"}preload=false`}
+                              allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
+                              className="absolute inset-0 h-full w-full"
+                              allowFullScreen
                             />
                           </div>
                         ) : (
-                          <CldImage
+                          <Image
                             src={mediaUrl}
                             alt="Media content"
                             width={400}
@@ -132,28 +120,40 @@ export const UserGallery = ({
         open={isDialogOpen}
         onOpenChange={(open) => {
           setIsDialogOpen(open)
-          // Si on ferme, réinitialiser la vidéo
           if (!open) setSelectedMedia(null)
         }}
       >
-        <DialogContent className="flex h-screen max-w-none items-center justify-center border-none bg-black/90 p-0 sm:rounded-none">
-          <div className="relative max-h-[90vh] max-w-[90vw]">
+        <DialogContent className="w-full sm:max-w-max">
+          <VisuallyHidden.Root asChild>
+            <DialogTitle>
+              {selectedMedia && isVideo(selectedMedia)
+                ? "Vidéo en plein écran"
+                : "Image en plein écran"}
+            </DialogTitle>
+          </VisuallyHidden.Root>
+          <div className="w-full">
             {selectedMedia && (
               <>
                 {isVideo(selectedMedia) ? (
-                  <video
-                    controls
-                    autoPlay
-                    src={selectedMedia}
-                    className="max-h-[90vh] max-w-[90vw] rounded-md"
-                  ></video>
+                  // <video
+                  //   controls
+                  //   autoPlay
+                  //   src={selectedMedia}
+                  //   className="max-h-[90vh] max-w-[90vw] rounded-md"
+                  // ></video>
+                  <iframe
+                    src={`${selectedMedia}${selectedMedia.includes("?") ? "&" : "?"}preload=false`}
+                    allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
+                    className="absolute inset-0 h-full w-full"
+                    allowFullScreen
+                  />
                 ) : (
-                  <CldImage
+                  <Image
                     src={selectedMedia}
                     alt="Media full view"
                     width={1200}
                     height={1200}
-                    className="max-h-[90vh] max-w-[90vw] object-contain"
+                    className="h-auto max-h-[90vh] w-full max-w-[90vw] object-contain"
                   />
                 )}
               </>

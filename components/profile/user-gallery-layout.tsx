@@ -2,14 +2,13 @@
 
 import { useQuery } from "convex/react"
 import { Link as LucideLink, MapPin } from "lucide-react"
-import { CldImage } from "next-cloudinary"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { RenewDialog } from "@/components/profile/renew-dialog"
 import { SubscribeDialog } from "@/components/profile/subscribe-dialog"
 import { UnsubscribeDialog } from "@/components/profile/unsubscribe-dialog"
 import { UserGallery } from "@/components/profile/user-gallery"
-import { ProfileImage } from "@/components/shared/profile-image"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -38,7 +37,7 @@ export const UserGalleryLayout = ({
   const isGalleryActive = pathname.includes(`/${username}/gallery`)
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-l border-r max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
+    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
       <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
         {userProfile?.name}
       </h1>
@@ -46,7 +45,7 @@ export const UserGalleryLayout = ({
       <div className="relative">
         <div>
           <AspectRatio ratio={3 / 1} className="bg-muted">
-            <CldImage
+            <Image
               src={
                 (userProfile?.imageBanner as string) ||
                 "https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&dpr=2&q=80"
@@ -62,7 +61,7 @@ export const UserGalleryLayout = ({
             <DialogTrigger asChild>
               <Avatar className="border-accent size-36 cursor-pointer border-4 object-none object-center max-sm:size-24">
                 {userProfile?.image ? (
-                  <ProfileImage
+                  <Image
                     src={userProfile.image}
                     width={600}
                     height={600}
@@ -79,7 +78,7 @@ export const UserGalleryLayout = ({
             <DialogContent className="flex h-screen max-w-none items-center justify-center border-none bg-black/80 p-0 sm:rounded-none">
               <div className="relative max-h-[90vh] max-w-[90vw]">
                 {userProfile?.image ? (
-                  <ProfileImage
+                  <Image
                     src={userProfile.image}
                     width={1200}
                     height={1200}
@@ -97,7 +96,7 @@ export const UserGalleryLayout = ({
 
       <>
         {currentUser?.username === userProfile.username ? (
-          <div className="mr-5 mt-4 flex justify-end">
+          <div className="mt-4 mr-5 flex justify-end">
             <Button
               asChild
               variant={"outline"}
@@ -147,7 +146,7 @@ export const UserGalleryLayout = ({
       <>
         {currentUser?.username !== userProfile.username && (
           <div className="border-muted border-b px-4 py-4">
-            <div className="text-2xl font-semibold leading-none tracking-tight">
+            <div className="text-2xl leading-none font-semibold tracking-tight">
               Abonnement
             </div>
             <div className="mb-1">
@@ -156,7 +155,7 @@ export const UserGalleryLayout = ({
                   switch (subscriptionStatus.status) {
                     case "expired":
                       return <RenewDialog userProfile={userProfile} />
-                    case "cancelled":
+                    case "canceled":
                       return <SubscribeDialog userProfile={userProfile} />
                     case "active":
                       return <UnsubscribeDialog userProfile={userProfile} />

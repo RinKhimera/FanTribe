@@ -115,108 +115,183 @@ export const checkTransaction = action({
   },
 })
 
-export const deleteCloudinaryAsset = action({
+export const fanoutNewPostNotifications = action({
   args: {
-    publicId: v.string(),
+    authorId: v.id("users"),
+    postId: v.id("posts"),
+    recipientIds: v.array(v.id("users")),
+    chunkSize: v.optional(v.number()),
+    delayMsBetweenChunks: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const cloudinary = require("cloudinary").v2
+    const chunkSize = args.chunkSize ?? 200
+    const delay = args.delayMsBetweenChunks ?? 1000
 
-    cloudinary.config({
-      cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
-      secure: true,
-    })
+    let inserted = 0
+    let chunks = 0
 
-    try {
-      const result = await cloudinary.uploader.destroy(args.publicId, {
-        invalidate: true,
-      })
-      return { success: true, result }
-    } catch (error) {
-      console.error(`Error deleting asset ${args.publicId}:`, error)
-      return { success: false, error: String(error) }
+    for (let i = 0; i < args.recipientIds.length; i += chunkSize) {
+      const slice = args.recipientIds.slice(i, i + chunkSize)
+      chunks++
+
+      await Promise.all(
+        slice.map((recipientId) =>
+          ctx
+            .runMutation(internal.notifications.insertNewPostNotification, {
+              recipientId,
+              sender: args.authorId,
+              postId: args.postId,
+            })
+            .catch((err) => {
+              console.error("fanout newPost notification failed", {
+                recipientId,
+                postId: args.postId,
+                err,
+              })
+            }),
+        ),
+      )
+
+      inserted += slice.length
+
+      if (delay > 0 && i + chunkSize < args.recipientIds.length) {
+        await new Promise((res) => setTimeout(res, delay))
+      }
+    }
+
+    return {
+      total: args.recipientIds.length,
+      inserted,
+      chunks,
+      chunkSize,
+      delayed: delay > 0,
     }
   },
 })
 
-export const deleteCloudinaryAssetFromUrl = action({
+export const deleteBunnyAssets = action({
   args: {
-    url: v.string(),
+    mediaUrls: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    try {
-      const cloudinary = require("cloudinary").v2
+    const axios = require("axios")
 
-      cloudinary.config({
-        cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-        secure: true,
-      })
+    const storageAccessKey = process.env.BUNNY_STORAGE_ACCESS_KEY
+    const storageZoneName = process.env.BUNNY_STORAGE_ZONE_NAME
+    const videoLibraryId = process.env.BUNNY_VIDEO_LIBRARY_ID
+    const videoAccessKey = process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY
 
-      const publicId = extractPublicIdFromUrl(args.url)
-
-      if (!publicId) {
-        return {
+    if (
+      !storageAccessKey ||
+      !storageZoneName ||
+      !videoLibraryId ||
+      !videoAccessKey
+    ) {
+      console.error("❌ Variables d'environnement Bunny.net manquantes")
+      return {
+        total: args.mediaUrls.length,
+        success: 0,
+        failures: args.mediaUrls.length,
+        results: args.mediaUrls.map((url) => ({
+          url,
           success: false,
-          error: "Could not extract publicId from URL",
-          url: args.url,
+          error: "Missing Bunny.net environment variables",
+        })),
+      }
+    }
+
+    const results = []
+
+    for (const mediaUrl of args.mediaUrls) {
+      try {
+        // Déterminer si c'est une image ou une vidéo
+        const isVideo = mediaUrl.startsWith(
+          "https://iframe.mediadelivery.net/embed/",
+        )
+
+        if (isVideo) {
+          // Extraire le GUID de la vidéo
+          const guidMatch = mediaUrl.match(/\/embed\/\d+\/([^?/]+)/)
+          const videoGuid = guidMatch ? guidMatch[1] : null
+
+          if (videoGuid) {
+            // Supprimer la vidéo via l'API Bunny Stream
+            const deleteResponse = await axios.delete(
+              `https://video.bunnycdn.com/library/${videoLibraryId}/videos/${videoGuid}`,
+              {
+                headers: {
+                  AccessKey: videoAccessKey,
+                },
+              },
+            )
+
+            results.push({
+              url: mediaUrl,
+              type: "video",
+              guid: videoGuid,
+              success: true,
+              status: deleteResponse.status,
+            })
+          } else {
+            console.error(`❌ Impossible d'extraire le GUID de: ${mediaUrl}`)
+            results.push({
+              url: mediaUrl,
+              type: "video",
+              success: false,
+              error: "Could not extract video GUID from URL",
+            })
+          }
+        } else {
+          // C'est une image - extraire le chemin complet (userId/filename)
+          const match = mediaUrl.match(/https:\/\/[^\/]+\/(.+)/)
+          const filePath = match ? match[1] : null
+
+          if (filePath) {
+            // Supprimer l'image via l'API Bunny Storage
+            const deleteResponse = await axios.delete(
+              `https://storage.bunnycdn.com/${storageZoneName}/${filePath}`,
+              {
+                headers: {
+                  AccessKey: storageAccessKey,
+                },
+              },
+            )
+
+            results.push({
+              url: mediaUrl,
+              type: "image",
+              filePath: filePath,
+              success: true,
+              status: deleteResponse.status,
+            })
+          } else {
+            console.error(`❌ Impossible d'extraire le chemin de: ${mediaUrl}`)
+            results.push({
+              url: mediaUrl,
+              type: "image",
+              success: false,
+              error: "Could not extract file path from URL",
+            })
+          }
         }
+      } catch (error) {
+        console.error(`❌ Erreur suppression ${mediaUrl}:`, error)
+        results.push({
+          url: mediaUrl,
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        })
       }
+    }
 
-      const resourceType = args.url.includes("/video/") ? "video" : "image"
+    const successCount = results.filter((r) => r.success).length
+    const failureCount = results.filter((r) => !r.success).length
 
-      const result = await cloudinary.uploader.destroy(publicId, {
-        invalidate: true,
-        resource_type: resourceType,
-      })
-
-      return {
-        success: true,
-        result,
-        publicId,
-        resourceType,
-        originalUrl: args.url,
-      }
-    } catch (error) {
-      console.error(`Error deleting asset from URL ${args.url}:`, error)
-      return {
-        success: false,
-        error: String(error),
-        url: args.url,
-      }
+    return {
+      total: args.mediaUrls.length,
+      success: successCount,
+      failures: failureCount,
+      results,
     }
   },
 })
-
-const extractPublicIdFromUrl = (url: string): string | null => {
-  try {
-    // Nettoyer l'URL des paramètres de query
-    const cleanUrl = url.split("?")[0]
-
-    const patterns = [
-      // Pattern standard avec version
-      /\/(?:image|video|raw)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.\/]+)?$/,
-      // Pattern avec transformations
-      /\/(?:image|video|raw)\/upload\/(?:[^\/]+\/)*(?:v\d+\/)?(.+?)(?:\.[^.\/]+)?$/,
-      // Pattern sans version
-      /\/(?:image|video|raw)\/upload\/(.+?)(?:\.[^.\/]+)?$/,
-      // Pattern général de fallback
-      /\/upload\/(?:.*\/)?(.+?)(?:\.[^.\/]+)?$/,
-    ]
-
-    for (const pattern of patterns) {
-      const match = cleanUrl.match(pattern)
-      if (match && match[1]) {
-        return match[1]
-      }
-    }
-
-    return null
-  } catch (error) {
-    console.error("Error extracting publicId from URL:", error)
-    return null
-  }
-}

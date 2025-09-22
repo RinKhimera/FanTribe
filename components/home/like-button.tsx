@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { Heart } from "lucide-react"
 import { useTransition } from "react"
 import { toast } from "sonner"
@@ -11,42 +11,24 @@ import { cn } from "@/lib/utils"
 
 type LikeButtonProps = {
   postId: Id<"posts">
-  postLikes: Id<"users">[]
-  currentUserId: Id<"users">
   disabled?: boolean
 }
 
-export const LikeButton = ({
-  postId,
-  postLikes,
-  currentUserId,
-  disabled = false,
-}: LikeButtonProps) => {
+export const LikeButton = ({ postId, disabled = false }: LikeButtonProps) => {
   const [isPending, startTransition] = useTransition()
 
-  const likePost = useMutation(api.posts.likePost)
-  const unlikePost = useMutation(api.posts.unlikePost)
+  const likedQuery = useQuery(api.likes.isLiked, { postId })
+  const isLiked = likedQuery?.liked || false
 
-  const handleLike = async () => {
-    if (disabled) return
+  const likePost = useMutation(api.likes.likePost)
+  const unlikePost = useMutation(api.likes.unlikePost)
 
+  const handleToggle = () => {
+    if (disabled || isPending) return
     startTransition(async () => {
       try {
-        await likePost({ postId })
-      } catch (error) {
-        console.error(error)
-        toast.error("Une erreur s'est produite !", {
-          description:
-            "Veuillez vérifier votre connexion internet et réessayer",
-        })
-      }
-    })
-  }
-
-  const handleUnlike = async () => {
-    startTransition(async () => {
-      try {
-        await unlikePost({ postId })
+        if (isLiked) await unlikePost({ postId })
+        else await likePost({ postId })
       } catch (error) {
         console.error(error)
         toast.error("Une erreur s'est produite !", {
@@ -63,25 +45,14 @@ export const LikeButton = ({
         variant="ghost"
         className={cn("size-8 rounded-full transition-colors", {
           "cursor-not-allowed opacity-50": disabled || isPending,
-          "bg-red-600/15 text-red-500": postLikes.includes(currentUserId),
+          "bg-red-600/15 text-red-500": isLiked,
           "hover:bg-red-600/15 hover:text-red-500":
-            !disabled && !isPending && !postLikes.includes(currentUserId),
+            !disabled && !isPending && !isLiked,
         })}
-        onClick={() => {
-          if (postLikes.includes(currentUserId)) {
-            handleUnlike()
-          } else {
-            handleLike()
-          }
-        }}
+        onClick={handleToggle}
         disabled={disabled || isPending}
       >
-        <Heart
-          className={cn(
-            "!size-[20px]",
-            postLikes.includes(currentUserId) ? "fill-current" : "",
-          )}
-        />
+        <Heart className={cn("!size-[20px]", isLiked ? "fill-current" : "")} />
       </Button>
     </div>
   )

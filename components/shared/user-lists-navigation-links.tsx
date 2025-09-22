@@ -9,41 +9,25 @@ export const UserListsNavigationLinks = () => {
   const pathname = usePathname()
   const { isAuthenticated } = useConvexAuth()
 
-  // Récupérer les données des abonnements et abonnés
-  const followings = useQuery(
-    api.follows.getCurrentUserFollowings,
-    isAuthenticated ? undefined : "skip",
+  // Récupérer stats souscriptions (abonnements) et abonnés
+  const mySubsStats = useQuery(
+    api.subscriptions.getMyContentAccessSubscriptionsStats,
+    isAuthenticated ? {} : "skip",
   )
-  const followers = useQuery(
-    api.follows.getCurrentUserFollowers,
-    isAuthenticated ? undefined : "skip",
-  )
-
-  // Récupérer les posts associés
-  const postsFromFollowings = useQuery(
-    api.follows.getPostsFromFollowedUsers,
-    isAuthenticated ? undefined : "skip",
-  )
-  const postsFromFollowers = useQuery(
-    api.follows.getPostsFromFollowers,
-    isAuthenticated ? undefined : "skip",
+  const mySubscribersStats = useQuery(
+    api.subscriptions.getMySubscribersStats,
+    isAuthenticated ? {} : "skip",
   )
 
-  // Calculer les statistiques à partir des données récupérées
   const subscriptionStats = {
-    users: followings?.length || 0,
-    posts: postsFromFollowings?.length || 0,
+    users: mySubsStats?.creatorsCount || 0,
+    posts: mySubsStats?.postsCount || 0,
   }
-
   const subscriberStats = {
-    users: followers?.length || 0,
-    posts: postsFromFollowers?.length || 0,
+    users: mySubscribersStats?.subscribersCount || 0,
+    posts: mySubscribersStats?.postsCount || 0,
   }
-
-  const blockedStats = {
-    users: 0,
-    posts: 0,
-  }
+  const blockedStats = { users: 0, posts: 0 }
 
   const navItems = [
     {
@@ -71,20 +55,20 @@ export const UserListsNavigationLinks = () => {
           href={item.href}
           className={`h-16 p-2 transition-colors ${
             pathname === item.href
-              ? "border-l-4 border-primary bg-primary/20 font-medium text-foreground"
+              ? "border-primary bg-primary/20 text-foreground border-l-4 font-medium"
               : "hover:bg-muted"
           }`}
         >
           <div className="flex h-full w-full items-center justify-between">
             <div className="flex flex-col">
               <span className="font-medium">{item.label}</span>
-              <span className="text-xs text-muted-foreground">
-                {followings === undefined || followers === undefined
+              <span className="text-muted-foreground text-xs">
+                {mySubsStats === undefined || mySubscribersStats === undefined
                   ? "Chargement..."
                   : `${item.stats.users} utilisateur(s) • ${item.stats.posts} posts`}
               </span>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
               <span className="text-xs">
                 {item.label === "Mes abonnements" ? "AB" : "FA"}
               </span>

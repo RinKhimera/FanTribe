@@ -1,5 +1,4 @@
 import { CheckCheck } from "lucide-react"
-import { CldImage } from "next-cloudinary"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
@@ -62,7 +61,7 @@ export const MessageBox = ({
             isMember={isMember}
             isGroup={isGroup}
           />
-          <div className="relative z-20 flex max-w-fit flex-col rounded-3xl rounded-bl-md bg-accent px-4 py-2 shadow-md">
+          <div className="bg-accent relative z-20 flex max-w-fit flex-col rounded-3xl rounded-bl-md px-4 py-2 shadow-md">
             {renderMessageContent()}
             {open && (
               <ImageDialog
@@ -82,7 +81,7 @@ export const MessageBox = ({
     <>
       <DateIndicator message={message} previousMessage={previousMessage} />
       <div className="ml-auto flex w-2/3 gap-1">
-        <div className="relative z-20 ml-auto flex max-w-fit flex-col rounded-3xl rounded-br-md bg-muted px-4 py-1.5 shadow-md">
+        <div className="bg-muted relative z-20 ml-auto flex max-w-fit flex-col rounded-3xl rounded-br-md px-4 py-1.5 shadow-md">
           {renderMessageContent()}
           {open && (
             <ImageDialog
@@ -132,13 +131,12 @@ const ImageMessage = ({
 }) => {
   return (
     <div className="relative m-2">
-      <CldImage
+      <Image
         src={message.content}
         className="cursor-pointer rounded object-cover"
         alt="image"
         width={500}
         height={500}
-        crop="auto"
         onClick={handleClick}
       />
     </div>

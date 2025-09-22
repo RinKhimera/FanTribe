@@ -199,3 +199,86 @@ export interface Report {
     name: string
   }
 }
+
+// Bunny.net Video API Types détaillés
+export interface BunnyVideoGetResponse {
+  videoLibraryId: number
+  guid: string
+  title: string
+  dateUploaded: string
+  views: number
+  isPublic: boolean
+  length: number
+  status: number
+  framerate: number
+  rotation: number
+  width: number
+  height: number
+  availableResolutions: string
+  thumbnailCount: number
+  encodeProgress: number
+  storageSize: number
+  captions: Array<{
+    srclang: string
+    label: string
+  }>
+  hasMP4Fallback: boolean
+  collectionId: string
+  thumbnailFileName: string
+  averageWatchTime: number
+  totalWatchTime: number
+  category: string
+  chapters: Array<{
+    title: string
+    start: number
+    end: number
+  }>
+  moments: Array<{
+    label: string
+    timestamp: number
+  }>
+  metaTags: Array<{
+    property: string
+    value: string
+  }>
+  transcodingMessages: string[]
+  jitEncodingEnabled: boolean
+}
+
+export interface BunnyVideoUploadResponse {
+  success: boolean
+  message: string
+  statusCode: number
+}
+
+// Status des vidéos Bunny.net
+export enum BunnyVideoStatus {
+  CREATED = 0,
+  UPLOADED = 1,
+  PROCESSING = 2,
+  TRANSCODING = 3,
+  FINISHED = 4,
+  ERROR = 5,
+}
+
+// Types pour les réponses dans votre API
+export interface BunnyApiResponse {
+  success: boolean
+  url: string
+  mediaId: string
+  type: "image" | "video"
+  error?: string
+}
+
+export interface BunnyApiErrorResponse {
+  error: string
+}
+
+export interface BunnyCollectionCreateResponse {
+  videoLibraryId: number
+  guid: string
+  name: string
+  videoCount: number
+  totalSize: number
+  previewVideoIds: string
+}

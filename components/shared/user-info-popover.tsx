@@ -9,8 +9,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { ProfileImage } from "@/components/shared/profile-image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -34,13 +33,14 @@ export const UserInfoPopover = ({
 }) => {
   const router = useRouter()
 
-  const getFollowers = useQuery(api.follows.getFollowers, {
-    userId: currentUser._id,
-  })
-
-  const getFollowings = useQuery(api.follows.getFollowings, {
-    userId: currentUser._id,
-  })
+  const mySubsStats = useQuery(
+    api.subscriptions.getMyContentAccessSubscriptionsStats,
+    {},
+  )
+  const mySubscribersStats = useQuery(
+    api.subscriptions.getMySubscribersStats,
+    {},
+  )
 
   const handleNavigation = (href: string) => {
     if (onNavigate) {
@@ -60,7 +60,7 @@ export const UserInfoPopover = ({
           <div className="flex items-center gap-2">
             <Avatar className="size-8 rounded-lg">
               {currentUser?.image ? (
-                <ProfileImage
+                <AvatarImage
                   src={currentUser.image}
                   width={100}
                   height={100}
@@ -93,7 +93,7 @@ export const UserInfoPopover = ({
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="size-8 rounded-lg">
               {currentUser?.image ? (
-                <ProfileImage
+                <AvatarImage
                   src={currentUser.image}
                   width={100}
                   height={100}
@@ -113,7 +113,8 @@ export const UserInfoPopover = ({
             </div>
           </div>
           <div className="mt-2 px-2 text-sm">
-            {getFollowers?.length} fans | {getFollowings?.length} abonnements
+            {mySubscribersStats?.subscribersCount || 0} fans |{" "}
+            {mySubsStats?.creatorsCount || 0} abonnements
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

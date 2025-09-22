@@ -1,8 +1,8 @@
 "use client"
 
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { Bookmark } from "lucide-react"
-import { useState, useTransition } from "react"
+import { useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
@@ -11,28 +11,24 @@ import { cn } from "@/lib/utils"
 
 type BookmarkButtonProps = {
   postId: Id<"posts">
-  currentUserBookmark: Id<"posts">[]
   disabled?: boolean
 }
 
 export const BookmarkButton = ({
   postId,
-  currentUserBookmark,
   disabled = false,
 }: BookmarkButtonProps) => {
-  const initialBookmarked = currentUserBookmark.includes(postId)
+  const addBookmark = useMutation(api.bookmarks.addBookmark)
+  const removeBookmark = useMutation(api.bookmarks.removeBookmark)
+  const bookmarkedQuery = useQuery(api.bookmarks.isBookmarked, { postId })
+  const isBookmarked = bookmarkedQuery?.bookmarked || false
 
-  const [isBookmarked, setIsBookmarked] = useState<Boolean>(initialBookmarked)
   const [isPending, startTransition] = useTransition()
 
-  const addBookmark = useMutation(api.posts.addBookmark)
-  const removeBookmark = useMutation(api.posts.removeBookmark)
-
-  const handleAddBookmark = async () => {
+  const handleAddBookmark = () => {
     startTransition(async () => {
       try {
         await addBookmark({ postId })
-        setIsBookmarked(true)
         toast.success("La publication a été ajoutée à vos collections")
       } catch (error) {
         console.error(error)
@@ -44,11 +40,10 @@ export const BookmarkButton = ({
     })
   }
 
-  const handleRemoveBookmark = async () => {
+  const handleRemoveBookmark = () => {
     startTransition(async () => {
       try {
         await removeBookmark({ postId })
-        setIsBookmarked(false)
         toast.success("La publication a été retirée de vos collections")
       } catch (error) {
         console.error(error)
@@ -60,14 +55,10 @@ export const BookmarkButton = ({
     })
   }
 
-  const handleBookmark = async () => {
-    if (disabled) return
-
-    if (isBookmarked) {
-      handleRemoveBookmark()
-    } else {
-      handleAddBookmark()
-    }
+  const handleBookmark = () => {
+    if (disabled || isPending) return
+    if (isBookmarked) handleRemoveBookmark()
+    else handleAddBookmark()
   }
 
   return (

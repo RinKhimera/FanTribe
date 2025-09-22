@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values"
-import { addDays } from "date-fns"
+import { Id } from "./_generated/dataModel"
 import {
   internalMutation,
   internalQuery,
@@ -7,401 +7,334 @@ import {
   query,
 } from "./_generated/server"
 
-export const canUserSubscribe = query({
-  args: { creatorId: v.id("users") },
-  handler: async (ctx, args) => {
-    const creator = await ctx.db.get(args.creatorId)
+// Helper récupération user courant
+const getCurrentUser = async (ctx: any) => {
+  const identity = await ctx.auth.getUserIdentity()
+  if (!identity) throw new ConvexError("Not authenticated")
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_tokenIdentifier", (q: any) =>
+      q.eq("tokenIdentifier", identity.tokenIdentifier),
+    )
+    .unique()
+  if (!user) throw new ConvexError("User not found")
+  return user
+}
 
-    if (!creator) {
-      return {
-        canSubscribe: false,
-        reason: "Creator not found",
-        message: "Cet utilisateur n'existe pas",
-      }
-    }
-
-    if (creator.accountType === "USER") {
-      return {
-        canSubscribe: false,
-        reason: "User is not a creator",
-        message: "Cet utilisateur n'est pas un créateur",
-      }
-    }
-
-    if (creator.creatorApplicationStatus !== "approved") {
-      return {
-        canSubscribe: false,
-        reason: "Creator application is not approved",
-        message: "Ce créateur n'est pas encore approuvé",
-      }
-    }
-
-    return {
-      canSubscribe: true,
-      reason: null,
-      message: null,
-    }
-  },
-})
-
+// PUBLIC: obtenir la souscription entre deux utilisateurs (content_access par défaut)
 export const getFollowSubscription = query({
   args: { creatorId: v.id("users"), subscriberId: v.id("users") },
   handler: async (ctx, args) => {
-    const subscription = await ctx.db
+    const sub = await ctx.db
       .query("subscriptions")
       .withIndex("by_creator_subscriber", (q) =>
         q.eq("creator", args.creatorId).eq("subscriber", args.subscriberId),
       )
-      .filter((q) => q.eq(q.field("serviceType"), "follow"))
-      .unique()
-
-    return subscription
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .first()
+    return sub || null
   },
 })
 
+// PUBLIC: liste des souscriptions d'un abonné (content_access)
+export const listSubscriberSubscriptions = query({
+  args: { subscriberId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("subscriptions")
+      .withIndex("by_subscriber", (q) => q.eq("subscriber", args.subscriberId))
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .collect()
+  },
+})
+
+// PUBLIC: liste des abonnés d'un créateur (content_access)
+export const listCreatorSubscribers = query({
+  args: { creatorId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("subscriptions")
+      .withIndex("by_creator", (q) => q.eq("creator", args.creatorId))
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .collect()
+  },
+})
+
+// PUBLIC: annuler une souscription (passe à canceled)
+export const cancelSubscription = mutation({
+  args: { subscriptionId: v.id("subscriptions") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    const sub = await ctx.db.get(args.subscriptionId)
+    if (!sub) throw new ConvexError("Subscription not found")
+    if (sub.subscriber !== user._id && sub.creator !== user._id) {
+      throw new ConvexError("Unauthorized")
+    }
+    if (sub.status === "canceled")
+      return { canceled: false, reason: "Already canceled" }
+    await ctx.db.patch(sub._id, {
+      status: "canceled",
+      lastUpdateTime: Date.now(),
+    })
+    return { canceled: true }
+  },
+})
+
+// INTERNAL: mutation pour créer/renouveler/relancer une souscription lors d'un paiement
 export const followUser = internalMutation({
   args: {
+    transactionId: v.string(), // provider transaction id
     creatorId: v.id("users"),
     subscriberId: v.id("users"),
-    startDate: v.string(),
-    transactionId: v.optional(v.string()),
+    startDate: v.string(), // ISO date
     amountPaid: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const currentTime = Date.now()
-    const amount = args.amountPaid ?? 1000
-    const startDate = currentTime
-    const endDate = addDays(new Date(startDate), 30).getTime()
+    const periodDays = 30 // durée de souscription
+    const startMs = Date.parse(args.startDate) || Date.now()
+    const now = Date.now()
 
-    // Vérifie si un abonnement avec les mêmes détails existe
-    const existingSubscription = await ctx.db
+    // Chercher souscription existante
+    let sub = await ctx.db
       .query("subscriptions")
       .withIndex("by_creator_subscriber", (q) =>
         q.eq("creator", args.creatorId).eq("subscriber", args.subscriberId),
       )
-      .filter((q) => q.eq(q.field("serviceType"), "follow"))
-      .unique()
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .first()
 
-    // Si l'abonnement existe
-    if (existingSubscription) {
-      // Vérifier si l'abonnement est expiré ou annulé
-      const needsReactivation = ["expired", "cancelled"].includes(
-        existingSubscription.status,
-      )
+    let renewed = false
+    let reactivated = false
 
-      // Si l'ID de transaction est fourni, on le met à jour
-      const transactionUpdate = args.transactionId
-        ? { transactionId: args.transactionId }
-        : {}
-
-      // Mettre à jour l'abonnement existant
-      await ctx.db.patch(existingSubscription._id, {
-        startDate: currentTime,
-        endDate: endDate,
-        status: "active",
-        ...transactionUpdate,
-        renewalCount: existingSubscription.renewalCount + 1,
-        lastUpdateTime: currentTime,
-        amountPaid: amount,
-      })
-
-      // CORRECTION : Vérifier si la relation follow existe, indépendamment du statut d'abonnement
-      const existingFollow = await ctx.db
-        .query("follows")
-        .withIndex("by_follower_following", (q) =>
-          q
-            .eq("followerId", args.subscriberId)
-            .eq("followingId", args.creatorId),
-        )
-        .unique()
-
-      // Si la relation n'existe pas, la créer (même pour un renouvellement)
-      if (!existingFollow) {
-        await ctx.db.insert("follows", {
-          followerId: args.subscriberId,
-          followingId: args.creatorId,
-          subscriptionId: existingSubscription._id,
-        })
-      }
-
-      // Créer une notification appropriée
-      await ctx.db.insert("notifications", {
-        type: needsReactivation ? "newSubscription" : "renewSubscription",
-        recipientId: args.creatorId,
-        sender: args.subscriberId,
-        read: false,
-      })
-
-      // Vérifier et supprimer tout blocage existant
-      const blockFromSubscriber = await ctx.db
-        .query("blocks")
-        .withIndex("by_blocker_blocked", (q) =>
-          q.eq("blockerId", args.subscriberId).eq("blockedId", args.creatorId),
-        )
-        .unique()
-
-      if (blockFromSubscriber) {
-        // L'abonné avait bloqué le créateur, supprimer ce blocage
-        await ctx.db.delete(blockFromSubscriber._id)
-
-        // Optionnel : Notifier l'abonné que le blocage a été levé
-        // await ctx.db.insert("notifications", {
-        //   type: "blockRemoved",
-        //   recipientId: args.subscriberId,
-        //   sender: args.creatorId,
-        //   read: false,
-        //   message: "Blocage automatiquement levé suite à votre abonnement",
-        // })
-      }
-
-      // Vérifier également si le créateur avait bloqué l'abonné
-      const blockFromCreator = await ctx.db
-        .query("blocks")
-        .withIndex("by_blocker_blocked", (q) =>
-          q.eq("blockerId", args.creatorId).eq("blockedId", args.subscriberId),
-        )
-        .unique()
-
-      if (blockFromCreator) {
-        // Le créateur avait bloqué l'abonné, supprimer ce blocage
-        await ctx.db.delete(blockFromCreator._id)
-
-        // Optionnel : Notifier le créateur que le blocage a été levé
-        // await ctx.db.insert("notifications", {
-        //   type: "blockRemoved",
-        //   recipientId: args.creatorId,
-        //   sender: args.subscriberId,
-        //   read: false,
-        //   message: "Blocage automatiquement levé suite à un nouvel abonnement",
-        // })
-      }
-
-      return {
-        subscriptionId: existingSubscription._id,
-        renewed: !needsReactivation,
-        reactivated: needsReactivation,
-      }
-    } else {
-      // Si l'abonnement n'existe pas, le crée
-      const newSubscription = await ctx.db.insert("subscriptions", {
-        startDate: startDate,
-        endDate: endDate,
-        serviceType: "follow",
-        amountPaid: amount,
+    if (!sub) {
+      const newSubId = await ctx.db.insert("subscriptions", {
         subscriber: args.subscriberId,
         creator: args.creatorId,
-        status: "active",
-        transactionId: args.transactionId,
+        startDate: startMs,
+        endDate: startMs + periodDays * 24 * 60 * 60 * 1000,
+        amountPaid: args.amountPaid ?? 0,
+        currency: "EUR",
         renewalCount: 0,
-        lastUpdateTime: currentTime,
+        lastUpdateTime: now,
+        type: "content_access",
+        status: "active",
       })
-
-      // Crée un suivi pour le nouvel abonnement
-      await ctx.db.insert("follows", {
-        followerId: args.subscriberId,
-        followingId: args.creatorId,
-        subscriptionId: newSubscription,
-      })
-
-      // Crée une notification pour le nouvel abonnement
-      await ctx.db.insert("notifications", {
-        type: "newSubscription",
-        recipientId: args.creatorId,
-        sender: args.subscriberId,
-        read: false,
-      })
-
-      return {
-        subscriptionId: newSubscription,
-        renewed: false,
-        reactivated: false,
+      sub = (await ctx.db.get(newSubId))!
+    } else {
+      // Souscription existante
+      if (sub.status === "active" && sub.endDate > now) {
+        // Renouvellement: étendre endDate
+        const newEnd = sub.endDate + periodDays * 24 * 60 * 60 * 1000
+        await ctx.db.patch(sub._id, {
+          endDate: newEnd,
+          renewalCount: sub.renewalCount + 1,
+          lastUpdateTime: now,
+        })
+        renewed = true
+      } else {
+        // Réactivation (expirée / canceled / pending)
+        await ctx.db.patch(sub._id, {
+          startDate: startMs,
+          endDate: startMs + periodDays * 24 * 60 * 60 * 1000,
+          status: "active",
+          renewalCount: sub.renewalCount + 1,
+          lastUpdateTime: now,
+        })
+        reactivated = true
       }
     }
-  },
-})
 
-export const unfollowUser = mutation({
-  args: {
-    creatorId: v.id("users"),
-    reason: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
+    // Enregistrer transaction (si pas déjà présente)
+    const existingTx = await ctx.db
+      .query("transactions")
+      .withIndex("by_subscriber", (q) =>
+        q.eq("subscriberId", args.subscriberId),
       )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    const currentTime = Date.now()
-
-    // Trouver l'abonnement à annuler
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_creator_subscriber", (q) =>
-        q.eq("creator", args.creatorId).eq("subscriber", user._id),
-      )
-      .filter((q) => q.eq(q.field("serviceType"), "follow"))
-      .unique()
-
-    // Vérifie si l'abonnement existe
-    if (!subscription) throw new ConvexError("Subscription not found")
-
-    // Au lieu de supprimer l'abonnement, marquer comme annulé
-    await ctx.db.patch(subscription._id, {
-      status: "cancelled",
-      lastUpdateTime: currentTime,
-    })
-
-    // Supprime le suivi associé à l'abonnement
-    const follow = await ctx.db
-      .query("follows")
-      .withIndex("by_subscriptionId", (q) =>
-        q.eq("subscriptionId", subscription._id),
-      )
-      .unique()
-
-    if (follow) {
-      await ctx.db.delete(follow._id)
-    }
-
-    return { cancelled: true, subscriptionId: subscription._id }
-  },
-})
-
-export const getSubscriptionHistory = query({
-  args: {
-    userId: v.id("users"),
-    asCreator: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    // Si asCreator est true, cherche les abonnements où l'utilisateur est le créateur
-    // Sinon, cherche les abonnements où l'utilisateur est l'abonné
-    const field = args.asCreator ? "creator" : "subscriber"
-
-    const subscriptions = await ctx.db
-      .query("subscriptions")
-      .withIndex(args.asCreator ? "by_creator" : "by_subscriber", (q) =>
-        q.eq(field, args.userId),
-      )
-      .order("desc")
-      .collect()
-
-    return subscriptions
-  },
-})
-
-export const getSubscriptionByTransactionId = internalQuery({
-  args: { transactionId: v.string() },
-  handler: async (ctx, args) => {
-    // Recherche un abonnement avec cet ID de transaction
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .filter((q) => q.eq(q.field("transactionId"), args.transactionId))
-      .unique()
-
-    return subscription
-  },
-})
-
-export const checkAndUpdateExpiredSubscriptions = internalMutation({
-  handler: async (ctx) => {
-    const currentTime = Date.now()
-
-    // Récupérer tous les abonnements actifs qui sont expirés
-    const expiredSubscriptions = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
-      .filter((q) => q.lt(q.field("endDate"), currentTime))
-      .collect()
-
-    // Compteurs pour le rapport
-    const updates = {
-      processed: 0,
-      followsRemoved: 0,
-      notificationsSent: 0,
-    }
-
-    // Mettre à jour tous les abonnements expirés
-    for (const subscription of expiredSubscriptions) {
-      // Mettre à jour le statut de l'abonnement
-      await ctx.db.patch(subscription._id, {
-        status: "expired",
-        lastUpdateTime: currentTime,
+      .filter((q) => q.eq(q.field("providerTransactionId"), args.transactionId))
+      .first()
+    if (!existingTx) {
+      await ctx.db.insert("transactions", {
+        subscriptionId: sub._id as Id<"subscriptions">,
+        subscriberId: args.subscriberId,
+        creatorId: args.creatorId,
+        amount: args.amountPaid ?? 0,
+        currency: "EUR",
+        status: "succeeded",
+        provider: "stripe",
+        providerTransactionId: args.transactionId,
       })
-
-      // CORRECTION : Utiliser withIndex avec by_follower_following au lieu de by_subscriptionId
-      const follows = await ctx.db
-        .query("follows")
-        .withIndex("by_follower_following", (q) =>
-          q
-            .eq("followerId", subscription.subscriber)
-            .eq("followingId", subscription.creator),
-        )
-        .collect()
-
-      // Supprimer toutes les relations de suivi trouvées
-      for (const follow of follows) {
-        await ctx.db.delete(follow._id)
-        updates.followsRemoved++
-      }
-
-      // Option: Envoyer une notification au créateur et à l'abonné
-      await ctx.db.insert("notifications", {
-        type: "subscriptionExpired",
-        recipientId: subscription.creator,
-        sender: subscription.subscriber,
-        read: false,
-      })
-
-      updates.notificationsSent++
-      updates.processed++
     }
 
     return {
-      processedCount: updates.processed,
-      followsRemoved: updates.followsRemoved,
-      notificationsSent: updates.notificationsSent,
+      subscriptionId: sub._id as Id<"subscriptions">,
+      renewed,
+      reactivated,
     }
   },
 })
 
-export const getCurrentUserSubscriptions = query({
+// INTERNAL: retrouver une souscription via transaction provider id
+export const getSubscriptionByTransactionId = internalQuery({
+  args: { transactionId: v.string() },
+  handler: async (ctx, args) => {
+    // Recherche transaction (scan limité par index subscriber/creator si nécessaire)
+    const tx = await ctx.db
+      .query("transactions")
+      .filter((q) => q.eq(q.field("providerTransactionId"), args.transactionId))
+      .first()
+    if (!tx) return null
+    const sub = await ctx.db.get(tx.subscriptionId)
+    return sub || null
+  },
+})
+
+// INTERNAL: cron pour marquer les souscriptions expirées
+export const checkAndUpdateExpiredSubscriptions = internalMutation({
+  args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    // Récupérer toutes les souscriptions où l'utilisateur est l'abonné
-    const subscriptions = await ctx.db
+    const now = Date.now()
+    // Récupérer les actives (index by_status)
+    const active = await ctx.db
       .query("subscriptions")
-      .withIndex("by_subscriber", (q) => q.eq("subscriber", user._id))
+      .withIndex("by_status", (q) => q.eq("status", "active"))
       .collect()
 
-    // Enrichir les résultats avec les informations des créateurs
-    const subscriptionsWithCreators = await Promise.all(
-      subscriptions.map(async (subscription) => {
-        const creator = await ctx.db.get(subscription.creator)
-        return {
-          ...subscription,
-          creatorDetails: creator,
-        }
-      }),
-    )
+    let updated = 0
+    for (const s of active) {
+      if (s.endDate <= now) {
+        await ctx.db.patch(s._id, { status: "expired", lastUpdateTime: now })
+        updated++
+      }
+    }
+    return { scanned: active.length, expiredUpdated: updated }
+  },
+})
 
-    return subscriptionsWithCreators
+export const getMyContentAccessSubscriptionsStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx)
+    // Souscriptions où l'utilisateur est abonné (subscriber)
+    const subs = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_subscriber", (q) => q.eq("subscriber", user._id))
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .collect()
+
+    if (subs.length === 0)
+      return { subscriptions: [], creatorsCount: 0, postsCount: 0 }
+
+    const creatorIds = [...new Set(subs.map((s) => s.creator))]
+    // Récupération posts pour chaque creator (compte seulement)
+    let postsCount = 0
+    for (const creatorId of creatorIds) {
+      const posts = await ctx.db
+        .query("posts")
+        .withIndex("by_author", (q) => q.eq("author", creatorId))
+        .collect()
+      postsCount += posts.length
+    }
+
+    // Enrichir créateurs
+    const creators = await Promise.all(creatorIds.map((id) => ctx.db.get(id)))
+    const creatorMap = new Map(creatorIds.map((id, i) => [id, creators[i]]))
+
+    const enriched = subs.map((s) => ({
+      ...s,
+      creatorUser: creatorMap.get(s.creator),
+    }))
+
+    return {
+      subscriptions: enriched,
+      creatorsCount: creatorIds.length,
+      postsCount,
+    }
+  },
+})
+
+export const getMySubscribersStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx)
+    // Souscriptions où l'utilisateur est le créateur
+    const subs = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_creator", (q) => q.eq("creator", user._id))
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .collect()
+
+    if (subs.length === 0)
+      return { subscribers: [], subscribersCount: 0, postsCount: 0 }
+
+    const subscriberIds = [...new Set(subs.map((s) => s.subscriber))]
+    // Compter les posts de tous les abonnés
+    let postsCount = 0
+    for (const subId of subscriberIds) {
+      const posts = await ctx.db
+        .query("posts")
+        .withIndex("by_author", (q) => q.eq("author", subId))
+        .collect()
+      postsCount += posts.length
+    }
+
+    const users = await Promise.all(subscriberIds.map((id) => ctx.db.get(id)))
+    const userMap = new Map(subscriberIds.map((id, i) => [id, users[i]]))
+
+    const enriched = subs.map((s) => ({
+      ...s,
+      subscriberUser: userMap.get(s.subscriber),
+    }))
+
+    return {
+      subscribers: enriched,
+      subscribersCount: subscriberIds.length,
+      postsCount,
+    }
+  },
+})
+
+export const canUserSubscribe = query({
+  args: { creatorId: v.id("users") },
+  handler: async (ctx, args) => {
+    let canSubscribe = true
+    let reason: string | null = null
+    let currentUser = null
+
+    try {
+      currentUser = await getCurrentUser(ctx)
+    } catch (e) {
+      return { canSubscribe: false, reason: "not_authenticated" }
+    }
+
+    if (currentUser._id === args.creatorId) {
+      return { canSubscribe: false, reason: "self" }
+    }
+
+    const existing = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_creator_subscriber", (q) =>
+        q.eq("creator", args.creatorId).eq("subscriber", currentUser._id),
+      )
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .first()
+
+    if (existing) {
+      if (existing.status === "active") {
+        canSubscribe = false
+        reason = "already_active"
+      } else if (existing.status === "pending") {
+        canSubscribe = false
+        reason = "pending"
+      } else if (
+        existing.status === "canceled" &&
+        existing.endDate > Date.now()
+      ) {
+        // période encore valable
+        canSubscribe = false
+        reason = "still_valid_until_expiry"
+      }
+    }
+
+    return { canSubscribe, reason }
   },
 })
