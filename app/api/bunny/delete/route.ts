@@ -17,11 +17,11 @@ export async function DELETE(request: NextRequest) {
     if (type === "video") {
       // Supprimer la vidéo de la bibliothèque
       const deleteResponse = await fetch(
-        `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
+        `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
           },
         },
       )
@@ -39,11 +39,11 @@ export async function DELETE(request: NextRequest) {
     } else {
       // Supprimer l'image du storage
       const deleteResponse = await fetch(
-        `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
+        `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: process.env.BUNNY_STORAGE_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
           },
         },
       )

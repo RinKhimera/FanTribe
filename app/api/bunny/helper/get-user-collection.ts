@@ -17,10 +17,10 @@ export async function getOrCreateUserCollection(
 
     // Récupérer toutes les collections pour voir si celle de l'utilisateur existe
     const collectionsResponse = await axios.get(
-      `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       {
         headers: {
-          AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+          AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
         },
       },
     )
@@ -40,11 +40,11 @@ export async function getOrCreateUserCollection(
 
     // Créer une nouvelle collection si elle n'existe pas
     const createResponse = await axios.post<BunnyCollectionCreateResponse>(
-      `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       { name: userCollectionName },
       {
         headers: {
-          AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+          AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
           "Content-Type": "application/json",
         },
       },

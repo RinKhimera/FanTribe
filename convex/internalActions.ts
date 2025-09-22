@@ -1,9 +1,10 @@
 "use node"
 
 import { v } from "convex/values"
+import { deleteBunnyAsset } from "@/lib/bunny"
 import { internal } from "./_generated/api"
 import { Doc, Id } from "./_generated/dataModel"
-import { action } from "./_generated/server"
+import { action, internalAction } from "./_generated/server"
 
 type ProcessPaymentResult = {
   success: boolean
@@ -169,17 +170,42 @@ export const fanoutNewPostNotifications = action({
   },
 })
 
-export const deleteBunnyAssets = action({
+export const deleteSingleBunnyAsset = internalAction({
+  args: {
+    mediaId: v.string(),
+    assetType: v.union(v.literal("image"), v.literal("video")),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const result = await deleteBunnyAsset(args.mediaId, args.assetType)
+
+      return {
+        success: result.success,
+        message: result.message,
+        statusCode: result.statusCode,
+      }
+    } catch (error) {
+      console.error("❌ Erreur dans deleteSingleBunnyAsset:", error)
+      return {
+        success: false,
+        message: "Erreur interne lors de la suppression",
+        statusCode: 500,
+      }
+    }
+  },
+})
+
+export const deleteMultipleBunnyAssets = action({
   args: {
     mediaUrls: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     const axios = require("axios")
 
-    const storageAccessKey = process.env.BUNNY_STORAGE_ACCESS_KEY
-    const storageZoneName = process.env.BUNNY_STORAGE_ZONE_NAME
-    const videoLibraryId = process.env.BUNNY_VIDEO_LIBRARY_ID
-    const videoAccessKey = process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY
+    const storageAccessKey = process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY
+    const storageZoneName = process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME
+    const videoLibraryId = process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID
+    const videoAccessKey = process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY
 
     if (
       !storageAccessKey ||

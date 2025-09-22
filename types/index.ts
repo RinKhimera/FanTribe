@@ -282,3 +282,9 @@ export interface BunnyCollectionCreateResponse {
   totalSize: number
   previewVideoIds: string
 }
+
+export type BunnyDeleteResponse = {
+  success: boolean
+  message: string | null
+  statusCode: number
+}

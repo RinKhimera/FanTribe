@@ -328,7 +328,7 @@ export const deleteReportedContentAndResolve = mutation({
       if (reportedPost.medias && reportedPost.medias.length > 0) {
         const uniqueMedias = [...new Set(reportedPost.medias)]
         await ctx.scheduler
-          .runAfter(0, api.internalActions.deleteBunnyAssets, {
+          .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
             mediaUrls: uniqueMedias,
           })
           .catch((error) => {

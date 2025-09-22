@@ -37,14 +37,14 @@ export async function POST(request: NextRequest) {
 
         // Créer la vidéo dans la collection de l'utilisateur
         const videoResponse = await axios.post(
-          `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos`,
+          `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos`,
           {
             title: videoFileName,
             collectionId: userCollectionId,
           },
           {
             headers: {
-              AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+              AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
               "Content-Type": "application/json",
             },
           },
@@ -61,11 +61,11 @@ export async function POST(request: NextRequest) {
 
       // Upload de la video
       await axios.put(
-        `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
+        `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
         buffer,
         {
           headers: {
-            AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
             "Content-Type": file.type,
           },
         },
@@ -73,18 +73,18 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json<BunnyApiResponse>({
         success: true,
-        url: `https://iframe.mediadelivery.net/embed/${process.env.BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
+        url: `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
         mediaId: videoData.guid,
         type: "video",
       })
     } else {
       // Upload de l'image
       await axios.put(
-        `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
+        `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
         buffer,
         {
           headers: {
-            AccessKey: process.env.BUNNY_STORAGE_ACCESS_KEY!,
+            AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
             "Content-Type": file.type,
           },
         },
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json<BunnyApiResponse>({
         success: true,
-        url: `${process.env.BUNNY_PULL_ZONE_URL}/${fileName}`,
+        url: `${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL}/${fileName}`,
         mediaId: fileName,
         type: "image",
       })
