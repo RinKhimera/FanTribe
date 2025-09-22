@@ -1,7 +1,6 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import axios, { AxiosProgressEvent } from "axios"
 import { useMutation } from "convex/react"
 import { CircleX, Globe, ImagePlus, LoaderCircle, Lock } from "lucide-react"
 import Image from "next/image"
@@ -28,6 +27,7 @@ import {
 } from "@/components/ui/select"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { uploadBunnyAsset } from "@/lib/bunny"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
 import { BunnyApiResponse } from "@/types"
@@ -37,7 +37,10 @@ export const NewPostLayout = () => {
   const { currentUser, isLoading } = useCurrentUser()
 
   const createDraftAsset = useMutation(api.assetsDraft.createDraftAsset)
-  const deleteDraftAsset = useMutation(api.assetsDraft.deleteDraftAsset)
+  const deleteDraftWithAsset = useMutation(api.assetsDraft.deleteDraftWithAsset)
+  const deleteDraftWithoutAsset = useMutation(
+    api.assetsDraft.deleteDraftWithoutAsset,
+  )
 
   const [medias, setMedias] = useState<
     { url: string; publicId: string; type: "image" | "video" }[]
@@ -60,7 +63,7 @@ export const NewPostLayout = () => {
       if (medias.length > 0 && !isPostCreatedRef.current) {
         medias.forEach(async (media) => {
           try {
-            await deleteDraftAsset({ mediaId: media.publicId })
+            await deleteDraftWithAsset({ mediaId: media.publicId })
           } catch (error) {
             console.error("Erreur lors de la suppression de l'asset:", error)
           }
@@ -68,7 +71,7 @@ export const NewPostLayout = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deleteDraftAsset])
+  }, [deleteDraftWithAsset])
 
   const createPost = useMutation(api.posts.createPost)
 
@@ -114,41 +117,24 @@ export const NewPostLayout = () => {
           continue
         }
 
-        const formData = new FormData()
         const randomSuffix = crypto
           .randomUUID()
           .replace(/-/g, "")
           .substring(0, 13)
         const fileExtension = file.name.split(".").pop()
-
-        formData.append("userId", currentUser._id)
-        formData.append("file", file)
-        formData.append(
-          "fileName",
-          `${currentUser._id}/${randomSuffix}.${fileExtension}`,
-        )
+        const fileName = `${currentUser._id}/${randomSuffix}.${fileExtension}`
 
         const fileKey = `${file.name}_${Date.now()}`
         setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
 
-        let lastLogged = 0
         try {
-          const response = await axios.post("/api/bunny/upload", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-            onUploadProgress: (pe: AxiosProgressEvent) => {
-              if (pe.total) {
-                const progress = Math.round((pe.loaded * 100) / pe.total)
-                setUploadProgress((prev) => ({ ...prev, [fileKey]: progress }))
-                if (progress - lastLogged >= 10 || progress === 100) {
-                  lastLogged = progress
-                  console.log(`Upload ${file.name}: ${progress}%`)
-                }
-              }
-            },
+          // Utiliser la logique métier directement
+          const result: BunnyApiResponse = await uploadBunnyAsset({
+            file,
+            fileName,
+            userId: currentUser._id,
           })
 
-          const result: BunnyApiResponse = response.data
-          console.log("Upload result:", result)
           setUploadProgress((prev) => {
             const np = { ...prev }
             delete np[fileKey]
@@ -200,7 +186,7 @@ export const NewPostLayout = () => {
     setMedias((prev) => prev.filter((_, i) => i !== index))
 
     try {
-      await deleteDraftAsset({ mediaId: media.publicId })
+      await deleteDraftWithAsset({ mediaId: media.publicId })
       toast.success("Média supprimé avec succès")
     } catch (error) {
       console.error("Erreur lors de la suppression:", error)
@@ -224,7 +210,7 @@ export const NewPostLayout = () => {
 
         // Supprimer tous les draft assets après création du post
         for (const media of medias) {
-          await deleteDraftAsset({ mediaId: media.publicId })
+          await deleteDraftWithoutAsset({ mediaId: media.publicId })
         }
 
         toast.success("Votre publication a été partagée")

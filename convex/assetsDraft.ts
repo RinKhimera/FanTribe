@@ -23,7 +23,7 @@ export const createDraftAsset = mutation({
   },
 })
 
-export const deleteDraftAsset = mutation({
+export const deleteDraftWithAsset = mutation({
   args: { mediaId: v.string() },
   handler: async (ctx, args) => {
     const { mediaId } = args
@@ -53,6 +53,38 @@ export const deleteDraftAsset = mutation({
       return {
         success: true,
         message: "Asset supprimé de la DB, suppression Bunny en cours",
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors de la suppression:", error)
+      return {
+        success: false,
+        message: "Erreur serveur lors de la suppression",
+        statusCode: 500,
+      }
+    }
+  },
+})
+
+export const deleteDraftWithoutAsset = mutation({
+  args: { mediaId: v.string() },
+  handler: async (ctx, args) => {
+    const { mediaId } = args
+
+    const asset = await ctx.db
+      .query("assetsDraft")
+      .withIndex("by_mediaId", (q) => q.eq("mediaId", mediaId))
+      .first()
+
+    if (!asset) {
+      return { success: false, error: "Asset not found" }
+    }
+
+    try {
+      // Supprimer de la DB Convex immédiatement
+      await ctx.db.delete(asset._id)
+      return {
+        success: true,
+        message: "Asset supprimé de la DB, suppression Bunny différée",
       }
     } catch (error) {
       console.error("❌ Erreur lors de la suppression:", error)
