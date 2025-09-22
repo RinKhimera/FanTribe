@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react"
 import { Link as LucideLink, MapPin } from "lucide-react"
-import { CldImage } from "next-cloudinary"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { RenewDialog } from "@/components/profile/renew-dialog"
@@ -17,7 +17,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
-import { ProfileImage } from "../shared/profile-image"
 import { Button } from "../ui/button"
 
 type UserProfileLayoutProps = {
@@ -54,7 +53,7 @@ export const UserProfileLayout = ({
       <div className="relative">
         <div>
           <AspectRatio ratio={3 / 1} className="bg-muted">
-            <CldImage
+            <Image
               src={
                 (userProfile?.imageBanner as string) ||
                 "https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&dpr=2&q=80"
@@ -70,7 +69,7 @@ export const UserProfileLayout = ({
             <DialogTrigger asChild>
               <Avatar className="border-accent size-36 cursor-pointer border-4 object-none object-center max-sm:size-24">
                 {userProfile?.image ? (
-                  <ProfileImage
+                  <Image
                     src={userProfile.image}
                     width={600}
                     height={600}
@@ -87,7 +86,7 @@ export const UserProfileLayout = ({
             <DialogContent className="flex h-screen max-w-none items-center justify-center border-none bg-black/80 p-0 sm:rounded-none">
               <div className="relative max-h-[90vh] max-w-[90vw]">
                 {userProfile?.image ? (
-                  <ProfileImage
+                  <Image
                     src={userProfile.image}
                     width={1200}
                     height={1200}

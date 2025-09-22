@@ -1,9 +1,3 @@
-import NotificationEllipsis from "@/components/notifications/notification-ellipsis"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { api } from "@/convex/_generated/api"
-import { Doc } from "@/convex/_generated/dataModel"
-import { cn } from "@/lib/utils"
-import { formatCustomTimeAgo } from "@/utils/formatCustomTimeAgo"
 import { useMutation } from "convex/react"
 import {
   Heart,
@@ -11,11 +5,17 @@ import {
   MessageSquareText,
   UserRoundPlus,
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { toast } from "sonner"
-import { ProfileImage } from "../shared/profile-image"
+import NotificationEllipsis from "@/components/notifications/notification-ellipsis"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { api } from "@/convex/_generated/api"
+import { Doc } from "@/convex/_generated/dataModel"
+import { cn } from "@/lib/utils"
+import { formatCustomTimeAgo } from "@/utils/formatCustomTimeAgo"
 
 // Define a type `ExtendedNotificationProps` that extends the `Doc<"notifications">` type
 // But omits the "sender", "post", and "comment" properties. These properties are then redefined with new types.
@@ -127,8 +127,8 @@ export const NotificationItem = ({
             <>{icon}</>
             <Link href={`/${notification.sender?.username}`}>
               <Avatar className="size-9">
-                <ProfileImage
-                  src={notification.sender?.image}
+                <Image
+                  src={notification.sender?.image!}
                   width={100}
                   height={100}
                   alt={notification.sender?.name || "Profile image"}

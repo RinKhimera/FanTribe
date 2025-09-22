@@ -265,7 +265,7 @@ export enum BunnyVideoStatus {
 export interface BunnyApiResponse {
   success: boolean
   url: string
-  publicId: string
+  mediaId: string
   type: "image" | "video"
   error?: string
 }

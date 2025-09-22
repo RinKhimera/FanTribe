@@ -1,9 +1,9 @@
 "use client"
 
 import { ImagePlus } from "lucide-react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import TextareaAutosize from "react-textarea-autosize"
-import { ProfileImage } from "@/components/shared/profile-image"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
@@ -32,8 +32,8 @@ export const CreatePost = ({
       onClick={handleCreatePostClick}
     >
       <Avatar>
-        <ProfileImage
-          src={currentUser?.image}
+        <Image
+          src={currentUser?.image!}
           width={100}
           height={100}
           alt={currentUser?.username || "Profile image"}
@@ -47,7 +47,7 @@ export const CreatePost = ({
         <div className="flex h-full w-full flex-col">
           <TextareaAutosize
             placeholder="Partager une publication"
-            className="outline-hidden mt-1 h-full w-full cursor-pointer resize-none border-none bg-transparent text-xl"
+            className="mt-1 h-full w-full cursor-pointer resize-none border-none bg-transparent text-xl outline-hidden"
             onClick={(e) => {
               e.stopPropagation()
               handleCreatePostClick()

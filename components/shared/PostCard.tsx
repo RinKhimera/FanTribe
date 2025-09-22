@@ -12,9 +12,8 @@ import { CommentButton } from "@/components/home/comment-button"
 import { LikeButton } from "@/components/home/like-button"
 import { PostEllipsis } from "@/components/home/post-ellipsis"
 import { CommentSection } from "@/components/shared/comment-section"
-import { ProfileImage } from "@/components/shared/profile-image"
 import { SubscriptionModal } from "@/components/shared/subscription-modal"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 
@@ -103,18 +102,15 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
             <Link href={`/${post.author?.username}`}>
               <div className="flex items-center gap-3">
                 <Avatar>
-                  {post.author?.image ? (
-                    <ProfileImage
-                      src={post.author.image}
-                      width={100}
-                      height={100}
-                      alt={post.author.username || "Profile image"}
-                    />
-                  ) : (
-                    <AvatarFallback className="size-11">
-                      <div className="animate-pulse rounded-full bg-gray-500"></div>
-                    </AvatarFallback>
-                  )}
+                  <AvatarImage
+                    src={post.author?.image}
+                    width={100}
+                    height={100}
+                    alt={post.author?.username || "Profile image"}
+                  />
+                  <AvatarFallback className="size-11">
+                    <div className="animate-pulse rounded-full bg-gray-500" />
+                  </AvatarFallback>
                 </Avatar>
 
                 <div className="text-left max-sm:text-sm">

@@ -4,12 +4,12 @@ import { BunnyApiErrorResponse } from "@/types"
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const publicId = searchParams.get("publicId")
+    const mediaId = searchParams.get("mediaId")
     const type = searchParams.get("type") as "image" | "video"
 
-    if (!publicId || !type) {
+    if (!mediaId || !type) {
       return NextResponse.json<BunnyApiErrorResponse>(
-        { error: "publicId and type are required" },
+        { error: "mediaId and type are required" },
         { status: 400 },
       )
     }
@@ -17,7 +17,7 @@ export async function DELETE(request: NextRequest) {
     if (type === "video") {
       // Supprimer la vidéo de la bibliothèque
       const deleteResponse = await fetch(
-        `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${publicId}`,
+        `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
         {
           method: "DELETE",
           headers: {
@@ -39,7 +39,7 @@ export async function DELETE(request: NextRequest) {
     } else {
       // Supprimer l'image du storage
       const deleteResponse = await fetch(
-        `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE_NAME}/${publicId}`,
+        `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
         {
           method: "DELETE",
           headers: {

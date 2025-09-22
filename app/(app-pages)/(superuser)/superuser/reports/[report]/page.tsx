@@ -17,11 +17,10 @@ import {
   User,
   X,
 } from "lucide-react"
-import { CldImage } from "next-cloudinary"
+import Image from "next/image"
 import Link from "next/link"
 import { use, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { ProfileImage } from "@/components/shared/profile-image"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -232,7 +231,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
           <div className="flex items-center space-x-4">
             <div className="bg-muted flex h-16 w-16 items-center justify-center overflow-hidden rounded-full">
               {report.reportedUser.image ? (
-                <ProfileImage
+                <Image
                   src={report.reportedUser.image}
                   alt={report.reportedUser.name}
                   width={64}
@@ -287,7 +286,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
           <div className="flex items-center space-x-3">
             <div className="bg-muted flex h-10 w-10 items-center justify-center overflow-hidden rounded-full">
               {report.reportedPost.author?.image ? (
-                <ProfileImage
+                <Image
                   src={report.reportedPost.author.image}
                   alt={report.reportedPost.author.name}
                   width={40}
@@ -320,7 +319,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
                       key={index}
                       className="relative aspect-video overflow-hidden rounded-lg"
                     >
-                      <CldImage
+                      <Image
                         src={media}
                         alt={`Média ${index + 1}`}
                         fill
@@ -363,7 +362,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
           <div className="flex items-center space-x-3">
             <div className="bg-muted flex h-10 w-10 items-center justify-center overflow-hidden rounded-full">
               {report.reportedComment.author?.image ? (
-                <ProfileImage
+                <Image
                   src={report.reportedComment.author.image}
                   alt={report.reportedComment.author.name}
                   width={40}

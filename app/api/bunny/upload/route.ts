@@ -11,42 +11,35 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File
+    const fileName = formData.get("fileName") as string
     const userId = formData.get("userId") as string
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    if (!file || !userId || !fileName) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      )
     }
-
-    console.log(`🚀 API Route - Début upload: ${file.name}`)
 
     const randomSuffix = crypto.randomUUID().replace(/-/g, "").substring(0, 13)
     const fileExtension = file.name.split(".").pop()
-    const fileName = `${userId}/${randomSuffix}.${fileExtension}`
+    const videoFileName = `${randomSuffix}.${fileExtension}`
 
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
     if (file.type.startsWith("video/")) {
-      console.log(`🎥 Début traitement vidéo pour l'utilisateur: ${userId}`)
-
       let videoData: BunnyVideoGetResponse
 
       try {
         // Obtenir ou créer la collection de l'utilisateur
-        console.log(
-          `🔍 Recherche/création de collection pour userId: ${userId}`,
-        )
         const userCollectionId = await getOrCreateUserCollection(userId)
-        console.log(`✅ Collection obtenue/créée: ${userCollectionId}`)
 
         // Créer la vidéo dans la collection de l'utilisateur
-        console.log(
-          `📹 Création de la vidéo avec collectionId: ${userCollectionId}`,
-        )
         const videoResponse = await axios.post(
           `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos`,
           {
-            title: fileName,
+            title: videoFileName,
             collectionId: userCollectionId,
           },
           {
@@ -58,27 +51,15 @@ export async function POST(request: NextRequest) {
         )
 
         videoData = videoResponse.data
-        console.log(`✅ Vidéo créée avec GUID: ${videoData.guid}`)
       } catch (collectionError) {
         console.error(
           "❌ Erreur lors de la gestion des collections:",
           collectionError,
         )
-        // Fallback: créer la vidéo sans collection
-        console.log("🔄 Fallback: création de vidéo sans collection")
-        const videoResponse = await axios.post(
-          `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos`,
-          { title: fileName },
-          {
-            headers: {
-              AccessKey: process.env.BUNNY_VIDEO_LIBRARY_ACCESS_KEY!,
-              "Content-Type": "application/json",
-            },
-          },
-        )
-        videoData = videoResponse.data
-        console.log(`✅ Vidéo créée en fallback avec GUID: ${videoData.guid}`)
-      } // Upload du fichier
+        throw collectionError
+      }
+
+      // Upload de la video
       await axios.put(
         `https://video.bunnycdn.com/library/${process.env.BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
         buffer,
@@ -93,11 +74,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json<BunnyApiResponse>({
         success: true,
         url: `https://iframe.mediadelivery.net/embed/${process.env.BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
-        publicId: videoData.guid,
+        mediaId: videoData.guid,
         type: "video",
       })
     } else {
-      // Upload image
+      // Upload de l'image
       await axios.put(
         `https://storage.bunnycdn.com/${process.env.BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
         buffer,
@@ -112,7 +93,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json<BunnyApiResponse>({
         success: true,
         url: `${process.env.BUNNY_PULL_ZONE_URL}/${fileName}`,
-        publicId: fileName,
+        mediaId: fileName,
         type: "image",
       })
     }

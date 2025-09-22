@@ -159,7 +159,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
       <div
         key={media}
         onClick={(e) => e.stopPropagation()}
-        className="relative mt-2 w-full overflow-hidden"
+        className="relative mt-2 flex w-full overflow-hidden"
       >
         {/* Background blurred image */}
         <Image
@@ -177,7 +177,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           width={0}
           height={0}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="relative z-10 h-auto max-h-[750px] w-full object-cover"
+          className="relative z-10 h-auto max-h-[750px] w-full bg-red-50 object-cover"
         />
       </div>
     )

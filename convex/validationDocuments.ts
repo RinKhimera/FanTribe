@@ -4,15 +4,15 @@ import { mutation } from "./_generated/server"
 export const createDraftDocument = mutation({
   args: {
     userId: v.id("users"),
-    publicId: v.string(),
+    mediaUrl: v.string(),
     documentType: v.union(v.literal("identity_card"), v.literal("selfie")),
   },
   handler: async (ctx, args) => {
-    const { userId, publicId, documentType } = args
+    const { userId, mediaUrl, documentType } = args
 
     const draftDocument = await ctx.db.insert("validationDocumentsDraft", {
       userId,
-      publicId,
+      mediaUrl,
       documentType,
     })
 
@@ -21,14 +21,14 @@ export const createDraftDocument = mutation({
 })
 
 export const deleteDraftDocument = mutation({
-  args: { publicId: v.string() },
+  args: { mediaUrl: v.string() },
   handler: async (ctx, args) => {
-    const { publicId } = args
+    const { mediaUrl } = args
 
-    // Rechercher le document par publicId
+    // Rechercher le document par mediaUrl
     const document = await ctx.db
       .query("validationDocumentsDraft")
-      .withIndex("by_publicId", (q) => q.eq("publicId", publicId))
+      .withIndex("by_mediaUrl", (q) => q.eq("mediaUrl", mediaUrl))
       .first()
 
     // Si le document existe, le supprimer

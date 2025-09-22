@@ -31,11 +31,10 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
 import { BunnyApiResponse } from "@/types"
-import { ProfileImage } from "../shared/profile-image"
 
 export const NewPostLayout = () => {
   const router = useRouter()
-  const { currentUser } = useCurrentUser()
+  const { currentUser, isLoading } = useCurrentUser()
 
   const createDraftAsset = useMutation(api.assetsDraft.createDraftAsset)
   const deleteDraftAsset = useMutation(api.assetsDraft.deleteDraftAsset)
@@ -54,8 +53,6 @@ export const NewPostLayout = () => {
 
   const isPostCreatedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  if (currentUser?.accountType === "USER") router.push("/")
 
   useEffect(() => {
     return () => {
@@ -86,6 +83,9 @@ export const NewPostLayout = () => {
     },
   })
 
+  if (isLoading || !currentUser) return null
+  if (currentUser.accountType === "USER") router.push("/")
+
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -112,16 +112,24 @@ export const NewPostLayout = () => {
           toast.error(`Format non supporté: ${file.name}`)
           continue
         }
-        // if (file.size > 50 * 1024 * 1024) {
-        //   toast.error(`Fichier trop volumineux: ${file.name}`)
-        //   continue
-        // }
+        if (file.size > 300 * 1024 * 1024) {
+          toast.error(`Fichier trop volumineux: ${file.name} (max 300MB)`)
+          continue
+        }
 
         const formData = new FormData()
+        const randomSuffix = crypto
+          .randomUUID()
+          .replace(/-/g, "")
+          .substring(0, 13)
+        const fileExtension = file.name.split(".").pop()
+
+        formData.append("userId", currentUser._id)
         formData.append("file", file)
-        if (currentUser) {
-          formData.append("userId", currentUser._id)
-        }
+        formData.append(
+          "fileName",
+          `${currentUser._id}/${randomSuffix}.${fileExtension}`,
+        )
 
         const fileKey = `${file.name}_${Date.now()}`
         setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
@@ -153,14 +161,14 @@ export const NewPostLayout = () => {
           if (result.success) {
             const newMedia = {
               url: result.url,
-              publicId: result.publicId,
+              publicId: result.mediaId,
               type: result.type,
             }
             setMedias((prev) => [...prev, newMedia])
             if (currentUser) {
               await createDraftAsset({
                 author: currentUser._id,
-                publicId: result.publicId,
+                mediaUrl: result.url,
                 assetType: result.type,
               })
             }
@@ -249,7 +257,7 @@ export const NewPostLayout = () => {
       <div className="border-muted relative flex items-stretch space-x-3 border-b px-4 py-5">
         <Avatar>
           {currentUser?.image ? (
-            <ProfileImage
+            <Image
               src={currentUser.image}
               width={100}
               height={100}

@@ -6,8 +6,7 @@ import { useForm } from "react-hook-form"
 import TextareaAutosize from "react-textarea-autosize"
 import { toast } from "sonner"
 import { z } from "zod"
-import { ProfileImage } from "@/components/shared/profile-image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -64,7 +63,7 @@ export const CreateComment = ({
       {/* Avatar version desktop et tablette */}
       <div className="hidden sm:block">
         <Avatar className="overflow-hidden">
-          <ProfileImage
+          <AvatarImage
             src={currentUser?.image}
             alt={currentUser?.username || "Avatar"}
             width={44}
@@ -79,7 +78,7 @@ export const CreateComment = ({
       {/* Avatar version mobile (plus petit) */}
       <div className="block sm:hidden">
         <Avatar className="size-8 overflow-hidden">
-          <ProfileImage
+          <AvatarImage
             src={currentUser?.image}
             alt={currentUser?.username || "Avatar"}
             width={32}

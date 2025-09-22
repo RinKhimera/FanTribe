@@ -1,11 +1,10 @@
 import { useMutation } from "convex/react"
 import { Loader2 } from "lucide-react"
-import { CldImage } from "next-cloudinary"
+import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
-import { ProfileImage } from "@/components/shared/profile-image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { api } from "@/convex/_generated/api"
@@ -67,7 +66,7 @@ export const UserListsCard = ({
       {/* Bannière cliquable */}
       <Link href={profileUrl} className="relative block h-20 w-full">
         {user.bannerUrl ? (
-          <CldImage
+          <Image
             src={user.bannerUrl}
             alt={`Bannière de ${user.name}`}
             fill
@@ -86,7 +85,7 @@ export const UserListsCard = ({
             className="border-background -mt-14 block rounded-full border-4"
           >
             <Avatar className="h-20 w-20 overflow-hidden">
-              <ProfileImage
+              <AvatarImage
                 src={user.avatarUrl}
                 alt={user.name}
                 width={80}

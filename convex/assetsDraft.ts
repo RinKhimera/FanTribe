@@ -5,15 +5,15 @@ import { internalMutation, mutation } from "./_generated/server"
 export const createDraftAsset = mutation({
   args: {
     author: v.id("users"),
-    publicId: v.string(),
+    mediaUrl: v.string(),
     assetType: v.string(),
   },
   handler: async (ctx, args) => {
-    const { author, publicId, assetType } = args
+    const { author, mediaUrl, assetType } = args
 
     const draftAsset = await ctx.db.insert("assetsDraft", {
       author,
-      publicId,
+      mediaUrl,
       assetType,
     })
 
@@ -28,7 +28,7 @@ export const deleteDraftAsset = mutation({
 
     const asset = await ctx.db
       .query("assetsDraft")
-      .withIndex("by_publicId", (q) => q.eq("publicId", publicId))
+      .withIndex("by_mediaUrl", (q) => q.eq("mediaUrl", publicId))
       .first()
 
     if (asset) {
@@ -58,10 +58,8 @@ export const cleanUpDraftAssets = internalMutation({
     // Collecter toutes les URLs de médias pour suppression en lot
     const mediaUrls: string[] = []
 
-    // Les assets de posts contiennent maintenant des URLs complètes Bunny.net
     for (const asset of draftAssets) {
-      // Le publicId est maintenant une URL complète pour Bunny.net
-      mediaUrls.push(asset.publicId)
+      mediaUrls.push(asset.mediaUrl)
 
       try {
         await ctx.db.delete(asset._id)
@@ -72,9 +70,8 @@ export const cleanUpDraftAssets = internalMutation({
       }
     }
 
-    // Les documents de validation peuvent encore utiliser Cloudinary (à migrer plus tard)
     for (const doc of draftDocuments) {
-      mediaUrls.push(doc.publicId)
+      mediaUrls.push(doc.mediaUrl)
       try {
         await ctx.db.delete(doc._id)
         deleted++

@@ -6,7 +6,6 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { ProfileImage } from "@/components/shared/profile-image"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -159,8 +158,7 @@ export const UserListDialog = () => {
           {users?.map((user) => (
             <div
               key={user._id}
-              className={`flex cursor-pointer items-center gap-3 rounded p-2 transition-all duration-300 ease-in-out active:scale-95
-							${selectedUsers.includes(user._id) ? "bg-sky-600" : ""}`}
+              className={`flex cursor-pointer items-center gap-3 rounded p-2 transition-all duration-300 ease-in-out active:scale-95 ${selectedUsers.includes(user._id) ? "bg-sky-600" : ""}`}
               onClick={() => {
                 if (selectedUsers.includes(user._id)) {
                   setSelectedUsers(
@@ -173,9 +171,9 @@ export const UserListDialog = () => {
             >
               <Avatar className="overflow-visible">
                 {user.isOnline && (
-                  <div className="border-foreground absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
+                  <div className="border-foreground absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
                 )}
-                <ProfileImage
+                <Image
                   src={user.image}
                   width={100}
                   height={100}
@@ -207,7 +205,7 @@ export const UserListDialog = () => {
             }
           >
             {isPending ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2" />
+              <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-b-2" />
             ) : (
               "Suivant"
             )}

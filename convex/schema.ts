@@ -213,17 +213,17 @@ export default defineSchema({
 
   validationDocumentsDraft: defineTable({
     userId: v.id("users"),
-    publicId: v.string(),
+    mediaUrl: v.string(),
     documentType: v.union(v.literal("identity_card"), v.literal("selfie")),
   })
     .index("by_userId", ["userId"])
-    .index("by_publicId", ["publicId"]),
+    .index("by_mediaUrl", ["mediaUrl"]),
 
   assetsDraft: defineTable({
     author: v.id("users"),
-    publicId: v.string(),
+    mediaUrl: v.string(),
     assetType: v.string(),
   })
     .index("by_author", ["author"])
-    .index("by_publicId", ["publicId"]),
+    .index("by_mediaUrl", ["mediaUrl"]),
 })

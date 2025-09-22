@@ -68,8 +68,7 @@ export const createUser = internalMutation({
       image: args.image,
       lastSeenAt: Date.now(),
       isOnline: true,
-      imageBanner:
-        "https://res.cloudinary.com/onlyscam/image/upload/v1745084406/banner-profile/placeholder.jpg",
+      imageBanner: "https://cdn.fantribe.io/fantribe/placeholder.jpg",
       accountType: "USER",
     })
   },

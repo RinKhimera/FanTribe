@@ -4,8 +4,7 @@ import { useMutation } from "convex/react"
 import { Loader2, Send } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
-import { ProfileImage } from "@/components/shared/profile-image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
@@ -69,18 +68,15 @@ export const CommentSection = ({
           onClick={(e) => e.stopPropagation()}
         >
           <Avatar className="h-8 w-8 shrink-0">
-            {currentUser.image ? (
-              <ProfileImage
-                src={currentUser.image}
-                width={32}
-                height={32}
-                alt={currentUser.username || "Profile image"}
-              />
-            ) : (
-              <AvatarFallback className="text-xs">
-                {currentUser.name?.charAt(0) || "U"}
-              </AvatarFallback>
-            )}
+            <AvatarImage
+              src={currentUser.image}
+              width={32}
+              height={32}
+              alt={currentUser.username || "Profile image"}
+            />
+            <AvatarFallback className="text-xs">
+              {currentUser.name?.charAt(0) || "U"}
+            </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 space-y-2">

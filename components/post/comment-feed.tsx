@@ -4,8 +4,7 @@ import { fr } from "date-fns/locale"
 import Link from "next/link"
 import React from "react"
 import { CommentEllipsis } from "@/components/post/comment-ellipsis"
-import { ProfileImage } from "@/components/shared/profile-image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 
@@ -24,11 +23,9 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
               <Link href={`/${comment.author?.username}`}>
                 <div className="flex items-center gap-3">
                   <Avatar className="overflow-hidden">
-                    <ProfileImage
+                    <AvatarImage
                       src={comment.author?.image}
                       alt={comment.author?.name || "Avatar"}
-                      width={44}
-                      height={44}
                     />
                     <AvatarFallback className="size-11">
                       <div className="animate-pulse rounded-full bg-gray-500"></div>
