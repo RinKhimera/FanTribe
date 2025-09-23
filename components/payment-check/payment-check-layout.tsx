@@ -40,7 +40,7 @@ export const PaymentCheckLayout = () => {
 
   if (isPending)
     return (
-      <main className="flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-l border-r border-muted max-lg:w-[80%]">
+      <main className="border-muted flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-r border-l max-lg:w-[80%]">
         <div className="px-3 text-center text-xl">
           Veuillez patienter. Nous interrogeons le statut de votre paiement...
         </div>
@@ -49,7 +49,7 @@ export const PaymentCheckLayout = () => {
 
   if (error)
     return (
-      <main className="flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-l border-r border-muted max-lg:w-[80%]">
+      <main className="border-muted flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-r border-l max-lg:w-[80%]">
         <div className="px-3 text-center text-xl">
           Une erreur s&apos;est produite : {error.message}
           <br />
@@ -70,7 +70,7 @@ export const PaymentCheckLayout = () => {
   // }
 
   return (
-    <main className="flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-l border-r border-muted max-lg:w-[80%]">
+    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-r border-l max-lg:w-[80%]">
       <div>
         {data.status === "COMPLETED" && (
           <div className="flex flex-col items-center gap-4">

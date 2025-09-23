@@ -2,8 +2,6 @@ import { fetchQuery } from "convex/nextjs"
 import { notFound, redirect } from "next/navigation"
 import { getAuthToken } from "@/app/auth"
 import { UserGalleryLayout } from "@/components/profile/user-gallery-layout"
-import { SubscriptionSidebar } from "@/components/shared/subscription-sidebar"
-import { SuggestionSidebar } from "@/components/shared/suggestion-sidebar"
 import { api } from "@/convex/_generated/api"
 
 const UserGalleryPage = async (props: {
@@ -24,20 +22,7 @@ const UserGalleryPage = async (props: {
   if (userProfile === null) notFound()
 
   return (
-    <>
-      <UserGalleryLayout currentUser={currentUser} userProfile={userProfile} />
-
-      <>
-        {currentUser.username !== userProfile.username ? (
-          <SubscriptionSidebar
-            userProfile={userProfile}
-            currentUserId={currentUser._id}
-          />
-        ) : (
-          <SuggestionSidebar />
-        )}
-      </>
-    </>
+    <UserGalleryLayout currentUser={currentUser} userProfile={userProfile} />
   )
 }
 

@@ -2,7 +2,7 @@
 
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { LeftSidebar } from "@/components/shared/left-sidebar"
+import { ResponsiveLayout } from "@/components/shared/responsive-layout"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 export default function DashboardLayout({
@@ -19,8 +19,8 @@ export default function DashboardLayout({
       <section>
         <div className="flex h-screen w-full items-center justify-center">
           <div className="text-center">
-            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-            <p className="text-lg text-muted-foreground">Chargement...</p>
+            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+            <p className="text-muted-foreground text-lg">Chargement...</p>
           </div>
         </div>
       </section>
@@ -39,8 +39,8 @@ export default function DashboardLayout({
       <section>
         <div className="flex h-screen w-full items-center justify-center">
           <div className="text-center">
-            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-            <p className="text-lg text-muted-foreground">
+            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+            <p className="text-muted-foreground text-lg">
               Erreur de chargement du profil...
             </p>
           </div>
@@ -50,13 +50,6 @@ export default function DashboardLayout({
   }
 
   return (
-    <section>
-      <div className="relative flex h-full w-full items-center justify-center">
-        <div className="relative flex h-full w-full max-w-(--breakpoint-xl)">
-          <LeftSidebar currentUser={currentUser} />
-          {children}
-        </div>
-      </div>
-    </section>
+    <ResponsiveLayout currentUser={currentUser}>{children}</ResponsiveLayout>
   )
 }

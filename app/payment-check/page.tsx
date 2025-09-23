@@ -2,8 +2,7 @@ import { fetchQuery } from "convex/nextjs"
 import { redirect } from "next/navigation"
 import { getAuthToken } from "@/app/auth"
 import { PaymentCheckLayout } from "@/components/payment-check/payment-check-layout"
-import { LeftSidebar } from "@/components/shared/left-sidebar"
-import { SuggestionSidebar } from "@/components/shared/suggestion-sidebar"
+import { ResponsiveLayout } from "@/components/shared/responsive-layout"
 import { api } from "@/convex/_generated/api"
 
 const PaymentCheckPage = async () => {
@@ -15,13 +14,9 @@ const PaymentCheckPage = async () => {
   if (!currentUser?.username) redirect("/onboarding")
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center">
-      <div className="relative flex h-full w-full max-w-(--breakpoint-xl)">
-        <LeftSidebar currentUser={currentUser} />
-        <PaymentCheckLayout />
-        <SuggestionSidebar />
-      </div>
-    </div>
+    <ResponsiveLayout currentUser={currentUser}>
+      <PaymentCheckLayout />
+    </ResponsiveLayout>
   )
 }
 

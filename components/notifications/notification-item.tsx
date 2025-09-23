@@ -5,13 +5,12 @@ import {
   MessageSquareText,
   UserRoundPlus,
 } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { toast } from "sonner"
 import NotificationEllipsis from "@/components/notifications/notification-ellipsis"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
@@ -127,11 +126,12 @@ export const NotificationItem = ({
             <>{icon}</>
             <Link href={`/${notification.sender?.username}`}>
               <Avatar className="size-9">
-                <Image
+                <AvatarImage
                   src={notification.sender?.image!}
                   width={100}
                   height={100}
                   alt={notification.sender?.name || "Profile image"}
+                  className="aspect-square h-full w-full object-cover"
                 />
                 <AvatarFallback className="size-11">
                   <div className="animate-pulse rounded-full bg-gray-500"></div>

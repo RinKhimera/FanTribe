@@ -5,8 +5,6 @@ import { Loader2 } from "lucide-react"
 import { notFound } from "next/navigation"
 import { use } from "react"
 import { UserProfileLayout } from "@/components/profile/user-profile-layout"
-import { SubscriptionSidebar } from "@/components/shared/subscription-sidebar"
-import { SuggestionSidebar } from "@/components/shared/suggestion-sidebar"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 
@@ -22,14 +20,7 @@ const UserProfilePage = ({
     username: username,
   })
 
-  // Vérifier si l'utilisateur peut être suivi
-  const canSubscribeCheck = useQuery(
-    api.subscriptions.canUserSubscribe,
-    userProfile?._id ? { creatorId: userProfile._id } : "skip",
-  )
-  const canSubscribe = !!canSubscribeCheck?.canSubscribe
-  // Variable reason disponible (cannotReason) pour gestion UI
-  // const cannotReason = canSubscribeCheck?.reason
+  // La logique de l'abonnement/suggestions est désormais gérée par RightSidebarRouter
 
   if (userProfile === undefined) {
     return (
@@ -43,20 +34,7 @@ const UserProfilePage = ({
   if (userProfile === null) notFound()
 
   return (
-    <>
-      <UserProfileLayout currentUser={currentUser!} userProfile={userProfile} />
-
-      <>
-        {currentUser?.username !== userProfile.username && canSubscribe ? (
-          <SubscriptionSidebar
-            userProfile={userProfile}
-            currentUserId={currentUser?._id}
-          />
-        ) : (
-          <SuggestionSidebar />
-        )}
-      </>
-    </>
+    <UserProfileLayout currentUser={currentUser!} userProfile={userProfile} />
   )
 }
 

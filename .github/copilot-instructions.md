@@ -45,6 +45,8 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 // Standard component structure
 
+// Standard component structure
+
 export const MyComponent = () => {
   const { currentUser, isLoading } = useCurrentUser()
   // Component logic
@@ -71,8 +73,12 @@ await createPost({ content, medias, visibility })
 
 ### Media Handling
 
-- Draft assets stored in `assetsDraft` table during upload
-- Video/image processing patterns in `lib/video-utils.ts`
+- **Bunny CDN Architecture**: Videos use Bunny Stream (`iframe.mediadelivery.net`), images use Bunny Storage
+- **User Collections**: Videos automatically organized in user-specific collections via `getOrCreateUserCollection`
+- **Upload Process**: Use `BunnyUploadWidget` component → `uploadBunnyAsset` function → creates draft in `assetsDraft` table
+- **Video Metadata**: Fetch via `/api/bunny/metadata` endpoint using video GUIDs extracted from iframe URLs
+- **File Naming**: `userId/{randomSuffix}.{extension}` pattern for all uploads
+- **Note**: All media handling uses Bunny CDN exclusively (Cloudinary is being phased out)
 
 ## Project-Specific Patterns
 
@@ -88,14 +94,28 @@ await createPost({ content, medias, visibility })
 - Blocks table prevents notifications between blocked users
 - Real-time via Convex subscriptions
 
+### Creator Verification
+
+- `creatorApplications` table with status: `pending`, `approved`, `rejected`
+- Identity documents handled via Bunny CDN storage
+- Account type automatically upgraded from `USER` to `CREATOR` upon approval
+
+### Payment Integration
+
+- **CinetPay**: African-focused payment processor for subscriptions
+- **Test Mode**: Bypasses CinetPay verification in development (`TEST MODE` logs)
+- **Payment Flow**: CinetPay → webhook notification → subscription activation
+- **Return Handling**: `/api/return` validates transactions with CinetPay API
+
 ### Component Organization
 
 ```
 components/
-├── shared/          # Reusable components (left-sidebar, profile-image)
+├── shared/          # Reusable components (LeftSidebar, ProfileImage, BunnyUploadWidget)
 ├── home/           # Feed-specific components
-├── messages/       # Chat system components
-├── new-post/       # Post creation flow
+├── messages/       # Chat system components with media support
+├── new-post/       # Post creation flow with draft system
+├── profile/        # User profiles, subscribe/renew dialogs
 └── ui/             # Shadcn/ui components
 ```
 
@@ -110,7 +130,7 @@ components/
 ### External Services
 
 - **Clerk**: Authentication with French localization (`frFR`)
-- **Bunny CDN**: Video delivery (bunny-sdk)
+- **Bunny CDN**: Video delivery (bunny-sdk) and storage with organized user collections
 - **Resend**: Email notifications
 - **CinetPay**: Payment processing (African market focus)
 
@@ -136,10 +156,12 @@ components/
 - Remember French localization for user-facing text
 - Test creator vs user permission flows
 - Handle offline/online states in messaging
+- Bunny CDN requires proper environment variables and collection management
+- Avoid fixed width percentages in layouts - use ResponsiveLayout component instead
 
 ### File Naming
 
-- Kebab-case for files and directories
-- Component files end with `.tsx`
+- PascalCase for component files: `MyComponent.tsx`
+- Kebab-case for directories and non-component files
 - API-like functions in `convex/` use camelCase
 - Use meaningful prefixes: `use-` for hooks, descriptive names for components

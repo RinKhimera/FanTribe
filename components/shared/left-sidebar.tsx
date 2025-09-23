@@ -49,8 +49,8 @@ export const LeftSidebar = ({ currentUser }: { currentUser: Doc<"users"> }) => {
   return (
     <>
       {/* Navigation Desktop */}
-      <section className="sticky top-0 flex h-screen w-[20%] flex-col items-stretch px-3 max-lg:w-[15%] max-lg:items-end max-[500px]:hidden">
-        <div className="mt-4 flex h-full flex-col space-y-5 font-semibold max-lg:items-center">
+      <section className="sticky top-0 flex h-screen w-[clamp(72px,24vw,260px)] flex-col items-stretch pr-2 max-[500px]:hidden max-lg:items-end lg:ml-5 lg:pr-10">
+        <div className="mt-4 flex h-full w-full flex-col space-y-5 font-semibold max-lg:items-center lg:min-w-[230px]">
           {filteredNavigationLinks.map((link) => {
             const IconComponent = link.icon
             const badgeValue = link.badge ? link.badge(unreadCounts) : null
@@ -62,7 +62,7 @@ export const LeftSidebar = ({ currentUser }: { currentUser: Doc<"users"> }) => {
                 href={href}
                 className={cn(
                   buttonVariants({ variant: "navLink" }),
-                  "hover:bg-foreground/10 hover:text-primary flex w-fit items-center space-x-4 rounded-3xl text-xl transition",
+                  "hover:bg-foreground/10 hover:text-primary flex w-fit items-center gap-6 rounded-3xl text-xl transition",
                   { "text-muted-foreground": pathname !== href },
                 )}
               >
@@ -71,7 +71,7 @@ export const LeftSidebar = ({ currentUser }: { currentUser: Doc<"users"> }) => {
                   {badgeValue && (
                     <Badge
                       variant="destructive"
-                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
+                      className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
                     >
                       {badgeValue}
                     </Badge>

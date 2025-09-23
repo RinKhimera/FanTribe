@@ -2,8 +2,6 @@ import { fetchQuery } from "convex/nextjs"
 import { notFound, redirect } from "next/navigation"
 import { getAuthToken } from "@/app/auth"
 import { EditProfileLayout } from "@/components/profile/edit-profile-layout"
-import { SubscriptionSidebar } from "@/components/shared/subscription-sidebar"
-import { SuggestionSidebar } from "@/components/shared/suggestion-sidebar"
 import { api } from "@/convex/_generated/api"
 
 const EditProfile = async (props: {
@@ -32,24 +30,11 @@ const EditProfile = async (props: {
   )
 
   return (
-    <>
-      <EditProfileLayout
-        currentUser={currentUser}
-        userProfile={userProfile}
-        subStatus={subscriptionStatus}
-      />
-
-      <>
-        {currentUser.username !== userProfile.username ? (
-          <SubscriptionSidebar
-            userProfile={userProfile}
-            currentUserId={currentUser._id}
-          />
-        ) : (
-          <SuggestionSidebar />
-        )}
-      </>
-    </>
+    <EditProfileLayout
+      currentUser={currentUser}
+      userProfile={userProfile}
+      subStatus={subscriptionStatus}
+    />
   )
 }
 

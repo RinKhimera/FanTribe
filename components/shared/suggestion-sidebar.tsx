@@ -84,15 +84,15 @@ export const SuggestionSidebar = () => {
   const isSearching = debouncedSearchTerm.trim().length > 0
 
   return (
-    <section className="sticky top-0 h-screen w-[30%] items-stretch overflow-auto pl-6 pr-2 max-lg:hidden">
+    <section className="sticky top-0 h-screen w-[clamp(280px,32vw,420px)] items-stretch overflow-auto pr-2 pl-6 max-lg:hidden">
       <div className="mt-3">
         {/* Barre de recherche */}
         <div className="relative h-12 w-full">
           <label
             htmlFor="searchBox"
-            className="absolute left-0 top-0 flex h-full items-center justify-center p-4"
+            className="absolute top-0 left-0 flex h-full items-center justify-center p-4"
           >
-            <Search className="h-5 w-5 text-muted-foreground" />
+            <Search className="text-muted-foreground h-5 w-5" />
           </label>
 
           <input
@@ -101,7 +101,7 @@ export const SuggestionSidebar = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Rechercher sur FanTribe"
-            className="h-full w-full rounded-xl border-none bg-muted py-4 pl-14 pr-12 outline-hidden placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
+            className="bg-muted placeholder:text-muted-foreground focus:ring-primary h-full w-full rounded-xl border-none py-4 pr-12 pl-14 outline-hidden focus:ring-2"
           />
 
           {searchTerm && (
@@ -109,7 +109,7 @@ export const SuggestionSidebar = () => {
               variant="ghost"
               size="icon"
               onClick={clearSearch}
-              className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2"
+              className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -126,8 +126,8 @@ export const SuggestionSidebar = () => {
             {searchResults === undefined ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"></div>
+                  <p className="text-muted-foreground mt-2 text-sm">
                     Recherche en cours...
                   </p>
                 </div>
@@ -135,11 +135,11 @@ export const SuggestionSidebar = () => {
             ) : searchResults.length === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
-                  <Search className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <Search className="text-muted-foreground mx-auto h-12 w-12" />
+                  <p className="text-muted-foreground mt-2 text-sm">
                     Aucun utilisateur trouvé
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Essayez avec un autre nom ou username
                   </p>
                 </div>
@@ -182,12 +182,12 @@ export const SuggestionSidebar = () => {
                       key={index}
                       className="relative mb-2.5 h-[140px] animate-pulse rounded-lg"
                     >
-                      <div className="h-full w-full rounded-lg bg-muted"></div>
-                      <div className="absolute left-4 top-1/2 z-10 -translate-y-1/2 transform">
-                        <div className="relative size-24 rounded-full border-2 bg-muted"></div>
+                      <div className="bg-muted h-full w-full rounded-lg"></div>
+                      <div className="absolute top-1/2 left-4 z-10 -translate-y-1/2 transform">
+                        <div className="bg-muted relative size-24 rounded-full border-2"></div>
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 h-16 rounded-b-lg bg-black/30">
-                        <div className="ml-[120px] flex flex-col justify-center gap-2 pr-4 pt-3">
+                      <div className="absolute right-0 bottom-0 left-0 h-16 rounded-b-lg bg-black/30">
+                        <div className="ml-[120px] flex flex-col justify-center gap-2 pt-3 pr-4">
                           <div className="h-4 w-32 rounded bg-gray-400/50"></div>
                           <div className="h-3 w-24 rounded bg-gray-400/30"></div>
                         </div>
@@ -199,13 +199,13 @@ export const SuggestionSidebar = () => {
             ) : !suggestedCreators || suggestedCreators.length === 0 ? (
               <div className="flex items-center justify-center">
                 <div className="rounded-lg border p-4 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <Search className="h-6 w-6 text-muted-foreground" />
+                  <div className="bg-muted mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+                    <Search className="text-muted-foreground h-6 w-6" />
                   </div>
-                  <p className="mt-3 font-medium text-foreground">
+                  <p className="text-foreground mt-3 font-medium">
                     Aucune suggestion disponible
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Revenez plus tard pour découvrir de nouveaux créateurs
                   </p>
                 </div>
@@ -220,14 +220,14 @@ export const SuggestionSidebar = () => {
                         variant="outline"
                         size="icon"
                         onClick={refreshSuggestions}
-                        className="h-8 w-8 rounded-full hover:bg-primary"
+                        className="hover:bg-primary h-8 w-8 rounded-full"
                       >
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                       {userGroups.length > 1 && (
                         <>
-                          <CarouselPrevious className="static h-8 w-8 translate-y-0 hover:bg-primary" />
-                          <CarouselNext className="static h-8 w-8 translate-y-0 hover:bg-primary" />
+                          <CarouselPrevious className="hover:bg-primary static h-8 w-8 translate-y-0" />
+                          <CarouselNext className="hover:bg-primary static h-8 w-8 translate-y-0" />
                         </>
                       )}
                     </div>

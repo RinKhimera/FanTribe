@@ -28,7 +28,7 @@ export const SubscriptionSidebar = ({
     subscriberId: currentUserId!,
   })
   return (
-    <section className="sticky top-0 h-screen w-[30%] items-stretch overflow-auto pr-2 pl-6 max-lg:hidden">
+    <section className="sticky top-0 h-screen w-[clamp(280px,32vw,420px)] items-stretch overflow-auto pr-2 pl-6 max-lg:hidden">
       <Card className="mt-4 w-[350px] bg-transparent">
         <CardHeader>
           <CardTitle>Abonnement</CardTitle>
