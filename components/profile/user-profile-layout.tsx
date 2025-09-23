@@ -11,7 +11,7 @@ import { UnsubscribeDialog } from "@/components/profile/unsubscribe-dialog"
 import { UserPosts } from "@/components/profile/user-posts"
 import { UserReportButton } from "@/components/profile/user-report-button"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
@@ -69,10 +69,10 @@ export const UserProfileLayout = ({
             <DialogTrigger asChild>
               <Avatar className="border-accent size-36 cursor-pointer border-4 object-none object-center max-sm:size-24">
                 {userProfile?.image ? (
-                  <Image
+                  <AvatarImage
                     src={userProfile.image}
-                    width={600}
-                    height={600}
+                    width={100}
+                    height={100}
                     className="aspect-square h-full w-full object-cover"
                     alt={userProfile?.name || "Profile image"}
                   />

@@ -1,10 +1,9 @@
 "use client"
 
 import { ImagePlus } from "lucide-react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import TextareaAutosize from "react-textarea-autosize"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
 
@@ -32,10 +31,11 @@ export const CreatePost = ({
       onClick={handleCreatePostClick}
     >
       <Avatar>
-        <Image
+        <AvatarImage
           src={currentUser?.image!}
           width={100}
           height={100}
+          className="aspect-square h-full w-full object-cover"
           alt={currentUser?.username || "Profile image"}
         />
         <AvatarFallback className="size-11">

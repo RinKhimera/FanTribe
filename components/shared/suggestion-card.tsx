@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UserProps } from "@/types"
 
 interface SuggestionCardProps {
@@ -47,7 +47,7 @@ export const SuggestionCard = ({ user, searchTerm }: SuggestionCardProps) => {
               <div className="border-foreground absolute top-0 right-1.5 size-4 rounded-full border-2 bg-green-500" />
             )}
             {user?.image ? (
-              <Image
+              <AvatarImage
                 src={user.image}
                 width={200}
                 height={200}

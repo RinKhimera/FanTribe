@@ -107,6 +107,7 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
                     width={100}
                     height={100}
                     alt={post.author?.username || "Profile image"}
+                    className="aspect-square h-full w-full object-cover"
                   />
                   <AvatarFallback className="size-11">
                     <div className="animate-pulse rounded-full bg-gray-500" />

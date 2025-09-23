@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form"
 import TextareaAutosize from "react-textarea-autosize"
 import { toast } from "sonner"
 import { z } from "zod"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -233,10 +233,11 @@ export const NewPostLayout = () => {
       <div className="border-muted relative flex items-stretch space-x-3 border-b px-4 py-5">
         <Avatar>
           {currentUser?.image ? (
-            <Image
+            <AvatarImage
               src={currentUser.image}
               width={100}
               height={100}
+              className="aspect-square h-full w-full object-cover"
               alt={currentUser?.username || "Profile image"}
             />
           ) : (

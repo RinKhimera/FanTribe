@@ -7,7 +7,7 @@ import { useTransition } from "react"
 import { toast } from "sonner"
 import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { deleteBunnyAsset } from "@/lib/bunny"
 import { cn } from "@/lib/utils"
@@ -208,10 +208,11 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
                 onClick={() => open()}
               >
                 {currentUser?.image ? (
-                  <Image
+                  <AvatarImage
                     src={currentUser.image}
                     width={600}
                     height={600}
+                    className="object-cover"
                     alt={currentUser?.name || "Profile image"}
                   />
                 ) : (
