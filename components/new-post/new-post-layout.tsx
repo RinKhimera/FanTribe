@@ -128,7 +128,6 @@ export const NewPostLayout = () => {
         setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
 
         try {
-          // Utiliser la logique métier directement
           const result: BunnyApiResponse = await uploadBunnyAsset({
             file,
             fileName,

@@ -9,6 +9,7 @@ import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
+import { deleteBunnyAsset } from "@/lib/bunny"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
 
@@ -17,13 +18,55 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
   const updateProfileImage = useMutation(api.users.updateProfileImage)
   const updateBannerImage = useMutation(api.users.updateBannerImage)
 
-  const handleUploadProfile = (result: {
+  // Fonction helper pour extraire le mediaId depuis l'URL Bunny
+  const extractMediaIdFromUrl = (url: string): string | null => {
+    try {
+      // Pour les images: https://cdn.fantribe.io/userId/randomId.ext
+      // On veut récupérer "userId/randomId.ext" comme mediaId
+      const urlParts = url.split("/")
+
+      // Trouver l'index du domaine cdn.fantribe.io et récupérer tout ce qui suit
+      const domainIndex = urlParts.findIndex((part) =>
+        part.includes("cdn.fantribe.io"),
+      )
+      if (domainIndex !== -1 && urlParts.length > domainIndex + 1) {
+        // Récupérer tous les segments après le domaine (userId/randomId.ext)
+        const mediaIdParts = urlParts.slice(domainIndex + 1)
+        return mediaIdParts.join("/") || null
+      }
+
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  const handleUploadProfile = async (result: {
     url: string
     mediaId: string
     type: "image" | "video"
   }) => {
     startTransition(async () => {
       try {
+        // Supprimer l'ancienne image de profil si elle existe et n'est pas le placeholder
+        if (
+          currentUser?.image &&
+          !currentUser.image.includes("placeholder.jpg") &&
+          currentUser.image.includes("cdn.fantribe.io")
+        ) {
+          const oldMediaId = extractMediaIdFromUrl(currentUser.image)
+          if (oldMediaId) {
+            try {
+              await deleteBunnyAsset(oldMediaId, "image")
+            } catch (error) {
+              console.warn(
+                "Impossible de supprimer l'ancienne image de profil:",
+                error,
+              )
+            }
+          }
+        }
+
         await updateProfileImage({
           imgUrl: result.url,
           tokenIdentifier: currentUser?.tokenIdentifier!,
@@ -39,13 +82,32 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
     })
   }
 
-  const handleUploadBanner = (result: {
+  const handleUploadBanner = async (result: {
     url: string
     mediaId: string
     type: "image" | "video"
   }) => {
     startTransition(async () => {
       try {
+        // Supprimer l'ancienne bannière si elle existe et n'est pas le placeholder
+        if (
+          currentUser?.imageBanner &&
+          !currentUser.imageBanner.includes("placeholder.jpg") &&
+          currentUser.imageBanner.includes("cdn.fantribe.io")
+        ) {
+          const oldMediaId = extractMediaIdFromUrl(currentUser.imageBanner)
+          if (oldMediaId) {
+            try {
+              await deleteBunnyAsset(oldMediaId, "image")
+            } catch (error) {
+              console.warn(
+                "Impossible de supprimer l'ancienne bannière:",
+                error,
+              )
+            }
+          }
+        }
+
         await updateBannerImage({
           bannerUrl: result.url,
           tokenIdentifier: currentUser?.tokenIdentifier!,
@@ -87,7 +149,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           <Image
             src={
               currentUser?.imageBanner ||
-              "https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&dpr=2&q=80"
+              "https://cdn.fantribe.io/fantribe/placeholder.jpg"
             }
             alt={currentUser?.name as string}
             className="object-cover"

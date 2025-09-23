@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react"
 import { Pencil } from "lucide-react"
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,8 +30,17 @@ export const EditPostDialog = ({ postId }: EditPostDialogProps) => {
   const [isPending, startTransition] = useTransition()
 
   // Récupérer le post actuel pour pré-remplir le contenu
-  const post = useQuery(api.posts.getPost, { postId })
+  // Utiliser "skip" quand le dialog est fermé pour éviter les requêtes inutiles
+  const post = useQuery(api.posts.getPost, open ? { postId } : "skip")
   const updatePost = useMutation(api.posts.updatePost)
+
+  // Fermer le dialog si le post n'existe plus (supprimé)
+  useEffect(() => {
+    if (open && post === null) {
+      setOpen(false)
+      toast.error("Cette publication n'existe plus")
+    }
+  }, [open, post])
 
   // Pré-remplir le contenu quand le dialog s'ouvre
   const handleOpenChange = (isOpen: boolean) => {

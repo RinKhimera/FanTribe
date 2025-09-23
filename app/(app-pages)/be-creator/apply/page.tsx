@@ -7,7 +7,6 @@ import { useEffect, useRef, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { deleteValidationDocument } from "@/actions/bunny-actions"
 import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,6 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { deleteBunnyAsset } from "@/lib/bunny"
 
 const applicationSchema = z.object({
   fullName: z.string().min(2, "Le nom complet est requis"),
@@ -151,7 +151,7 @@ const ApplyCreatorPage = () => {
         const currentDocs = uploadedDocumentsRef.current
         Object.values(currentDocs).forEach((doc) => {
           if (doc?.mediaId) {
-            deleteValidationDocument(doc.mediaId).catch((error: unknown) => {
+            deleteBunnyAsset(doc.mediaId, "image").catch((error: unknown) => {
               console.error("Erreur lors de la suppression du document:", error)
             })
             deleteDraftDocument({ mediaUrl: doc.mediaId }).catch(
@@ -212,7 +212,7 @@ const ApplyCreatorPage = () => {
     if (!document) return
 
     try {
-      await deleteValidationDocument(document.mediaId)
+      await deleteBunnyAsset(document.mediaId, "image")
       await deleteDraftDocument({ mediaUrl: document.mediaId })
       setUploadedDocuments((prev) => ({
         ...prev,

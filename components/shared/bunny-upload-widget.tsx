@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { toast } from "sonner"
-import { BunnyApiResponse } from "@/types"
+import { uploadBunnyAsset } from "@/lib/bunny"
 
 interface BunnyUploadWidgetProps {
   onSuccess: (result: {
@@ -78,24 +78,20 @@ export const BunnyUploadWidget = ({
 
     try {
       const fileExtension = file.name.split(".").pop()
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("fileName", `${fileName}.${fileExtension}`)
-      formData.append("userId", userId)
+      const randomSuffix = crypto
+        .randomUUID()
+        .replace(/-/g, "")
+        .substring(0, 13)
+      const finalFileName = `${fileName}_${randomSuffix}.${fileExtension}`
 
-      const response = await fetch("/api/bunny/upload", {
-        method: "POST",
-        body: formData,
+      const result = await uploadBunnyAsset({
+        file,
+        fileName: finalFileName,
+        userId,
       })
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de l'upload")
-      }
-
-      const result: BunnyApiResponse = await response.json()
-
       if (!result.success) {
-        throw new Error("Upload échoué")
+        throw new Error(result.error || "Upload échoué")
       }
 
       onSuccess({
