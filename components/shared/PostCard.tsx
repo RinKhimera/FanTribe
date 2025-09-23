@@ -4,7 +4,6 @@ import { useQuery } from "convex/react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import React, { useState } from "react"
 import { PostMedia } from "@/components/blocs/PostMedia"
 import { BookmarkButton } from "@/components/home/bookmark-button"
@@ -14,8 +13,15 @@ import { PostEllipsis } from "@/components/home/post-ellipsis"
 import { CommentSection } from "@/components/shared/comment-section"
 import { SubscriptionModal } from "@/components/shared/subscription-modal"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
+import { formatPostDate } from "@/utils/formatPostDate"
 
 // ExtendedPost is a type that represents a post with an extended author field.
 // It's created by taking the original Doc<"posts"> type and omitting the 'author' field.
@@ -40,7 +46,6 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
 
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false)
-  const router = useRouter()
 
   const isOwnPost = currentUser._id === post.author?._id
   const isMediaProtected = post.visibility === "subscribers_only"
@@ -66,41 +71,26 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
     isSubscriber ||
     currentUser.accountType === "SUPERUSER"
 
-  const handlePostClick = (e: React.MouseEvent) => {
-    // Ne navigue que si le clic n'est pas sur un élément interactif
-    if (
-      !(e.target as HTMLElement).closest("button") &&
-      !(e.target as HTMLElement).closest("a") &&
-      !(e.target as HTMLElement).closest("textarea") &&
-      !(e.target as HTMLElement).closest("form")
-    ) {
-      // Si l'utilisateur n'a pas accès au contenu restreint
-      if (!canViewMedia && post.author && !isOwnPost) {
-        setIsSubscriptionModalOpen(true)
-      } else {
-        // Navigation normale vers la page du post
-        router.push(`/${post.author?.username}/post/${post._id}`)
-      }
-    }
-  }
-
   const toggleComments = () => {
     setIsCommentsOpen(!isCommentsOpen)
   }
 
   return (
     <>
-      <div
-        className="hover:bg-muted/10 flex cursor-pointer space-x-4 border-b pt-4 pb-2 transition-colors"
-        onClick={handlePostClick}
-      >
+      <div className="flex space-x-4 border-b pt-4 pb-2">
         <div className="flex w-full flex-col">
           <div
             className="flex items-center justify-between pr-2 pl-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <Link href={`/${post.author?.username}`}>
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
+              {/* Avatar cliquable */}
+              <Link
+                href={`/${post.author?.username}`}
+                prefetch={false}
+                className="focus-visible:ring-primary shrink-0 rounded-full focus-visible:ring-2 focus-visible:outline-none"
+                aria-label={`Aller au profil de ${post.author?.username}`}
+              >
                 <Avatar>
                   <AvatarImage
                     src={post.author?.image}
@@ -113,22 +103,53 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
                     <div className="animate-pulse rounded-full bg-gray-500" />
                   </AvatarFallback>
                 </Avatar>
+              </Link>
 
-                <div className="text-left max-sm:text-sm">
-                  <div className="font-bold">{post.author?.name}</div>
-                  <div className="text-muted-foreground">
-                    @{post.author?.username}
-                  </div>
-                </div>
+              <div className="flex flex-col text-left max-sm:text-sm">
+                <Link
+                  href={`/${post.author?.username}`}
+                  className="focus-visible:ring-primary cursor-pointer rounded font-bold hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  {post.author?.name}
+                </Link>
+                <Link
+                  href={`/${post.author?.username}`}
+                  className="text-muted-foreground hover:text-primary focus-visible:ring-primary w-fit cursor-pointer rounded underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  @{post.author?.username}
+                </Link>
               </div>
-            </Link>
+            </div>
 
-            <div className="text-muted-foreground flex items-center gap-3">
-              <>
-                {format(new Date(post._creationTime), "d MMMM", {
-                  locale: fr,
-                })}
-              </>
+            <div className="flex items-center gap-2 text-sm">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={`/${post.author?.username}/post/${post._id}`}
+                      role="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!canViewMedia && post.author && !isOwnPost) {
+                          e.preventDefault()
+                          setIsSubscriptionModalOpen(true)
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                      aria-label="Voir le post"
+                    >
+                      {formatPostDate(post._creationTime)}
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={2}>
+                    {format(
+                      new Date(post._creationTime),
+                      "d MMMM yyyy 'à' HH:mm",
+                      { locale: fr },
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
               <PostEllipsis
                 postId={post._id}

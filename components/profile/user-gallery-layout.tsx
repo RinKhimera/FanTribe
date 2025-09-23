@@ -183,7 +183,7 @@ export const UserGalleryLayout = ({
                 value="posts"
                 className={cn(
                   "w-full rounded-none transition-colors duration-200",
-                  "hover:bg-primary/10 data-[state=active]:bg-muted/30",
+                  "hover:bg-primary/10 data-[state=active]:bg-muted/30 cursor-pointer",
                   !isGalleryActive && "border-primary border-b-2",
                 )}
               >
@@ -195,7 +195,7 @@ export const UserGalleryLayout = ({
                 value="media"
                 className={cn(
                   "w-full rounded-none transition-colors duration-200",
-                  "hover:bg-primary/10 data-[state=active]:bg-muted/30",
+                  "hover:bg-primary/10 data-[state=active]:bg-muted/30 cursor-pointer",
                   isGalleryActive && "border-primary border-b-2",
                 )}
               >

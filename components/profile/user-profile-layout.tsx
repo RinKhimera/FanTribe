@@ -5,14 +5,16 @@ import { Link as LucideLink, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useCallback, useState } from "react"
 import { RenewDialog } from "@/components/profile/renew-dialog"
 import { SubscribeDialog } from "@/components/profile/subscribe-dialog"
 import { UnsubscribeDialog } from "@/components/profile/unsubscribe-dialog"
 import { UserPosts } from "@/components/profile/user-posts"
 import { UserReportButton } from "@/components/profile/user-report-button"
+// Fullscreen viewer pour l'image de profil
+import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
@@ -43,6 +45,12 @@ export const UserProfileLayout = ({
   const username = userProfile.username
   const isGalleryActive = pathname.includes(`/${username}/gallery`)
   const canSubscribe = canSubscribeCheck?.canSubscribe || false
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false)
+
+  const openAvatar = useCallback(() => {
+    if (!userProfile?.image) return
+    setAvatarViewerOpen(true)
+  }, [userProfile?.image])
 
   return (
     <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
@@ -65,40 +73,33 @@ export const UserProfileLayout = ({
           </AspectRatio>
         </div>
         <div className="absolute -bottom-[65px] left-5 max-sm:-bottom-[38px]">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Avatar className="border-accent size-36 cursor-pointer border-4 object-none object-center max-sm:size-24">
-                {userProfile?.image ? (
-                  <AvatarImage
-                    src={userProfile.image}
-                    width={100}
-                    height={100}
-                    className="aspect-square h-full w-full object-cover"
-                    alt={userProfile?.name || "Profile image"}
-                  />
-                ) : (
-                  <AvatarFallback className="size-11">
-                    <div className="animate-pulse rounded-full bg-gray-500"></div>
-                  </AvatarFallback>
-                )}
-              </Avatar>
-            </DialogTrigger>
-            <DialogContent className="flex h-screen max-w-none items-center justify-center border-none bg-black/80 p-0 sm:rounded-none">
-              <div className="relative max-h-[90vh] max-w-[90vw]">
-                {userProfile?.image ? (
-                  <Image
-                    src={userProfile.image}
-                    width={1200}
-                    height={1200}
-                    className="max-h-[90vh] max-w-[90vw] object-contain"
-                    alt={userProfile?.name || "Profile image"}
-                  />
-                ) : (
-                  <div className="h-[50vh] w-[50vh] animate-pulse rounded-full bg-gray-500"></div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+          <button
+            type="button"
+            onClick={openAvatar}
+            className="focus-visible:ring-ring group rounded-full outline-none focus-visible:ring-2"
+          >
+            <Avatar className="border-accent size-36 cursor-pointer border-4 object-none object-center transition hover:brightness-110 max-sm:size-24">
+              {userProfile?.image ? (
+                <AvatarImage
+                  src={userProfile.image}
+                  width={100}
+                  height={100}
+                  className="aspect-square h-full w-full object-cover"
+                  alt={userProfile?.name || "Profile image"}
+                />
+              ) : (
+                <AvatarFallback className="size-11">
+                  <div className="animate-pulse rounded-full bg-gray-500"></div>
+                </AvatarFallback>
+              )}
+            </Avatar>
+          </button>
+          <FullscreenImageViewer
+            medias={userProfile?.image ? [userProfile.image] : []}
+            index={0}
+            open={avatarViewerOpen}
+            onClose={() => setAvatarViewerOpen(false)}
+          />
         </div>
       </div>
 
@@ -196,7 +197,7 @@ export const UserProfileLayout = ({
                 value="posts"
                 className={cn(
                   "w-full rounded-none transition-colors duration-200",
-                  "hover:bg-primary/10 data-[state=active]:bg-muted/30",
+                  "hover:bg-primary/10 data-[state=active]:bg-muted/30 cursor-pointer",
                   !isGalleryActive && "border-primary border-b-2",
                 )}
               >
@@ -208,7 +209,7 @@ export const UserProfileLayout = ({
                 value="media"
                 className={cn(
                   "w-full rounded-none transition-colors duration-200",
-                  "hover:bg-primary/10 data-[state=active]:bg-muted/30",
+                  "hover:bg-primary/10 data-[state=active]:bg-muted/30 cursor-pointer",
                   isGalleryActive && "border-primary border-b-2",
                 )}
               >

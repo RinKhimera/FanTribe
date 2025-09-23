@@ -2,8 +2,9 @@
 
 import { Image as ImageIcon, Lock } from "lucide-react"
 import Image from "next/image"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { extractVideoGuidFromUrl } from "@/app/api/bunny/helper/get-video"
+import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { Button } from "@/components/ui/button"
 import {
   Carousel,
@@ -35,6 +36,17 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   const [videoMetadata, setVideoMetadata] = useState<
     Record<string, BunnyVideoGetResponse>
   >({})
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState(0)
+
+  // Liste des seules images (exclut les vidéos)
+  const imageMedias = useMemo(
+    () =>
+      medias.filter(
+        (m) => !m.startsWith("https://iframe.mediadelivery.net/embed/"),
+      ),
+    [medias],
+  )
 
   // Récupérer les métadonnées des vidéos au montage du composant
   useEffect(() => {
@@ -119,6 +131,14 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     )
   }
 
+  const openImage = (media: string) => {
+    const idx = imageMedias.indexOf(media)
+    if (idx >= 0) {
+      setViewerIndex(idx)
+      setViewerOpen(true)
+    }
+  }
+
   const renderMedia = (media: string, forceRatio?: string) => {
     const isVideo = media.startsWith("https://iframe.mediadelivery.net/embed/")
 
@@ -156,30 +176,33 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     }
 
     return (
-      <div
+      <button
+        type="button"
         key={media}
-        onClick={(e) => e.stopPropagation()}
-        className="relative mt-2 flex w-full overflow-hidden"
+        onClick={(e) => {
+          e.stopPropagation()
+          openImage(media)
+        }}
+        className="group relative mt-2 flex w-full overflow-hidden focus:outline-none"
       >
-        {/* Background blurred image */}
         <Image
           src={media}
           alt=""
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="scale-110 object-cover blur-lg"
+          className="scale-110 object-cover blur-lg transition-opacity group-hover:opacity-70"
           style={{ filter: "blur(20px)" }}
         />
-        {/* Main image */}
         <Image
           src={media}
           alt=""
           width={0}
           height={0}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="relative z-10 h-auto max-h-[750px] w-full bg-red-50 object-cover"
+          className="relative z-10 h-auto max-h-[750px] w-full cursor-pointer object-cover transition-opacity group-hover:opacity-90"
         />
-      </div>
+        <span className="pointer-events-none absolute inset-0 z-20 block bg-gradient-to-t from-black/10 via-transparent to-black/10 opacity-0 group-hover:opacity-100" />
+      </button>
     )
   }
 
@@ -244,10 +267,28 @@ export const PostMedia: React.FC<PostMediaProps> = ({
             </div>
           </div>
         )}
+        <FullscreenImageViewer
+          medias={imageMedias}
+          index={viewerIndex}
+          open={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          onIndexChange={setViewerIndex}
+        />
       </div>
     )
   }
 
   // Single media
-  return <>{medias.map((m) => renderMedia(m))}</>
+  return (
+    <>
+      {medias.map((m) => renderMedia(m))}
+      <FullscreenImageViewer
+        medias={imageMedias}
+        index={viewerIndex}
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        onIndexChange={setViewerIndex}
+      />
+    </>
+  )
 }
