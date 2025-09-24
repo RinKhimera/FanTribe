@@ -1,3 +1,4 @@
+import axios from "axios"
 import {
   BunnyApiResponse,
   BunnyCollectionCreateResponse,
@@ -100,10 +101,12 @@ export const uploadBunnyAsset = async ({
   file,
   fileName,
   userId,
+  onProgress,
 }: {
   file: File
   fileName: string
   userId: string
+  onProgress?: (percent: number) => void
 }): Promise<BunnyApiResponse> => {
   if (!file || !userId || !fileName) {
     return {
@@ -120,67 +123,62 @@ export const uploadBunnyAsset = async ({
     const fileExtension = file.name.split(".").pop()
     const videoFileName = `${randomSuffix}.${fileExtension}`
 
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
     if (file.type.startsWith("video/")) {
-      // Gestion des vidéos
+      // Gestion des vidéos via axios
       let videoData: BunnyVideoGetResponse
-
       try {
-        // Obtenir ou créer la collection de l'utilisateur
         const userCollectionId = await getOrCreateUserCollection(userId)
-
-        // Créer la vidéo dans la collection de l'utilisateur
-        const videoResponse = await fetch(
+        const createRes = await axios.post(
           `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos`,
           {
-            method: "POST",
+            title: videoFileName,
+            collectionId: userCollectionId,
+          },
+          {
             headers: {
               AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              title: videoFileName,
-              collectionId: userCollectionId,
-            }),
           },
         )
-
-        if (!videoResponse.ok) {
-          throw new Error(`Erreur création vidéo: ${videoResponse.status}`)
-        }
-
-        videoData = await videoResponse.json()
-      } catch (collectionError) {
-        console.error(
-          "❌ Erreur lors de la gestion des collections:",
-          collectionError,
-        )
+        videoData = createRes.data
+      } catch (e: any) {
+        console.error("❌ Erreur création vidéo:", e)
         return {
           success: false,
           url: "",
           mediaId: "",
           type: "video",
-          error: "Erreur lors de la création de la collection vidéo",
+          error: "Erreur lors de la création de la vidéo",
         }
       }
 
-      // Upload de la vidéo
-      const uploadResponse = await fetch(
-        `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
-        {
-          method: "PUT",
-          headers: {
-            AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
-            "Content-Type": file.type,
+      try {
+        await axios.put(
+          `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
+          file,
+          {
+            headers: {
+              AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
+              "Content-Type": file.type,
+            },
+            onUploadProgress: (evt) => {
+              if (evt.total && onProgress) {
+                onProgress(Math.round((evt.loaded / evt.total) * 100))
+              }
+            },
           },
-          body: buffer,
-        },
-      )
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Erreur upload vidéo: ${uploadResponse.status}`)
+        )
+        onProgress?.(100)
+      } catch (e: any) {
+        console.error("❌ Erreur upload vidéo:", e)
+        return {
+          success: false,
+          url: "",
+          mediaId: videoData.guid,
+          type: "video",
+          error: "Erreur lors de l'upload vidéo",
+        }
       }
 
       return {
@@ -190,24 +188,33 @@ export const uploadBunnyAsset = async ({
         type: "video",
       }
     } else {
-      // Gestion des images
-      const uploadResponse = await fetch(
-        `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
-        {
-          method: "PUT",
-          headers: {
-            AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
-            "Content-Type": file.type,
+      // Images via axios
+      try {
+        await axios.put(
+          `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
+          file,
+          {
+            headers: {
+              AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
+              "Content-Type": file.type,
+            },
+            onUploadProgress: (evt) => {
+              if (evt.total && onProgress) {
+                onProgress(Math.round((evt.loaded / evt.total) * 100))
+              }
+            },
           },
-          body: buffer,
-        },
-      )
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text()
-        throw new Error(
-          `Erreur upload image: ${uploadResponse.status} - ${errorText}`,
         )
+        onProgress?.(100)
+      } catch (e: any) {
+        console.error("❌ Erreur upload image:", e)
+        return {
+          success: false,
+          url: "",
+          mediaId: fileName,
+          type: "image",
+          error: "Erreur lors de l'upload image",
+        }
       }
 
       return {
@@ -232,13 +239,12 @@ export const uploadBunnyAsset = async ({
   }
 }
 
+// Cache module-level pour conserver les collections utilisateur entre appels
+const userCollectionsCache = new Map<string, string>()
+
 // Fonction helper pour obtenir ou créer la collection utilisateur
 const getOrCreateUserCollection = async (userId: string): Promise<string> => {
   try {
-    // Cache en mémoire pour éviter les appels répétés
-    const userCollectionsCache = new Map<string, string>()
-
-    // Vérifier le cache d'abord
     if (userCollectionsCache.has(userId)) {
       return userCollectionsCache.get(userId)!
     }

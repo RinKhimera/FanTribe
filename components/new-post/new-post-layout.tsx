@@ -132,6 +132,9 @@ export const NewPostLayout = () => {
             file,
             fileName,
             userId: currentUser._id,
+            onProgress: (percent) => {
+              setUploadProgress((prev) => ({ ...prev, [fileKey]: percent }))
+            },
           })
 
           setUploadProgress((prev) => {
