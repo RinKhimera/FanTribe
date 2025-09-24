@@ -153,7 +153,8 @@ export default defineSchema({
   })
     .index("by_subscription", ["subscriptionId"])
     .index("by_subscriber", ["subscriberId"])
-    .index("by_creator", ["creatorId"]),
+    .index("by_creator", ["creatorId"])
+    .index("by_providerTransactionId", ["providerTransactionId"]),
 
   notifications: defineTable({
     type: v.string(),

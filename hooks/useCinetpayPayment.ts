@@ -1,13 +1,9 @@
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
-import {
-  PaymentData,
-  handlePaymentError,
-  handlePaymentSuccess,
-  initializeCinetPayPayment,
-} from "@/utils/cinetpayPayment"
+import { toast } from "sonner"
+import { PaymentData, initializeCinetPayPayment } from "@/utils/cinetpayPayment"
 
-export const usePayment = () => {
+export const useCinetpayPayment = () => {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -16,9 +12,13 @@ export const usePayment = () => {
       const result = await initializeCinetPayPayment(paymentData)
 
       if (result.success && result.payment_url) {
-        handlePaymentSuccess(result.payment_url, router)
+        router.push(result.payment_url)
       } else {
-        handlePaymentError(result.error || "Erreur inconnue")
+        toast.error("Une erreur s'est produite !", {
+          description:
+            result.error ||
+            "Veuillez vérifier votre connexion internet et réessayer",
+        })
       }
     })
   }

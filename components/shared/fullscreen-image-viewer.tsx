@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import Image from "next/image"
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 interface FullscreenImageViewerProps {
@@ -24,9 +24,30 @@ export const FullscreenImageViewer = ({
 }: FullscreenImageViewerProps) => {
   const startY = useRef<number | null>(null)
   const startX = useRef<number | null>(null)
+  const [isMounted, setIsMounted] = useState<boolean>(open)
+  const [isClosing, setIsClosing] = useState<boolean>(false)
+  const ANIMATION_MS = 60
 
+  // Mount while closing to allow the "animate-out" to play
   useEffect(() => {
-    if (!open) return
+    if (open) {
+      setIsMounted(true)
+      setIsClosing(false)
+      return
+    }
+    if (!open && isMounted) {
+      setIsClosing(true)
+      const t = setTimeout(() => {
+        setIsClosing(false)
+        setIsMounted(false)
+      }, ANIMATION_MS)
+      return () => clearTimeout(t)
+    }
+  }, [open, isMounted])
+
+  // Prevent background scroll while mounted (including during close animation)
+  useEffect(() => {
+    if (!isMounted) return
     const originalOverflow = document.body.style.overflow
     const originalPaddingRight = document.body.style.paddingRight
 
@@ -71,7 +92,7 @@ export const FullscreenImageViewer = ({
       window.removeEventListener("touchmove", prevent)
       window.removeEventListener("keydown", onKey)
     }
-  }, [open])
+  }, [isMounted])
 
   const total = medias.length
 
@@ -100,17 +121,23 @@ export const FullscreenImageViewer = ({
     return () => window.removeEventListener("keydown", onKey)
   }, [open, go, onClose, index, total])
 
-  if (!open) return null
+  if (!isMounted) return null
+
+  const stateAttr = open && !isClosing ? "open" : "closed"
 
   return (
     <div
       className={cn(
+        // Fade like shadcn DialogOverlay
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200",
         "fixed inset-0 z-[999] flex items-center justify-center bg-black/90 backdrop-blur-sm select-none",
         className,
       )}
       role="dialog"
       aria-modal="true"
+      data-state={stateAttr}
       onClick={onClose}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Close button */}
       <button
@@ -169,7 +196,12 @@ export const FullscreenImageViewer = ({
 
       {/* Image container */}
       <div
-        className="relative flex max-h-[90vh] w-full max-w-5xl items-center justify-center"
+        className={cn(
+          // Zoom like shadcn DialogContent
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-200",
+          "relative flex max-h-[90vh] w-full max-w-5xl items-center justify-center",
+        )}
+        data-state={stateAttr}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => {
           const t = e.touches[0]
@@ -221,7 +253,10 @@ export const FullscreenImageViewer = ({
                 width={1600}
                 height={1200}
                 priority
-                className="max-h-[90vh] w-auto rounded object-contain shadow-lg"
+                className="max-h-[90vh] w-auto rounded object-contain shadow-lg select-none"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 sizes="100vw"
               />
             )}

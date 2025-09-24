@@ -4,16 +4,26 @@ import { v } from "convex/values"
 import { deleteBunnyAsset } from "@/lib/bunny"
 import { internal } from "./_generated/api"
 import { Doc, Id } from "./_generated/dataModel"
-import { action, internalAction } from "./_generated/server"
+import {
+  action,
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server"
 
 type ProcessPaymentResult = {
   success: boolean
   message: string
-  subscriptionId: Id<"subscriptions">
+  subscriptionId: Id<"subscriptions"> | null
   status?: string
-  alreadyExists?: boolean
-  renewed?: boolean
-  reactivated?: boolean
+  alreadyProcessed?: boolean
+  action?: "created" | "renewed" | "reactivated" | "noop"
+  renewalCount?: number
+  previousEndDate?: number
+  newEndDate?: number
+  transactionId?: Id<"transactions">
+  providerTransactionId?: string
+  provider?: string
 }
 
 type CheckTransactionResult = {
@@ -30,51 +40,250 @@ type CheckTransactionResult = {
   }
 }
 
-export const processPayment = action({
+// Internal query pour retrouver une transaction par providerTransactionId
+export const getTransactionByProviderTransactionId = internalQuery({
+  args: { providerTransactionId: v.string() },
+  handler: async (ctx, args) => {
+    const tx = await ctx.db
+      .query("transactions")
+      .withIndex("by_providerTransactionId", (q) =>
+        q.eq("providerTransactionId", args.providerTransactionId),
+      )
+      .first()
+    return tx || null
+  },
+})
+
+// Internal query simple pour récupérer une souscription par id
+export const getSubscriptionById = internalQuery({
+  args: { subscriptionId: v.id("subscriptions") },
+  handler: async (ctx, args) => {
+    const sub = await ctx.db.get(args.subscriptionId)
+    return sub || null
+  },
+})
+
+// Internal mutation: applique le paiement sur la souscription (création, renouvellement, réactivation)
+export const applySubscriptionPayment = internalMutation({
   args: {
-    transactionId: v.string(),
     creatorId: v.id("users"),
     subscriberId: v.id("users"),
-    startDate: v.string(),
-    amountPaid: v.optional(v.number()),
+    amountPaid: v.number(),
+    startMs: v.number(),
+    durationMs: v.number(),
+    currency: v.string(),
   },
-  handler: async (ctx, args): Promise<ProcessPaymentResult> => {
-    // Vérifie d'abord si cette transaction existe déjà
-    const subscription: Doc<"subscriptions"> | null = await ctx.runQuery(
-      internal.subscriptions.getSubscriptionByTransactionId,
-      {
-        transactionId: args.transactionId,
-      },
-    )
+  handler: async (ctx, args) => {
+    const now = Date.now()
+    const {
+      creatorId,
+      subscriberId,
+      amountPaid,
+      startMs,
+      durationMs,
+      currency,
+    } = args
 
-    if (subscription) {
-      return {
-        success: true,
-        message: "Transaction already processed",
-        subscriptionId: subscription._id,
-        status: subscription.status,
-        alreadyExists: true,
+    let sub = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_creator_subscriber", (q) =>
+        q.eq("creator", creatorId).eq("subscriber", subscriberId),
+      )
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .first()
+
+    let action: "created" | "renewed" | "reactivated" | "noop" = "noop"
+    let previousEndDate: number | undefined
+    let newEndDate: number | undefined
+    let renewalCount: number | undefined
+
+    if (!sub) {
+      const newSubId = await ctx.db.insert("subscriptions", {
+        subscriber: subscriberId,
+        creator: creatorId,
+        startDate: startMs,
+        endDate: startMs + durationMs,
+        amountPaid: amountPaid,
+        currency,
+        renewalCount: 0,
+        lastUpdateTime: now,
+        type: "content_access",
+        status: "active",
+      })
+      sub = (await ctx.db.get(newSubId))!
+      action = "created"
+      previousEndDate = sub.endDate
+      newEndDate = sub.endDate
+      renewalCount = 0
+    } else {
+      previousEndDate = sub.endDate
+      if (sub.status === "active" && sub.endDate > now) {
+        // Renouvellement
+        newEndDate = sub.endDate + durationMs
+        await ctx.db.patch(sub._id, {
+          endDate: newEndDate,
+          renewalCount: sub.renewalCount + 1,
+          lastUpdateTime: now,
+        })
+        action = "renewed"
+        renewalCount = sub.renewalCount + 1
+      } else {
+        // Réactivation
+        newEndDate = startMs + durationMs
+        await ctx.db.patch(sub._id, {
+          startDate: startMs,
+          endDate: newEndDate,
+          renewalCount: sub.renewalCount + 1,
+          lastUpdateTime: now,
+          status: "active",
+        })
+        action = "reactivated"
+        renewalCount = sub.renewalCount + 1
       }
     }
 
-    // Si la transaction n'existe pas, traite le paiement
-    const result: {
-      subscriptionId: Id<"subscriptions">
-      renewed: boolean
-      reactivated: boolean
-    } = await ctx.runMutation(internal.subscriptions.followUser, {
-      transactionId: args.transactionId,
-      creatorId: args.creatorId,
+    return {
+      subscriptionId: sub._id as Id<"subscriptions">,
+      action,
+      previousEndDate,
+      newEndDate,
+      renewalCount,
+    }
+  },
+})
+
+// Internal mutation: enregistre la transaction si absente (idempotent)
+export const recordTransactionIfAbsent = internalMutation({
+  args: {
+    subscriptionId: v.id("subscriptions"),
+    providerTransactionId: v.string(),
+    provider: v.string(),
+    amount: v.number(),
+    currency: v.string(),
+    subscriberId: v.id("users"),
+    creatorId: v.id("users"),
+    rawPayload: v.optional(v.string()),
+    paymentMethod: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("transactions")
+      .withIndex("by_providerTransactionId", (q) =>
+        q.eq("providerTransactionId", args.providerTransactionId),
+      )
+      .first()
+    if (existing) return { transactionId: existing._id as Id<"transactions"> }
+
+    const txId = await ctx.db.insert("transactions", {
+      subscriptionId: args.subscriptionId,
       subscriberId: args.subscriberId,
-      startDate: args.startDate,
-      amountPaid: args.amountPaid,
+      creatorId: args.creatorId,
+      amount: args.amount,
+      currency: args.currency,
+      status: "succeeded", // si on arrive ici c'est que le provider a confirmé
+      provider: args.provider,
+      providerTransactionId: args.providerTransactionId,
     })
+    return { transactionId: txId as Id<"transactions"> }
+  },
+})
+
+export const processPayment = action({
+  args: {
+    provider: v.string(), // 'cinetpay'
+    providerTransactionId: v.string(),
+    creatorId: v.id("users"),
+    subscriberId: v.id("users"),
+    amount: v.number(),
+    currency: v.string(),
+    subscriptionType: v.optional(v.string()), // future
+    paymentMethod: v.optional(v.string()),
+    startedAt: v.optional(v.string()), // ISO
+  },
+  handler: async (ctx, args): Promise<ProcessPaymentResult> => {
+    const {
+      provider,
+      providerTransactionId,
+      creatorId,
+      subscriberId,
+      amount,
+      currency,
+      paymentMethod,
+      startedAt,
+    } = args
+
+    // 1. Validation basique
+
+    // 2. Idempotence: transaction déjà enregistrée ?
+    const existingTx = await ctx.runQuery(
+      internal.internalActions.getTransactionByProviderTransactionId,
+      { providerTransactionId },
+    )
+    if (existingTx) {
+      const sub = await ctx.runQuery(
+        internal.internalActions.getSubscriptionById,
+        {
+          subscriptionId: existingTx.subscriptionId,
+        },
+      )
+      return {
+        success: true,
+        message: "Already processed",
+        subscriptionId: sub?._id || null,
+        status: sub?.status,
+        alreadyProcessed: true,
+        action: "noop",
+        renewalCount: sub?.renewalCount,
+        previousEndDate: sub?.endDate,
+        newEndDate: sub?.endDate,
+        transactionId: existingTx._id as Id<"transactions">,
+        providerTransactionId,
+        provider,
+      }
+    }
+
+    // 3. Appliquer paiement à la souscription
+    const startMs = startedAt ? Date.parse(startedAt) : Date.now()
+    const durationMs = 30 * 24 * 60 * 60 * 1000 // 30 jours
+    const subResult = await ctx.runMutation(
+      internal.internalActions.applySubscriptionPayment,
+      {
+        creatorId,
+        subscriberId,
+        amountPaid: amount,
+        startMs,
+        durationMs,
+        currency: currency.toUpperCase(),
+      },
+    )
+
+    // 4. Enregistrer la transaction (idempotent)
+    const txResult = await ctx.runMutation(
+      internal.internalActions.recordTransactionIfAbsent,
+      {
+        subscriptionId: subResult.subscriptionId,
+        providerTransactionId,
+        provider,
+        amount,
+        currency: currency.toUpperCase(),
+        subscriberId,
+        creatorId,
+        paymentMethod,
+      },
+    )
 
     return {
       success: true,
-      message: "Transaction processed successfully",
-      ...result,
-      alreadyExists: false,
+      message: "Payment processed",
+      subscriptionId: subResult.subscriptionId,
+      status: "active",
+      action: subResult.action,
+      renewalCount: subResult.renewalCount,
+      previousEndDate: subResult.previousEndDate,
+      newEndDate: subResult.newEndDate,
+      transactionId: txResult.transactionId,
+      providerTransactionId,
+      provider,
     }
   },
 })

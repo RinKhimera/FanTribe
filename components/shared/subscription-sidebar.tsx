@@ -1,9 +1,7 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { RenewDialog } from "@/components/profile/renew-dialog"
-import { SubscribeDialog } from "@/components/profile/subscribe-dialog"
-import { UnsubscribeDialog } from "@/components/profile/unsubscribe-dialog"
+import { SubscriptionDialog } from "@/components/profile/subscription-dialog"
 import {
   Card,
   CardContent,
@@ -41,17 +39,37 @@ export const SubscriptionSidebar = ({
             (() => {
               switch (subscriptionStatus.status) {
                 case "expired":
-                  return <RenewDialog userProfile={userProfile} />
+                  return (
+                    <SubscriptionDialog
+                      userProfile={userProfile}
+                      type="renew"
+                    />
+                  )
                 case "canceled":
-                  return <SubscribeDialog userProfile={userProfile} />
+                  return (
+                    <SubscriptionDialog
+                      userProfile={userProfile}
+                      type="subscribe"
+                    />
+                  )
                 case "active":
-                  return <UnsubscribeDialog userProfile={userProfile} />
+                  return (
+                    <SubscriptionDialog
+                      userProfile={userProfile}
+                      type="unsubscribe"
+                    />
+                  )
                 default:
-                  return <SubscribeDialog userProfile={userProfile} />
+                  return (
+                    <SubscriptionDialog
+                      userProfile={userProfile}
+                      type="subscribe"
+                    />
+                  )
               }
             })()
           ) : (
-            <SubscribeDialog userProfile={userProfile} />
+            <SubscriptionDialog userProfile={userProfile} type="subscribe" />
           )}
         </CardContent>
       </Card>

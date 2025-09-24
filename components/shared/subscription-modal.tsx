@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Doc } from "@/convex/_generated/dataModel"
-import { usePayment } from "@/hooks/useCinetpayPayment"
+import { useCinetpayPayment } from "@/hooks/useCinetpayPayment"
 import { cn } from "@/lib/utils"
 
 interface SubscriptionModalProps {
@@ -30,7 +30,7 @@ export const SubscriptionModal = ({
   creator,
   currentUser,
 }: SubscriptionModalProps) => {
-  const { processPayment, isPending } = usePayment()
+  const { processPayment, isPending } = useCinetpayPayment()
 
   const handleSubscribe = () => {
     if (!currentUser || !creator) return
@@ -71,15 +71,15 @@ export const SubscriptionModal = ({
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="absolute right-2 top-2 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40"
+              className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Avatar du créateur - Position ajustée */}
-          <div className="absolute left-6 top-[105px] max-sm:top-20">
-            <Avatar className="h-20 w-20 border-4 border-background">
+          <div className="absolute top-[105px] left-6 max-sm:top-20">
+            <Avatar className="border-background h-20 w-20 border-4">
               <AvatarImage
                 src={creator?.image}
                 className="object-cover"
@@ -90,7 +90,7 @@ export const SubscriptionModal = ({
           </div>
 
           {/* Contenu principal - Padding ajusté */}
-          <div className="px-6 pb-6 pt-16">
+          <div className="px-6 pt-16 pb-6">
             <DialogHeader className="space-y-3">
               <div className="text-left">
                 <DialogTitle className="text-xl font-bold">
@@ -100,7 +100,7 @@ export const SubscriptionModal = ({
               </div>
 
               <DialogDescription className="text-left">
-                <h3 className="mb-4 text-lg font-semibold text-foreground">
+                <h3 className="text-foreground mb-4 text-lg font-semibold">
                   Débloquez du contenu exclusif
                 </h3>
                 <p className="mb-4 text-sm">
@@ -146,9 +146,9 @@ export const SubscriptionModal = ({
             {/* Prix et bouton */}
             <DialogFooter className="mt-6">
               <div className="w-full space-y-3">
-                <div className="rounded-lg bg-muted/50 p-3 text-center">
-                  <p className="text-sm text-muted-foreground">Prix mensuel</p>
-                  <p className="text-2xl font-bold text-primary">1000 XAF</p>
+                <div className="bg-muted/50 rounded-lg p-3 text-center">
+                  <p className="text-muted-foreground text-sm">Prix mensuel</p>
+                  <p className="text-primary text-2xl font-bold">1000 XAF</p>
                 </div>
 
                 <Button

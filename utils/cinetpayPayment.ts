@@ -1,4 +1,3 @@
-import { toast } from "sonner"
 import { v4 as uuidv4 } from "uuid"
 
 export type PaymentData = {
@@ -94,15 +93,4 @@ export const initializeCinetPayPayment = async (
       error: "Erreur de connexion. Veuillez réessayer.",
     }
   }
-}
-
-export const handlePaymentError = (error: string) => {
-  toast.error("Une erreur s'est produite !", {
-    description:
-      error || "Veuillez vérifier votre connexion internet et réessayer",
-  })
-}
-
-export const handlePaymentSuccess = (paymentUrl: string, router: any) => {
-  router.push(paymentUrl)
 }

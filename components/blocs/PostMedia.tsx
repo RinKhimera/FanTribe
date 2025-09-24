@@ -183,15 +183,19 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           e.stopPropagation()
           openImage(media)
         }}
-        className="group relative mt-2 flex w-full overflow-hidden focus:outline-none"
+        className="relative mt-2 flex w-full overflow-hidden focus:outline-none"
+        onContextMenu={(e) => e.preventDefault()}
       >
         <Image
           src={media}
           alt=""
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="scale-110 object-cover blur-lg transition-opacity group-hover:opacity-70"
+          className="scale-110 object-cover blur-lg"
           style={{ filter: "blur(20px)" }}
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          onContextMenu={(e) => e.preventDefault()}
         />
         <Image
           src={media}
@@ -199,9 +203,11 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           width={0}
           height={0}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="relative z-10 h-auto max-h-[750px] w-full cursor-pointer object-cover transition-opacity group-hover:opacity-90"
+          className="relative z-10 h-auto max-h-[750px] w-full cursor-pointer object-cover select-none"
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          onContextMenu={(e) => e.preventDefault()}
         />
-        <span className="pointer-events-none absolute inset-0 z-20 block bg-gradient-to-t from-black/10 via-transparent to-black/10 opacity-0 group-hover:opacity-100" />
       </button>
     )
   }

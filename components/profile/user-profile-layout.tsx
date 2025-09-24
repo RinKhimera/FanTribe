@@ -6,12 +6,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useCallback, useState } from "react"
-import { RenewDialog } from "@/components/profile/renew-dialog"
-import { SubscribeDialog } from "@/components/profile/subscribe-dialog"
-import { UnsubscribeDialog } from "@/components/profile/unsubscribe-dialog"
+import { SubscriptionDialog } from "@/components/profile/subscription-dialog"
 import { UserPosts } from "@/components/profile/user-posts"
 import { UserReportButton } from "@/components/profile/user-report-button"
-// Fullscreen viewer pour l'image de profil
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -168,17 +165,40 @@ export const UserProfileLayout = ({
                 (() => {
                   switch (subscriptionStatus.status) {
                     case "expired":
-                      return <RenewDialog userProfile={userProfile} />
+                      return (
+                        <SubscriptionDialog
+                          userProfile={userProfile}
+                          type="renew"
+                        />
+                      )
                     case "canceled":
-                      return <SubscribeDialog userProfile={userProfile} />
+                      return (
+                        <SubscriptionDialog
+                          userProfile={userProfile}
+                          type="subscribe"
+                        />
+                      )
                     case "active":
-                      return <UnsubscribeDialog userProfile={userProfile} />
+                      return (
+                        <SubscriptionDialog
+                          userProfile={userProfile}
+                          type="unsubscribe"
+                        />
+                      )
                     default:
-                      return <SubscribeDialog userProfile={userProfile} />
+                      return (
+                        <SubscriptionDialog
+                          userProfile={userProfile}
+                          type="subscribe"
+                        />
+                      )
                   }
                 })()
               ) : (
-                <SubscribeDialog userProfile={userProfile} />
+                <SubscriptionDialog
+                  userProfile={userProfile}
+                  type="subscribe"
+                />
               )}
             </div>
           </div>

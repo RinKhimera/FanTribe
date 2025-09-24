@@ -85,17 +85,20 @@ export async function POST(request: Request) {
         api_response_id: `api-${Date.now()}`,
       }
 
-      // Traiter le paiement simulé
+      // Traiter le paiement simulé avec la nouvelle signature
       const result = await fetchAction(api.internalActions.processPayment, {
-        transactionId,
+        provider: "cinetpay",
+        providerTransactionId: transactionId,
         creatorId,
         subscriberId,
-        startDate: new Date().toISOString(),
-        amountPaid,
+        amount: amountPaid || 1000,
+        currency: mockResponse.data.currency,
+        paymentMethod: mockResponse.data.payment_method || "TEST",
+        startedAt: new Date().toISOString(),
       })
 
       return Response.json({
-        message: result.alreadyExists
+        message: result.alreadyProcessed
           ? "Transaction already processed (TEST MODE)"
           : "Transaction processed successfully (TEST MODE)",
         result,
@@ -144,23 +147,26 @@ export async function POST(request: Request) {
     const checkData: CinetPayResponse = await checkRes.json()
 
     // Vérification que le paiement est réussi
-    if (checkData.code === "00" || checkData.code === "662") {
+    if (checkData.code === "00") {
       // Extraire le montant du paiement
       const cinetPayAmount = checkData.data.amount
         ? Number(checkData.data.amount)
         : undefined
 
-      // Utilise l'action pour traiter le paiement
+      // Utilise l'action pour traiter le paiement avec la nouvelle signature
       const result = await fetchAction(api.internalActions.processPayment, {
-        transactionId,
+        provider: "cinetpay",
+        providerTransactionId: transactionId,
         creatorId,
         subscriberId,
-        startDate: new Date().toISOString(),
-        amountPaid: cinetPayAmount,
+        amount: cinetPayAmount || 0,
+        currency: checkData.data.currency || "XOF",
+        paymentMethod: checkData.data.payment_method || undefined,
+        startedAt: new Date().toISOString(),
       })
 
       return Response.json({
-        message: result.alreadyExists
+        message: result.alreadyProcessed
           ? "Transaction already processed"
           : "Transaction processed successfully",
         result,

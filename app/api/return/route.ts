@@ -79,10 +79,24 @@ export async function POST(request: Request) {
     const checkData: CinetPayResponse = await checkRes.json()
 
     // Vérification que le paiement est réussi
-    // TODO : Enlever le code 662 dans la version finale
-    if (checkData.code === "00" || checkData.code === "662") {
-      // Pour le retour utilisateur, nous rediriger simplement vers la page de succès
-      // La notification webhook se chargera d'enregistrer la transaction
+    if (checkData.code === "00") {
+      // Optionnel: tenter un traitement idempotent si le webhook n'a pas encore touché
+      try {
+        await fetchAction(api.internalActions.processPayment, {
+          provider: "cinetpay",
+          providerTransactionId: transactionId,
+          creatorId: (checkData as any)?.data?.metadata?.creatorId,
+          subscriberId: (checkData as any)?.data?.metadata?.subscriberId,
+          amount: checkData.data.amount ? Number(checkData.data.amount) : 0,
+          currency: checkData.data.currency || "XOF",
+          paymentMethod: checkData.data.payment_method || undefined,
+          startedAt: checkData.data.payment_date || new Date().toISOString(),
+        })
+      } catch (e) {
+        console.warn("Return API: processPayment optional call failed", e)
+      }
+
+      // Rediriger vers la page de succès quoi qu'il arrive (le traitement est idempotent)
       console.log(
         `Return API: Payment successful according to CinetPay. Code: ${checkData.code}`,
       )
