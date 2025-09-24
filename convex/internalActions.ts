@@ -212,9 +212,7 @@ export const processPayment = action({
       startedAt,
     } = args
 
-    // 1. Validation basique
-
-    // 2. Idempotence: transaction déjà enregistrée ?
+    // 1. Idempotence: transaction déjà enregistrée ?
     const existingTx = await ctx.runQuery(
       internal.internalActions.getTransactionByProviderTransactionId,
       { providerTransactionId },
@@ -242,7 +240,7 @@ export const processPayment = action({
       }
     }
 
-    // 3. Appliquer paiement à la souscription
+    // 2. Appliquer paiement à la souscription
     const startMs = startedAt ? Date.parse(startedAt) : Date.now()
     const durationMs = 30 * 24 * 60 * 60 * 1000 // 30 jours
     const subResult = await ctx.runMutation(
@@ -257,7 +255,7 @@ export const processPayment = action({
       },
     )
 
-    // 4. Enregistrer la transaction (idempotent)
+    // 3. Enregistrer la transaction (idempotent)
     const txResult = await ctx.runMutation(
       internal.internalActions.recordTransactionIfAbsent,
       {
