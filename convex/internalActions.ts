@@ -1,5 +1,3 @@
-"use node"
-
 import { v } from "convex/values"
 import { deleteBunnyAsset } from "@/lib/bunny"
 import { internal } from "./_generated/api"
@@ -407,8 +405,6 @@ export const deleteMultipleBunnyAssets = action({
     mediaUrls: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const axios = require("axios")
-
     const storageAccessKey = process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY
     const storageZoneName = process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME
     const videoLibraryId = process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID
@@ -433,7 +429,15 @@ export const deleteMultipleBunnyAssets = action({
       }
     }
 
-    const results = []
+    const results: Array<{
+      url: string
+      type?: "image" | "video"
+      guid?: string | null
+      filePath?: string | null
+      success: boolean
+      status?: number
+      error?: string
+    }> = []
 
     for (const mediaUrl of args.mediaUrls) {
       try {
@@ -449,22 +453,34 @@ export const deleteMultipleBunnyAssets = action({
 
           if (videoGuid) {
             // Supprimer la vidéo via l'API Bunny Stream
-            const deleteResponse = await axios.delete(
+            const res = await fetch(
               `https://video.bunnycdn.com/library/${videoLibraryId}/videos/${videoGuid}`,
               {
+                method: "DELETE",
                 headers: {
                   AccessKey: videoAccessKey,
-                },
+                } as any,
               },
             )
 
-            results.push({
-              url: mediaUrl,
-              type: "video",
-              guid: videoGuid,
-              success: true,
-              status: deleteResponse.status,
-            })
+            if (res.ok) {
+              results.push({
+                url: mediaUrl,
+                type: "video",
+                guid: videoGuid,
+                success: true,
+                status: res.status,
+              })
+            } else {
+              results.push({
+                url: mediaUrl,
+                type: "video",
+                guid: videoGuid,
+                success: false,
+                status: res.status,
+                error: `Bunny Stream DELETE failed: ${res.status} ${res.statusText}`,
+              })
+            }
           } else {
             console.error(`❌ Impossible d'extraire le GUID de: ${mediaUrl}`)
             results.push({
@@ -481,22 +497,34 @@ export const deleteMultipleBunnyAssets = action({
 
           if (filePath) {
             // Supprimer l'image via l'API Bunny Storage
-            const deleteResponse = await axios.delete(
+            const res = await fetch(
               `https://storage.bunnycdn.com/${storageZoneName}/${filePath}`,
               {
+                method: "DELETE",
                 headers: {
                   AccessKey: storageAccessKey,
-                },
+                } as any,
               },
             )
 
-            results.push({
-              url: mediaUrl,
-              type: "image",
-              filePath: filePath,
-              success: true,
-              status: deleteResponse.status,
-            })
+            if (res.ok) {
+              results.push({
+                url: mediaUrl,
+                type: "image",
+                filePath: filePath,
+                success: true,
+                status: res.status,
+              })
+            } else {
+              results.push({
+                url: mediaUrl,
+                type: "image",
+                filePath: filePath,
+                success: false,
+                status: res.status,
+                error: `Bunny Storage DELETE failed: ${res.status} ${res.statusText}`,
+              })
+            }
           } else {
             console.error(`❌ Impossible d'extraire le chemin de: ${mediaUrl}`)
             results.push({

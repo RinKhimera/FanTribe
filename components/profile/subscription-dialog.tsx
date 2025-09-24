@@ -74,7 +74,7 @@ export const SubscriptionDialog = ({
       creatorId: userProfile._id,
       subscriberId: currentUser._id,
       creatorUsername: userProfile.username,
-      amount: 1000,
+      amount: 100,
       description: `${actionText} mensuel - ${userProfile.username}`,
       customFields: {
         type: "subscription",
