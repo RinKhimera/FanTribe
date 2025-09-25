@@ -1,0 +1,71 @@
+import { fetchAction } from "convex/nextjs"
+import { NextResponse } from "next/server"
+import Stripe from "stripe"
+import { api } from "@/convex/_generated/api"
+import { stripe } from "@/lib/stripe"
+
+export async function POST(request: Request) {
+  let event: Stripe.Event
+
+  try {
+    const payload = await request.text()
+    const sig = request.headers.get("stripe-signature")!
+
+    event = stripe.webhooks.constructEvent(
+      payload,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!,
+    )
+  } catch (err: any) {
+    console.error("Stripe webhook verification failed:", err?.message || err)
+    return new NextResponse(`Webhook error: ${err?.message || String(err)}`, {
+      status: 400,
+    })
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session
+        const metadata = session.metadata || {}
+
+        const creatorId = metadata.creatorId as any
+        const subscriberId = metadata.subscriberId as any
+        const currency = (session.currency || "xof").toUpperCase()
+        const zeroDecimal = ["XOF", "XAF", "JPY", "KRW"].includes(currency)
+        const amountTotal = session.amount_total || 0
+        const amount = zeroDecimal
+          ? amountTotal
+          : Math.round((amountTotal || 0) / 100)
+        const startedAt = session.created
+          ? new Date(session.created * 1000).toISOString()
+          : new Date().toISOString()
+
+        if (!creatorId || !subscriberId || !session.id) break
+
+        await fetchAction(api.internalActions.processPayment, {
+          provider: "stripe",
+          providerTransactionId: session.id,
+          creatorId,
+          subscriberId,
+          amount,
+          currency,
+          paymentMethod: session.payment_method_types?.[0],
+          startedAt,
+        })
+        break
+      }
+      default:
+        console.log(`Unhandled Stripe event: ${event.type}`)
+    }
+  } catch (err) {
+    console.error("Stripe webhook handler error:", err)
+    return new NextResponse("Handler error", { status: 500 })
+  }
+
+  return new NextResponse("ok", { status: 200 })
+}
+
+export async function GET() {
+  return NextResponse.json({ ok: true })
+}

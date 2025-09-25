@@ -2,6 +2,8 @@
 
 import { Check, LoaderCircle, X } from "lucide-react"
 import Image from "next/image"
+import React from "react"
+import { startStripeCheckout } from "@/actions/stripe/checkout"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -31,6 +33,7 @@ export const SubscriptionModal = ({
   currentUser,
 }: SubscriptionModalProps) => {
   const { processPayment, isPending } = useCinetpayPayment()
+  const [isStripePending, setIsStripePending] = React.useState(false)
 
   const handleSubscribe = () => {
     if (!currentUser || !creator) return
@@ -46,6 +49,22 @@ export const SubscriptionModal = ({
         action: "subscribe",
       },
     })
+  }
+
+  const handleSubscribeStripe = async () => {
+    if (!currentUser || !creator) return
+    setIsStripePending(true)
+    try {
+      await startStripeCheckout({
+        creatorId: creator._id as string,
+        subscriberId: currentUser._id as string,
+        creatorUsername: creator.username as string,
+        amount: 1000,
+        action: "subscribe",
+      })
+    } finally {
+      setIsStripePending(false)
+    }
   }
 
   return (
@@ -151,23 +170,44 @@ export const SubscriptionModal = ({
                   <p className="text-primary text-2xl font-bold">1000 XAF</p>
                 </div>
 
-                <Button
-                  onClick={handleSubscribe}
-                  disabled={isPending}
-                  className={cn("w-full", {
-                    "justify-center": isPending,
-                  })}
-                  size="lg"
-                >
-                  {isPending ? (
-                    <>
-                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                      Traitement...
-                    </>
-                  ) : (
-                    "S'abonner maintenant"
-                  )}
-                </Button>
+                <div className="grid grid-cols-1 gap-3">
+                  <Button
+                    onClick={handleSubscribe}
+                    disabled={isPending}
+                    className={cn("w-full", {
+                      "justify-center": isPending,
+                    })}
+                    size="lg"
+                  >
+                    {isPending ? (
+                      <>
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        Traitement CinetPay...
+                      </>
+                    ) : (
+                      "Payer avec CinetPay"
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={handleSubscribeStripe}
+                    disabled={isStripePending}
+                    className={cn("w-full", {
+                      "justify-center": isStripePending,
+                    })}
+                    size="lg"
+                  >
+                    {isStripePending ? (
+                      <>
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        Redirection Stripe...
+                      </>
+                    ) : (
+                      "Payer avec Stripe (carte)"
+                    )}
+                  </Button>
+                </div>
 
                 <Button
                   variant="ghost"

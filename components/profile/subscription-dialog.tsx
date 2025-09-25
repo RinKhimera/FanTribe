@@ -5,6 +5,7 @@ import { Check, Crown, LoaderCircle, MessageCircle, Star } from "lucide-react"
 import Image from "next/image"
 import { useTransition } from "react"
 import { toast } from "sonner"
+import { startStripeCheckout } from "@/actions/stripe/checkout"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,6 +34,7 @@ export const SubscriptionDialog = ({
 }: SubscriptionDialogProps) => {
   const { currentUser } = useCurrentUser()
   const { processPayment, isPending: isPaymentPending } = useCinetpayPayment()
+  const [isStripePending, startStripeTransition] = useTransition()
   const [isUnsubscribePending, startTransition] = useTransition()
 
   const canSubscribe = useQuery(
@@ -74,12 +76,30 @@ export const SubscriptionDialog = ({
       creatorId: userProfile._id,
       subscriberId: currentUser._id,
       creatorUsername: userProfile.username,
-      amount: 100,
+      amount: 1000,
       description: `${actionText} mensuel - ${userProfile.username}`,
       customFields: {
         type: "subscription",
         action: type === "renew" ? "renew" : "subscribe",
       },
+    })
+  }
+
+  const handleSubscribeStripe = async () => {
+    if (!currentUser || !userProfile) return
+    startStripeTransition(async () => {
+      try {
+        await startStripeCheckout({
+          creatorId: userProfile._id as string,
+          subscriberId: currentUser._id as string,
+          creatorUsername: userProfile.username as string,
+          amount: 1000,
+          action: type === "renew" ? "renew" : "subscribe",
+        })
+      } catch (error) {
+        console.error(error)
+        toast.error("Impossible de démarrer le paiement Stripe")
+      }
     })
   }
 
@@ -154,7 +174,7 @@ export const SubscriptionDialog = ({
 
   const buttonConfig = getButtonConfig()
   const dialogContent = getDialogContent()
-  const isPending = isPaymentPending || isUnsubscribePending
+  const isPending = isPaymentPending || isUnsubscribePending || isStripePending
 
   return (
     <Dialog>
@@ -265,34 +285,72 @@ export const SubscriptionDialog = ({
               </div>
             )}
 
-            <Button
-              className={cn(
-                "w-full text-lg font-semibold shadow-lg transition-all",
-                type === "unsubscribe"
-                  ? "hover:bg-destructive/90 bg-destructive text-destructive-foreground"
-                  : "from-primary to-primary/80 rounded-xl bg-linear-to-r hover:scale-[1.02] hover:shadow-xl",
-                {
-                  "pointer-events-none opacity-70": isPending,
-                },
-              )}
-              onClick={
-                type === "unsubscribe" ? handleUnsubscribe : handleSubscribe
-              }
-              disabled={isPending || (type === "unsubscribe" && !subscription)}
-              size="lg"
-            >
-              {isPending ? (
-                <div className="flex items-center gap-2">
-                  <LoaderCircle className="h-5 w-5 animate-spin" />
-                  {type === "unsubscribe" ? "Annulation..." : "Traitement..."}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  {type !== "unsubscribe" && <Crown className="h-5 w-5" />}
-                  {dialogContent.buttonText}
-                </div>
-              )}
-            </Button>
+            {type === "unsubscribe" ? (
+              <Button
+                className={cn(
+                  "w-full text-lg font-semibold shadow-lg transition-all",
+                  "hover:bg-destructive/90 bg-destructive text-destructive-foreground",
+                  { "pointer-events-none opacity-70": isPending },
+                )}
+                onClick={handleUnsubscribe}
+                disabled={isPending || !subscription}
+                size="lg"
+              >
+                {isPending ? (
+                  <div className="flex items-center gap-2">
+                    <LoaderCircle className="h-5 w-5 animate-spin" />
+                    Annulation...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">Se désabonner</div>
+                )}
+              </Button>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                <Button
+                  className={cn(
+                    "from-primary to-primary/80 w-full rounded-xl bg-linear-to-r text-lg font-semibold shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl",
+                    { "pointer-events-none opacity-70": isPending },
+                  )}
+                  onClick={handleSubscribe}
+                  disabled={isPending}
+                  size="lg"
+                >
+                  {isPaymentPending ? (
+                    <div className="flex items-center gap-2">
+                      <LoaderCircle className="h-5 w-5 animate-spin" />
+                      Traitement CinetPay...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-5 w-5" />
+                      Payer avec CinetPay
+                    </div>
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className={cn("w-full text-lg font-semibold", {
+                    "pointer-events-none opacity-70": isPending,
+                  })}
+                  onClick={handleSubscribeStripe}
+                  disabled={isPending}
+                  size="lg"
+                >
+                  {isStripePending ? (
+                    <div className="flex items-center gap-2">
+                      <LoaderCircle className="h-5 w-5 animate-spin" />
+                      Redirection Stripe...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      Payer avec Stripe (carte)
+                    </div>
+                  )}
+                </Button>
+              </div>
+            )}
 
             {type !== "unsubscribe" && (
               <p className="text-muted-foreground mt-3 text-center text-xs">
