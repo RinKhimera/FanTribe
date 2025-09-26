@@ -13,7 +13,6 @@ export async function startStripeCheckout(params: {
   creatorId: string
   subscriberId: string
   creatorUsername: string
-  amount: number
   action: "subscribe" | "renew"
 }) {
   const { userId } = await auth()
@@ -22,12 +21,6 @@ export async function startStripeCheckout(params: {
   if (!userId || !user) {
     return { error: "Unauthorized" }
   }
-
-  const currency = "xaf"
-  const zeroDecimal = ["xaf", "xof", "jpy", "krw"].includes(currency)
-  const amountUnit = zeroDecimal
-    ? params.amount
-    : Math.round(params.amount * 100)
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],

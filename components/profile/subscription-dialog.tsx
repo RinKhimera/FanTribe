@@ -93,7 +93,6 @@ export const SubscriptionDialog = ({
           creatorId: userProfile._id as string,
           subscriberId: currentUser._id as string,
           creatorUsername: userProfile.username as string,
-          amount: 1000,
           action: type === "renew" ? "renew" : "subscribe",
         })
       } catch (error) {

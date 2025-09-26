@@ -59,7 +59,6 @@ export const SubscriptionModal = ({
         creatorId: creator._id as string,
         subscriberId: currentUser._id as string,
         creatorUsername: creator.username as string,
-        amount: 1000,
         action: "subscribe",
       })
     } finally {

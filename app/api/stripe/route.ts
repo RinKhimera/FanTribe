@@ -33,12 +33,7 @@ export async function POST(request: Request) {
 
         const creatorId = metadata.creatorId as any
         const subscriberId = metadata.subscriberId as any
-        const currency = (session.currency || "xof").toUpperCase()
-        const zeroDecimal = ["XOF", "XAF", "JPY", "KRW"].includes(currency)
-        const amountTotal = session.amount_total || 0
-        const amount = zeroDecimal
-          ? amountTotal
-          : Math.round((amountTotal || 0) / 100)
+
         const startedAt = session.created
           ? new Date(session.created * 1000).toISOString()
           : new Date().toISOString()
@@ -50,8 +45,8 @@ export async function POST(request: Request) {
           providerTransactionId: session.id,
           creatorId,
           subscriberId,
-          amount,
-          currency,
+          amount: session.amount_total || 0,
+          currency: session.currency || "XOF",
           paymentMethod: session.payment_method_types?.[0],
           startedAt,
         })
