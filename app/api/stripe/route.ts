@@ -1,4 +1,4 @@
-import { fetchAction } from "convex/nextjs"
+import { ConvexHttpClient } from "convex/browser"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { api } from "@/convex/_generated/api"
@@ -24,6 +24,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
 
         if (!creatorId || !subscriberId || !session.id) break
 
-        await fetchAction(api.internalActions.processPayment, {
+        await convex.action(api.internalActions.processPayment, {
           provider: "stripe",
           providerTransactionId: session.id,
           creatorId,

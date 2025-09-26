@@ -36,17 +36,7 @@ export async function startStripeCheckout(params: {
     customer_email: user.emailAddresses?.[0]?.emailAddress,
     line_items: [
       {
-        price_data: {
-          currency,
-          unit_amount: amountUnit,
-          product_data: {
-            name:
-              params.action === "renew"
-                ? "Renouvellement abonnement"
-                : "Abonnement mensuel",
-            description: `@${params.creatorUsername}`,
-          },
-        },
+        price: process.env.STRIPE_PRICE_ID,
         quantity: 1,
       },
     ],
@@ -56,8 +46,8 @@ export async function startStripeCheckout(params: {
       creatorUsername: params.creatorUsername,
       action: params.action,
     },
-    success_url: `${baseUrl}/payment-check?provider=stripe&status=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${baseUrl}/payment-check?provider=stripe&status=cancel`,
+    success_url: `${baseUrl}/payment/merci?provider=stripe&session_id={CHECKOUT_SESSION_ID}&username=${params.creatorUsername}`,
+    cancel_url: `${baseUrl}/payment/cancelled?provider=stripe&reason=cancelled&username=${params.creatorUsername}`,
   })
 
   if (session.url) {
