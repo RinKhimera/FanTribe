@@ -268,7 +268,7 @@ export const SubscriptionDialog = ({
                 </div>
                 <div className="text-sm font-medium">
                   {type === "subscribe"
-                    ? "Résiliation à tout moment"
+                    ? "Sans engagement"
                     : "Annuler votre abonnement à tout moment"}
                 </div>
               </div>
@@ -323,7 +323,7 @@ export const SubscriptionDialog = ({
                   ) : (
                     <div className="flex items-center gap-2">
                       <Crown className="h-5 w-5" />
-                      Payer avec CinetPay
+                      Payer avec OM/MOMO
                     </div>
                   )}
                 </Button>

@@ -155,7 +155,7 @@ export const SubscriptionModal = ({
                 <div className="text-sm">
                   <span className="font-medium">Flexibilité</span>
                   <p className="text-muted-foreground">
-                    Annulez votre abonnement à tout moment
+                    Annulez à tout moment sans engagement
                   </p>
                 </div>
               </div>
@@ -184,7 +184,7 @@ export const SubscriptionModal = ({
                         Traitement CinetPay...
                       </>
                     ) : (
-                      "Payer avec CinetPay"
+                      "Payer avec OM/MOMO"
                     )}
                   </Button>
 
