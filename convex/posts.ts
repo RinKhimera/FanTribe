@@ -228,23 +228,38 @@ export const getPost = query({
 })
 
 export const getUserPosts = query({
-  args: { authorId: v.id("users") },
+  args: {
+    authorId: v.id("users"),
+    paginationOpts: v.optional(
+      v.object({
+        numItems: v.number(),
+        cursor: v.union(v.string(), v.null()),
+      }),
+    ),
+  },
   handler: async (ctx, args) => {
     const author = await ctx.db.get(args.authorId)
     if (!author) throw new ConvexError("User not found")
 
-    const posts = await ctx.db
+    const PAGE_SIZE = args.paginationOpts?.numItems || 20
+
+    // Pagination avec curseur
+    const paginationResult = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", author._id))
       .order("desc")
-      .collect()
+      .paginate(args.paginationOpts || { numItems: PAGE_SIZE, cursor: null })
 
-    const postsWithAuthor = posts.map((post) => ({
+    const postsWithAuthor = paginationResult.page.map((post) => ({
       ...post,
       author,
     }))
 
-    return postsWithAuthor
+    return {
+      posts: postsWithAuthor,
+      continueCursor: paginationResult.continueCursor,
+      isDone: paginationResult.isDone,
+    }
   },
 })
 
