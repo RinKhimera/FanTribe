@@ -1,5 +1,4 @@
 import { v } from "convex/values"
-import { deleteBunnyAsset } from "@/lib/bunny"
 import { internal } from "./_generated/api"
 import { Doc, Id } from "./_generated/dataModel"
 import {
@@ -8,6 +7,110 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server"
+
+// Helper pour supprimer un asset Bunny depuis Convex
+// (ne peut pas utiliser clientEnv car pas disponible côté Convex)
+async function deleteBunnyAssetFromConvex(
+  mediaId: string,
+  type: "image" | "video",
+): Promise<{ success: boolean; message: string; statusCode: number }> {
+  // Récupérer les variables d'environnement Convex
+  const BUNNY_VIDEO_LIBRARY_ID = process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID
+  const BUNNY_VIDEO_ACCESS_KEY = process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY
+  const BUNNY_STORAGE_ZONE_NAME =
+    process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME
+  const BUNNY_STORAGE_ACCESS_KEY =
+    process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY
+
+  if (type === "video") {
+    if (!BUNNY_VIDEO_LIBRARY_ID || !BUNNY_VIDEO_ACCESS_KEY) {
+      console.error("❌ Bunny video credentials missing in Convex env")
+      return {
+        success: false,
+        message: "Configuration Bunny CDN manquante",
+        statusCode: 500,
+      }
+    }
+
+    try {
+      const response = await fetch(
+        `https://video.bunnycdn.com/library/${BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
+        {
+          method: "DELETE",
+          headers: { AccessKey: BUNNY_VIDEO_ACCESS_KEY },
+        },
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error("❌ Bunny video deletion failed:", data)
+        return {
+          success: false,
+          message: data.message || "Erreur lors de la suppression",
+          statusCode: response.status,
+        }
+      }
+
+      console.log("✅ Bunny video deleted:", mediaId)
+      return { success: true, message: "Vidéo supprimée", statusCode: 200 }
+    } catch (error) {
+      console.error("❌ Bunny video deletion error:", error)
+      return {
+        success: false,
+        message: "Erreur réseau",
+        statusCode: 500,
+      }
+    }
+  }
+
+  if (type === "image") {
+    if (!BUNNY_STORAGE_ZONE_NAME || !BUNNY_STORAGE_ACCESS_KEY) {
+      console.error("❌ Bunny storage credentials missing in Convex env")
+      return {
+        success: false,
+        message: "Configuration Bunny CDN manquante",
+        statusCode: 500,
+      }
+    }
+
+    try {
+      const response = await fetch(
+        `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
+        {
+          method: "DELETE",
+          headers: { AccessKey: BUNNY_STORAGE_ACCESS_KEY },
+        },
+      )
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("❌ Bunny image deletion failed:", errorText)
+        return {
+          success: false,
+          message: errorText || "Erreur lors de la suppression",
+          statusCode: response.status,
+        }
+      }
+
+      console.log("✅ Bunny image deleted:", mediaId)
+      return { success: true, message: "Image supprimée", statusCode: 200 }
+    } catch (error) {
+      console.error("❌ Bunny image deletion error:", error)
+      return {
+        success: false,
+        message: "Erreur réseau",
+        statusCode: 500,
+      }
+    }
+  }
+
+  return {
+    success: false,
+    message: "Type d'asset invalide",
+    statusCode: 400,
+  }
+}
 
 type ProcessPaymentResult = {
   success: boolean
@@ -382,7 +485,10 @@ export const deleteSingleBunnyAsset = internalAction({
   },
   handler: async (ctx, args) => {
     try {
-      const result = await deleteBunnyAsset(args.mediaId, args.assetType)
+      const result = await deleteBunnyAssetFromConvex(
+        args.mediaId,
+        args.assetType,
+      )
 
       return {
         success: result.success,

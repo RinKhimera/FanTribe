@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
-import { formatCustomTimeAgo } from "@/utils/formatCustomTimeAgo"
+import { formatCustomTimeAgo } from "@/utils/formatters/format-custom-time-ago"
 
 // Define a type `ExtendedNotificationProps` that extends the `Doc<"notifications">` type
 // But omits the "sender", "post", and "comment" properties. These properties are then redefined with new types.

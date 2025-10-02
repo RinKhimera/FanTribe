@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { toast } from "sonner"
-import { uploadBunnyAsset } from "@/lib/bunny"
+import { uploadBunnyAsset } from "@/lib/services/bunny"
 
 interface BunnyUploadWidgetProps {
   onSuccess: (result: {

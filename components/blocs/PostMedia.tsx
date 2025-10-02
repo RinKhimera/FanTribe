@@ -14,7 +14,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/video-utils"
+import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/utils/calculators/video-display-info"
 import type { BunnyVideoGetResponse } from "@/types"
 
 interface PostMediaProps {

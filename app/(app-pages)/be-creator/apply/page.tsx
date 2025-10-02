@@ -30,7 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { deleteBunnyAsset } from "@/lib/bunny"
+import { deleteBunnyAsset } from "@/lib/services/bunny"
 
 const applicationSchema = z.object({
   fullName: z.string().min(2, "Le nom complet est requis"),

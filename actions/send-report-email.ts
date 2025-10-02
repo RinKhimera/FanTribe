@@ -1,7 +1,7 @@
 "use server"
 
 import { Resend } from "resend"
-import { env } from "@/lib/env"
+import { env } from "@/lib/config/env"
 import { ReportEmailTemplate } from "@/templates/report-email-template"
 
 const resend = new Resend(env.RESEND_API_KEY)

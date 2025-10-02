@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { toast } from "sonner"
-import { PaymentData, initializeCinetPayPayment } from "@/utils/cinetpayPayment"
+import { PaymentData, initializeCinetPayPayment } from "@/lib/services/cinetpay"
 
 export const useCinetpayPayment = () => {
   const router = useRouter()

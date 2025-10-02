@@ -1,7 +1,7 @@
 "use server"
 
-import { deleteBunnyAsset } from "@/lib/bunny"
-import { logger } from "@/lib/logger"
+import { deleteBunnyAsset } from "@/lib/services/bunny"
+import { logger } from "@/lib/config/logger"
 
 export const deleteAsset = async (
   mediaId: string,

@@ -2,8 +2,9 @@ import { ConvexHttpClient } from "convex/browser"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { api } from "@/convex/_generated/api"
-import { env } from "@/lib/env"
-import { stripe } from "@/lib/stripe"
+import { clientEnv } from "@/lib/config/env.client"
+import { env } from "@/lib/config/env"
+import { stripe } from "@/lib/services/stripe"
 
 export async function POST(request: Request) {
   let event: Stripe.Event
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const convex = new ConvexHttpClient(env.NEXT_PUBLIC_CONVEX_URL)
+    const convex = new ConvexHttpClient(clientEnv.NEXT_PUBLIC_CONVEX_URL)
 
     switch (event.type) {
       case "checkout.session.completed": {

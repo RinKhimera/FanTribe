@@ -1,6 +1,6 @@
 import axios from "axios"
-import { env } from "@/lib/env"
-import { logger } from "@/lib/logger"
+import { clientEnv } from "@/lib/config/env.client"
+import { logger } from "@/lib/config/logger"
 import {
   BunnyApiResponse,
   BunnyCollectionCreateResponse,
@@ -15,11 +15,11 @@ export const deleteBunnyAsset = async (
   if (type === "video") {
     try {
       const response = await fetch(
-        `https://video.bunnycdn.com/library/${env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
+        `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
+            AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
           },
         },
       )
@@ -60,11 +60,11 @@ export const deleteBunnyAsset = async (
   if (type === "image") {
     try {
       const response = await fetch(
-        `https://storage.bunnycdn.com/${env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
+        `https://storage.bunnycdn.com/${clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY,
+            AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY,
           },
         },
       )
@@ -142,14 +142,14 @@ export const uploadBunnyAsset = async ({
       try {
         const userCollectionId = await getOrCreateUserCollection(userId)
         const createRes = await axios.post(
-          `https://video.bunnycdn.com/library/${env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos`,
+          `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos`,
           {
             title: videoFileName,
             collectionId: userCollectionId,
           },
           {
             headers: {
-              AccessKey: env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
+              AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
               "Content-Type": "application/json",
             },
           },
@@ -171,11 +171,11 @@ export const uploadBunnyAsset = async ({
 
       try {
         await axios.put(
-          `https://video.bunnycdn.com/library/${env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
+          `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
           file,
           {
             headers: {
-              AccessKey: env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
+              AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
               "Content-Type": file.type,
             },
             onUploadProgress: (evt) => {
@@ -203,7 +203,7 @@ export const uploadBunnyAsset = async ({
 
       return {
         success: true,
-        url: `https://iframe.mediadelivery.net/embed/${env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
+        url: `https://iframe.mediadelivery.net/embed/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
         mediaId: videoData.guid,
         type: "video",
       }
@@ -211,11 +211,11 @@ export const uploadBunnyAsset = async ({
       // Images via axios
       try {
         await axios.put(
-          `https://storage.bunnycdn.com/${env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
+          `https://storage.bunnycdn.com/${clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
           file,
           {
             headers: {
-              AccessKey: env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY,
+              AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY,
               "Content-Type": file.type,
             },
             onUploadProgress: (evt) => {
@@ -243,7 +243,7 @@ export const uploadBunnyAsset = async ({
 
       return {
         success: true,
-        url: `${env.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL}/${fileName}`,
+        url: `${clientEnv.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL}/${fileName}`,
         mediaId: fileName,
         type: "image",
       }
@@ -281,10 +281,10 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     // Récupérer toutes les collections pour voir si celle de l'utilisateur existe
     const collectionsResponse = await fetch(
-      `https://video.bunnycdn.com/library/${env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       {
         headers: {
-          AccessKey: env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
+          AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
         },
       },
     )
@@ -311,11 +311,11 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     // Créer une nouvelle collection si elle n'existe pas
     const createResponse = await fetch(
-      `https://video.bunnycdn.com/library/${env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       {
         method: "POST",
         headers: {
-          AccessKey: env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
+          AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name: userCollectionName }),

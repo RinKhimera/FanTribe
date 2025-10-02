@@ -18,7 +18,7 @@ import {
 import { api } from "@/convex/_generated/api"
 import { useCinetpayPayment } from "@/hooks/useCinetpayPayment"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { logger } from "@/lib/logger"
+import { logger } from "@/lib/config/logger"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
 

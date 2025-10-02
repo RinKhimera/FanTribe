@@ -18,8 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Application } from "@/types"
-import { detectRiskFactors, getRiskBadge } from "@/utils/detectRiskFactors"
-import { getStatusBadge } from "@/utils/getStatusBadge"
+import { detectRiskFactors, getRiskBadge } from "@/utils/validators/detect-risk-factors"
+import { getStatusBadge } from "@/utils/ui/get-status-badge"
 
 const CreatorApplicationsPage = () => {
   const { currentUser } = useCurrentUser()

@@ -1,29 +1,17 @@
 import { z } from "zod"
 
 /**
- * Schéma de validation pour les variables d'environnement
- * Toutes les variables NEXT_PUBLIC_* sont accessibles côté client
- * Les autres sont uniquement côté serveur
+ * ✅ VARIABLES CLIENT (NEXT_PUBLIC_*)
+ * Ce fichier peut être importé partout (client et serveur)
+ * Seules les variables commençant par NEXT_PUBLIC_ sont ici
  */
-const envSchema = z.object({
-  // Node environment
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
-
-  // Convex (Backend)
-  CONVEX_DEPLOYMENT: z.string().min(1, "CONVEX_DEPLOYMENT is required"),
+const clientEnvSchema = z.object({
+  // Convex
   NEXT_PUBLIC_CONVEX_URL: z
     .string()
     .url("NEXT_PUBLIC_CONVEX_URL must be a valid URL"),
 
   // Clerk (Authentication)
-  CLERK_SECRET_KEY: z
-    .string()
-    .startsWith("sk_", "CLERK_SECRET_KEY must start with 'sk_'"),
-  CLERK_WEBHOOK_SECRET: z
-    .string()
-    .startsWith("whsec_", "CLERK_WEBHOOK_SECRET must start with 'whsec_'"),
   NEXT_PUBLIC_CLERK_FRONTEND_API_URL: z
     .string()
     .url("NEXT_PUBLIC_CLERK_FRONTEND_API_URL must be a valid URL"),
@@ -53,41 +41,21 @@ const envSchema = z.object({
     .string()
     .url("NEXT_PUBLIC_BUNNY_PULL_ZONE_URL must be a valid URL"),
 
-  // CinetPay (African payment processor)
+  // CinetPay
   NEXT_PUBLIC_CINETPAY_SITE_ID: z
     .string()
     .min(1, "NEXT_PUBLIC_CINETPAY_SITE_ID is required"),
   NEXT_PUBLIC_CINETPAY_API_KEY: z
     .string()
     .min(1, "NEXT_PUBLIC_CINETPAY_API_KEY is required"),
-
-  // Stripe (Card payments)
-  STRIPE_SECRET_KEY: z
-    .string()
-    .startsWith("sk_", "STRIPE_SECRET_KEY must start with 'sk_'"),
-  STRIPE_WEBHOOK_SECRET: z
-    .string()
-    .startsWith("whsec_", "STRIPE_WEBHOOK_SECRET must start with 'whsec_'"),
-  STRIPE_PRICE_ID: z
-    .string()
-    .startsWith("price_", "STRIPE_PRICE_ID must start with 'price_'"),
-
-  // Resend (Email)
-  RESEND_API_KEY: z
-    .string()
-    .startsWith("re_", "RESEND_API_KEY must start with 're_'"),
 })
 
 /**
- * Variables d'environnement validées et typées
- * @throws {ZodError} Si la validation échoue
+ * Variables d'environnement client validées et typées
+ * Accessible partout (client et serveur)
  */
-export const env = envSchema.parse({
-  NODE_ENV: process.env.NODE_ENV,
-  CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,
+export const clientEnv = clientEnvSchema.parse({
   NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
-  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-  CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
   NEXT_PUBLIC_CLERK_FRONTEND_API_URL:
     process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
@@ -105,13 +73,9 @@ export const env = envSchema.parse({
   NEXT_PUBLIC_BUNNY_PULL_ZONE_URL: process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL,
   NEXT_PUBLIC_CINETPAY_SITE_ID: process.env.NEXT_PUBLIC_CINETPAY_SITE_ID,
   NEXT_PUBLIC_CINETPAY_API_KEY: process.env.NEXT_PUBLIC_CINETPAY_API_KEY,
-  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
-  STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
-  RESEND_API_KEY: process.env.RESEND_API_KEY,
 })
 
 /**
- * Type helper pour les variables d'environnement
+ * Type helper pour les variables d'environnement client
  */
-export type Env = z.infer<typeof envSchema>
+export type ClientEnv = z.infer<typeof clientEnvSchema>

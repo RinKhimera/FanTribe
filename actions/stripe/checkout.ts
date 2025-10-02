@@ -2,8 +2,8 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { env } from "@/lib/env"
-import { stripe } from "@/lib/stripe"
+import { env } from "@/lib/config/env"
+import { stripe } from "@/lib/services/stripe"
 
 const baseUrl =
   env.NODE_ENV === "production"

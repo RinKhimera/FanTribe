@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { uploadBunnyAsset } from "@/lib/bunny"
+import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
 import { BunnyApiResponse } from "@/types"

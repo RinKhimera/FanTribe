@@ -9,7 +9,7 @@ import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
-import { deleteBunnyAsset } from "@/lib/bunny"
+import { deleteBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
 
