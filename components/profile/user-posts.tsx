@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { PostCard } from "@/components/shared/PostCard"
+import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 

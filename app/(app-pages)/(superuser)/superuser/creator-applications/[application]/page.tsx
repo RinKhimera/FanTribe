@@ -22,8 +22,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { detectRiskFactors, getRiskBadge } from "@/utils/detectRiskFactors"
-import { getStatusBadge } from "@/utils/getStatusBadge"
+import { detectRiskFactors, getRiskBadge } from "@/utils/validators/detect-risk-factors"
+import { getStatusBadge } from "@/utils/ui/get-status-badge"
 
 interface ApplicationDetailsProps {
   params: Promise<{ application: Id<"creatorApplications"> }>

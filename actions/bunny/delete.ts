@@ -1,6 +1,7 @@
 "use server"
 
-import { deleteBunnyAsset } from "@/lib/bunny"
+import { deleteBunnyAsset } from "@/lib/services/bunny"
+import { logger } from "@/lib/config/logger"
 
 export const deleteAsset = async (
   mediaId: string,
@@ -46,7 +47,7 @@ export const deleteAsset = async (
       statusCode: result.statusCode || 200,
     }
   } catch (error) {
-    console.error("❌ Erreur dans deleteAsset server action:", error)
+    logger.error("Delete asset server action failed", error, { mediaId, type })
     return {
       success: false,
       message: "Erreur serveur lors de la suppression",

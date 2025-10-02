@@ -1,4 +1,6 @@
 import axios from "axios"
+import { clientEnv } from "@/lib/config/env.client"
+import { logger } from "@/lib/config/logger"
 import {
   BunnyApiResponse,
   BunnyCollectionCreateResponse,
@@ -13,11 +15,11 @@ export const deleteBunnyAsset = async (
   if (type === "video") {
     try {
       const response = await fetch(
-        `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
+        `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
+            AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
           },
         },
       )
@@ -25,10 +27,11 @@ export const deleteBunnyAsset = async (
       const deleteResponse: BunnyDeleteResponse = await response.json()
 
       if (!response.ok) {
-        console.error(
-          "❌ Erreur lors de la suppression de la vidéo",
-          deleteResponse,
-        )
+        logger.error("Bunny video deletion failed", deleteResponse, {
+          mediaId,
+          type: "video",
+          statusCode: response.status,
+        })
         return {
           success: false,
           message: deleteResponse.message || "Erreur lors de la suppression",
@@ -36,13 +39,16 @@ export const deleteBunnyAsset = async (
         }
       }
 
-      console.log("✅ Vidéo supprimée avec succès", deleteResponse)
+      logger.success("Bunny video deleted successfully", {
+        mediaId,
+        statusCode: response.status,
+      })
       return deleteResponse
     } catch (error) {
-      console.error(
-        "❌ Erreur réseau lors de la suppression de la vidéo",
-        error,
-      )
+      logger.error("Bunny video deletion network error", error, {
+        mediaId,
+        type: "video",
+      })
       return {
         success: false,
         message: "Erreur réseau lors de la suppression",
@@ -54,18 +60,22 @@ export const deleteBunnyAsset = async (
   if (type === "image") {
     try {
       const response = await fetch(
-        `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
+        `https://storage.bunnycdn.com/${clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${mediaId}`,
         {
           method: "DELETE",
           headers: {
-            AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
+            AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY,
           },
         },
       )
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error("❌ Erreur lors de la suppression de l'image", errorText)
+        logger.error("Bunny image deletion failed", errorText, {
+          mediaId,
+          type: "image",
+          statusCode: response.status,
+        })
         return {
           success: false,
           message: errorText || "Erreur lors de la suppression de l'image",
@@ -73,14 +83,17 @@ export const deleteBunnyAsset = async (
         }
       }
 
-      console.log("✅ Image supprimée avec succès")
+      logger.success("Bunny image deleted successfully", { mediaId })
       return {
         success: true,
         message: "Image supprimée avec succès",
         statusCode: 200,
       }
     } catch (error) {
-      console.error("❌ Erreur réseau lors de la suppression de l'image", error)
+      logger.error("Bunny image deletion network error", error, {
+        mediaId,
+        type: "image",
+      })
       return {
         success: false,
         message: "Erreur réseau lors de la suppression",
@@ -129,21 +142,24 @@ export const uploadBunnyAsset = async ({
       try {
         const userCollectionId = await getOrCreateUserCollection(userId)
         const createRes = await axios.post(
-          `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos`,
+          `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos`,
           {
             title: videoFileName,
             collectionId: userCollectionId,
           },
           {
             headers: {
-              AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
+              AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
               "Content-Type": "application/json",
             },
           },
         )
         videoData = createRes.data
       } catch (e: any) {
-        console.error("❌ Erreur création vidéo:", e)
+        logger.error("Bunny video creation failed", e, {
+          userId,
+          fileName: videoFileName,
+        })
         return {
           success: false,
           url: "",
@@ -155,11 +171,11 @@ export const uploadBunnyAsset = async ({
 
       try {
         await axios.put(
-          `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
+          `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/videos/${videoData.guid}`,
           file,
           {
             headers: {
-              AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
+              AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
               "Content-Type": file.type,
             },
             onUploadProgress: (evt) => {
@@ -171,7 +187,11 @@ export const uploadBunnyAsset = async ({
         )
         onProgress?.(100)
       } catch (e: any) {
-        console.error("❌ Erreur upload vidéo:", e)
+        logger.error("Bunny video upload failed", e, {
+          videoGuid: videoData.guid,
+          userId,
+          fileName: videoFileName,
+        })
         return {
           success: false,
           url: "",
@@ -183,7 +203,7 @@ export const uploadBunnyAsset = async ({
 
       return {
         success: true,
-        url: `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
+        url: `https://iframe.mediadelivery.net/embed/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/${videoData.guid}`,
         mediaId: videoData.guid,
         type: "video",
       }
@@ -191,11 +211,11 @@ export const uploadBunnyAsset = async ({
       // Images via axios
       try {
         await axios.put(
-          `https://storage.bunnycdn.com/${process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
+          `https://storage.bunnycdn.com/${clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME}/${fileName}`,
           file,
           {
             headers: {
-              AccessKey: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY!,
+              AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY,
               "Content-Type": file.type,
             },
             onUploadProgress: (evt) => {
@@ -207,7 +227,11 @@ export const uploadBunnyAsset = async ({
         )
         onProgress?.(100)
       } catch (e: any) {
-        console.error("❌ Erreur upload image:", e)
+        logger.error("Bunny image upload failed", e, {
+          fileName,
+          userId,
+          fileType: file.type,
+        })
         return {
           success: false,
           url: "",
@@ -219,18 +243,24 @@ export const uploadBunnyAsset = async ({
 
       return {
         success: true,
-        url: `${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL}/${fileName}`,
+        url: `${clientEnv.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL}/${fileName}`,
         mediaId: fileName,
         type: "image",
       }
     }
   } catch (error) {
-    console.error("❌ Erreur uploadBunnyAsset:", error)
+    const mediaType = file.type.startsWith("video/") ? "video" : "image"
+    logger.error("Bunny asset upload failed", error, {
+      fileName,
+      userId,
+      fileType: file.type,
+      mediaType,
+    })
     return {
       success: false,
       url: "",
       mediaId: "",
-      type: file.type.startsWith("video/") ? "video" : "image",
+      type: mediaType,
       error:
         error instanceof Error
           ? error.message
@@ -251,10 +281,10 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     // Récupérer toutes les collections pour voir si celle de l'utilisateur existe
     const collectionsResponse = await fetch(
-      `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       {
         headers: {
-          AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
+          AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
         },
       },
     )
@@ -281,11 +311,11 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     // Créer une nouvelle collection si elle n'existe pas
     const createResponse = await fetch(
-      `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
+      `https://video.bunnycdn.com/library/${clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID}/collections`,
       {
         method: "POST",
         headers: {
-          AccessKey: process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY!,
+          AccessKey: clientEnv.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name: userCollectionName }),
@@ -302,7 +332,7 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     return newCollection.guid
   } catch (error) {
-    console.error("❌ Erreur lors de la gestion des collections:", error)
+    logger.error("Bunny collection management failed", error, { userId })
     throw new Error("Failed to get or create user collection")
   }
 }

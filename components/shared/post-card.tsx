@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
-import { formatPostDate } from "@/utils/formatPostDate"
+import { formatPostDate } from "@/utils/formatters/format-post-date"
 
 // ExtendedPost is a type that represents a post with an extended author field.
 // It's created by taking the original Doc<"posts"> type and omitting the 'author' field.
