@@ -28,7 +28,7 @@ export const UserPosts = ({
   const result = useQuery(api.posts.getUserPosts, {
     authorId,
     paginationOpts: {
-      numItems: 3,
+      numItems: 20,
       cursor,
     },
   })
