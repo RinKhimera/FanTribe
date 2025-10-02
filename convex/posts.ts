@@ -307,7 +307,14 @@ export const getAllPosts = query({
 })
 
 export const getHomePosts = query({
-  args: {},
+  args: {
+    paginationOpts: v.optional(
+      v.object({
+        numItems: v.number(),
+        cursor: v.union(v.string(), v.null()),
+      }),
+    ),
+  },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -320,22 +327,7 @@ export const getHomePosts = query({
       .unique()
     if (!currentUser) throw new ConvexError("User not found")
 
-    const POST_FETCH_LIMIT = 80
-
-    // Cas SUPERUSER: lecture brute + enrichissement auteurs
-    if (currentUser.accountType === "SUPERUSER") {
-      const posts = await ctx.db
-        .query("posts")
-        .order("desc")
-        .take(POST_FETCH_LIMIT)
-      const authorIds = [...new Set(posts.map((p) => p.author))]
-      const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
-      const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
-      return posts.map((p) => ({
-        ...p,
-        author: authorsMap.get(p.author),
-      }))
-    }
+    const PAGE_SIZE = args.paginationOpts?.numItems || 20
 
     // Récupérer toutes les souscriptions de l'utilisateur (une seule requête)
     const subs = await ctx.db
@@ -349,14 +341,17 @@ export const getHomePosts = query({
       subs.filter((s) => s.status === "active").map((s) => s.creator),
     )
 
-    // Récupérer un lot de posts récents
-    const rawPosts = await ctx.db
+    // Pagination avec curseur
+    const paginationResult = await ctx.db
       .query("posts")
       .order("desc")
-      .take(POST_FETCH_LIMIT)
+      .paginate(args.paginationOpts || { numItems: PAGE_SIZE, cursor: null })
 
     // Filtrage visibilité
-    const filtered = rawPosts.filter((post) => {
+    const filtered = paginationResult.page.filter((post) => {
+      // SUPERUSER voit tout
+      if (currentUser.accountType === "SUPERUSER") return true
+
       if (!post.visibility || post.visibility === "public") return true
       if (post.visibility === "subscribers_only") {
         if (post.author === currentUser._id) return true
@@ -370,10 +365,16 @@ export const getHomePosts = query({
     const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
     const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
 
-    return filtered.map((p) => ({
+    const postsWithAuthors = filtered.map((p) => ({
       ...p,
       author: authorsMap.get(p.author),
     }))
+
+    return {
+      posts: postsWithAuthors,
+      continueCursor: paginationResult.continueCursor,
+      isDone: paginationResult.isDone,
+    }
   },
 })
 
