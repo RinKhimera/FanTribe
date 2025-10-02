@@ -18,6 +18,7 @@ import {
 import { api } from "@/convex/_generated/api"
 import { useCinetpayPayment } from "@/hooks/useCinetpayPayment"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
 
@@ -96,23 +97,48 @@ export const SubscriptionDialog = ({
           action: type === "renew" ? "renew" : "subscribe",
         })
       } catch (error) {
-        console.error(error)
-        toast.error("Impossible de démarrer le paiement Stripe")
+        const errorMessage =
+          error instanceof Error ? error.message : "Erreur inconnue"
+
+        logger.error("Stripe checkout failed", error, {
+          creatorId: userProfile._id,
+          subscriberId: currentUser._id,
+          action: type,
+        })
+
+        toast.error("Impossible de démarrer le paiement Stripe", {
+          description: errorMessage,
+        })
       }
     })
   }
 
   const handleUnsubscribe = () => {
-    if (!subscription?._id) return
+    if (!subscription?._id || !currentUser || !userProfile) return
     startTransition(async () => {
       try {
         await cancelSubscription({ subscriptionId: subscription._id })
-        toast.success("Abonnement annulé")
+
+        logger.success("Subscription cancelled", {
+          subscriptionId: subscription._id,
+          creatorId: userProfile._id,
+        })
+
+        toast.success("Abonnement annulé avec succès")
       } catch (error) {
-        console.error(error)
-        toast.error("Une erreur s'est produite !", {
-          description:
-            "Veuillez vérifier votre connexion internet et réessayer",
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Veuillez vérifier votre connexion internet et réessayer"
+
+        logger.error("Subscription cancellation failed", error, {
+          subscriptionId: subscription._id,
+          creatorId: userProfile._id,
+          subscriberId: currentUser._id,
+        })
+
+        toast.error("Impossible d'annuler l'abonnement", {
+          description: errorMessage,
         })
       }
     })

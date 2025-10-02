@@ -2,6 +2,7 @@ import { ConvexHttpClient } from "convex/browser"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { api } from "@/convex/_generated/api"
+import { env } from "@/lib/env"
 import { stripe } from "@/lib/stripe"
 
 export async function POST(request: Request) {
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
     event = stripe.webhooks.constructEvent(
       payload,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      env.STRIPE_WEBHOOK_SECRET,
     )
   } catch (err: any) {
     console.error("Stripe webhook verification failed:", err?.message || err)
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+    const convex = new ConvexHttpClient(env.NEXT_PUBLIC_CONVEX_URL)
 
     switch (event.type) {
       case "checkout.session.completed": {

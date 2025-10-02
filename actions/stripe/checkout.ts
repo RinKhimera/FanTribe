@@ -2,10 +2,11 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
+import { env } from "@/lib/env"
 import { stripe } from "@/lib/stripe"
 
 const baseUrl =
-  process.env.NODE_ENV === "production"
+  env.NODE_ENV === "production"
     ? "https://fantribe.io"
     : "http://localhost:3000"
 
@@ -29,7 +30,7 @@ export async function startStripeCheckout(params: {
     customer_email: user.emailAddresses?.[0]?.emailAddress,
     line_items: [
       {
-        price: process.env.STRIPE_PRICE_ID,
+        price: env.STRIPE_PRICE_ID,
         quantity: 1,
       },
     ],
