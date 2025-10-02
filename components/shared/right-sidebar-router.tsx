@@ -17,6 +17,7 @@ export const RightSidebarRouter = () => {
 
   const segments = (pathname || "/").split("/").filter(Boolean)
   const first = segments[0] || ""
+  const second = segments[1] || ""
 
   // Routes sans sidebar droite (layouts spécifiques)
   const hiddenRoutes = new Set(["messages", "user-lists"]) // on peut étendre si besoin
@@ -48,6 +49,12 @@ export const RightSidebarRouter = () => {
     api.subscriptions.canUserSubscribe,
     userProfile?._id ? { creatorId: userProfile._id } : "skip",
   )
+
+  // Pages superuser spécifiques sans sidebar (pleine largeur)
+  const hiddenSuperuserPages = new Set(["transactions"])
+
+  // Si on est sur superuser/transactions, masquer la sidebar
+  if (first === "superuser" && hiddenSuperuserPages.has(second)) return null
 
   // Rendu
   if (hiddenRoutes.has(first)) return null

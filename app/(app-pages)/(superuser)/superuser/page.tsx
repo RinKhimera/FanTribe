@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   BarChart3,
   Clock,
+  DollarSign,
   Eye,
   FileText,
   MessageSquare,
@@ -15,6 +16,7 @@ import {
   Users,
 } from "lucide-react"
 import Link from "next/link"
+import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,6 +25,15 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 const SuperUserPage = () => {
   const { currentUser } = useCurrentUser()
+
+  // Mémoriser les dates pour éviter les re-renders infinis
+  const dateRange = useMemo(() => {
+    const now = Date.now()
+    return {
+      startDate: now - 14 * 24 * 60 * 60 * 1000,
+      endDate: now,
+    }
+  }, [])
 
   // Queries pour récupérer les statistiques
   const allApplications = useQuery(
@@ -43,6 +54,12 @@ const SuperUserPage = () => {
   const reportsStats = useQuery(
     api.reports.getReportsStats,
     currentUser?.accountType === "SUPERUSER" ? {} : "skip",
+  )
+
+  // Récupérer les statistiques des transactions (2 dernières semaines)
+  const transactionsSummary = useQuery(
+    api.transactions.getTransactionsSummary,
+    currentUser?.accountType === "SUPERUSER" ? dateRange : "skip",
   )
 
   // Calcul des statistiques
@@ -72,8 +89,8 @@ const SuperUserPage = () => {
   const isLoading = !allApplications || !allPosts || !allUsers
 
   return (
-    <main className="flex h-full min-h-screen w-full flex-col border-l border-r border-muted max-[500px]:pb-16 sm:w-[80%] lg:w-[60%]">
-      <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16 sm:w-[80%] lg:w-[60%]">
+      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Dashboard Administrateur</h1>
           <Badge variant="outline" className="hidden sm:inline-flex">
@@ -91,13 +108,13 @@ const SuperUserPage = () => {
               <CardTitle className="flex-1 text-sm font-medium">
                 Utilisateurs Total
               </CardTitle>
-              <Users className="ml-2 h-6 w-6 shrink-0 text-muted-foreground" />
+              <Users className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {isLoading ? "..." : totalUsers}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {creatorUsers.length} créateurs • {regularUsers.length}{" "}
                 utilisateurs
               </p>
@@ -109,13 +126,13 @@ const SuperUserPage = () => {
               <CardTitle className="flex-1 text-sm font-medium">
                 Posts Publiés
               </CardTitle>
-              <FileText className="ml-2 h-6 w-6 shrink-0 text-muted-foreground" />
+              <FileText className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {isLoading ? "..." : totalPosts}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {recentPosts.length} cette semaine
               </p>
             </CardContent>
@@ -126,14 +143,37 @@ const SuperUserPage = () => {
               <CardTitle className="flex-1 text-sm font-medium">
                 Candidatures
               </CardTitle>
-              <UserPlus className="ml-2 h-6 w-6 shrink-0 text-muted-foreground" />
+              <UserPlus className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {isLoading ? "..." : totalApplications}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {pendingApplications.length} en attente
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="flex-1 text-sm font-medium">
+                Revenus (2 semaines)
+              </CardTitle>
+              <DollarSign className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {!transactionsSummary
+                  ? "..."
+                  : new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: transactionsSummary.currency,
+                      minimumFractionDigits: 0,
+                    }).format(transactionsSummary.totalAmount)}
+              </div>
+              <p className="text-muted-foreground text-xs">
+                {transactionsSummary?.totalTransactions || 0} transactions
               </p>
             </CardContent>
           </Card>
@@ -143,7 +183,7 @@ const SuperUserPage = () => {
               <CardTitle className="flex-1 text-sm font-medium">
                 Taux d&apos;Approbation
               </CardTitle>
-              <TrendingUp className="ml-2 h-6 w-6 shrink-0 text-muted-foreground" />
+              <TrendingUp className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -153,7 +193,7 @@ const SuperUserPage = () => {
                     ? `${Math.round((approvedApplications.length / totalApplications) * 100)}%`
                     : "0%"}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {approvedApplications.length} approuvées
               </p>
             </CardContent>
@@ -179,7 +219,7 @@ const SuperUserPage = () => {
                     <Badge variant="destructive" className="text-xs">
                       {pendingApplications.length}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       candidatures
                     </span>
                   </div>
@@ -224,7 +264,7 @@ const SuperUserPage = () => {
                     <Badge variant="secondary" className="text-xs">
                       {reportsStats?.pending || 0}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       à traiter
                     </span>
                   </div>
@@ -345,7 +385,7 @@ const SuperUserPage = () => {
                 >
                   <UserPlus className="h-6 w-6" />
                   <span className="font-medium">Candidatures</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     Gérer les demandes créateur
                   </span>
                 </Button>
@@ -358,23 +398,24 @@ const SuperUserPage = () => {
                 >
                   <AlertTriangle className="h-6 w-6" />
                   <span className="font-medium">Signalements</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     Modérer le contenu
                   </span>
                 </Button>
               </Link>
 
-              <Button
-                variant="outline"
-                className="flex h-auto w-full flex-col items-center gap-2 p-4"
-                disabled
-              >
-                <BarChart3 className="h-6 w-6" />
-                <span className="font-medium">Statistiques</span>
-                <span className="text-xs text-muted-foreground">
-                  Analyses détaillées
-                </span>
-              </Button>
+              <Link href="/superuser/transactions">
+                <Button
+                  variant="outline"
+                  className="flex h-auto w-full flex-col items-center gap-2 p-4"
+                >
+                  <BarChart3 className="h-6 w-6" />
+                  <span className="font-medium">Transactions</span>
+                  <span className="text-muted-foreground text-xs">
+                    Suivi des paiements
+                  </span>
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
