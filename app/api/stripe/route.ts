@@ -2,8 +2,8 @@ import { ConvexHttpClient } from "convex/browser"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { api } from "@/convex/_generated/api"
-import { clientEnv } from "@/lib/config/env.client"
 import { env } from "@/lib/config/env"
+import { clientEnv } from "@/lib/config/env.client"
 import { stripe } from "@/lib/services/stripe"
 
 export async function POST(request: Request) {
@@ -42,13 +42,45 @@ export async function POST(request: Request) {
 
         if (!creatorId || !subscriberId || !session.id) break
 
+        // Stripe renvoie les montants en centimes pour les devises à 2 décimales
+        // mais les devises à zéro décimale (comme XAF) sont déjà en unités entières
+        const currency = session.currency?.toUpperCase() || "USD"
+
+        // Liste des devises à zéro décimale selon Stripe
+        // https://docs.stripe.com/currencies#zero-decimal
+        const zeroDecimalCurrencies = [
+          "BIF",
+          "CLP",
+          "DJF",
+          "GNF",
+          "JPY",
+          "KMF",
+          "KRW",
+          "MGA",
+          "PYG",
+          "RWF",
+          "UGX",
+          "VND",
+          "VUV",
+          "XAF",
+          "XOF",
+          "XPF",
+        ]
+
+        const isZeroDecimal = zeroDecimalCurrencies.includes(currency)
+        const amount = session.amount_total
+          ? isZeroDecimal
+            ? session.amount_total // XAF: 1000 = 1000 XAF
+            : session.amount_total / 100 // USD: 500 = 5.00 USD
+          : 0
+
         await convex.action(api.internalActions.processPayment, {
           provider: "stripe",
           providerTransactionId: session.id,
           creatorId,
           subscriberId,
-          amount: session.amount_total || 0,
-          currency: session.currency || "XOF",
+          amount,
+          currency,
           paymentMethod: session.payment_method_types?.[0],
           startedAt,
         })
