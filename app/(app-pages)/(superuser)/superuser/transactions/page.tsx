@@ -23,7 +23,7 @@ import { TransactionsTable } from "./_components/transactions-table"
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
 
 // 🧪 Mode TEST - Mettre à true pour afficher des données fictives
-const USE_TEST_DATA = true
+const USE_TEST_DATA = false
 
 export default function TransactionsDashboardPage() {
   const { currentUser, isLoading } = useCurrentUser()
