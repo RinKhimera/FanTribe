@@ -3,6 +3,7 @@
 import { Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -10,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
 import { Id } from "@/convex/_generated/dataModel"
 
 interface TransactionsFiltersProps {
@@ -59,7 +59,9 @@ export function TransactionsFilters({
   }
 
   const getCurrentPreset = () => {
-    const daysDiff = Math.floor((dateRange.endDate - dateRange.startDate) / (24 * 60 * 60 * 1000))
+    const daysDiff = Math.floor(
+      (dateRange.endDate - dateRange.startDate) / (24 * 60 * 60 * 1000),
+    )
     const preset = PRESET_RANGES.find((r) => r.days === daysDiff)
     return preset ? preset.days.toString() : "14"
   }
@@ -74,7 +76,10 @@ export function TransactionsFilters({
               <Calendar className="h-4 w-4" />
               Période
             </Label>
-            <Select value={getCurrentPreset()} onValueChange={handlePresetChange}>
+            <Select
+              value={getCurrentPreset()}
+              onValueChange={handlePresetChange}
+            >
               <SelectTrigger id="period">
                 <SelectValue placeholder="Sélectionner une période" />
               </SelectTrigger>
@@ -94,7 +99,9 @@ export function TransactionsFilters({
             <Select
               value={selectedCreatorId || "all"}
               onValueChange={(value) =>
-                onCreatorChange(value === "all" ? undefined : (value as Id<"users">))
+                onCreatorChange(
+                  value === "all" ? undefined : (value as Id<"users">),
+                )
               }
             >
               <SelectTrigger id="creator">
@@ -104,7 +111,8 @@ export function TransactionsFilters({
                 <SelectItem value="all">Toutes les créatrices</SelectItem>
                 {creators.map((creator) => (
                   <SelectItem key={creator._id} value={creator._id}>
-                    {creator.name} {creator.username ? `(@${creator.username})` : ""}
+                    {creator.name}{" "}
+                    {creator.username ? `(@${creator.username})` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -116,7 +124,9 @@ export function TransactionsFilters({
             <Label htmlFor="provider">Moyen de paiement</Label>
             <Select
               value={selectedProvider || "all"}
-              onValueChange={(value) => onProviderChange(value === "all" ? undefined : value)}
+              onValueChange={(value) =>
+                onProviderChange(value === "all" ? undefined : value)
+              }
             >
               <SelectTrigger id="provider">
                 <SelectValue placeholder="Tous les moyens" />

@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { type Currency, formatDualCurrency } from "@/lib/services/currency"
 
 interface Earner {
   creatorId: string
@@ -34,14 +35,6 @@ export function TopEarnersCard({
   icon,
   isLoading,
 }: TopEarnersCardProps) {
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
-
   if (isLoading) {
     return (
       <Card>
@@ -134,7 +127,11 @@ export function TopEarnersCard({
               {/* Amount */}
               <div className="text-right">
                 <p className="text-lg font-bold">
-                  {formatCurrency(earner.totalAmount, earner.currency)}
+                  {formatDualCurrency(
+                    earner.totalAmount,
+                    earner.currency.toUpperCase() as Currency,
+                    true,
+                  )}
                 </p>
               </div>
             </div>

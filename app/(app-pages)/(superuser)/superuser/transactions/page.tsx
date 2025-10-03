@@ -23,7 +23,7 @@ import { TransactionsTable } from "./_components/transactions-table"
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
 
 // 🧪 Mode TEST - Mettre à true pour afficher des données fictives
-const USE_TEST_DATA = false
+const USE_TEST_DATA = true
 
 export default function TransactionsDashboardPage() {
   const { currentUser, isLoading } = useCurrentUser()
@@ -141,17 +141,6 @@ export default function TransactionsDashboardPage() {
               )}
             </div>
           </div>
-
-          {/* Filtres */}
-          <TransactionsFilters
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            selectedCreatorId={selectedCreatorId}
-            onCreatorChange={setSelectedCreatorId}
-            selectedProvider={selectedProvider}
-            onProviderChange={setSelectedProvider}
-            creators={creators || []}
-          />
         </div>
 
         {/* Cartes de résumé */}
@@ -186,7 +175,18 @@ export default function TransactionsDashboardPage() {
               Liste complète des transactions pour la période sélectionnée
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Filtres */}
+            <TransactionsFilters
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              selectedCreatorId={selectedCreatorId}
+              onCreatorChange={setSelectedCreatorId}
+              selectedProvider={selectedProvider}
+              onProviderChange={setSelectedProvider}
+              creators={creators || []}
+            />
+
             <TransactionsTable
               transactions={transactions || []}
               isLoading={!transactions}

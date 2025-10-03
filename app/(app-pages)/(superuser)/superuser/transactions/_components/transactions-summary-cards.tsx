@@ -2,6 +2,7 @@
 
 import { DollarSign, Receipt, TrendingUp, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { type Currency, formatDualCurrency } from "@/lib/services/currency"
 
 interface TransactionsSummaryCardsProps {
   summary?: {
@@ -22,26 +23,18 @@ export function TransactionsSummaryCards({
   summary,
   isLoading,
 }: TransactionsSummaryCardsProps) {
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
-
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 w-24 bg-muted rounded"></div>
-              <div className="h-4 w-4 bg-muted rounded"></div>
+              <div className="bg-muted h-4 w-24 rounded"></div>
+              <div className="bg-muted h-4 w-4 rounded"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-8 w-32 bg-muted rounded"></div>
-              <div className="h-3 w-20 bg-muted rounded mt-2"></div>
+              <div className="bg-muted h-8 w-32 rounded"></div>
+              <div className="bg-muted mt-2 h-3 w-20 rounded"></div>
             </CardContent>
           </Card>
         ))}
@@ -54,7 +47,9 @@ export function TransactionsSummaryCards({
   }
 
   const averagePerTransaction =
-    summary.totalTransactions > 0 ? summary.totalAmount / summary.totalTransactions : 0
+    summary.totalTransactions > 0
+      ? summary.totalAmount / summary.totalTransactions
+      : 0
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -62,13 +57,17 @@ export function TransactionsSummaryCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Revenu Total</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <DollarSign className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {formatCurrency(summary.totalAmount, summary.currency)}
+            {formatDualCurrency(
+              summary.totalAmount,
+              summary.currency.toUpperCase() as Currency,
+              true,
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-xs">
             Pour la période sélectionnée
           </p>
         </CardContent>
@@ -78,11 +77,11 @@ export function TransactionsSummaryCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-          <Receipt className="h-4 w-4 text-muted-foreground" />
+          <Receipt className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{summary.totalTransactions}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-xs">
             Paiements réussis
           </p>
         </CardContent>
@@ -91,12 +90,16 @@ export function TransactionsSummaryCards({
       {/* Nombre de créatrices */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Créatrices actives</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">
+            Créatrices actives
+          </CardTitle>
+          <Users className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{summary.creatorSummaries.length}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <div className="text-2xl font-bold">
+            {summary.creatorSummaries.length}
+          </div>
+          <p className="text-muted-foreground mt-1 text-xs">
             Ont reçu des paiements
           </p>
         </CardContent>
@@ -105,16 +108,20 @@ export function TransactionsSummaryCards({
       {/* Moyenne par transaction */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Moyenne/Transaction</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">
+            Moyenne/Transaction
+          </CardTitle>
+          <TrendingUp className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {formatCurrency(averagePerTransaction, summary.currency)}
+            {formatDualCurrency(
+              averagePerTransaction,
+              summary.currency.toUpperCase() as Currency,
+              true,
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Montant moyen
-          </p>
+          <p className="text-muted-foreground mt-1 text-xs">Montant moyen</p>
         </CardContent>
       </Card>
     </div>

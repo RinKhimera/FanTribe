@@ -39,7 +39,7 @@
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.2.0",
     "clsx": "^2.1.1",
-    "convex": "^1.23.0",
+    "convex": "^1.27.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
     "embla-carousel-react": "^8.6.0",
