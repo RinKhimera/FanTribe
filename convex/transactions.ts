@@ -151,7 +151,18 @@ export const getTransactionsSummary = query({
       })
     }
 
-    // Calculer les totaux par créateur
+    // Taux de conversion USD → XAF (aligné sur lib/services/currency.ts)
+    const USD_TO_XAF_RATE = 562.2
+
+    // Fonction helper pour normaliser les montants en XAF
+    const normalizeToXAF = (amount: number, currency: string): number => {
+      if (currency.toUpperCase() === "USD") {
+        return amount * USD_TO_XAF_RATE
+      }
+      return amount // Déjà en XAF
+    }
+
+    // Calculer les totaux par créateur (normalisés en XAF)
     const creatorTotals = new Map<
       string,
       {
@@ -171,17 +182,20 @@ export const getTransactionsSummary = query({
       const key = tx.creatorId
       const existing = creatorTotals.get(key)
 
+      // Normaliser le montant en XAF pour des comparaisons correctes
+      const normalizedAmount = normalizeToXAF(tx.amount, tx.currency)
+
       if (existing) {
-        existing.totalAmount += tx.amount
+        existing.totalAmount += normalizedAmount
         existing.transactionCount += 1
       } else {
         creatorTotals.set(key, {
           creatorId: tx.creatorId,
           creatorName: creator.name,
           creatorUsername: creator.username,
-          totalAmount: tx.amount,
+          totalAmount: normalizedAmount,
           transactionCount: 1,
-          currency: tx.currency,
+          currency: "XAF", // Toujours XAF pour les totaux normalisés
         })
       }
     }
@@ -191,8 +205,11 @@ export const getTransactionsSummary = query({
       (a, b) => b.totalAmount - a.totalAmount,
     )
 
-    // Calculer le total global
-    const totalAmount = transactions.reduce((sum, tx) => sum + tx.amount, 0)
+    // Calculer le total global (normalisé en XAF)
+    const totalAmount = transactions.reduce(
+      (sum, tx) => sum + normalizeToXAF(tx.amount, tx.currency),
+      0,
+    )
 
     // Identifier les top et low earners
     const topEarners = creatorSummaries.slice(0, 5)
@@ -201,7 +218,7 @@ export const getTransactionsSummary = query({
     return {
       totalAmount,
       totalTransactions: transactions.length,
-      currency: transactions[0]?.currency || "XAF",
+      currency: "XAF", // Toujours XAF car les montants sont normalisés
       creatorSummaries,
       topEarners,
       lowEarners,
