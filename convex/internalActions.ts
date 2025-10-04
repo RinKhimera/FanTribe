@@ -598,7 +598,7 @@ export const deleteMultipleBunnyAssets = action({
           }
         } else {
           // C'est une image - extraire le chemin complet (userId/filename)
-          const match = mediaUrl.match(/https:\/\/[^\/]+\/(.+)/)
+          const match = mediaUrl.match(/https:\/\/[^/]+\/(.+)/)
           const filePath = match ? match[1] : null
 
           if (filePath) {

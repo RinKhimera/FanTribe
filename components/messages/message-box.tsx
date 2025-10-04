@@ -146,7 +146,7 @@ const ImageMessage = ({
 const VideoMessage = ({ message }: { message: MessageProps }) => {
   return (
     <ReactPlayer
-      url={message.content}
+      // url={message.content}
       width="250px"
       height="250px"
       controls={true}
