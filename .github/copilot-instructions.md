@@ -260,3 +260,10 @@ Defined in `convex/crons.ts`:
 - **Actions**: Server actions in `actions/` directory (`actions/stripe/checkout.ts`)
 - **Types**: Centralized in `types/index.ts`, generated Convex types in `convex/_generated/`
 - **Directories**: Always kebab-case (`user-lists/`, `new-post/`)
+
+### Code Style Preferences
+
+- **Function Declarations**: Always use **arrow functions** (`const myFunction = () => {}`) instead of traditional function declarations (`function myFunction() {}`)
+  - Applies to: Components, utilities, helpers, event handlers
+  - Exception: Convex mutations/queries/actions use arrow function syntax by default
+  - Example: `export const MyComponent = () => { ... }` NOT `export function MyComponent() { ... }`

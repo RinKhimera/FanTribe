@@ -90,6 +90,7 @@ export const UserListsCard = ({
                 alt={user.name}
                 width={80}
                 height={80}
+                className="object-cover"
               />
               <AvatarFallback className="text-xl">
                 {user.name.substring(0, 2).toUpperCase()}
