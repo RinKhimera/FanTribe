@@ -105,7 +105,27 @@ export const listPostComments = query({
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_post", (q) => q.eq("post", args.postId))
+      .order("desc")
       .collect()
+
+    // Batch auteurs
+    const authorIds = [...new Set(comments.map((c) => c.author))]
+    const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
+    const authorMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
+
+    return comments.map((c) => ({ ...c, author: authorMap.get(c.author) }))
+  },
+})
+
+export const getRecentComments = query({
+  args: { postId: v.id("posts"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 3
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_post", (q) => q.eq("post", args.postId))
+      .order("desc")
+      .take(limit)
 
     // Batch auteurs
     const authorIds = [...new Set(comments.map((c) => c.author))]

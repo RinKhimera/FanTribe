@@ -221,6 +221,7 @@ export const PostCard = ({ post, currentUser }: PostCardProps) => {
               currentUser={currentUser}
               isOpen={isCommentsOpen}
               disabled={!canViewMedia}
+              onClose={toggleComments}
             />
           </div>
         </div>
