@@ -48,6 +48,7 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
                 <CommentEllipsis
                   commentId={comment._id}
                   author={comment.author}
+                  initialContent={comment.content}
                 />
               </div>
             </div>
