@@ -1,6 +1,8 @@
+"use client"
+
 import { useMutation, useQuery } from "convex/react"
-import { Ellipsis, LoaderCircle } from "lucide-react"
-import { useTransition } from "react"
+import { Ellipsis, LoaderCircle, Pencil, Trash2 } from "lucide-react"
+import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { ReportDialog } from "@/components/shared/report-dialog"
 import {
@@ -16,23 +18,41 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 
 export const CommentEllipsis = ({
   commentId,
   author,
+  initialContent,
 }: {
   commentId: Id<"comments">
   author: Doc<"users"> | null | undefined
+  initialContent: string
 }) => {
   const [isPending, startTransition] = useTransition()
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editContent, setEditContent] = useState(initialContent)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const deleteComment = useMutation(api.comments.deleteComment)
+  const updateComment = useMutation(api.comments.updateComment)
   const currentUser = useQuery(api.users.getCurrentUser, {})
 
   const isOwner = currentUser && author?._id === currentUser._id
@@ -52,25 +72,99 @@ export const CommentEllipsis = ({
     })
   }
 
+  const updateHandler = async () => {
+    if (!editContent.trim() || editContent === initialContent) {
+      setIsEditOpen(false)
+      return
+    }
+
+    setIsUpdating(true)
+    try {
+      await updateComment({ commentId, content: editContent.trim() })
+      toast.success("Commentaire modifié")
+      setIsEditOpen(false)
+    } catch (error) {
+      console.error(error)
+      toast.error("Erreur lors de la modification")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button size={"icon"} variant="ghost">
-          <Ellipsis />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <Button size="icon" variant="ghost" className="h-8 w-8">
+          <Ellipsis className="h-4 w-4" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-1" side="right">
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-60" align="end">
+        {/* Option d'édition (seulement pour le propriétaire) */}
+        {isOwner && (
+          <>
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Modifier le commentaire
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogContent onClick={(e) => e.stopPropagation()}>
+                <DialogHeader>
+                  <DialogTitle>Modifier votre commentaire</DialogTitle>
+                  <DialogDescription>
+                    Apportez des modifications à votre commentaire
+                  </DialogDescription>
+                </DialogHeader>
+                <Textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="min-h-[100px]"
+                  placeholder="Écrivez votre commentaire..."
+                />
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditContent(initialContent)
+                      setIsEditOpen(false)
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={updateHandler}
+                    disabled={isUpdating || !editContent.trim()}
+                  >
+                    {isUpdating ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Enregistrer"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <DropdownMenuSeparator />
+          </>
+        )}
+
         {/* Option de suppression (seulement pour le propriétaire) */}
         {isOwner && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start">
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={(e) => e.preventDefault()}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
                 Supprimer le commentaire
-              </Button>
+              </DropdownMenuItem>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Etes-vous absolument sûr ?</AlertDialogTitle>
+                <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Cette action ne peut pas être annulée. Cela supprimera
                   définitivement votre commentaire.
@@ -80,7 +174,7 @@ export const CommentEllipsis = ({
                 <AlertDialogCancel>Annuler</AlertDialogCancel>
                 <AlertDialogAction onClick={deleteHandler} disabled={isPending}>
                   {isPending ? (
-                    <LoaderCircle className="animate-spin" />
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
                   ) : (
                     "Supprimer"
                   )}
@@ -92,15 +186,18 @@ export const CommentEllipsis = ({
 
         {/* Option de signalement */}
         {!isOwner && author && (
-          <ReportDialog
-            reportedUserId={author._id}
-            reportedCommentId={commentId}
-            type="comment"
-            triggerText="Signaler le commentaire"
-            username={author.username || undefined}
-          />
+          <>
+            <DropdownMenuSeparator />
+            <ReportDialog
+              reportedUserId={author._id}
+              reportedCommentId={commentId}
+              type="comment"
+              triggerText="Signaler le commentaire"
+              username={author.username || undefined}
+            />
+          </>
         )}
-      </PopoverContent>
-    </Popover>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

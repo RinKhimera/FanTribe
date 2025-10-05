@@ -123,7 +123,7 @@ export const CommentSection = ({
                 <div className="mb-3 px-4">
                   <button
                     onClick={() => setShowAllComments(true)}
-                    className="text-primary text-sm font-medium hover:underline"
+                    className="text-primary cursor-pointer text-sm font-medium hover:underline"
                   >
                     Voir plus de commentaires
                   </button>

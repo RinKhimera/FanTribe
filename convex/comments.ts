@@ -68,6 +68,30 @@ export const addComment = mutation({
   },
 })
 
+export const updateComment = mutation({
+  args: {
+    commentId: v.id("comments"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    const comment = await ctx.db.get(args.commentId)
+    if (!comment) throw new ConvexError("Comment not found")
+
+    if (comment.author !== user._id) {
+      throw new ConvexError("Not authorized")
+    }
+
+    if (!args.content.trim()) throw new ConvexError("Empty content")
+
+    await ctx.db.patch(args.commentId, {
+      content: args.content.trim(),
+    })
+
+    return { success: true }
+  },
+})
+
 export const deleteComment = mutation({
   args: { commentId: v.id("comments") },
   handler: async (ctx, args) => {

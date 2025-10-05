@@ -48,7 +48,11 @@ export const CommentItem = ({ comment }: CommentItemProps) => {
             </div>
             <p className="mt-0.5 text-sm leading-relaxed">{comment.content}</p>
           </div>
-          <CommentEllipsis commentId={comment._id} author={comment.author} />
+          <CommentEllipsis
+            commentId={comment._id}
+            author={comment.author}
+            initialContent={comment.content}
+          />
         </div>
       </div>
     </div>
