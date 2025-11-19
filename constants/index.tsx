@@ -2,6 +2,7 @@ import {
   Bell,
   Bookmark,
   CircleUserRound,
+  DollarSign,
   Home,
   Mail,
   Sparkles,
@@ -58,6 +59,12 @@ export const navigationLinks: NavLink[] = [
     title: "Abonnements",
     href: "/user-lists",
     icon: Users,
+  },
+  {
+    id: "income",
+    title: "Revenus",
+    href: "/income",
+    icon: DollarSign,
   },
   {
     id: "profile",

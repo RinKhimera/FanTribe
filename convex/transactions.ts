@@ -571,3 +571,116 @@ export const getTestCreators = query({
     ]
   },
 })
+
+/**
+ * Récupère les statistiques de revenus pour un créateur
+ * @returns Total net gagné, prochain paiement et date du prochain jeudi
+ */
+export const getCreatorEarnings = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Non authentifié")
+    }
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!currentUser) {
+      throw new Error("Utilisateur introuvable")
+    }
+
+    if (
+      currentUser.accountType !== "CREATOR" &&
+      currentUser.accountType !== "SUPERUSER"
+    ) {
+      throw new Error("Accès refusé : réservé aux créateurs")
+    }
+
+    const allTransactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_creator", (q) => q.eq("creatorId", currentUser._id))
+      .filter((q) => q.eq(q.field("status"), "succeeded"))
+      .collect()
+
+    // Taux de conversion USD → XAF
+    const USD_TO_XAF_RATE = 562.2
+
+    const normalizeToXAF = (amount: number, currency: string): number => {
+      if (currency.toUpperCase() === "USD") {
+        return amount * USD_TO_XAF_RATE
+      }
+      return amount
+    }
+
+    const totalGross = allTransactions.reduce((sum, tx) => {
+      return sum + normalizeToXAF(tx.amount, tx.currency)
+    }, 0)
+
+    const CREATOR_COMMISSION_RATE = 0.6
+    const totalNetEarned = totalGross * CREATOR_COMMISSION_RATE
+
+    const getLastThursdayOfMonth = (year: number, month: number): Date => {
+      const lastDay = new Date(year, month + 1, 0)
+
+      const daysToSubtract = (lastDay.getDay() - 4 + 7) % 7
+
+      const lastThursday = new Date(year, month + 1, 0)
+      lastThursday.setDate(lastDay.getDate() - daysToSubtract)
+      lastThursday.setHours(0, 0, 0, 0)
+
+      return lastThursday
+    }
+
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth()
+
+    const lastThursdayThisMonth = getLastThursdayOfMonth(
+      currentYear,
+      currentMonth,
+    )
+
+    let nextPaymentDate: Date
+    let lastPaymentDate: Date
+
+    if (now < lastThursdayThisMonth) {
+      nextPaymentDate = lastThursdayThisMonth
+      lastPaymentDate = getLastThursdayOfMonth(
+        currentMonth === 0 ? currentYear - 1 : currentYear,
+        currentMonth === 0 ? 11 : currentMonth - 1,
+      )
+    } else {
+      nextPaymentDate = getLastThursdayOfMonth(
+        currentMonth === 11 ? currentYear + 1 : currentYear,
+        currentMonth === 11 ? 0 : currentMonth + 1,
+      )
+      lastPaymentDate = lastThursdayThisMonth
+    }
+
+    const lastPaymentTimestamp = lastPaymentDate.getTime()
+
+    const pendingTransactions = allTransactions.filter(
+      (tx) => tx._creationTime >= lastPaymentTimestamp,
+    )
+
+    const nextPaymentGross = pendingTransactions.reduce((sum, tx) => {
+      return sum + normalizeToXAF(tx.amount, tx.currency)
+    }, 0)
+
+    const nextPaymentNet = nextPaymentGross * CREATOR_COMMISSION_RATE
+
+    return {
+      totalNetEarned: Math.round(totalNetEarned),
+      nextPaymentNet: Math.round(nextPaymentNet),
+      nextPaymentDate: nextPaymentDate.toISOString(),
+      currency: "XAF",
+      transactionCount: allTransactions.length,
+      pendingTransactionCount: pendingTransactions.length,
+    }
+  },
+})
