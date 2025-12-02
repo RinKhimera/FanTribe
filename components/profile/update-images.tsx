@@ -9,6 +9,7 @@ import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
+import { logger } from "@/lib/config/logger"
 import { deleteBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
@@ -59,9 +60,9 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
             try {
               await deleteBunnyAsset(oldMediaId, "image")
             } catch (error) {
-              console.warn(
-                "Impossible de supprimer l'ancienne image de profil:",
-                error,
+              logger.warn(
+                "Impossible de supprimer l'ancienne image de profil",
+                { error, oldMediaId },
               )
             }
           }
@@ -73,7 +74,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
         })
         toast.success("Photo de profil mise à jour")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to update profile image", error)
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -100,10 +101,10 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
             try {
               await deleteBunnyAsset(oldMediaId, "image")
             } catch (error) {
-              console.warn(
-                "Impossible de supprimer l'ancienne bannière:",
+              logger.warn("Impossible de supprimer l'ancienne bannière", {
                 error,
-              )
+                oldMediaId,
+              })
             }
           }
         }
@@ -114,7 +115,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
         })
         toast.success("Bannière mise à jour")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to update banner image", error)
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -133,7 +134,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
 
         toast.success("Votre photo de bannière a été supprimée")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to delete banner image", error)
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",

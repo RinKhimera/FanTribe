@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { logger } from "@/lib/config/logger"
 import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
@@ -65,7 +66,9 @@ export const NewPostLayout = () => {
           try {
             await deleteDraftWithAsset({ mediaId: media.publicId })
           } catch (error) {
-            console.error("Erreur lors de la suppression de l'asset:", error)
+            logger.error("Failed to delete draft asset", error, {
+              mediaId: media.publicId,
+            })
           }
         })
       }
@@ -168,12 +171,12 @@ export const NewPostLayout = () => {
             delete np[fileKey]
             return np
           })
-          console.error(e)
+          logger.error("Failed to upload file", e, { fileName: file.name })
           toast.error(`Erreur upload ${file.name}`)
         }
       }
     } catch (error) {
-      console.error("Upload error:", error)
+      logger.error("Upload error", error)
       toast.error("Erreur lors de l'upload")
     } finally {
       setIsUploading(false)
@@ -191,7 +194,7 @@ export const NewPostLayout = () => {
       await deleteDraftWithAsset({ mediaId: media.publicId })
       toast.success("Média supprimé avec succès")
     } catch (error) {
-      console.error("Erreur lors de la suppression:", error)
+      logger.error("Failed to delete media", error, { mediaId: media.publicId })
       toast.error("Erreur lors de la suppression du média")
     }
   }
@@ -218,7 +221,7 @@ export const NewPostLayout = () => {
         toast.success("Votre publication a été partagée")
         router.push("/")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to create post", error)
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",

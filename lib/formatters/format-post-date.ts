@@ -6,7 +6,7 @@ import {
 } from "date-fns"
 import { fr } from "date-fns/locale"
 
-export function formatPostDate(timestamp: number | Date): string {
+export const formatPostDate = (timestamp: number | Date): string => {
   const date = timestamp instanceof Date ? timestamp : new Date(timestamp)
   const now = new Date()
 

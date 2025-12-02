@@ -250,16 +250,61 @@ Defined in `convex/crons.ts`:
 - **Blocking**: Remember to filter blocked users in queries (see `convex/posts.ts` for pattern)
 - **Bunny CDN**: Videos require collection IDs, images need storage zone name
 - **ResponsiveLayout**: Don't set fixed widths in page content - breaks responsive design
+- **Logging**: Use `logger` from `@/lib/config/logger`, NOT `console.log/error` in client components
+- **Types**: Prefer `Doc<"tableName">` over manual type definitions (see `types/index.ts`)
 
 ### File Naming & Organization
 
 - **Components**: **kebab-case** for files (`bunny-upload-widget.tsx`), PascalCase for exports (`BunnyUploadWidget`)
-  - ⚠️ Exception: `PostCard.tsx` uses PascalCase - should be migrated to `post-card.tsx` for consistency
 - **Convex**: camelCase for functions (`getUser`, `createPost`)
-- **Hooks**: Prefix with `use-` (`useCurrentUser.ts`, kebab-case)
+- **Hooks**: Prefix with `use` (`useCurrentUser.ts`)
 - **Actions**: Server actions in `actions/` directory (`actions/stripe/checkout.ts`)
-- **Types**: Centralized in `types/index.ts`, generated Convex types in `convex/_generated/`
+- **Types**: Centralized in `types/index.ts`, use `Doc<"tableName">` from Convex when possible
 - **Directories**: Always kebab-case (`user-lists/`, `new-post/`)
+
+### Lib Directory Structure
+
+All utility functions are organized under `lib/`:
+
+```
+lib/
+├── bunny.ts           # Bunny CDN client functions (legacy, prefer lib/services/bunny.ts)
+├── dates.ts           # ⚠️ DEPRECATED - use lib/formatters/
+├── svgs.tsx           # SVG components
+├── utils.ts           # General utilities (cn, debounce, etc.)
+├── calculators/       # Pure calculation functions
+│   ├── index.ts
+│   └── video-display-info.ts  # Aspect ratio calculations
+├── config/            # App configuration
+│   └── logger.ts      # Structured logging (see LOGGER_GUIDE.md)
+├── context/           # React contexts
+├── formatters/        # Data formatting functions
+│   ├── index.ts
+│   ├── format-custom-time-ago.ts
+│   ├── format-date.ts
+│   └── format-post-date.ts
+├── generators/        # ID/string generators
+│   ├── index.ts
+│   ├── create-initials.ts
+│   └── generate-random-string.ts
+├── services/          # External service integrations
+│   ├── bunny.ts       # Bunny CDN upload/delete
+│   └── currency.ts    # Currency formatting
+├── ui/                # UI helper functions
+│   ├── index.ts
+│   └── get-status-badge.tsx
+└── validators/        # Validation functions
+    ├── index.ts
+    └── detect-risk-factors.tsx
+```
+
+**Import Pattern**: Use barrel exports from index.ts:
+
+```tsx
+import { calculateVideoDisplayInfo } from "@/lib/calculators"
+import { formatCustomTimeAgo, formatPostDate } from "@/lib/formatters"
+import { createInitials, generateRandomString } from "@/lib/generators"
+```
 
 ### Code Style Preferences
 
@@ -267,3 +312,29 @@ Defined in `convex/crons.ts`:
   - Applies to: Components, utilities, helpers, event handlers
   - Exception: Convex mutations/queries/actions use arrow function syntax by default
   - Example: `export const MyComponent = () => { ... }` NOT `export function MyComponent() { ... }`
+
+### Type Definitions Pattern
+
+Prefer using Convex's generated types with `Doc<>`:
+
+```tsx
+import { Doc, Id } from "@/convex/_generated/dataModel"
+
+// ✅ Preferred: Use Convex Doc types
+type User = Doc<"users">
+type Post = Doc<"posts">
+
+// For extended types with relations
+type PostWithAuthor = Doc<"posts"> & {
+  author: Doc<"users"> | null
+}
+
+// ❌ Avoid: Manual type definitions that duplicate schema
+interface User {
+  _id: Id<"users">
+  name: string
+  // ... duplicates schema
+}
+```
+
+See `types/index.ts` for centralized type definitions.

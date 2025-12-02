@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 import { cn } from "@/lib/utils"
 import { profileFormSchema } from "@/schemas/profile"
 
@@ -85,7 +86,9 @@ export const EditProfileForm = ({
           })
         }
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to update profile", error, {
+          username: data.username,
+        })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -98,7 +101,7 @@ export const EditProfileForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="mb-4 mt-16 space-y-6 px-2"
+        className="mt-16 mb-4 space-y-6 px-2"
       >
         <FormField
           control={form.control}

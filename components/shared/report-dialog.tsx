@@ -25,6 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 import { DropdownMenuItem } from "../ui/dropdown-menu"
 
 interface ReportDialogProps {
@@ -97,7 +98,7 @@ export const ReportDialog = ({
         setReason("")
         setDescription("")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to create report", error, { type, reason })
         toast.error("Erreur lors du signalement", {
           description: "Une erreur s'est produite. Veuillez réessayer.",
         })

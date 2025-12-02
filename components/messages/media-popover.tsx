@@ -1,12 +1,13 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { ImageIcon } from "lucide-react"
-import { CldUploadWidget } from "next-cloudinary"
-import { useTransition } from "react"
+import { ImageIcon, Loader2 } from "lucide-react"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { logger } from "@/lib/config"
+import { uploadBunnyAsset } from "@/lib/services"
 import { ConversationProps } from "@/types"
 
 export const MediaPopover = ({
@@ -15,118 +16,105 @@ export const MediaPopover = ({
   conversation: ConversationProps
 }) => {
   const { currentUser } = useCurrentUser()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
-  const [isPending, startTransition] = useTransition()
-
-  // const generateUploadUrl = useMutation(api.conversations.generateUploadUrl)
   const sendImage = useMutation(api.messages.sendImage)
-  const sendVideo = useMutation(api.messages.sendVideo)
 
-  const handleSendImage = async (result: any) => {
-    startTransition(async () => {
-      try {
-        await sendImage({
-          conversation: conversation!._id,
-          imgUrl: result?.info?.secure_url,
-          sender: currentUser!._id,
-        })
-
-        console.log(result)
-      } catch (error) {
-        console.error(error)
-        toast.error("Une erreur s'est produite !", {
-          description:
-            "Le partage a échoué. Veuillez vérifier votre connexion internet et réessayer",
-        })
-      }
-    })
+  const handleFileSelect = () => {
+    fileInputRef.current?.click()
   }
 
-  // const handleSendVideo = async () => {
-  //   startTransition(async () => {
-  //     try {
-  //       const postUrl = await generateUploadUrl()
-  //       const result = await fetch(postUrl, {
-  //         method: "POST",
-  //         headers: { "Content-Type": selectedVideo!.type },
-  //         body: selectedVideo,
-  //       })
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file || !currentUser || !conversation) return
 
-  //       const { storageId } = await result.json()
+    // Validation du type de fichier (images seulement pour les messages)
+    if (!file.type.startsWith("image/")) {
+      toast.error("Seules les images sont acceptées")
+      return
+    }
 
-  //       await sendVideo({
-  //         videoId: storageId,
-  //         conversation: conversation!._id,
-  //         sender: currentUser!._id,
-  //       })
+    // Validation de la taille (10MB max)
+    const maxFileSize = 10 * 1024 * 1024
+    if (file.size > maxFileSize) {
+      toast.error("Le fichier est trop volumineux. Taille maximale: 10MB")
+      return
+    }
 
-  //       setSelectedVideo(null)
-  //     } catch (error) {
-  //       console.error(error)
-  //       toast.error("Une erreur s'est produite !", {
-  //         description:
-  //           "Le partage a échoué. Veuillez vérifier votre connexion internet et réessayer",
-  //       })
-  //     }
-  //   })
-  // }
+    setIsUploading(true)
+
+    try {
+      const fileExtension = file.name.split(".").pop()
+      const randomSuffix = crypto
+        .randomUUID()
+        .replace(/-/g, "")
+        .substring(0, 13)
+      const fileName = `${currentUser._id}/${randomSuffix}.${fileExtension}`
+
+      const result = await uploadBunnyAsset({
+        file,
+        fileName,
+        userId: currentUser._id,
+      })
+
+      if (!result.success) {
+        throw new Error(result.error || "Upload échoué")
+      }
+
+      await sendImage({
+        conversation: conversation._id,
+        imgUrl: result.url,
+        sender: currentUser._id,
+      })
+
+      logger.success("Image envoyée avec succès", {
+        conversationId: conversation._id,
+        mediaId: result.mediaId,
+      })
+    } catch (error) {
+      logger.error("Erreur lors de l'envoi de l'image", error, {
+        conversationId: conversation._id,
+        userId: currentUser._id,
+      })
+      toast.error("Une erreur s'est produite !", {
+        description:
+          "Le partage a échoué. Veuillez vérifier votre connexion internet et réessayer",
+      })
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
 
   return (
     <>
-      <CldUploadWidget
-        uploadPreset="onlyscam-preset"
-        options={{
-          cropping: true,
-          croppingAspectRatio: 1,
-          sources: ["local", "camera", "google_drive", "url"],
-          multiple: false,
-          // croppingCoordinatesMode: "face",
-        }}
-        onSuccess={handleSendImage}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileChange}
+        disabled={isUploading}
+      />
+      <button
+        className="flex items-center p-2"
+        onClick={handleFileSelect}
+        disabled={isUploading}
       >
-        {({ open }) => {
-          return (
-            <button className="flex items-center p-2" onClick={() => open()}>
-              <ImageIcon
-                size={22}
-                className="text-muted-foreground transition hover:text-white"
-              />
-            </button>
-          )
-        }}
-      </CldUploadWidget>
-      {/* <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Plus className="text-muted-foreground" />
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent sideOffset={20} alignOffset={-45} align="start">
-          <DropdownMenuItem asChild>
-            <CldUploadWidget
-              uploadPreset="onlyscam-preset"
-              options={{ cropping: true, croppingAspectRatio: 0.5 }}
-              onSuccess={handleSendImage}
-            >
-              {({ open }) => {
-                return (
-                  <button
-                    className="flex items-center p-2"
-                    onClick={() => open()}
-                  >
-                    <ImageIcon size={18} className="mr-1" /> Photo
-                  </button>
-                )
-              }}
-            </CldUploadWidget>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-          // onClick={() => videoInput.current!.click()}
-          >
-            <Video size={20} className="mr-1" />
-            Video
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu> */}
+        {isUploading ? (
+          <Loader2 size={22} className="text-muted-foreground animate-spin" />
+        ) : (
+          <ImageIcon
+            size={22}
+            className="text-muted-foreground transition hover:text-white"
+          />
+        )}
+      </button>
     </>
   )
 }

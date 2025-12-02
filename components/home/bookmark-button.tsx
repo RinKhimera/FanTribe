@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config"
 import { cn } from "@/lib/utils"
 
 type BookmarkButtonProps = {
@@ -31,7 +32,7 @@ export const BookmarkButton = ({
         await addBookmark({ postId })
         toast.success("La publication a été ajoutée à vos collections")
       } catch (error) {
-        console.error(error)
+        logger.error("Erreur ajout bookmark", error, { postId })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -46,7 +47,7 @@ export const BookmarkButton = ({
         await removeBookmark({ postId })
         toast.success("La publication a été retirée de vos collections")
       } catch (error) {
-        console.error(error)
+        logger.error("Erreur suppression bookmark", error, { postId })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",

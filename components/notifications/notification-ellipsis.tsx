@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 
 const NotificationEllipsis = ({
   notificationId,
@@ -29,7 +30,9 @@ const NotificationEllipsis = ({
       try {
         await markAsRead({ notificationId })
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to mark notification as read", error, {
+          notificationId,
+        })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -43,7 +46,9 @@ const NotificationEllipsis = ({
       try {
         await markAsUnread({ notificationId })
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to mark notification as unread", error, {
+          notificationId,
+        })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",

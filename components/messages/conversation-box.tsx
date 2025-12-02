@@ -3,7 +3,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { formatDate } from "@/lib/dates"
+import { formatDate } from "@/lib/formatters"
 import { MessageSeenSvg } from "@/lib/svgs"
 import { ConversationProps } from "@/types"
 
@@ -28,13 +28,11 @@ export const ConversationBox = ({
     <>
       <div
         onClick={() => router.push(`/messages/${conversation?._id}`)}
-        className={`flex cursor-pointer items-center gap-2 border-b p-3 transition 
-          ${hasUnreadMessages ? "bg-blue-900/10 font-semibold" : "hover:bg-muted/60"}
-          ${conversation?._id === params.id ? "bg-muted" : ""}`}
+        className={`flex cursor-pointer items-center gap-2 border-b p-3 transition ${hasUnreadMessages ? "bg-blue-900/10 font-semibold" : "hover:bg-muted/60"} ${conversation?._id === params.id ? "bg-muted" : ""}`}
       >
         <Avatar className="relative overflow-visible border border-gray-900">
           {conversation?.isOnline && (
-            <div className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-foreground bg-green-500" />
+            <div className="border-foreground absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
           )}
           <AvatarImage
             src={conversationImage}
@@ -63,7 +61,7 @@ export const ConversationBox = ({
               </Badge>
             )}
 
-            <span className="ml-auto text-xs text-muted-foreground lg:text-sm">
+            <span className="text-muted-foreground ml-auto text-xs lg:text-sm">
               {lastMessage?._creationTime || conversation?.lastActivityTime
                 ? formatDate(
                     lastMessage?._creationTime ||
@@ -74,7 +72,7 @@ export const ConversationBox = ({
             </span>
           </div>
           <p
-            className={`mt-1 flex items-center gap-1 text-sm ${hasUnreadMessages ? "font-medium text-foreground" : "text-muted-foreground"}`}
+            className={`mt-1 flex items-center gap-1 text-sm ${hasUnreadMessages ? "text-foreground font-medium" : "text-muted-foreground"}`}
           >
             {lastMessage?.sender === currentUser?._id ? <MessageSeenSvg /> : ""}
             {conversation?.isGroup && <Users size={16} />}

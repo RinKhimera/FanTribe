@@ -36,6 +36,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 
 export const CommentEllipsis = ({
   commentId,
@@ -63,7 +64,7 @@ export const CommentEllipsis = ({
         await deleteComment({ commentId })
         toast.success("Votre commentaire a été supprimé")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to delete comment", error, { commentId })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -84,7 +85,7 @@ export const CommentEllipsis = ({
       toast.success("Commentaire modifié")
       setIsEditOpen(false)
     } catch (error) {
-      console.error(error)
+      logger.error("Failed to update comment", error, { commentId })
       toast.error("Erreur lors de la modification")
     } finally {
       setIsUpdating(false)

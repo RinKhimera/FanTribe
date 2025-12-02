@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/popover"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 import { ConversationProps, UserProps } from "@/types"
 
 type MessageFormProps = {
@@ -43,7 +44,9 @@ export const MessageForm = ({
 
       setMsgText("")
     } catch (error) {
-      console.error(error)
+      logger.error("Failed to send message", error, {
+        conversationId: params.id,
+      })
       toast.error("Une erreur s'est produite !", {
         description:
           "Votre message n'a pas été envoyé. Veuillez vérifier votre connexion internet et réessayer",
@@ -53,7 +56,7 @@ export const MessageForm = ({
 
   return (
     <div className="sticky bottom-0 z-10 w-full">
-      <div className="flex items-center gap-4 bg-muted/60 p-2">
+      <div className="bg-muted/60 flex items-center gap-4 p-2">
         <div className="relative ml-2 flex gap-2">
           {/* Emoji Picker */}
           <Popover>
@@ -94,7 +97,7 @@ export const MessageForm = ({
               <Button
                 type="submit"
                 size={"sm"}
-                className="bg-transparent text-foreground hover:bg-transparent"
+                className="text-foreground bg-transparent hover:bg-transparent"
               >
                 <Send />
               </Button>
@@ -102,7 +105,7 @@ export const MessageForm = ({
               <Button
                 type="submit"
                 size={"sm"}
-                className="bg-transparent text-foreground hover:bg-transparent"
+                className="text-foreground bg-transparent hover:bg-transparent"
               >
                 <Mic className="text-muted-foreground transition hover:text-white" />
               </Button>

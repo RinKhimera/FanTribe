@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config"
 import { cn } from "@/lib/utils"
 
 type LikeButtonProps = {
@@ -30,7 +31,7 @@ export const LikeButton = ({ postId, disabled = false }: LikeButtonProps) => {
         if (isLiked) await unlikePost({ postId })
         else await likePost({ postId })
       } catch (error) {
-        console.error(error)
+        logger.error("Erreur toggle like", error, { postId, isLiked })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",

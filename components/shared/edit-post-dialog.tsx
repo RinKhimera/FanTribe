@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 
 interface EditPostDialogProps {
   postId: Id<"posts">
@@ -69,7 +70,7 @@ export const EditPostDialog = ({ postId }: EditPostDialogProps) => {
 
         setOpen(false)
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to update post", error, { postId })
         toast.error("Erreur lors de la modification", {
           description: "Une erreur s'est produite. Veuillez réessayer.",
         })

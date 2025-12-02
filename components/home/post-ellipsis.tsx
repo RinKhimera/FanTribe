@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config"
 
 type PostEllipsisProps = {
   postId: Id<"posts">
@@ -77,7 +78,7 @@ export const PostEllipsis = ({
         await deletePost({ postId })
         toast.success("Votre publication a été supprimée")
       } catch (error) {
-        console.error(error)
+        logger.error("Erreur suppression post", error, { postId })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -96,7 +97,7 @@ export const PostEllipsis = ({
           url: postUrl,
         })
         .catch((err) => {
-          console.error("Erreur lors du partage:", err)
+          logger.warn("Fallback vers copie après échec partage", { postId })
           // Fallback sur la copie si le partage échoue
           handleCopyLink()
         })
@@ -135,7 +136,10 @@ export const PostEllipsis = ({
         })
       })
       .catch((error) => {
-        console.error(error)
+        logger.error("Erreur modification visibilité", error, {
+          postId,
+          newVisibility,
+        })
         toast.error("Erreur lors de la modification")
       })
       .finally(() => {

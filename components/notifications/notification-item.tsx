@@ -13,8 +13,9 @@ import NotificationEllipsis from "@/components/notifications/notification-ellips
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config"
+import { formatCustomTimeAgo } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { formatCustomTimeAgo } from "@/utils/formatters/format-custom-time-ago"
 
 // Define a type `ExtendedNotificationProps` that extends the `Doc<"notifications">` type
 // But omits the "sender", "post", and "comment" properties. These properties are then redefined with new types.
@@ -92,7 +93,9 @@ export const NotificationItem = ({
           router.push(`/${notification.sender?.username}`)
         }
       } catch (error) {
-        console.error(error)
+        logger.error("Erreur lors du marquage de la notification", error, {
+          notificationId: notification._id,
+        })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",

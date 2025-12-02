@@ -15,6 +15,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators"
+import { logger } from "@/lib/config"
 import type { BunnyVideoGetResponse } from "@/types"
 
 interface PostMediaProps {
@@ -85,8 +86,8 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           throw new Error("Invalid response from metadata API")
         }
       } catch (error) {
-        console.error(
-          "❌ Erreur lors de la récupération des métadonnées vidéos:",
+        logger.error(
+          "Erreur lors de la récupération des métadonnées vidéos",
           error,
         )
       }

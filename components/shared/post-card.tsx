@@ -5,12 +5,12 @@ import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import Link from "next/link"
 import React, { useState } from "react"
-import { PostMedia } from "@/components/blocs/PostMedia"
 import { BookmarkButton } from "@/components/home/bookmark-button"
 import { CommentButton } from "@/components/home/comment-button"
 import { LikeButton } from "@/components/home/like-button"
 import { PostEllipsis } from "@/components/home/post-ellipsis"
 import { CommentSection } from "@/components/shared/comment-section"
+import { PostMedia } from "@/components/shared/post-media"
 import { SubscriptionModal } from "@/components/shared/subscription-modal"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
-import { formatPostDate } from "@/utils/formatters/format-post-date"
+import { formatPostDate } from "@/lib/formatters"
 
 // ExtendedPost is a type that represents a post with an extended author field.
 // It's created by taking the original Doc<"posts"> type and omitting the 'author' field.

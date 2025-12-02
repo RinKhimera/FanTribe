@@ -1,6 +1,6 @@
 import { AlertTriangle, CheckCircle, Clock, XCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Application } from "@/types"
+import type { Application } from "@/types"
 
 const normalizeFullName = (name: string): string => {
   return name
@@ -124,7 +124,7 @@ export const detectRiskFactors = (app: Application, allApps: Application[]) => {
   // 5. NOUVELLE: Vérifier si l'utilisateur a changé d'informations personnelles
   if (userApplications.length > 0) {
     const previousApplications = userApplications.filter(
-      (prevApp) => prevApp.submittedAt < app.submittedAt, // Fix: utiliser prevApp au lieu de app
+      (prevApp) => prevApp.submittedAt < app.submittedAt,
     )
 
     previousApplications.forEach((prevApp) => {
@@ -180,7 +180,7 @@ export const detectRiskFactors = (app: Application, allApps: Application[]) => {
   return riskFactors
 }
 
-export const getStatusBadge = (status: string) => {
+export const getApplicationStatusBadge = (status: string) => {
   switch (status) {
     case "pending":
       return (

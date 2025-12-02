@@ -1,4 +1,4 @@
-import { BunnyVideoGetResponse } from "@/types"
+import type { BunnyVideoGetResponse } from "@/types"
 
 export type AspectRatio =
   | "16:9"
@@ -22,9 +22,9 @@ export interface VideoDisplayInfo {
  * Calcule l'aspect ratio et les dimensions d'affichage d'une vidéo Bunny.net
  * en tenant compte de la rotation
  */
-export function getVideoDisplayInfo(
+export const getVideoDisplayInfo = (
   videoData: BunnyVideoGetResponse,
-): VideoDisplayInfo {
+): VideoDisplayInfo => {
   const { width, height, rotation } = videoData
 
   // Calculer les dimensions après rotation
@@ -79,7 +79,7 @@ export function getVideoDisplayInfo(
 /**
  * Convertit un aspect ratio en valeur CSS
  */
-export function aspectRatioToCSS(aspectRatio: AspectRatio): string {
+export const aspectRatioToCSS = (aspectRatio: AspectRatio): string => {
   switch (aspectRatio) {
     case "16:9":
       return "16 / 9"
@@ -101,7 +101,7 @@ export function aspectRatioToCSS(aspectRatio: AspectRatio): string {
 /**
  * Détermine l'aspect ratio optimal pour l'affichage en fonction du contexte
  */
-export function getOptimalDisplayRatio(videoInfo: VideoDisplayInfo): string {
+export const getOptimalDisplayRatio = (videoInfo: VideoDisplayInfo): string => {
   // Pour le feed, limiter la hauteur des vidéos portrait
   if (videoInfo.isPortrait) {
     // Pour les vidéos très hautes (comme 9:16), limiter à un ratio moins extrême

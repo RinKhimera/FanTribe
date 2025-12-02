@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 import { commentFormSchema } from "@/schemas/comment"
 
 export const CreateComment = ({
@@ -49,7 +50,7 @@ export const CreateComment = ({
 
         toast.success("Votre réponse a été publiée")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to create comment", error, { postId })
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
