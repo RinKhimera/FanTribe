@@ -13,7 +13,7 @@ export const ChatBubbleAvatar = ({
   isMember,
   message,
 }: ChatBubbleAvatarProps) => {
-  if (!isGroup) return null
+  if (!isGroup || !message.sender) return null
 
   return (
     <Avatar className="relative overflow-visible">
@@ -21,7 +21,7 @@ export const ChatBubbleAvatar = ({
         <div className="border-foreground absolute top-0 right-0 h-2 w-2 rounded-full border-2 bg-green-500" />
       )}
       <Image
-        src={message.sender?.image}
+        src={message.sender.image}
         width={100}
         height={100}
         alt={message.sender.name || "Profile image"}

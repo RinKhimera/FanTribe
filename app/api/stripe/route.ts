@@ -2,6 +2,7 @@ import { ConvexHttpClient } from "convex/browser"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 import { env } from "@/lib/config/env"
 import { clientEnv } from "@/lib/config/env.client"
 import { stripe } from "@/lib/services/stripe"
@@ -83,8 +84,8 @@ export async function POST(request: Request) {
         await convex.action(api.internalActions.processPayment, {
           provider: "stripe",
           providerTransactionId: session.id,
-          creatorId,
-          subscriberId,
+          creatorId: creatorId as Id<"users">,
+          subscriberId: subscriberId as Id<"users">,
           amount,
           currency,
           paymentMethod: session.payment_method_types?.[0],

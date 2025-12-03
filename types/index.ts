@@ -14,20 +14,13 @@ export type UserProps = Doc<"users"> | undefined
  * Type pour les messages enrichis avec les infos du sender
  */
 export type MessageProps = {
-  _id: string
+  _id: Id<"messages">
   content: string
   _creationTime: number
   messageType: "text" | "image" | "video"
-  read: boolean
-  sender: {
-    _id: Id<"users">
-    image: string
-    name?: string
-    tokenIdentifier: string
-    email: string
-    _creationTime: number
-    isOnline: boolean
-  }
+  read?: boolean
+  conversation: Id<"conversations">
+  sender: Doc<"users"> | null
 }
 
 /**
@@ -75,12 +68,36 @@ export type Application = Doc<"creatorApplications"> & {
 // Types pour les signalements (enrichis avec relations)
 // ============================================================================
 
-export interface Report {
-  _id: string
+/**
+ * Type pour les posts signalés enrichis avec l'auteur
+ */
+export interface ReportedPost {
+  _id: Id<"posts">
   _creationTime: number
-  reporterId: string
-  reportedUserId?: string
-  reportedPostId?: string
+  content: string
+  medias: string[]
+  visibility: "public" | "subscribers_only"
+  author: Doc<"users"> | null
+}
+
+/**
+ * Type pour les commentaires signalés enrichis avec l'auteur et le post
+ */
+export interface ReportedComment {
+  _id: Id<"comments">
+  _creationTime: number
+  content: string
+  post: Doc<"posts"> | null
+  author: Doc<"users"> | null
+}
+
+export interface Report {
+  _id: Id<"reports">
+  _creationTime: number
+  reporterId: Id<"users">
+  reportedUserId?: Id<"users">
+  reportedPostId?: Id<"posts">
+  reportedCommentId?: Id<"comments">
   type: "user" | "post" | "comment"
   reason:
     | "spam"
@@ -94,34 +111,14 @@ export interface Report {
   description?: string
   status: "pending" | "reviewing" | "resolved" | "rejected"
   adminNotes?: string
-  reviewedBy?: string
+  reviewedBy?: Id<"users">
   reviewedAt?: number
   createdAt: number
-  reporter?: {
-    _id: string
-    name: string
-    username?: string
-    email: string
-  }
-  reportedUser?: {
-    _id: string
-    name: string
-    username?: string
-    email: string
-  }
-  reportedPost?: {
-    _id: string
-    content: string
-    author?: {
-      _id: string
-      name: string
-      username?: string
-    }
-  }
-  reviewedByUser?: {
-    _id: string
-    name: string
-  }
+  reporter: Doc<"users"> | null
+  reportedUser: Doc<"users"> | null
+  reportedPost: ReportedPost | null
+  reportedComment: ReportedComment | null
+  reviewedByUser: Doc<"users"> | null
 }
 
 // ============================================================================

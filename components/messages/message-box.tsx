@@ -47,9 +47,11 @@ export const MessageBox = ({
   const minute = date.getMinutes().toString().padStart(2, "0")
   const time = `${hour}:${minute}`
 
-  const isMember = conversation!.participants.includes(message.sender._id)
+  const isMember = message.sender
+    ? conversation!.participants.includes(message.sender._id)
+    : false
   const isGroup = conversation?.isGroup
-  const isFromCurrentUser = message.sender._id === currentUser?._id
+  const isFromCurrentUser = message.sender?._id === currentUser?._id
 
   if (!isFromCurrentUser) {
     return (

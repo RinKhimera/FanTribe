@@ -184,11 +184,35 @@ export default function TransactionsDashboardPage() {
               onCreatorChange={setSelectedCreatorId}
               selectedProvider={selectedProvider}
               onProviderChange={setSelectedProvider}
-              creators={creators || []}
+              creators={(creators || []) as Array<{
+                _id: Id<"users">
+                name: string
+                username?: string
+                image: string
+              }>}
             />
 
             <TransactionsTable
-              transactions={transactions || []}
+              transactions={(transactions || []) as Array<{
+                _id: Id<"transactions">
+                _creationTime: number
+                amount: number
+                currency: string
+                provider: string
+                providerTransactionId: string
+                creator: {
+                  _id: Id<"users">
+                  name: string
+                  username?: string
+                  image: string
+                } | null
+                subscriber: {
+                  _id: Id<"users">
+                  name: string
+                  username?: string
+                  image: string
+                } | null
+              }>}
               isLoading={!transactions}
             />
           </CardContent>

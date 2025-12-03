@@ -1,5 +1,6 @@
 import { fetchAction } from "convex/nextjs"
 import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 import { CinetPayResponse } from "@/types"
 
 export async function POST(request: Request) {
@@ -88,8 +89,8 @@ export async function POST(request: Request) {
         await fetchAction(api.internalActions.processPayment, {
           provider: "cinetpay",
           providerTransactionId: transactionId,
-          creatorId: metadata?.creatorId,
-          subscriberId: metadata?.subscriberId,
+          creatorId: (metadata?.creatorId || "") as Id<"users">,
+          subscriberId: (metadata?.subscriberId || "") as Id<"users">,
           amount: checkData.data.amount ? Number(checkData.data.amount) : 0,
           currency: checkData.data.currency || "XOF",
           paymentMethod: checkData.data.payment_method || undefined,
