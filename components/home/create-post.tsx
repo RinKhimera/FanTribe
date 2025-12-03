@@ -32,7 +32,7 @@ export const CreatePost = ({
     >
       <Avatar>
         <AvatarImage
-          src={currentUser?.image!}
+          src={currentUser?.image || ""}
           width={100}
           height={100}
           className="aspect-square h-full w-full object-cover"

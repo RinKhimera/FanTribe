@@ -28,14 +28,13 @@ const USE_TEST_DATA = false
 export default function TransactionsDashboardPage() {
   const { currentUser, isLoading } = useCurrentUser()
 
-  // État des filtres
   const [dateRange, setDateRange] = useState<{
     startDate: number
     endDate: number
-  }>({
+  }>(() => ({
     startDate: Date.now() - TWO_WEEKS_MS,
     endDate: Date.now(),
-  })
+  }))
   const [selectedCreatorId, setSelectedCreatorId] = useState<
     Id<"users"> | undefined
   >()
@@ -184,35 +183,39 @@ export default function TransactionsDashboardPage() {
               onCreatorChange={setSelectedCreatorId}
               selectedProvider={selectedProvider}
               onProviderChange={setSelectedProvider}
-              creators={(creators || []) as Array<{
-                _id: Id<"users">
-                name: string
-                username?: string
-                image: string
-              }>}
+              creators={
+                (creators || []) as Array<{
+                  _id: Id<"users">
+                  name: string
+                  username?: string
+                  image: string
+                }>
+              }
             />
 
             <TransactionsTable
-              transactions={(transactions || []) as Array<{
-                _id: Id<"transactions">
-                _creationTime: number
-                amount: number
-                currency: string
-                provider: string
-                providerTransactionId: string
-                creator: {
-                  _id: Id<"users">
-                  name: string
-                  username?: string
-                  image: string
-                } | null
-                subscriber: {
-                  _id: Id<"users">
-                  name: string
-                  username?: string
-                  image: string
-                } | null
-              }>}
+              transactions={
+                (transactions || []) as Array<{
+                  _id: Id<"transactions">
+                  _creationTime: number
+                  amount: number
+                  currency: string
+                  provider: string
+                  providerTransactionId: string
+                  creator: {
+                    _id: Id<"users">
+                    name: string
+                    username?: string
+                    image: string
+                  } | null
+                  subscriber: {
+                    _id: Id<"users">
+                    name: string
+                    username?: string
+                    image: string
+                  } | null
+                }>
+              }
               isLoading={!transactions}
             />
           </CardContent>

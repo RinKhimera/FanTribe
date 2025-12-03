@@ -4,7 +4,13 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react"
 import { ImageIcon, MailPlus } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState, useTransition } from "react"
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -44,14 +50,23 @@ export const UserListDialog = () => {
 
   const router = useRouter()
 
+  // Utiliser useEffectEvent pour éviter le setState synchrone dans l'effect
+  const updateRenderedImage = useEffectEvent((imageData: string) => {
+    setRenderedImage(imageData)
+  })
+
   useEffect(() => {
-    if (!selectedImage) return setRenderedImage("")
+    if (!selectedImage) {
+      updateRenderedImage("")
+      return
+    }
     const reader = new FileReader()
-    reader.onload = (e) => setRenderedImage(e.target?.result as string)
+    reader.onload = (e) => updateRenderedImage(e.target?.result as string)
+    reader.readAsDataURL(selectedImage)
   }, [selectedImage])
 
   const handleCreateConversation = () => {
-    if (selectedUsers.length === 0) return
+    if (selectedUsers.length === 0 || !currentUser?._id) return
     startTransition(async () => {
       try {
         const isGroup = selectedUsers.length > 1
@@ -60,7 +75,7 @@ export const UserListDialog = () => {
 
         if (!isGroup) {
           conversationId = await createConversation({
-            participants: [...selectedUsers, currentUser?._id!],
+            participants: [...selectedUsers, currentUser._id],
             isGroup: false,
           })
         } else {
@@ -68,16 +83,16 @@ export const UserListDialog = () => {
 
           const result = await fetch(postUrl, {
             method: "POST",
-            headers: { "Content-Type": selectedImage?.type! },
+            headers: { "Content-Type": selectedImage?.type || "image/png" },
             body: selectedImage,
           })
 
           const { storageId } = await result.json()
 
           conversationId = await createConversation({
-            participants: [...selectedUsers, currentUser?._id!],
+            participants: [...selectedUsers, currentUser._id],
             isGroup: true,
-            admin: currentUser?._id!,
+            admin: currentUser._id,
             groupName,
             groupImage: storageId,
           })

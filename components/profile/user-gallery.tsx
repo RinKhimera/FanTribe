@@ -30,9 +30,12 @@ export const UserGallery = ({
   const isSubscriber = subscriptionStatus?.status === "active"
   const isOwnProfile = authorId === currentUser._id
 
+  // Déstructurer userGallery pour une dépendance stable
+  const galleryData = userGallery
+
   const mediaList = useMemo(() => {
-    if (!userGallery) return [] as string[]
-    return userGallery
+    if (!galleryData) return [] as string[]
+    return galleryData
       .filter((item) => {
         const isMediaProtected = item.visibility === "subscribers_only"
         const canViewMedia =
@@ -43,7 +46,7 @@ export const UserGallery = ({
         return canViewMedia
       })
       .map((i) => i.mediaUrl)
-  }, [userGallery, isOwnProfile, isSubscriber, currentUser.accountType])
+  }, [galleryData, isOwnProfile, isSubscriber, currentUser.accountType])
 
   const openViewerAt = useCallback(
     (mediaUrl: string) => {

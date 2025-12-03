@@ -166,7 +166,8 @@ const ApplyCreatorPage = () => {
         })
       }
     }
-  }, [deleteDraftDocument])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const form = useForm<ApplicationForm>({
     resolver: zodResolver(applicationSchema),

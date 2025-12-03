@@ -57,12 +57,19 @@ export const NewPostLayout = () => {
 
   const isPostCreatedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediasRef = useRef(medias) // Ref pour accéder à la valeur actuelle dans le cleanup
+
+  // Synchroniser la ref avec le state
+  useEffect(() => {
+    mediasRef.current = medias
+  }, [medias])
 
   useEffect(() => {
     return () => {
       // Nettoie tous les assets si le post n'a pas été créé
-      if (medias.length > 0 && !isPostCreatedRef.current) {
-        medias.forEach(async (media) => {
+      // Utiliser mediasRef.current pour avoir la valeur actuelle au moment de l'unmount
+      if (mediasRef.current.length > 0 && !isPostCreatedRef.current) {
+        mediasRef.current.forEach(async (media) => {
           try {
             await deleteDraftWithAsset({ mediaId: media.publicId })
           } catch (error) {
@@ -74,7 +81,7 @@ export const NewPostLayout = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deleteDraftWithAsset])
+  }, [])
 
   const createPost = useMutation(api.posts.createPost)
 

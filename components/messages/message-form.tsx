@@ -35,11 +35,13 @@ export const MessageForm = ({
   const handleSendTextMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    if (!currentUser?._id) return
+
     try {
       await sendTextMessage({
         content: msgText,
         conversation: params.id as Id<"conversations">,
-        sender: currentUser?._id!,
+        sender: currentUser._id,
       })
 
       setMsgText("")

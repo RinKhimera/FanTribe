@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react"
 import { Loader2 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
 import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
@@ -35,35 +35,45 @@ export const NewsFeed = ({
       : "skip",
   )
 
+  // Déstructurer pour avoir des dépendances stables
+  const posts = result?.posts
+  const isDone = result?.isDone
+  const continueCursor = result?.continueCursor
+
+  // Utiliser useEffectEvent pour mettre à jour les posts
+  const updatePosts = useEffectEvent((newPosts: PostWithAuthor[]) => {
+    setAllPosts((prev) => {
+      // Éviter les doublons en vérifiant les IDs
+      const existingIds = new Set(prev.map((p) => p._id))
+      const filteredPosts = newPosts.filter((p) => !existingIds.has(p._id))
+      return [...prev, ...filteredPosts] as PostWithAuthor[]
+    })
+    setIsLoadingMore(false)
+    setHasInitiallyLoaded(true)
+  })
+
   // Ajouter les nouveaux posts à la liste
   useEffect(() => {
-    if (result?.posts) {
-      setAllPosts((prev) => {
-        // Éviter les doublons en vérifiant les IDs
-        const existingIds = new Set(prev.map((p) => p._id))
-        const newPosts = result.posts.filter((p) => !existingIds.has(p._id))
-        return [...prev, ...newPosts] as PostWithAuthor[]
-      })
-      setIsLoadingMore(false)
-      setHasInitiallyLoaded(true)
+    if (posts) {
+      updatePosts(posts as PostWithAuthor[])
     }
-  }, [result])
+  }, [posts])
 
   // Intersection Observer pour détecter le scroll
   useEffect(() => {
-    if (!loadMoreRef.current || !result) return
+    if (!loadMoreRef.current || posts === undefined) return
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
         const firstEntry = entries[0]
         if (
           firstEntry.isIntersecting &&
-          !result.isDone &&
+          !isDone &&
           !isLoadingMore &&
-          result.continueCursor
+          continueCursor
         ) {
           setIsLoadingMore(true)
-          setCursor(result.continueCursor)
+          setCursor(continueCursor)
         }
       },
       {
@@ -79,7 +89,7 @@ export const NewsFeed = ({
         observerRef.current.disconnect()
       }
     }
-  }, [result, isLoadingMore])
+  }, [isDone, continueCursor, isLoadingMore, posts])
 
   // Afficher un loader si currentUser n'est pas encore défini
   if (!currentUser) {

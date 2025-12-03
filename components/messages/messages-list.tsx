@@ -3,6 +3,7 @@ import {
   CSSProperties,
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -40,6 +41,11 @@ export const MessagesList = ({
     limit: 30,
   })
 
+  // Déstructurer pour avoir des dépendances stables
+  const messages = messagesData?.messages
+  const dataHasMore = messagesData?.hasMore
+  const dataCursor = messagesData?.cursor
+
   // Fonctions de scroll (mémorisées)
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current && !isInitialLoadRef.current) {
@@ -64,18 +70,30 @@ export const MessagesList = ({
     }
   }, [allMessages, scrollToBottomInstant])
 
-  // Effet principal pour gérer les messages (initial + updates)
-  useEffect(() => {
-    if (!messagesData) return
-
-    if (isInitialLoadRef.current) {
-      const initialMessages = messagesData.messages || []
+  // useEffectEvent pour les mises à jour de state
+  const handleInitialMessages = useEffectEvent(
+    (initialMessages: MessageProps[]) => {
       setAllMessages(initialMessages)
-      setHasMore(!!messagesData.hasMore)
-      nextOlderMessagesStartPointRef.current = messagesData.cursor
-    } else if (cursor === undefined) {
-      const latestPageFromServer = messagesData.messages || []
+      setHasMore(!!dataHasMore)
+      nextOlderMessagesStartPointRef.current = dataCursor
+    },
+  )
 
+  const handleOlderMessages = useEffectEvent((olderBatch: MessageProps[]) => {
+    setAllMessages((prev) => [...olderBatch, ...prev])
+
+    if (!dataHasMore) {
+      setReachedOldestMessages(true)
+    }
+    setHasMore(!!dataHasMore)
+    setIsLoadingMore(false)
+    nextOlderMessagesStartPointRef.current = dataCursor
+    setCursor(undefined)
+  })
+
+  // useEffectEvent pour la mise à jour des messages en temps réel
+  const handleRealtimeUpdate = useEffectEvent(
+    (latestPageFromServer: MessageProps[]) => {
       setAllMessages((prevAllMessages) => {
         const boundaryTimestamp =
           latestPageFromServer.length > 0
@@ -123,9 +141,20 @@ export const MessagesList = ({
         }
         return newAllMessages
       })
-      setHasMore(!!messagesData.hasMore)
+      setHasMore(!!dataHasMore)
+    },
+  )
+
+  // Effet principal pour gérer les messages (initial + updates)
+  useEffect(() => {
+    if (!messages) return
+
+    if (isInitialLoadRef.current) {
+      handleInitialMessages(messages || [])
+    } else if (cursor === undefined) {
+      handleRealtimeUpdate(messages || [])
     }
-  }, [messagesData, cursor, scrollToBottom])
+  }, [messages, cursor])
 
   // Fonction pour charger plus de messages (mémorisée)
   const loadMoreMessages = useCallback(() => {
@@ -146,21 +175,12 @@ export const MessagesList = ({
 
   // Effet pour gérer le chargement de messages plus anciens (quand cursor est défini)
   useEffect(() => {
-    if (cursor && messagesData && !isInitialLoadRef.current) {
+    if (cursor && messages && !isInitialLoadRef.current) {
       if (isLoadingMore) {
-        const olderBatch = messagesData.messages || []
-        setAllMessages((prev) => [...olderBatch, ...prev])
-
-        if (!messagesData.hasMore) {
-          setReachedOldestMessages(true)
-        }
-        setHasMore(!!messagesData.hasMore)
-        setIsLoadingMore(false)
-        nextOlderMessagesStartPointRef.current = messagesData.cursor
-        setCursor(undefined)
+        handleOlderMessages(messages || [])
       }
     }
-  }, [messagesData, cursor, isLoadingMore])
+  }, [messages, cursor, isLoadingMore])
 
   useEffect(() => {
     if (!isLoadingMore && scrollHeightRef.current > 0) {

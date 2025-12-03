@@ -16,7 +16,7 @@ import {
   Users,
 } from "lucide-react"
 import Link from "next/link"
-import { useMemo } from "react"
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,14 +26,15 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 const SuperUserPage = () => {
   const { currentUser } = useCurrentUser()
 
-  // Mémoriser les dates pour éviter les re-renders infinis
-  const dateRange = useMemo(() => {
+  const [dateRange] = useState(() => {
     const now = Date.now()
     return {
       startDate: now - 14 * 24 * 60 * 60 * 1000,
       endDate: now,
     }
-  }, [])
+  })
+
+  const [weekAgo] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   // Queries pour récupérer les statistiques
   const allApplications = useQuery(
@@ -82,7 +83,6 @@ const SuperUserPage = () => {
   // Posts récents (7 derniers jours)
   const recentPosts =
     allPosts?.filter((post) => {
-      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
       return post._creationTime > weekAgo
     }) || []
 

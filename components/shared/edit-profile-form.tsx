@@ -55,6 +55,7 @@ export const EditProfileForm = ({
   })
 
   const { watch } = form
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchUsername = watch("username")
 
   const checkUsername = useQuery(api.users.getAvailableUsername, {
@@ -72,7 +73,7 @@ export const EditProfileForm = ({
             bio: data.bio,
             location: data.location,
             socials: (data.urls || []).map((url) => url.value),
-            tokenIdentifier: currentUser?.tokenIdentifier!,
+            tokenIdentifier: currentUser?.tokenIdentifier || "",
           })
 
           if (pathname === "/onboarding") {

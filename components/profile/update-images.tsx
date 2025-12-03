@@ -70,7 +70,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
 
         await updateProfileImage({
           imgUrl: result.url,
-          tokenIdentifier: currentUser?.tokenIdentifier!,
+          tokenIdentifier: currentUser?.tokenIdentifier || "",
         })
         toast.success("Photo de profil mise à jour")
       } catch (error) {
@@ -111,7 +111,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
 
         await updateBannerImage({
           bannerUrl: result.url,
-          tokenIdentifier: currentUser?.tokenIdentifier!,
+          tokenIdentifier: currentUser?.tokenIdentifier || "",
         })
         toast.success("Bannière mise à jour")
       } catch (error) {
@@ -129,7 +129,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
       try {
         await updateBannerImage({
           bannerUrl: "https://cdn.fantribe.io/fantribe/placeholder.jpg",
-          tokenIdentifier: currentUser?.tokenIdentifier!,
+          tokenIdentifier: currentUser?.tokenIdentifier || "",
         })
 
         toast.success("Votre photo de bannière a été supprimée")
@@ -159,7 +159,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
 
           <div className="absolute inset-0 flex items-center justify-center gap-6 bg-black/60 transition duration-300 hover:opacity-100 md:opacity-0">
             <BunnyUploadWidget
-              userId={currentUser?._id!}
+              userId={(currentUser?._id as string) || ""}
               fileName={`${currentUser?._id}/banner`}
               uploadType="image"
               onSuccess={handleUploadBanner}
@@ -194,7 +194,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
 
       <div className="absolute -bottom-[48px] left-5 max-sm:-bottom-[38px]">
         <BunnyUploadWidget
-          userId={currentUser?._id!}
+          userId={(currentUser?._id as string) || ""}
           fileName={`${currentUser?._id}/profile`}
           uploadType="image"
           onSuccess={handleUploadProfile}

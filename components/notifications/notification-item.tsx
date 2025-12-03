@@ -130,7 +130,7 @@ export const NotificationItem = ({
             <Link href={`/${notification.sender?.username}`}>
               <Avatar className="size-9">
                 <AvatarImage
-                  src={notification.sender?.image!}
+                  src={notification.sender?.image || ""}
                   width={100}
                   height={100}
                   alt={notification.sender?.name || "Profile image"}

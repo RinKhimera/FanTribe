@@ -36,14 +36,16 @@ export const ConversationContent = () => {
     if (isAuthenticated && currentConversation && params.id) {
       markAsRead({ conversationId: params.id as Id<"conversations"> })
     }
-  }, [isAuthenticated, currentConversation, params.id, markAsRead])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, currentConversation, params.id])
 
   // useEffect pour la redirection
   useEffect(() => {
     if (conversations && !currentConversation) {
       router.push("/messages")
     }
-  }, [conversations, currentConversation, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentConversation, router])
 
   // Si les données ne sont pas encore chargées ou si la conversation n'existe pas, afficher un indicateur de chargement
   if (!conversations || !currentUser || !currentConversation) {

@@ -145,6 +145,7 @@ const ImageMessage = ({
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const VideoMessage = ({ message }: { message: MessageProps }) => {
   return (
     <ReactPlayer

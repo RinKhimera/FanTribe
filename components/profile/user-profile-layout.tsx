@@ -45,9 +45,9 @@ export const UserProfileLayout = ({
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false)
 
   const openAvatar = useCallback(() => {
-    if (!userProfile?.image) return
+    if (!userProfile.image) return
     setAvatarViewerOpen(true)
-  }, [userProfile?.image])
+  }, [userProfile.image])
 
   return (
     <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">

@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react"
 import { RotateCcw, Search, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useEffectEvent, useState } from "react"
 import { SuggestionCard } from "@/components/shared/suggestion-card"
 import { Button } from "@/components/ui/button"
 import {
@@ -40,16 +40,21 @@ export const SuggestionSidebar = () => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
+  // Utiliser useEffectEvent pour éviter le setState synchrone
+  const updateCurrent = useEffectEvent((index: number) => {
+    setCurrent(index)
+  })
+
   // API Carousel pour suivre la pagination
   useEffect(() => {
     if (!carouselApi) {
       return
     }
 
-    setCurrent(carouselApi.selectedScrollSnap())
+    updateCurrent(carouselApi.selectedScrollSnap())
 
     carouselApi.on("select", () => {
-      setCurrent(carouselApi.selectedScrollSnap())
+      updateCurrent(carouselApi.selectedScrollSnap())
     })
   }, [carouselApi])
 
