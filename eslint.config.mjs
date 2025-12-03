@@ -1,43 +1,35 @@
-import { FlatCompat } from "@eslint/eslintrc"
-import js from "@eslint/js"
-import { dirname } from "path"
-import { fileURLToPath } from "url"
+import { defineConfig, globalIgnores } from "eslint/config"
+import nextVitals from "eslint-config-next/core-web-vitals"
+import nextTs from "eslint-config-next/typescript"
+import unusedImports from "eslint-plugin-unused-imports"
+import tanstackQuery from "@tanstack/eslint-plugin-query"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-})
+  // TanStack Query plugin
+  {
+    plugins: {
+      "@tanstack/query": tanstackQuery,
+    },
+    rules: {
+      ...tanstackQuery.configs.recommended.rules,
+    },
+  },
 
-const config = [
-  js.configs.recommended,
-
-  ...compat.extends("next/core-web-vitals", "plugin:import/recommended"),
-
-  ...compat.config({
-    plugins: ["unused-imports", "@tanstack/query"],
-    settings: {
-      "import/resolver": {
-        node: {
-          extensions: [".js", ".jsx", ".ts", ".tsx"],
-        },
-      },
-      react: {
-        version: "detect",
-      },
+  // Unused imports plugin
+  {
+    plugins: {
+      "unused-imports": unusedImports,
     },
     rules: {
       "no-unused-vars": "off",
       "unused-imports/no-unused-imports": "error",
-      "import/order": "off",
-      "import/named": "off",
-      "react/react-in-jsx-scope": "off",
-      "react/jsx-uses-react": "off",
     },
-  }),
+  },
 
+  // TypeScript specific rules
   {
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
@@ -45,17 +37,17 @@ const config = [
     },
   },
 
-  {
-    ignores: [
-      "**/node_modules/**",
-      "**/.next/**",
-      "**/out/**",
-      "**/dist/**",
-      "**/build/**",
-      "**/.convex/**",
-      "**/convex/_generated/**",
-    ],
-  },
-]
+  // Override default ignores of eslint-config-next
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "dist/**",
+    "next-env.d.ts",
+    ".convex/**",
+    "convex/_generated/**",
+    "node_modules/**",
+  ]),
+])
 
-export default config
+export default eslintConfig

@@ -199,8 +199,8 @@ const SignUpPage = () => {
               </div>
             </div>
 
-            {/* Footer mobile */}
-            <p className="text-muted-foreground mt-8 text-center text-xs lg:hidden">
+            {/* Footer */}
+            <p className="text-muted-foreground mt-8 text-center text-xs">
               En vous inscrivant, vous acceptez nos{" "}
               <Link href="/terms" className="text-primary hover:underline">
                 Conditions d&apos;utilisation
