@@ -445,7 +445,7 @@ export const getTestTransactionsSummary = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
-  handler: async (ctx, _args) => {
+  handler: async (ctx) => {
     // Vérifier que l'utilisateur est un superuser
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {

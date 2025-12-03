@@ -303,7 +303,7 @@ export const canUserSubscribe = query({
 
     try {
       currentUser = await getCurrentUser(ctx)
-    } catch (_e) {
+    } catch {
       return { canSubscribe: false, reason: "not_authenticated" }
     }
 

@@ -3,7 +3,7 @@ import { internalMutation, mutation, query } from "./_generated/server"
 
 export const getUserNotifications = query({
   args: {},
-  handler: async (ctx, _args) => {
+  handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
 

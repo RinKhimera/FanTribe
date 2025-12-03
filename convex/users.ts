@@ -94,7 +94,7 @@ export const getCurrentUser = query({
 // A modifier
 export const getUsers = query({
   args: {},
-  handler: async (ctx, _args) => {
+  handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
       throw new ConvexError("Not authenticated")
@@ -112,7 +112,7 @@ export const getUsers = query({
 export const getSuggestedCreators = query({
   // Le refreshKey permet de forcer une nouvelle randomisation
   args: { refreshKey: v.optional(v.number()) },
-  handler: async (ctx, _args) => {
+  handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
 
