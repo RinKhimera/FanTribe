@@ -8,6 +8,7 @@ import { GroupMembersDialog } from "@/components/messages/group-members-dialog"
 import { MessageForm } from "@/components/messages/message-form"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { ConversationProps } from "@/types"
 import { MessagesList } from "./messages-list"
@@ -33,7 +34,7 @@ export const ConversationContent = () => {
   // useEffect pour marquer les messages comme lus quand la conversation est ouverte
   useEffect(() => {
     if (isAuthenticated && currentConversation && params.id) {
-      markAsRead({ conversationId: params.id as any })
+      markAsRead({ conversationId: params.id as Id<"conversations"> })
     }
   }, [isAuthenticated, currentConversation, params.id, markAsRead])
 
@@ -57,11 +58,11 @@ export const ConversationContent = () => {
     <div className="flex h-full w-full flex-col lg:w-3/5">
       <div className="sticky top-0 z-10 w-full">
         {/* Header */}
-        <div className="flex justify-between bg-muted/50 p-3">
+        <div className="bg-muted/50 flex justify-between p-3">
           <div className="flex items-center gap-3">
             <Avatar className="relative overflow-visible border border-gray-900">
               {currentConversation.isOnline && (
-                <div className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-foreground bg-green-500" />
+                <div className="border-foreground absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
               )}
               <AvatarImage
                 src={

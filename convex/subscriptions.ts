@@ -6,14 +6,15 @@ import {
   mutation,
   query,
 } from "./_generated/server"
+import type { MutationCtx, QueryCtx } from "./_generated/server"
 
 // Helper récupération user courant
-const getCurrentUser = async (ctx: any) => {
+const getCurrentUser = async (ctx: MutationCtx | QueryCtx) => {
   const identity = await ctx.auth.getUserIdentity()
   if (!identity) throw new ConvexError("Not authenticated")
   const user = await ctx.db
     .query("users")
-    .withIndex("by_tokenIdentifier", (q: any) =>
+    .withIndex("by_tokenIdentifier", (q) =>
       q.eq("tokenIdentifier", identity.tokenIdentifier),
     )
     .unique()
@@ -302,7 +303,7 @@ export const canUserSubscribe = query({
 
     try {
       currentUser = await getCurrentUser(ctx)
-    } catch (e) {
+    } catch (_e) {
       return { canSubscribe: false, reason: "not_authenticated" }
     }
 

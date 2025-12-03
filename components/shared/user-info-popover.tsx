@@ -172,16 +172,3 @@ export const UserInfoPopover = ({
     </DropdownMenu>
   )
 }
-
-const UserInfoSkeleton = () => {
-  return (
-    <div className="mb-4 flex w-full items-center rounded-lg p-3">
-      <Skeleton className="bg-muted size-8 rounded-lg" />
-      <div className="ml-2 space-y-2">
-        <Skeleton className="bg-muted h-3 w-[100px]" />
-        <Skeleton className="bg-muted h-3 w-[150px]" />
-      </div>
-      <ChevronsUpDown className="text-muted-foreground ml-auto size-4" />
-    </div>
-  )
-}

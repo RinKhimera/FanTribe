@@ -18,11 +18,17 @@ export async function POST(request: Request) {
       sig,
       env.STRIPE_WEBHOOK_SECRET,
     )
-  } catch (err: any) {
-    console.error("Stripe webhook verification failed:", err?.message || err)
-    return new NextResponse(`Webhook error: ${err?.message || String(err)}`, {
-      status: 400,
-    })
+  } catch (err) {
+    console.error(
+      "Stripe webhook verification failed:",
+      err instanceof Error ? err.message : err,
+    )
+    return new NextResponse(
+      `Webhook error: ${err instanceof Error ? err.message : String(err)}`,
+      {
+        status: 400,
+      },
+    )
   }
 
   try {
@@ -33,8 +39,8 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session
         const metadata = session.metadata || {}
 
-        const creatorId = metadata.creatorId as any
-        const subscriberId = metadata.subscriberId as any
+        const creatorId = metadata.creatorId
+        const subscriberId = metadata.subscriberId
 
         const startedAt = session.created
           ? new Date(session.created * 1000).toISOString()

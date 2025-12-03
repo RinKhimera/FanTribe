@@ -185,10 +185,13 @@ export async function POST(request: Request) {
       code: checkData.code,
       description: checkData.message || "Unknown status",
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error("Webhook error:", error)
     return Response.json(
-      { error: "Webhook error", details: error?.message || String(error) },
+      {
+        error: "Webhook error",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     )
   }

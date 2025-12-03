@@ -96,7 +96,7 @@ export const PostEllipsis = ({
           title: "Partager ce post",
           url: postUrl,
         })
-        .catch((err) => {
+        .catch((_err) => {
           logger.warn("Fallback vers copie après échec partage", { postId })
           // Fallback sur la copie si le partage échoue
           handleCopyLink()

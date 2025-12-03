@@ -165,7 +165,7 @@ export const NewPostLayout = () => {
           } else {
             toast.error(`Erreur upload ${file.name}: ${result.error}`)
           }
-        } catch (e: any) {
+        } catch (e) {
           setUploadProgress((prev) => {
             const np = { ...prev }
             delete np[fileKey]

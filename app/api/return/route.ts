@@ -82,11 +82,14 @@ export async function POST(request: Request) {
     if (checkData.code === "00") {
       // Optionnel: tenter un traitement idempotent si le webhook n'a pas encore touché
       try {
+        const metadata = (
+          checkData as { data?: { metadata?: Record<string, string> } }
+        )?.data?.metadata
         await fetchAction(api.internalActions.processPayment, {
           provider: "cinetpay",
           providerTransactionId: transactionId,
-          creatorId: (checkData as any)?.data?.metadata?.creatorId,
-          subscriberId: (checkData as any)?.data?.metadata?.subscriberId,
+          creatorId: metadata?.creatorId,
+          subscriberId: metadata?.subscriberId,
           amount: checkData.data.amount ? Number(checkData.data.amount) : 0,
           currency: checkData.data.currency || "XOF",
           paymentMethod: checkData.data.payment_method || undefined,
@@ -115,7 +118,7 @@ export async function POST(request: Request) {
         ),
       )
     }
-  } catch (error: any) {
+  } catch (error) {
     // En cas d'erreur inattendue
     console.error("Return API error:", error)
     return Response.redirect(

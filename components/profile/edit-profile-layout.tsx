@@ -15,7 +15,6 @@ type EditProfileLayoutProps = {
 export const EditProfileLayout = ({
   currentUser,
   userProfile,
-  subStatus,
 }: EditProfileLayoutProps) => {
   return (
     <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">

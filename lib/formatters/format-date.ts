@@ -23,7 +23,14 @@ export const isSameDay = (timestamp1: number, timestamp2: number): boolean => {
   )
 }
 
-export const getRelativeDateTime = (message: any, previousMessage: any) => {
+interface MessageWithTime {
+  _creationTime: number
+}
+
+export const getRelativeDateTime = (
+  message: MessageWithTime,
+  previousMessage: MessageWithTime | null | undefined,
+) => {
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)

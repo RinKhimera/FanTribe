@@ -30,7 +30,7 @@ export async function getOrCreateUserCollection(
 
     // Chercher si la collection existe déjà
     const existingCollection = collections.find(
-      (col: any) => col.name === userCollectionName,
+      (col: { name: string; guid: string }) => col.name === userCollectionName,
     )
 
     if (existingCollection) {

@@ -300,7 +300,7 @@ export const getUserGallery = query({
 
 export const getAllPosts = query({
   args: {},
-  handler: async (ctx, args) => {
+  handler: async (ctx, _args) => {
     const posts = await ctx.db.query("posts").order("desc").take(100)
 
     const postsWithAuthor = await Promise.all(

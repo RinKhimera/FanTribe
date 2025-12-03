@@ -76,7 +76,15 @@ export const ReportDialog = ({
           reportedPostId,
           reportedCommentId,
           type,
-          reason: reason as any,
+          reason: reason as
+            | "spam"
+            | "harassment"
+            | "inappropriate_content"
+            | "fake_account"
+            | "copyright"
+            | "violence"
+            | "hate_speech"
+            | "other",
           description: description || undefined,
         })
 

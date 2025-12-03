@@ -1,6 +1,14 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
 
+// Type pour les données de test (mock IDs)
+type TestUser = {
+  _id: string
+  name: string
+  username: string
+  image: string
+}
+
 /**
  * Récupère toutes les transactions avec filtres pour le dashboard admin
  * @returns Liste des transactions filtrées avec les informations des créateurs et abonnés
@@ -293,33 +301,33 @@ export const getTestTransactionsForDashboard = query({
     }
 
     // Données de test pour les créatrices
-    const testCreators = [
+    const testCreators: TestUser[] = [
       {
-        _id: "test_creator_1" as any,
+        _id: "test_creator_1",
         name: "Sophie Martin",
         username: "sophiemartin",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie",
       },
       {
-        _id: "test_creator_2" as any,
+        _id: "test_creator_2",
         name: "Amélie Dubois",
         username: "ameliedubois",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Amelie",
       },
       {
-        _id: "test_creator_3" as any,
+        _id: "test_creator_3",
         name: "Clara Bernard",
         username: "clarabernard",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Clara",
       },
       {
-        _id: "test_creator_4" as any,
+        _id: "test_creator_4",
         name: "Léa Petit",
         username: "leapetit",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lea",
       },
       {
-        _id: "test_creator_5" as any,
+        _id: "test_creator_5",
         name: "Emma Laurent",
         username: "emmalaurent",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
@@ -327,39 +335,39 @@ export const getTestTransactionsForDashboard = query({
     ]
 
     // Données de test pour les abonnés
-    const testSubscribers = [
+    const testSubscribers: TestUser[] = [
       {
-        _id: "test_sub_1" as any,
+        _id: "test_sub_1",
         name: "Jean Dupont",
         username: "jeandupont",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jean",
       },
       {
-        _id: "test_sub_2" as any,
+        _id: "test_sub_2",
         name: "Pierre Moreau",
         username: "pierremoreau",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pierre",
       },
       {
-        _id: "test_sub_3" as any,
+        _id: "test_sub_3",
         name: "Marie Lambert",
         username: "marielambert",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie",
       },
       {
-        _id: "test_sub_4" as any,
+        _id: "test_sub_4",
         name: "Lucas Simon",
         username: "lucassimon",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas",
       },
       {
-        _id: "test_sub_5" as any,
+        _id: "test_sub_5",
         name: "Julie Roux",
         username: "julieroux",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Julie",
       },
       {
-        _id: "test_sub_6" as any,
+        _id: "test_sub_6",
         name: "Thomas Blanc",
         username: "thomasblanc",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas",
@@ -385,7 +393,7 @@ export const getTestTransactionsForDashboard = query({
       const provider = Math.random() < 0.7 ? "cinetpay" : "stripe"
 
       testTransactions.push({
-        _id: `test_tx_${i}` as any,
+        _id: `test_tx_${i}`,
         _creationTime: randomDate,
         amount: 1000, // 1000 XAF
         currency: "XAF",
@@ -437,7 +445,7 @@ export const getTestTransactionsSummary = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, _args) => {
     // Vérifier que l'utilisateur est un superuser
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -537,38 +545,40 @@ export const getTestCreators = query({
       throw new Error("Accès refusé : uniquement pour les administrateurs")
     }
 
-    return [
+    const testCreatorsData: TestUser[] = [
       {
-        _id: "test_creator_1" as any,
+        _id: "test_creator_1",
         name: "Sophie Martin",
         username: "sophiemartin",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie",
       },
       {
-        _id: "test_creator_2" as any,
+        _id: "test_creator_2",
         name: "Amélie Dubois",
         username: "ameliedubois",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Amelie",
       },
       {
-        _id: "test_creator_3" as any,
+        _id: "test_creator_3",
         name: "Clara Bernard",
         username: "clarabernard",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Clara",
       },
       {
-        _id: "test_creator_4" as any,
+        _id: "test_creator_4",
         name: "Léa Petit",
         username: "leapetit",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lea",
       },
       {
-        _id: "test_creator_5" as any,
+        _id: "test_creator_5",
         name: "Emma Laurent",
         username: "emmalaurent",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
       },
     ]
+
+    return testCreatorsData
   },
 })
 

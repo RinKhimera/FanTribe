@@ -14,10 +14,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import { api } from "@/convex/_generated/api"
+import { Doc } from "@/convex/_generated/dataModel"
 
 // Fonction pour diviser le tableau en sous-tableaux de taille n
-const chunkArray = (array: any[], size: number): any[][] => {
-  const chunkedArr: any[][] = []
+const chunkArray = <T,>(array: T[], size: number): T[][] => {
+  const chunkedArr: T[][] = []
   for (let i = 0; i < array.length; i += size) {
     chunkedArr.push(array.slice(i, i + size))
   }

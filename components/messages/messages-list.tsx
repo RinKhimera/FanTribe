@@ -1,16 +1,16 @@
-import { MessageBox } from "@/components/messages/message-box"
-import { api } from "@/convex/_generated/api"
-import { ConversationProps, UserProps } from "@/types"
 import { useQuery } from "convex/react"
-import { Button } from "@/components/ui/button"
 import {
-  useEffect,
-  useRef,
-  useState,
   CSSProperties,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
+  useState,
 } from "react"
+import { MessageBox } from "@/components/messages/message-box"
+import { Button } from "@/components/ui/button"
+import { api } from "@/convex/_generated/api"
+import { ConversationProps, MessageProps, UserProps } from "@/types"
 
 type MessagesListProps = {
   conversation: ConversationProps
@@ -22,7 +22,7 @@ export const MessagesList = ({
   currentUser,
 }: MessagesListProps) => {
   const [cursor, setCursor] = useState<number | undefined>(undefined)
-  const [allMessages, setAllMessages] = useState<any[]>([])
+  const [allMessages, setAllMessages] = useState<MessageProps[]>([])
   const [hasMore, setHasMore] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isReadyToShow, setIsReadyToShow] = useState(false)
