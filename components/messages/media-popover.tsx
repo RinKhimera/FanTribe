@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { logger } from "@/lib/config"
-import { uploadBunnyAsset } from "@/lib/services"
+import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { ConversationProps } from "@/types"
 
 export const MediaPopover = ({

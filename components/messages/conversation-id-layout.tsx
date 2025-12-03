@@ -4,14 +4,14 @@ import { UserListDialog } from "./user-list-dialog"
 
 export const ConversationIdLayout = () => {
   return (
-    <main className="flex h-screen w-[80%] flex-col border-l border-r border-muted max-sm:w-full max-[500px]:pb-16">
-      <h1 className="sticky top-0 z-20 border-b border-muted p-4 text-2xl font-bold backdrop-blur-sm">
+    <main className="border-muted flex h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
+      <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
         Messages
       </h1>
 
       <div className="flex flex-1 overflow-auto">
-        <div className="hidden h-full w-2/5 flex-col border-r border-muted lg:flex">
-          <div className="flex items-center justify-between border-b border-muted p-4 text-lg font-bold">
+        <div className="border-muted hidden h-full w-2/5 flex-col border-r lg:flex">
+          <div className="border-muted flex items-center justify-between border-b p-4 text-lg font-bold">
             <div>Mes conversations</div>
             <UserListDialog />
           </div>

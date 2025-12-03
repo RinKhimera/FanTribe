@@ -189,7 +189,7 @@ const CreatorApplicationsPage = () => {
   ).length
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l">
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Candidatures Créateur</h1>

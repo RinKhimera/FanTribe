@@ -304,7 +304,7 @@ const ApplyCreatorPage = () => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <h1 className="text-2xl font-bold">Candidature Créateur</h1>
       </div>

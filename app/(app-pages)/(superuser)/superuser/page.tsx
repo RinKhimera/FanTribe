@@ -89,7 +89,7 @@ const SuperUserPage = () => {
   const isLoading = !allApplications || !allPosts || !allUsers
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16 sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Dashboard Administrateur</h1>

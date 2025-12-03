@@ -6,17 +6,18 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useCallback, useState } from "react"
+import { PageContainer } from "@/components/layout"
 import { SubscriptionDialog } from "@/components/profile/subscription-dialog"
 import { UserPosts } from "@/components/profile/user-posts"
 import { UserReportButton } from "@/components/profile/user-report-button"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
-import { Button } from "../ui/button"
 
 type UserProfileLayoutProps = {
   currentUser: Doc<"users"> | undefined
@@ -50,11 +51,13 @@ export const UserProfileLayout = ({
   }, [userProfile.image])
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-[500px]:pb-16 max-lg:w-[80%] max-sm:w-full">
-      <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-        {userProfile?.name}
-      </h1>
+    <PageContainer title={userProfile?.name ?? ""} hideHeader>
+      {/* Header sticky personnalisé avec le nom */}
+      <header className="border-muted bg-background/80 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
+        <h1 className="text-2xl font-bold">{userProfile?.name}</h1>
+      </header>
 
+      {/* Bannière et avatar */}
       <div className="relative">
         <div>
           <AspectRatio ratio={3 / 1} className="bg-muted">
@@ -100,29 +103,25 @@ export const UserProfileLayout = ({
         </div>
       </div>
 
-      <>
-        {currentUser?.username === userProfile.username ? (
-          <div className="mt-4 mr-5 flex justify-end">
-            <Button
-              asChild
-              variant={"outline"}
-              className="rounded-3xl border-2"
-            >
-              <Link href={`/${currentUser?.username}/edit`}>
-                Modifier le profil
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="mt-4 mr-5 flex justify-end gap-2">
-            <UserReportButton
-              userId={userProfile._id}
-              username={userProfile.username}
-            />
-          </div>
-        )}
-      </>
+      {/* Actions du profil */}
+      {currentUser?.username === userProfile.username ? (
+        <div className="mt-4 mr-5 flex justify-end">
+          <Button asChild variant="outline" className="rounded-3xl border-2">
+            <Link href={`/${currentUser?.username}/edit`}>
+              Modifier le profil
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-4 mr-5 flex justify-end gap-2">
+          <UserReportButton
+            userId={userProfile._id}
+            username={userProfile.username}
+          />
+        </div>
+      )}
 
+      {/* Informations du profil */}
       <div className="border-muted border-b px-4 py-4">
         <div className="text-2xl font-bold">{userProfile?.name}</div>
         <div className="text-muted-foreground">@{userProfile?.username}</div>
@@ -133,77 +132,70 @@ export const UserProfileLayout = ({
           {userProfile?.location}
         </div>
 
-        <>
-          {userProfile?.socials?.map((url) => (
-            <div
-              key={url}
-              className="text-muted-foreground -ml-0.5 flex items-center gap-1"
+        {userProfile?.socials?.map((url) => (
+          <div
+            key={url}
+            className="text-muted-foreground -ml-0.5 flex items-center gap-1"
+          >
+            <LucideLink size={18} />
+            <Link
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-500 hover:underline"
             >
-              <LucideLink size={18} />
-
-              <Link
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-500 hover:underline"
-              >
-                {url}
-              </Link>
-            </div>
-          ))}
-        </>
+              {url}
+            </Link>
+          </div>
+        ))}
       </div>
 
-      <>
-        {currentUser?.username !== userProfile.username && canSubscribe && (
-          <div className="border-muted border-b px-4 py-4">
-            <div className="text-2xl leading-none font-semibold tracking-tight">
-              Abonnement
-            </div>
-            <div className="mb-1">
-              {subscriptionStatus ? (
-                (() => {
-                  switch (subscriptionStatus.status) {
-                    case "expired":
-                      return (
-                        <SubscriptionDialog
-                          userProfile={userProfile}
-                          type="renew"
-                        />
-                      )
-                    case "canceled":
-                      return (
-                        <SubscriptionDialog
-                          userProfile={userProfile}
-                          type="subscribe"
-                        />
-                      )
-                    case "active":
-                      return (
-                        <SubscriptionDialog
-                          userProfile={userProfile}
-                          type="unsubscribe"
-                        />
-                      )
-                    default:
-                      return (
-                        <SubscriptionDialog
-                          userProfile={userProfile}
-                          type="subscribe"
-                        />
-                      )
-                  }
-                })()
-              ) : (
-                <SubscriptionDialog
-                  userProfile={userProfile}
-                  type="subscribe"
-                />
-              )}
-            </div>
+      {/* Section abonnement (si applicable) */}
+      {currentUser?.username !== userProfile.username && canSubscribe && (
+        <div className="border-muted border-b px-4 py-4">
+          <div className="text-2xl leading-none font-semibold tracking-tight">
+            Abonnement
           </div>
-        )}
-      </>
+          <div className="mb-1">
+            {subscriptionStatus ? (
+              (() => {
+                switch (subscriptionStatus.status) {
+                  case "expired":
+                    return (
+                      <SubscriptionDialog
+                        userProfile={userProfile}
+                        type="renew"
+                      />
+                    )
+                  case "canceled":
+                    return (
+                      <SubscriptionDialog
+                        userProfile={userProfile}
+                        type="subscribe"
+                      />
+                    )
+                  case "active":
+                    return (
+                      <SubscriptionDialog
+                        userProfile={userProfile}
+                        type="unsubscribe"
+                      />
+                    )
+                  default:
+                    return (
+                      <SubscriptionDialog
+                        userProfile={userProfile}
+                        type="subscribe"
+                      />
+                    )
+                }
+              })()
+            ) : (
+              <SubscriptionDialog userProfile={userProfile} type="subscribe" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Navigation tabs pour Posts et Médias */}
       <div className="border-muted border-b">
@@ -242,6 +234,6 @@ export const UserProfileLayout = ({
 
       {/* Contenu de la page (UserPosts) */}
       <UserPosts authorId={userProfile._id} currentUser={currentUser} />
-    </main>
+    </PageContainer>
   )
 }

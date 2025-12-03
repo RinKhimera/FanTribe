@@ -309,7 +309,7 @@ const ReportsPage = () => {
   const rejectedReports = allReports.filter((r) => r.status === "rejected")
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-16 sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-16">
       {/* Header */}
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
