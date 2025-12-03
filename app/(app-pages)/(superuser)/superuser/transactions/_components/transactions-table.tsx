@@ -53,7 +53,6 @@ type SortField =
   | "amount"
 type SortOrder = "asc" | "desc"
 
-// Composant SortIcon défini hors du composant principal pour éviter la recréation à chaque render
 const SortIcon = ({
   field,
   sortField,

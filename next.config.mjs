@@ -22,6 +22,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.fantribe.io",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
     ],
   },
   async redirects() {
