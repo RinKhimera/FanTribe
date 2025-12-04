@@ -47,7 +47,7 @@ export default function Error({ error, reset }: ErrorProps) {
               <summary className="text-destructive cursor-pointer font-medium">
                 Détails de l&apos;erreur pour les développeurs
               </summary>
-              <pre className="mt-2 text-xs break-words whitespace-pre-wrap">
+              <pre className="mt-2 text-xs wrap-break-word whitespace-pre-wrap">
                 {error.message}
               </pre>
             </details>

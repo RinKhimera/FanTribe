@@ -172,7 +172,7 @@ export const CommentSection = ({
                   onChange={(e) => setCommentText(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                   placeholder="Ajouter un commentaire..."
-                  className="border-muted-foreground/20 min-h-[40px] resize-none text-sm"
+                  className="border-muted-foreground/20 min-h-10 resize-none text-sm"
                   disabled={isSubmitting}
                   rows={1}
                 />

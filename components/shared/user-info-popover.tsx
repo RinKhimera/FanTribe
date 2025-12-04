@@ -2,7 +2,6 @@ import { SignOutButton } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import {
   BookmarkPlus,
-  ChevronsUpDown,
   CircleUserRound,
   LogOut,
   Settings,
@@ -10,7 +9,6 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,16 +18,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
+import { cn } from "@/lib/utils"
+
+type UserInfoPopoverProps = {
+  currentUser: Doc<"users">
+  onNavigate?: () => void
+  /** Mode compact : affiche uniquement l'avatar (pour tablet) */
+  compact?: boolean
+}
 
 export const UserInfoPopover = ({
   currentUser,
   onNavigate,
-}: {
-  currentUser: Doc<"users">
-  onNavigate?: () => void
-}) => {
+  compact = false,
+}: UserInfoPopoverProps) => {
   const router = useRouter()
 
   const mySubsStats = useQuery(
@@ -54,10 +63,93 @@ export const UserInfoPopover = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="hover:bg-foreground/10 data-[state=open]:bg-foreground/10 data-[state=open]:text-foreground mb-4 flex w-full cursor-pointer items-center justify-between rounded-lg p-3 transition duration-200">
-          <div className="flex items-center gap-2">
-            <Avatar className="size-8 rounded-lg">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={cn(
+                // Base styles
+                "flex cursor-pointer items-center transition-all duration-200",
+                "rounded-xl",
+                "hover:bg-foreground/10",
+                "data-[state=open]:bg-foreground/10",
+                // Mode compact : bouton carré aligné à droite
+                compact && [
+                  "max-xl:h-12 max-xl:w-12 max-xl:justify-center max-xl:p-0",
+                  "xl:w-full xl:justify-between xl:p-3",
+                ],
+                // Mode normal : toujours full width
+                !compact && "w-full justify-between p-3",
+              )}
+            >
+              {/* Avatar + Info */}
+              <div
+                className={cn(
+                  "flex items-center gap-3",
+                  compact && "max-xl:gap-0",
+                )}
+              >
+                <Avatar
+                  className={cn(
+                    "shrink-0 rounded-lg transition-transform duration-200",
+                    "group-hover:scale-105",
+                    compact ? "size-8 max-xl:size-10" : "size-10",
+                  )}
+                >
+                  {currentUser?.image ? (
+                    <AvatarImage
+                      src={currentUser.image}
+                      width={100}
+                      height={100}
+                      className="aspect-square h-full w-full object-cover"
+                      alt={currentUser?.username || "Profile image"}
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-primary/20 text-primary rounded-lg font-semibold">
+                      {currentUser?.username?.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+
+                {/* Nom et username (cachés en mode compact sur tablet) */}
+                <div
+                  className={cn(
+                    "grid flex-1 text-left text-sm leading-tight",
+                    compact && "max-xl:hidden",
+                  )}
+                >
+                  <span className="text-foreground truncate font-semibold">
+                    {currentUser?.name}
+                  </span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    @{currentUser?.username}
+                  </span>
+                </div>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        {/* Tooltip uniquement en mode compact sur tablet */}
+        {compact && (
+          <TooltipContent side="right" className="xl:hidden" sideOffset={8}>
+            <p className="font-medium">{currentUser?.name}</p>
+            <p className="text-muted-foreground text-xs">
+              @{currentUser?.username}
+            </p>
+          </TooltipContent>
+        )}
+      </Tooltip>
+
+      <DropdownMenuContent
+        className="border-border/50 bg-popover/95 min-w-60 rounded-xl backdrop-blur-sm"
+        align={compact ? "center" : "end"}
+        side="top"
+        sideOffset={8}
+      >
+        {/* Header avec avatar et stats */}
+        <DropdownMenuLabel className="p-0 font-normal">
+          <div className="flex items-center gap-3 px-3 py-3">
+            <Avatar className="size-12 rounded-lg">
               {currentUser?.image ? (
                 <AvatarImage
                   src={currentUser.image}
@@ -67,13 +159,13 @@ export const UserInfoPopover = ({
                   alt={currentUser?.username || "Profile image"}
                 />
               ) : (
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="bg-primary/20 text-primary rounded-lg font-semibold">
                   {currentUser?.username?.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               )}
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">
+            <div className="grid flex-1 text-left leading-tight">
+              <span className="text-foreground truncate font-semibold">
                 {currentUser?.name}
               </span>
               <span className="text-muted-foreground truncate text-sm">
@@ -81,90 +173,79 @@ export const UserInfoPopover = ({
               </span>
             </div>
           </div>
-          <ChevronsUpDown className="ml-auto size-4" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="min-w-[232px] rounded-lg"
-        align="end"
-        sideOffset={4}
-      >
-        <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <Avatar className="size-8 rounded-lg">
-              {currentUser?.image ? (
-                <AvatarImage
-                  src={currentUser.image}
-                  width={100}
-                  height={100}
-                  className="aspect-square h-full w-full object-cover"
-                  alt={currentUser?.username || "Profile image"}
-                />
-              ) : (
-                <AvatarFallback className="rounded-lg">
-                  {currentUser?.username?.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">
-                {currentUser?.name}
+
+          {/* Stats */}
+          <div className="border-border/50 flex items-center gap-4 border-t px-3 py-2 text-sm">
+            <div className="flex items-center gap-1">
+              <span className="text-foreground font-semibold">
+                {mySubscribersStats?.subscribersCount || 0}
               </span>
-              <span className="truncate text-sm">@{currentUser?.username}</span>
+              <span className="text-muted-foreground">fans</span>
+            </div>
+            <div className="bg-border/50 h-4 w-px" />
+            <div className="flex items-center gap-1">
+              <span className="text-foreground font-semibold">
+                {mySubsStats?.creatorsCount || 0}
+              </span>
+              <span className="text-muted-foreground">abonnements</span>
             </div>
           </div>
-          <div className="mt-2 px-2 text-sm">
-            {mySubscribersStats?.subscribersCount || 0} fans |{" "}
-            {mySubsStats?.creatorsCount || 0} abonnements
-          </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+
+        {/* Option créateur - uniquement visible pour les utilisateurs non-créateurs */}
+        {currentUser.accountType !== "CREATOR" &&
+          currentUser.accountType !== "SUPERUSER" && (
+            <>
+              <DropdownMenuSeparator className="bg-border/50" />
+
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  className="focus:bg-primary/10 cursor-pointer rounded-lg px-3 py-2.5"
+                  onClick={() => handleNavigation("/be-creator")}
+                >
+                  <Sparkles className="text-primary mr-3 size-4" />
+                  <span>Passer au compte Créateur</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          )}
+
+        <DropdownMenuSeparator className="bg-border/50" />
+
+        {/* Liens de navigation */}
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <Sparkles className="mr-2 size-4 text-white" />
-            Passer au compte Créateur
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <Button
-            variant="ghost"
-            className="h-auto w-full justify-start p-0"
+          <DropdownMenuItem
+            className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
             onClick={() => handleNavigation(`/${currentUser?.username}`)}
           >
-            <DropdownMenuItem className="w-full cursor-pointer">
-              <CircleUserRound className="mr-2 size-4 text-white" />
-              Profil
-            </DropdownMenuItem>
-          </Button>
+            <CircleUserRound className="text-muted-foreground mr-3 size-4" />
+            <span>Profil</span>
+          </DropdownMenuItem>
 
-          <Button
-            variant="ghost"
-            className="h-auto w-full justify-start p-0"
+          <DropdownMenuItem
+            className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
             onClick={() => handleNavigation("/collections")}
           >
-            <DropdownMenuItem className="w-full cursor-pointer">
-              <BookmarkPlus className="mr-2 size-4 text-white" />
-              Collections
-            </DropdownMenuItem>
-          </Button>
+            <BookmarkPlus className="text-muted-foreground mr-3 size-4" />
+            <span>Collections</span>
+          </DropdownMenuItem>
 
-          <Button
-            variant="ghost"
-            className="h-auto w-full justify-start p-0"
+          <DropdownMenuItem
+            className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
             onClick={() => handleNavigation("/account")}
           >
-            <DropdownMenuItem className="w-full cursor-pointer">
-              <Settings className="mr-2 size-4 text-white" />
-              Compte
-            </DropdownMenuItem>
-          </Button>
+            <Settings className="text-muted-foreground mr-3 size-4" />
+            <span>Compte</span>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+
+        <DropdownMenuSeparator className="bg-border/50" />
+
+        {/* Déconnexion */}
         <SignOutButton>
-          <DropdownMenuItem className="cursor-pointer">
-            <LogOut className="mr-2 size-4 text-white" />
-            Se déconnecter
+          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer rounded-lg px-3 py-2.5">
+            <LogOut className="mr-3 size-4" />
+            <span>Se déconnecter</span>
           </DropdownMenuItem>
         </SignOutButton>
       </DropdownMenuContent>

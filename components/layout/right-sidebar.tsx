@@ -13,7 +13,8 @@ const sidebarWrapperClasses = cn(
   "sticky top-0 h-screen overflow-auto",
   "w-(--sidebar-right-width)",
   "pl-(--sidebar-right-padding) pr-2",
-  "max-lg:hidden",
+  // Masquer sous xl (1280px) pour cohérence avec left sidebar
+  "max-xl:hidden",
 )
 
 /**
@@ -24,7 +25,7 @@ const sidebarWrapperClasses = cn(
  * - Autres pages : Suggestions de créateurs + recherche
  *
  * Masquée automatiquement sur :
- * - Mobile et tablet (< 1024px)
+ * - Mobile et tablet (< 1280px / xl breakpoint)
  * - Pages spéciales (messages, user-lists, superuser/transactions)
  */
 export const RightSidebar = () => {

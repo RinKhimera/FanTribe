@@ -24,8 +24,10 @@
   --layout-gap: 0;
 
   /* Left Sidebar */
-  --sidebar-left-width: clamp(72px, 20vw, 260px);
+  --sidebar-left-width: clamp(68px, 18vw, 260px);
   --sidebar-left-padding: 0.5rem;
+  --sidebar-left-width-compact: 68px;
+  --sidebar-left-width-full: 260px;
 
   /* Right Sidebar */
   --sidebar-right-width: clamp(280px, 28vw, 380px);
@@ -41,6 +43,10 @@
 
   /* Mobile Navigation */
   --mobile-nav-height: 64px;
+
+  /* Navigation Item */
+  --nav-item-height: 48px;
+  --nav-item-gap: 4px;
 }
 
 /* Large screens adjustments */

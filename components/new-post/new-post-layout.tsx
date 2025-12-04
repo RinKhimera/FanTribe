@@ -284,7 +284,7 @@ export const NewPostLayout = () => {
                               <Button
                                 type="button"
                                 size={"icon"}
-                                className="bg-muted absolute top-3 right-[10px] z-10 size-8"
+                                className="bg-muted absolute top-3 right-2.5 z-10 size-8"
                                 onClick={() => handleRemoveMedia(index)}
                               >
                                 <CircleX size={22} />

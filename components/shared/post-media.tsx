@@ -1,6 +1,6 @@
 "use client"
 
-import { Image as ImageIcon, Lock } from "lucide-react"
+import { Image as ImageIcon, Lock, Sparkles } from "lucide-react"
 import Image from "next/image"
 import React, { useEffect, useMemo, useState } from "react"
 import { extractVideoGuidFromUrl } from "@/app/api/bunny/helper/get-video"
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/carousel"
 import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators"
 import { logger } from "@/lib/config"
+import { cn } from "@/lib/utils"
 import type { BunnyVideoGetResponse } from "@/types"
 
 interface PostMediaProps {
@@ -107,27 +108,66 @@ export const PostMedia: React.FC<PostMediaProps> = ({
 
   if (!medias || medias.length === 0) return null
 
+  // Locked content view - Modern design
   if (!canView) {
     return (
-      <div className="bg-muted/20 mt-2 flex aspect-video w-full flex-col items-center justify-center p-6">
-        <div className="bg-background/90 mb-3 rounded-full p-3">
-          <Lock className="text-primary size-6" />
+      <div
+        className={cn(
+          "relative mt-3 flex aspect-video w-full flex-col items-center justify-center",
+          "overflow-hidden rounded-xl",
+          "from-muted/40 to-muted/60 bg-linear-to-b",
+          "backdrop-blur-sm",
+        )}
+      >
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
         </div>
-        <h3 className="mb-1 text-lg font-semibold">Contenu exclusif</h3>
-        <p className="text-muted-foreground mb-4 text-center text-sm">
-          Ce contenu est réservé aux abonnés de @{authorUsername}
-        </p>
-        <Button
-          variant="default"
-          size="sm"
-          className="rounded-full"
-          onClick={(e) => {
-            e.stopPropagation()
-            onRequireSubscribe()
-          }}
-        >
-          S&apos;abonner pour voir
-        </Button>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center px-6 text-center">
+          <div
+            className={cn(
+              "mb-4 rounded-full p-4",
+              "bg-background/80 shadow-lg backdrop-blur-sm",
+              "ring-primary/20 ring-2",
+            )}
+          >
+            <Lock className="text-primary size-8" />
+          </div>
+
+          <h3 className="mb-2 text-lg font-semibold tracking-tight">
+            Contenu exclusif
+          </h3>
+
+          <p className="text-muted-foreground mb-5 max-w-xs text-sm">
+            Ce contenu est réservé aux abonnés de{" "}
+            <span className="text-primary font-medium">@{authorUsername}</span>
+          </p>
+
+          <Button
+            variant="default"
+            size="lg"
+            className={cn(
+              "rounded-full px-6 font-semibold",
+              "shadow-primary/20 shadow-lg",
+              "transition-all duration-200",
+              "hover:shadow-primary/30 hover:scale-105 hover:shadow-xl",
+            )}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRequireSubscribe()
+            }}
+          >
+            <Sparkles className="mr-2 size-4" />
+            S&apos;abonner pour voir
+          </Button>
+        </div>
       </div>
     )
   }
@@ -140,7 +180,11 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     }
   }
 
-  const renderMedia = (media: string, forceRatio?: string) => {
+  const renderMedia = (
+    media: string,
+    forceRatio?: string,
+    isInCarousel?: boolean,
+  ) => {
     const isVideo = media.startsWith("https://iframe.mediadelivery.net/embed/")
 
     if (isVideo) {
@@ -162,7 +206,10 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         <div
           key={media}
           onClick={(e) => e.stopPropagation()}
-          className="relative mt-2 w-full overflow-hidden"
+          className={cn(
+            "relative w-full overflow-hidden",
+            !isInCarousel && "mt-3 rounded-xl",
+          )}
           style={{ aspectRatio: optimalRatio }}
         >
           <iframe
@@ -176,6 +223,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
       )
     }
 
+    // Image rendering with modern design
     return (
       <button
         type="button"
@@ -184,9 +232,13 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           e.stopPropagation()
           openImage(media)
         }}
-        className="relative mt-2 flex w-full overflow-hidden focus:outline-none"
+        className={cn(
+          "group relative flex w-full overflow-hidden focus:outline-none",
+          !isInCarousel && "mt-3 rounded-xl",
+        )}
         onContextMenu={(e) => e.preventDefault()}
       >
+        {/* Blurred background */}
         <Image
           src={media}
           alt=""
@@ -198,25 +250,38 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           onDragStart={(e) => e.preventDefault()}
           onContextMenu={(e) => e.preventDefault()}
         />
+        {/* Main image */}
         <Image
           src={media}
           alt=""
           width={0}
           height={0}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="relative z-10 h-auto max-h-[750px] w-full cursor-pointer object-cover select-none"
+          className={cn(
+            "relative z-10 h-auto max-h-[750px] w-full cursor-pointer object-cover select-none",
+          )}
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
           onContextMenu={(e) => e.preventDefault()}
+        />
+        {/* Hover overlay */}
+        <div
+          className={cn(
+            "absolute inset-0 z-20 bg-black/0 transition-colors duration-300",
+            "group-hover:bg-black/10",
+          )}
         />
       </button>
     )
   }
 
-  // Multiple media: carousel
+  // Multiple media: carousel with modern design
   if (medias.length > 1) {
     return (
-      <div className="relative mt-2" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="relative mt-3 overflow-hidden rounded-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Carousel setApi={setCarouselApi}>
           <CarouselContent>
             {medias.map((m) => {
@@ -244,36 +309,59 @@ export const PostMedia: React.FC<PostMediaProps> = ({
                       className="relative w-full overflow-hidden"
                       style={{ aspectRatio: carouselRatio }}
                     >
-                      {renderMedia(m, carouselRatio)}
+                      {renderMedia(m, carouselRatio, true)}
                     </div>
                   ) : (
                     <div className="relative w-full overflow-hidden">
-                      {renderMedia(m)}
+                      {renderMedia(m, undefined, true)}
                     </div>
                   )}
                 </CarouselItem>
               )
             })}
           </CarouselContent>
+
+          {/* Navigation buttons with modern style */}
           <CarouselPrevious
             variant="secondary"
             size="icon"
-            className="hover:bg-muted/30 left-2 bg-transparent"
+            className={cn(
+              "left-3 size-9",
+              "bg-background/80 backdrop-blur-sm",
+              "hover:bg-background/90",
+              "border-0 shadow-lg",
+            )}
           />
           <CarouselNext
             variant="secondary"
             size="icon"
-            className="hover:bg-muted/30 right-2 bg-transparent"
+            className={cn(
+              "right-3 size-9",
+              "bg-background/80 backdrop-blur-sm",
+              "hover:bg-background/90",
+              "border-0 shadow-lg",
+            )}
           />
         </Carousel>
+
+        {/* Slide indicator - Modern pill style */}
         {slideCount > 1 && (
-          <div className="absolute bottom-1 left-1/2 z-10 -translate-x-1/2 transform">
-            <div className="bg-muted/40 flex cursor-default items-center gap-1 rounded px-2 py-1 text-xs font-medium">
-              <ImageIcon size={12} />
-              {currentSlide + 1}/{slideCount}
+          <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2">
+            <div
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-3 py-1.5",
+                "bg-background/80 backdrop-blur-sm",
+                "text-xs font-medium shadow-lg",
+              )}
+            >
+              <ImageIcon size={12} className="text-muted-foreground" />
+              <span className="tabular-nums">
+                {currentSlide + 1}/{slideCount}
+              </span>
             </div>
           </div>
         )}
+
         <FullscreenImageViewer
           medias={imageMedias}
           index={viewerIndex}
