@@ -90,7 +90,7 @@ export const MyComponent = () => {
 - **Onboarding Flow**: Incomplete profiles (no username) redirect to `/onboarding`
 - **Auth Hook**: Always use `useCurrentUser()` hook, NOT direct Clerk hooks
 - **Account Types**: `USER` (default) → `CREATOR` (subscription enabled) → `SUPERUSER` (admin)
-- **Middleware**: Public routes defined in `middleware.ts` - `/auth/*`, `/api/*`, `/payment/*`
+- **Proxy**: Public routes defined in `proxy.ts` - `/auth/*`, `/api/*`, `/payment/*`
 
 ### Data Access Patterns
 

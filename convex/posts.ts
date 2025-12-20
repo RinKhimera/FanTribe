@@ -356,6 +356,21 @@ export const getHomePosts = query({
       subs.filter((s) => s.status === "active").map((s) => s.creator),
     )
 
+    // Récupérer les blocs impliquant l'utilisateur
+    const blockedByMe = await ctx.db
+      .query("blocks")
+      .withIndex("by_blocker", (q) => q.eq("blockerId", currentUser._id))
+      .collect()
+    const blockingMe = await ctx.db
+      .query("blocks")
+      .withIndex("by_blocked", (q) => q.eq("blockedId", currentUser._id))
+      .collect()
+
+    const blockedUserIds = new Set([
+      ...blockedByMe.map((b) => b.blockedId),
+      ...blockingMe.map((b) => b.blockerId),
+    ])
+
     // Pagination avec curseur
     const paginationResult = await ctx.db
       .query("posts")
@@ -366,6 +381,9 @@ export const getHomePosts = query({
     const filtered = paginationResult.page.filter((post) => {
       // SUPERUSER voit tout
       if (currentUser.accountType === "SUPERUSER") return true
+
+      // Filtrer si l'auteur est bloqué ou m'a bloqué
+      if (blockedUserIds.has(post.author)) return false
 
       if (!post.visibility || post.visibility === "public") return true
       if (post.visibility === "subscribers_only") {
