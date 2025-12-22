@@ -5,8 +5,7 @@ import { Link as LucideLink, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { SubscriptionDialog } from "@/components/profile/subscription-dialog"
-import { UserGallery } from "@/components/profile/user-gallery"
+import { SubscriptionDialog } from "@/components/domains/subscriptions"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -15,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
+import { UserGallery } from "./user-gallery"
 
 type UserGalleryLayoutProps = {
   currentUser: Doc<"users">

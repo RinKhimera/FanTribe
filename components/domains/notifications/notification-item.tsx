@@ -9,13 +9,13 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { toast } from "sonner"
-import NotificationEllipsis from "@/components/notifications/notification-ellipsis"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { logger } from "@/lib/config"
 import { formatCustomTimeAgo } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import NotificationEllipsis from "./notification-ellipsis"
 
 // Define a type `ExtendedNotificationProps` that extends the `Doc<"notifications">` type
 // But omits the "sender", "post", and "comment" properties. These properties are then redefined with new types.

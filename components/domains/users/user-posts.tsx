@@ -34,7 +34,7 @@ export const UserPosts = ({
   })
 
   // Déstructurer pour avoir des dépendances stables
-  const posts = result?.posts
+  const posts = result?.page
   const isDone = result?.isDone
   const continueCursor = result?.continueCursor
 

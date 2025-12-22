@@ -178,9 +178,11 @@ describe("posts", () => {
     const viewer = t.withIdentity({ tokenIdentifier: "viewer_id" })
 
     // Without subscription
-    const result1 = await viewer.query(api.posts.getHomePosts, {})
-    expect(result1.posts).toHaveLength(1)
-    expect(result1.posts[0].content).toBe("Public Post")
+    const result1 = await viewer.query(api.posts.getHomePosts, {
+      paginationOpts: { numItems: 20, cursor: null },
+    })
+    expect(result1.page).toHaveLength(1)
+    expect(result1.page[0].content).toBe("Public Post")
 
     // With subscription
     await t.run(async (ctx) => {
@@ -198,7 +200,9 @@ describe("posts", () => {
       })
     })
 
-    const result2 = await viewer.query(api.posts.getHomePosts, {})
-    expect(result2.posts).toHaveLength(2)
+    const result2 = await viewer.query(api.posts.getHomePosts, {
+      paginationOpts: { numItems: 20, cursor: null },
+    })
+    expect(result2.page).toHaveLength(2)
   })
 })

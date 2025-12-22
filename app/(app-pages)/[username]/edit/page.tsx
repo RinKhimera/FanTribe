@@ -1,7 +1,7 @@
 import { fetchQuery } from "convex/nextjs"
 import { notFound, redirect } from "next/navigation"
 import { getAuthToken } from "@/app/auth"
-import { EditProfileLayout } from "@/components/profile/edit-profile-layout"
+import { EditProfileLayout } from "@/components/domains/users"
 import { api } from "@/convex/_generated/api"
 
 const EditProfile = async (props: {

@@ -229,4 +229,26 @@ export default defineSchema({
     .index("by_author", ["author"])
     .index("by_mediaUrl", ["mediaUrl"])
     .index("by_mediaId", ["mediaId"]),
+
+  // Queue de notifications pour fan-out robuste (créateurs avec beaucoup d'abonnés)
+  pendingNotifications: defineTable({
+    type: v.string(), // "newPost", "like", etc.
+    sender: v.id("users"),
+    recipientIds: v.array(v.id("users")), // Batch de destinataires
+    post: v.optional(v.id("posts")),
+    comment: v.optional(v.id("comments")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    attempts: v.number(),
+    lastAttemptAt: v.optional(v.number()),
+    processedCount: v.number(), // Nombre de notifications créées
+    errorMessage: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_status_createdAt", ["status", "createdAt"]),
 })

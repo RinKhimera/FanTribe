@@ -1,7 +1,7 @@
 import { fetchQuery } from "convex/nextjs"
 import { notFound, redirect } from "next/navigation"
 import { getAuthToken } from "@/app/auth"
-import { PostLayout } from "@/components/post/post-layout"
+import { PostLayout } from "@/components/domains/posts"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 

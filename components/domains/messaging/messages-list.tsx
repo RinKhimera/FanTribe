@@ -8,10 +8,10 @@ import {
   useRef,
   useState,
 } from "react"
-import { MessageBox } from "@/components/messages/message-box"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { ConversationProps, MessageProps, UserProps } from "@/types"
+import { MessageBox } from "./message-box"
 
 type MessagesListProps = {
   conversation: ConversationProps

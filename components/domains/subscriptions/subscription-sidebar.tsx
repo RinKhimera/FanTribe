@@ -1,7 +1,6 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { SubscriptionDialog } from "@/components/profile/subscription-dialog"
 import {
   Card,
   CardContent,
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
+import { SubscriptionDialog } from "./subscription-dialog"
 
 type SubscriptionSidebarProps = {
   currentUserId: Id<"users"> | undefined | null

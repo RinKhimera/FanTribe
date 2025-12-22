@@ -151,9 +151,11 @@ describe("blocks", () => {
     })
 
     const viewer = t.withIdentity({ tokenIdentifier: "viewer_id" })
-    const result = await viewer.query(api.posts.getHomePosts, {})
+    const result = await viewer.query(api.posts.getHomePosts, {
+      paginationOpts: { numItems: 20, cursor: null },
+    })
 
     // If this fails, it means getHomePosts doesn't filter blocked users
-    expect(result.posts).toHaveLength(0)
+    expect(result.page).toHaveLength(0)
   })
 })

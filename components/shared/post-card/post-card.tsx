@@ -2,12 +2,12 @@
 
 import { useQuery } from "convex/react"
 import { useState } from "react"
+import { SubscriptionModal } from "@/components/domains/subscriptions"
 import { CommentSection } from "@/components/shared/comment-section"
 import { PostActions } from "@/components/shared/post-card/post-actions"
 import { PostContent } from "@/components/shared/post-card/post-content"
 import { PostHeader } from "@/components/shared/post-card/post-header"
 import { PostMedia } from "@/components/shared/post-media"
-import { SubscriptionModal } from "@/components/shared/subscription-modal"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"

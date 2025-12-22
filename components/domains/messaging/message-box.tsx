@@ -3,14 +3,14 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import ReactPlayer from "react-player"
-import { ChatBubbleAvatar } from "@/components/messages/chat-bubble-avatar"
-import { DateIndicator } from "@/components/messages/date-indicator"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
 } from "@/components/ui/dialog"
 import { ConversationProps, MessageProps, UserProps } from "@/types"
+import { ChatBubbleAvatar } from "./chat-bubble-avatar"
+import { DateIndicator } from "./date-indicator"
 
 type MessageBoxProps = {
   conversation: ConversationProps

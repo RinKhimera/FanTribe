@@ -1,7 +1,6 @@
 "use client"
 
-import { CreatePost } from "@/components/home/create-post"
-import { NewsFeed } from "@/components/home/news-feed"
+import { CreatePost, NewsFeed } from "@/components/domains/posts"
 import { PageContainer } from "@/components/layout"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 

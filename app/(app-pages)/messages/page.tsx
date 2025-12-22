@@ -1,4 +1,4 @@
-import { ConversationLayout } from "@/components/messages/conversation-layout"
+import { ConversationLayout } from "@/components/domains/messaging"
 
 const ConversationsPage = async () => {
   return <ConversationLayout />

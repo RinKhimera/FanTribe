@@ -2,8 +2,8 @@
 
 import { useConvexAuth, useQuery } from "convex/react"
 import { PageContainer } from "@/components/layout"
-import { NotificationItem } from "@/components/notifications/notification-item"
 import { api } from "@/convex/_generated/api"
+import { NotificationItem } from "./notification-item"
 
 export const NotificationsLayout = () => {
   // We need to call database from client component to get reactivity when changing read status

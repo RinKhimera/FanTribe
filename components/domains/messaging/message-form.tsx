@@ -4,7 +4,6 @@ import { Mic, Send, Smile } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
-import { MediaPopover } from "@/components/messages/media-popover"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -16,6 +15,7 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { logger } from "@/lib/config/logger"
 import { ConversationProps, UserProps } from "@/types"
+import { MediaPopover } from "./media-popover"
 
 type MessageFormProps = {
   conversation: ConversationProps

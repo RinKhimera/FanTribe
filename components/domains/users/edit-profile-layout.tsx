@@ -1,10 +1,10 @@
 "use client"
 
-import { UpdateImages } from "@/components/profile/update-images"
+import { EditProfileForm } from "@/components/shared/edit-profile-form"
 import { ImageUploadInfo } from "@/components/shared/image-upload-info"
 import { Label } from "@/components/ui/label"
 import { Doc } from "@/convex/_generated/dataModel"
-import { EditProfileForm } from "../shared/edit-profile-form"
+import { UpdateImages } from "./update-images"
 
 type EditProfileLayoutProps = {
   currentUser: Doc<"users">

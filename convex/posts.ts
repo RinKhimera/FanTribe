@@ -1,6 +1,24 @@
-import { ConvexError, v } from "convex/values"
+/**
+ * Posts - Mutations et Queries refactorés
+ * Utilise les helpers de convex/lib pour réduire la duplication
+ */
+import { paginationOptsValidator } from "convex/server"
+import { v } from "convex/values"
 import { api } from "./_generated/api"
 import { mutation, query } from "./_generated/server"
+import {
+  createAppError,
+  filterBlockedUsers,
+  getActiveSubscribedCreatorIds,
+  getAuthenticatedUser,
+  getBlockedUserIds,
+  getCreatorSubscribers,
+} from "./lib"
+import { sendPostNotifications } from "./notificationQueue"
+
+// ============================================================================
+// MUTATIONS
+// ============================================================================
 
 export const createPost = mutation({
   args: {
@@ -9,16 +27,7 @@ export const createPost = mutation({
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-    if (!user) throw new ConvexError("User not found")
+    const user = await getAuthenticatedUser(ctx)
 
     const postId = await ctx.db.insert("posts", {
       author: user._id,
@@ -27,118 +36,50 @@ export const createPost = mutation({
       visibility: args.visibility,
     })
 
-    // Récupération des abonnés avec statuts active ou expired
-    const allSubs = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_creator_type", (q) =>
-        q.eq("creator", user._id).eq("type", "content_access"),
-      )
-      .collect()
-
-    const relevantSubs = allSubs.filter(
-      (s) => s.status === "active" || s.status === "expired",
-    )
-
-    if (relevantSubs.length === 0) {
-      return { postId }
-    }
-
-    // Déduplication des subscribers & exclusion de soi
-    const followerIds = [
-      ...new Set(
-        relevantSubs
-          .map((s) => s.subscriber)
-          .filter((subscriberId) => subscriberId !== user._id),
-      ),
-    ]
+    // Récupération des abonnés (actifs + expirés pour les notifier)
+    const followerIds = await getCreatorSubscribers(ctx, user._id, [
+      "active",
+      "expired",
+    ])
 
     if (followerIds.length === 0) {
       return { postId }
     }
 
-    // Exclure relations de blocage (auteur a bloqué / est bloqué)
-    const blockedByAuthor = await ctx.db
-      .query("blocks")
-      .withIndex("by_blocker", (q) => q.eq("blockerId", user._id))
-      .collect()
-    const blockingAuthor = await ctx.db
-      .query("blocks")
-      .withIndex("by_blocked", (q) => q.eq("blockedId", user._id))
-      .collect()
-
-    const blockedSet = new Set([
-      ...blockedByAuthor.map((b) => b.blockedId),
-      ...blockingAuthor.map((b) => b.blockerId),
-    ])
-
-    const finalRecipientIds = followerIds.filter((id) => !blockedSet.has(id))
+    // Filtrer les utilisateurs bloqués
+    const finalRecipientIds = await filterBlockedUsers(
+      ctx,
+      user._id,
+      followerIds,
+    )
 
     if (finalRecipientIds.length === 0) {
       return { postId }
     }
 
-    // Seuil pour fan-out différé si volumineux
-    const FANOUT_THRESHOLD = 200
-    if (finalRecipientIds.length > FANOUT_THRESHOLD) {
-      // Action interne fanoutNewPostNotifications pour batcher
-      await ctx.scheduler.runAfter(
-        0,
-        api.internalActions?.fanoutNewPostNotifications,
-        {
-          authorId: user._id,
-          postId,
-          recipientIds: finalRecipientIds,
-        },
-      )
-      return { postId, deferred: true }
-    }
+    // Envoi des notifications (direct ou via queue selon le volume)
+    const { direct, count } = await sendPostNotifications(ctx, {
+      sender: user._id,
+      postId,
+      recipientIds: finalRecipientIds,
+    })
 
-    // Insertion parallèle contrôlée, suffisant tant que volume raisonnable
-    await Promise.all(
-      finalRecipientIds.map((recipientId) =>
-        ctx.db
-          .insert("notifications", {
-            type: "newPost",
-            recipientId,
-            sender: user._id,
-            post: postId,
-            read: false,
-          })
-          .catch((err) => {
-            console.error("Notification insert failed", {
-              postId,
-              recipientId,
-              err,
-            })
-          }),
-      ),
-    )
-
-    return { postId }
+    return { postId, notificationsSent: count, deferred: !direct }
   },
 })
 
 export const deletePost = mutation({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
+    const user = await getAuthenticatedUser(ctx)
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
-
-    // Récupérer le post à supprimer
     const post = await ctx.db.get(args.postId)
-    if (!post) throw new ConvexError("Post not found")
+    if (!post) throw createAppError("POST_NOT_FOUND")
 
     if (post.author !== user._id && user.accountType !== "SUPERUSER") {
-      throw new ConvexError("User not authorized to delete this post")
+      throw createAppError("UNAUTHORIZED", {
+        context: { postId: args.postId, userId: user._id },
+      })
     }
 
     // Suppression des médias Bunny.net en parallèle
@@ -156,7 +97,7 @@ export const deletePost = mutation({
         })
     }
 
-    // Récupérations parallèles des entités associées (comments, likes, bookmarks, notifications)
+    // Récupérations parallèles des entités associées
     const [comments, likes, bookmarks, notifications] = await Promise.all([
       ctx.db
         .query("comments")
@@ -176,7 +117,7 @@ export const deletePost = mutation({
         .collect(),
     ])
 
-    // Suppressions en parallèle contrôlée
+    // Suppressions en parallèle
     await Promise.all([
       ...comments.map((c) => ctx.db.delete(c._id)),
       ...likes.map((l) => ctx.db.delete(l._id)),
@@ -184,7 +125,6 @@ export const deletePost = mutation({
       ...notifications.map((n) => ctx.db.delete(n._id)),
     ])
 
-    // Suppression finale du post
     await ctx.db.delete(args.postId)
 
     return {
@@ -200,65 +140,75 @@ export const deletePost = mutation({
   },
 })
 
+export const updatePost = mutation({
+  args: {
+    postId: v.id("posts"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+
+    const post = await ctx.db.get(args.postId)
+    if (!post) throw createAppError("POST_NOT_FOUND")
+    if (post.author !== user._id) throw createAppError("UNAUTHORIZED")
+
+    await ctx.db.patch(args.postId, { content: args.content })
+    return { success: true }
+  },
+})
+
+export const updatePostVisibility = mutation({
+  args: {
+    postId: v.id("posts"),
+    visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+
+    const post = await ctx.db.get(args.postId)
+    if (!post) throw createAppError("POST_NOT_FOUND")
+    if (post.author !== user._id) throw createAppError("UNAUTHORIZED")
+
+    await ctx.db.patch(args.postId, { visibility: args.visibility })
+    return { success: true }
+  },
+})
+
+// ============================================================================
+// QUERIES
+// ============================================================================
+
 export const getPost = query({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const post = await ctx.db
-      .query("posts")
-      .withIndex("by_id", (q) => q.eq("_id", args.postId))
-      .unique()
+    const post = await ctx.db.get(args.postId)
+    if (!post) return null
 
-    if (!post) {
-      console.error("Post not found for ID:", args.postId)
-      return null
-    }
+    const author = await ctx.db.get(post.author)
+    if (!author) throw createAppError("USER_NOT_FOUND")
 
-    const author = await ctx.db
-      .query("users")
-      .withIndex("by_id", (q) => q.eq("_id", post.author))
-      .unique()
-
-    if (!author) throw new ConvexError("Author not found")
-
-    return {
-      ...post,
-      author,
-    }
+    return { ...post, author }
   },
 })
 
 export const getUserPosts = query({
   args: {
     authorId: v.id("users"),
-    paginationOpts: v.optional(
-      v.object({
-        numItems: v.number(),
-        cursor: v.union(v.string(), v.null()),
-      }),
-    ),
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
     const author = await ctx.db.get(args.authorId)
-    if (!author) throw new ConvexError("User not found")
+    if (!author) throw createAppError("USER_NOT_FOUND")
 
-    const PAGE_SIZE = args.paginationOpts?.numItems || 20
-
-    // Pagination avec curseur
     const paginationResult = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", author._id))
       .order("desc")
-      .paginate(args.paginationOpts || { numItems: PAGE_SIZE, cursor: null })
-
-    const postsWithAuthor = paginationResult.page.map((post) => ({
-      ...post,
-      author,
-    }))
+      .paginate(args.paginationOpts)
 
     return {
-      posts: postsWithAuthor,
-      continueCursor: paginationResult.continueCursor,
-      isDone: paginationResult.isDone,
+      ...paginationResult,
+      page: paginationResult.page.map((post) => ({ ...post, author })),
     }
   },
 })
@@ -272,12 +222,10 @@ export const getUserGallery = query({
       .order("desc")
       .collect()
 
-    // Filtrer les posts qui ont au moins un média
     const postsWithMedia = posts.filter(
       (post) => post.medias && post.medias.length > 0,
     )
 
-    // Aplatir tous les médias en éléments individuels de galerie
     const galleryItems: Array<{
       _id: string
       mediaUrl: string
@@ -305,15 +253,8 @@ export const getAllPosts = query({
 
     const postsWithAuthor = await Promise.all(
       posts.map(async (post) => {
-        const author = await ctx.db
-          .query("users")
-          .filter((q) => q.eq(q.field("_id"), post.author))
-          .unique()
-
-        return {
-          ...post,
-          author,
-        }
+        const author = await ctx.db.get(post.author)
+        return { ...post, author }
       }),
     )
 
@@ -321,70 +262,92 @@ export const getAllPosts = query({
   },
 })
 
+/**
+ * Query principale du feed - Compatible avec usePaginatedQuery
+ * Filtre automatiquement : blocages, visibilité (subscribers_only)
+ */
 export const getHomePosts = query({
   args: {
-    paginationOpts: v.optional(
-      v.object({
-        numItems: v.number(),
-        cursor: v.union(v.string(), v.null()),
-      }),
-    ),
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
+    const currentUser = await getAuthenticatedUser(ctx)
 
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-    if (!currentUser) throw new ConvexError("User not found")
-
-    const PAGE_SIZE = args.paginationOpts?.numItems || 20
-
-    // Récupérer toutes les souscriptions de l'utilisateur (une seule requête)
-    const subs = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_subscriber_type", (q) =>
-        q.eq("subscriber", currentUser._id).eq("type", "content_access"),
-      )
-      .collect()
-
-    const activeCreatorIds = new Set(
-      subs.filter((s) => s.status === "active").map((s) => s.creator),
+    // Récupérer les créateurs auxquels l'utilisateur est abonné
+    const activeCreatorIds = await getActiveSubscribedCreatorIds(
+      ctx,
+      currentUser._id,
+      "content_access",
     )
 
-    // Récupérer les blocs impliquant l'utilisateur
-    const blockedByMe = await ctx.db
-      .query("blocks")
-      .withIndex("by_blocker", (q) => q.eq("blockerId", currentUser._id))
-      .collect()
-    const blockingMe = await ctx.db
-      .query("blocks")
-      .withIndex("by_blocked", (q) => q.eq("blockedId", currentUser._id))
-      .collect()
+    // Récupérer les IDs bloqués
+    const blockedUserIds = await getBlockedUserIds(ctx, currentUser._id)
 
-    const blockedUserIds = new Set([
-      ...blockedByMe.map((b) => b.blockedId),
-      ...blockingMe.map((b) => b.blockerId),
-    ])
-
-    // Pagination avec curseur
+    // Pagination native Convex
     const paginationResult = await ctx.db
       .query("posts")
       .order("desc")
-      .paginate(args.paginationOpts || { numItems: PAGE_SIZE, cursor: null })
+      .paginate(args.paginationOpts)
 
-    // Filtrage visibilité
+    // Filtrage visibilité et blocage
     const filtered = paginationResult.page.filter((post) => {
       // SUPERUSER voit tout
       if (currentUser.accountType === "SUPERUSER") return true
 
-      // Filtrer si l'auteur est bloqué ou m'a bloqué
+      // Filtrer les auteurs bloqués
       if (blockedUserIds.has(post.author)) return false
 
+      // Visibilité publique
+      if (!post.visibility || post.visibility === "public") return true
+
+      // Visibilité abonnés uniquement
+      if (post.visibility === "subscribers_only") {
+        if (post.author === currentUser._id) return true
+        if (activeCreatorIds.has(post.author)) return true
+      }
+
+      return false
+    })
+
+    // Enrichissement auteurs (batch optimisé)
+    const authorIds = [...new Set(filtered.map((p) => p.author))]
+    const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
+    const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
+
+    return {
+      ...paginationResult,
+      page: filtered.map((p) => ({ ...p, author: authorsMap.get(p.author) })),
+    }
+  },
+})
+
+/**
+ * Query compatible avec usePaginatedQuery de convex/react
+ * Retourne directement les posts (pas l'objet { page, continueCursor, isDone })
+ */
+export const getHomePostsPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await getAuthenticatedUser(ctx)
+
+    const activeCreatorIds = await getActiveSubscribedCreatorIds(
+      ctx,
+      currentUser._id,
+      "content_access",
+    )
+
+    const blockedUserIds = await getBlockedUserIds(ctx, currentUser._id)
+
+    const paginationResult = await ctx.db
+      .query("posts")
+      .order("desc")
+      .paginate(args.paginationOpts)
+
+    const filtered = paginationResult.page.filter((post) => {
+      if (currentUser.accountType === "SUPERUSER") return true
+      if (blockedUserIds.has(post.author)) return false
       if (!post.visibility || post.visibility === "public") return true
       if (post.visibility === "subscribers_only") {
         if (post.author === currentUser._id) return true
@@ -393,87 +356,13 @@ export const getHomePosts = query({
       return false
     })
 
-    // Enrichissement auteurs (batch)
     const authorIds = [...new Set(filtered.map((p) => p.author))]
     const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
     const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
 
-    const postsWithAuthors = filtered.map((p) => ({
-      ...p,
-      author: authorsMap.get(p.author),
-    }))
-
     return {
-      posts: postsWithAuthors,
-      continueCursor: paginationResult.continueCursor,
-      isDone: paginationResult.isDone,
+      ...paginationResult,
+      page: filtered.map((p) => ({ ...p, author: authorsMap.get(p.author) })),
     }
-  },
-})
-
-export const updatePost = mutation({
-  args: {
-    postId: v.id("posts"),
-    content: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-    if (!user) throw new ConvexError("User not found")
-
-    // Récupérer le post
-    const post = await ctx.db.get(args.postId)
-    if (!post) throw new ConvexError("Post not found")
-
-    // Vérifier que l'utilisateur est bien l'auteur
-    if (post.author !== user._id) throw new ConvexError("Unauthorized")
-
-    // Mettre à jour le contenu du post
-    await ctx.db.patch(args.postId, {
-      content: args.content,
-    })
-
-    return { success: true }
-  },
-})
-
-export const updatePostVisibility = mutation({
-  args: {
-    postId: v.id("posts"),
-    visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Unauthorized")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) throw new Error("User not found")
-
-    // Récupérer le post
-    const post = await ctx.db.get(args.postId)
-    if (!post) throw new Error("Post not found")
-
-    // Vérifier que l'utilisateur est bien l'auteur
-    if (post.author !== user._id) throw new Error("Unauthorized")
-
-    // Mettre à jour la visibilité du post
-    await ctx.db.patch(args.postId, {
-      visibility: args.visibility,
-    })
-
-    return { success: true }
   },
 })

@@ -3,10 +3,10 @@ import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import Link from "next/link"
 import React from "react"
-import { CommentEllipsis } from "@/components/post/comment-ellipsis"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { CommentEllipsis } from "./comment-ellipsis"
 
 export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
   const postComments = useQuery(api.comments.listPostComments, { postId })

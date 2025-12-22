@@ -46,10 +46,12 @@ describe("visibility", () => {
     })
 
     const viewer = t.withIdentity({ tokenIdentifier: "viewer_id" })
-    const result = await viewer.query(api.posts.getHomePosts, {})
+    const result = await viewer.query(api.posts.getHomePosts, {
+      paginationOpts: { numItems: 20, cursor: null },
+    })
 
-    expect(result.posts).toHaveLength(1)
-    expect(result.posts[0].content).toBe("Public Post")
+    expect(result.page).toHaveLength(1)
+    expect(result.page[0].content).toBe("Public Post")
   })
 
   it("should show subscribers_only posts to active subscribers in getHomePosts", async () => {
@@ -101,10 +103,12 @@ describe("visibility", () => {
     })
 
     const subscriber = t.withIdentity({ tokenIdentifier: "subscriber_id" })
-    const result = await subscriber.query(api.posts.getHomePosts, {})
+    const result = await subscriber.query(api.posts.getHomePosts, {
+      paginationOpts: { numItems: 20, cursor: null },
+    })
 
-    expect(result.posts).toHaveLength(1)
-    expect(result.posts[0].content).toBe("Private Post")
+    expect(result.page).toHaveLength(1)
+    expect(result.page[0].content).toBe("Private Post")
   })
 
   it("should show all posts to SUPERUSER in getHomePosts", async () => {
@@ -142,9 +146,11 @@ describe("visibility", () => {
     })
 
     const admin = t.withIdentity({ tokenIdentifier: "admin_id" })
-    const result = await admin.query(api.posts.getHomePosts, {})
+    const result = await admin.query(api.posts.getHomePosts, {
+      paginationOpts: { numItems: 20, cursor: null },
+    })
 
-    expect(result.posts).toHaveLength(1)
-    expect(result.posts[0].content).toBe("Private Post")
+    expect(result.page).toHaveLength(1)
+    expect(result.page[0].content).toBe("Private Post")
   })
 })

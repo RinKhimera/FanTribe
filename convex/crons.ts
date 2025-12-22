@@ -17,4 +17,19 @@ crons.daily(
   internal.assetsDraft.cleanUpDraftAssets,
 )
 
+// Traitement de la queue de notifications toutes les minutes
+// Permet un fan-out progressif sans surcharger le système
+crons.interval(
+  "process-notification-queue",
+  { minutes: 1 },
+  internal.notificationQueue.processNextBatches,
+)
+
+// Nettoyage des batches terminés (une fois par jour à 04:00 UTC)
+crons.daily(
+  "cleanup-notification-batches",
+  { hourUTC: 4, minuteUTC: 0 },
+  internal.notificationQueue.cleanupCompletedBatches,
+)
+
 export default crons
