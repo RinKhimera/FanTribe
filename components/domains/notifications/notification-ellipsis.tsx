@@ -1,3 +1,5 @@
+"use client"
+
 import { useMutation } from "convex/react"
 import { Ellipsis } from "lucide-react"
 import { useTransition } from "react"

@@ -1,3 +1,5 @@
+"use client"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "convex/react"
 import { LoaderCircle } from "lucide-react"

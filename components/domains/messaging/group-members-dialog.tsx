@@ -1,3 +1,7 @@
+"use client"
+
+import { useQuery } from "convex/react"
+import { Crown } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Dialog,
@@ -10,8 +14,6 @@ import {
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { ConversationProps } from "@/types"
-import { useQuery } from "convex/react"
-import { Crown } from "lucide-react"
 
 export const GroupMembersDialog = ({
   conversation,
@@ -25,7 +27,7 @@ export const GroupMembersDialog = ({
   return (
     <Dialog>
       <DialogTrigger>
-        <p className="text-left text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-left text-xs">
           Voir les membres
         </p>
       </DialogTrigger>
@@ -33,7 +35,7 @@ export const GroupMembersDialog = ({
         <DialogHeader>
           <DialogTitle className="my-2">Membres participants</DialogTitle>
           <DialogDescription>
-            <div className="flex flex-col gap-3 ">
+            <div className="flex flex-col gap-3">
               {groupMembers?.map((groupMember) => (
                 <div
                   key={groupMember._id}
@@ -41,7 +43,7 @@ export const GroupMembersDialog = ({
                 >
                   <Avatar className="overflow-visible">
                     {groupMember.isOnline && (
-                      <div className="absolute right-0 top-0 h-2 w-2 rounded-full border-2 border-foreground bg-green-500" />
+                      <div className="border-foreground absolute top-0 right-0 h-2 w-2 rounded-full border-2 bg-green-500" />
                     )}
                     <AvatarImage
                       src={groupMember.image}
@@ -52,7 +54,7 @@ export const GroupMembersDialog = ({
                     </AvatarFallback>
                   </Avatar>
 
-                  <div className="w-full ">
+                  <div className="w-full">
                     <div className="flex items-center gap-2">
                       <h3 className="text-md font-medium">
                         {groupMember.name || groupMember.email.split("@")[0]}

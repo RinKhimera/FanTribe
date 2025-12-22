@@ -1,3 +1,5 @@
+"use client"
+
 import { ImageIcon, Users, VideoIcon } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

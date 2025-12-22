@@ -1,3 +1,5 @@
+"use client"
+
 import { useQuery } from "convex/react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"

@@ -1,3 +1,5 @@
+"use client"
+
 import { useMutation } from "convex/react"
 import EmojiPicker, { Theme } from "emoji-picker-react"
 import { Mic, Send, Smile } from "lucide-react"
