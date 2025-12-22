@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 
 type CommentSectionProps = {
   postId: Id<"posts">
@@ -77,7 +78,7 @@ export const CommentSection = ({
       setCommentText("")
       toast.success("Commentaire publié !")
     } catch (error) {
-      console.error("Error creating comment:", error)
+      logger.error("Failed to create comment", error, { postId })
       toast.error("Erreur lors de la publication du commentaire")
     } finally {
       setIsSubmitting(false)
@@ -171,7 +172,7 @@ export const CommentSection = ({
                   onChange={(e) => setCommentText(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                   placeholder="Ajouter un commentaire..."
-                  className="border-muted-foreground/20 min-h-[40px] resize-none text-sm"
+                  className="border-muted-foreground/20 min-h-10 resize-none text-sm"
                   disabled={isSubmitting}
                   rows={1}
                 />

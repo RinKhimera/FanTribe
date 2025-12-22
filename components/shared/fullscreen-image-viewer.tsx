@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import Image from "next/image"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 interface FullscreenImageViewerProps {
@@ -28,18 +28,24 @@ export const FullscreenImageViewer = ({
   const [isClosing, setIsClosing] = useState<boolean>(false)
   const ANIMATION_MS = 60
 
+  // Utiliser useEffectEvent pour les mises à jour de state dans l'effet
+  const handleMountState = useEffectEvent(
+    (mounted: boolean, closing: boolean) => {
+      setIsMounted(mounted)
+      setIsClosing(closing)
+    },
+  )
+
   // Mount while closing to allow the "animate-out" to play
   useEffect(() => {
     if (open) {
-      setIsMounted(true)
-      setIsClosing(false)
+      handleMountState(true, false)
       return
     }
     if (!open && isMounted) {
-      setIsClosing(true)
+      handleMountState(isMounted, true)
       const t = setTimeout(() => {
-        setIsClosing(false)
-        setIsMounted(false)
+        handleMountState(false, false)
       }, ANIMATION_MS)
       return () => clearTimeout(t)
     }

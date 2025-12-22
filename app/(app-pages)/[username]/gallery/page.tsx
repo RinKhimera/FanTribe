@@ -1,7 +1,7 @@
 import { fetchQuery } from "convex/nextjs"
 import { notFound, redirect } from "next/navigation"
 import { getAuthToken } from "@/app/auth"
-import { UserGalleryLayout } from "@/components/profile/user-gallery-layout"
+import { UserGalleryLayout } from "@/components/domains/users"
 import { api } from "@/convex/_generated/api"
 
 const UserGalleryPage = async (props: {

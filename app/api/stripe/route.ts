@@ -2,6 +2,7 @@ import { ConvexHttpClient } from "convex/browser"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 import { env } from "@/lib/config/env"
 import { clientEnv } from "@/lib/config/env.client"
 import { stripe } from "@/lib/services/stripe"
@@ -18,11 +19,17 @@ export async function POST(request: Request) {
       sig,
       env.STRIPE_WEBHOOK_SECRET,
     )
-  } catch (err: any) {
-    console.error("Stripe webhook verification failed:", err?.message || err)
-    return new NextResponse(`Webhook error: ${err?.message || String(err)}`, {
-      status: 400,
-    })
+  } catch (err) {
+    console.error(
+      "Stripe webhook verification failed:",
+      err instanceof Error ? err.message : err,
+    )
+    return new NextResponse(
+      `Webhook error: ${err instanceof Error ? err.message : String(err)}`,
+      {
+        status: 400,
+      },
+    )
   }
 
   try {
@@ -33,8 +40,8 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session
         const metadata = session.metadata || {}
 
-        const creatorId = metadata.creatorId as any
-        const subscriberId = metadata.subscriberId as any
+        const creatorId = metadata.creatorId
+        const subscriberId = metadata.subscriberId
 
         const startedAt = session.created
           ? new Date(session.created * 1000).toISOString()
@@ -77,8 +84,8 @@ export async function POST(request: Request) {
         await convex.action(api.internalActions.processPayment, {
           provider: "stripe",
           providerTransactionId: session.id,
-          creatorId,
-          subscriberId,
+          creatorId: creatorId as Id<"users">,
+          subscriberId: subscriberId as Id<"users">,
           amount,
           currency,
           paymentMethod: session.payment_method_types?.[0],

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react"
 import { Pencil } from "lucide-react"
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useEffectEvent, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 
 interface EditPostDialogProps {
   postId: Id<"posts">
@@ -34,13 +35,19 @@ export const EditPostDialog = ({ postId }: EditPostDialogProps) => {
   const post = useQuery(api.posts.getPost, open ? { postId } : "skip")
   const updatePost = useMutation(api.posts.updatePost)
 
+  // Utiliser useEffectEvent pour fermer le dialog si le post est supprimé
+  const closeDialogIfDeleted = useEffectEvent(() => {
+    setOpen(false)
+    toast.error("Cette publication n'existe plus")
+  })
+
   // Fermer le dialog si le post n'existe plus (supprimé)
   useEffect(() => {
     if (open && post === null) {
-      setOpen(false)
-      toast.error("Cette publication n'existe plus")
+      closeDialogIfDeleted()
     }
-  }, [open, post])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   // Pré-remplir le contenu quand le dialog s'ouvre
   const handleOpenChange = (isOpen: boolean) => {
@@ -69,7 +76,7 @@ export const EditPostDialog = ({ postId }: EditPostDialogProps) => {
 
         setOpen(false)
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to update post", error, { postId })
         toast.error("Erreur lors de la modification", {
           description: "Une erreur s'est produite. Veuillez réessayer.",
         })

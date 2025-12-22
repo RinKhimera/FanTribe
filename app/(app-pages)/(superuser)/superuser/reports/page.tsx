@@ -37,10 +37,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { Report } from "@/types"
 
 const ReportsPage = () => {
   const { currentUser } = useCurrentUser()
-  const [selectedReport, setSelectedReport] = useState<any>(null)
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [adminNotes, setAdminNotes] = useState("")
   const [isPending, startTransition] = useTransition()
 
@@ -168,7 +169,7 @@ const ReportsPage = () => {
       try {
         await updateReportStatus({
           reportId,
-          status: status as any,
+          status: status as "pending" | "reviewing" | "resolved" | "rejected",
           adminNotes: adminNotes || undefined,
         })
 
@@ -182,12 +183,7 @@ const ReportsPage = () => {
     })
   }
 
-  const openReportDetails = (report: any) => {
-    setSelectedReport(report)
-    setAdminNotes(report.adminNotes || "")
-  }
-
-  const renderReportCard = (report: any) => {
+  const renderReportCard = (report: Report) => {
     return (
       <Card key={report._id} className="transition-shadow hover:shadow-md">
         <CardHeader>
@@ -209,7 +205,7 @@ const ReportsPage = () => {
         <CardContent>
           <div className="space-y-3">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Motif du signalement
               </p>
               <p className="font-medium">{getReasonLabel(report.reason)}</p>
@@ -217,14 +213,14 @@ const ReportsPage = () => {
 
             {report.description && (
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-sm font-medium">
                   Description
                 </p>
                 <p className="line-clamp-2 text-sm">{report.description}</p>
               </div>
             )}
 
-            <div className="flex flex-col space-y-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div className="text-muted-foreground flex flex-col space-y-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <div className="flex items-center">
                 <Calendar className="mr-1 h-4 w-4" />
                 Signalé le {formatDate(report.createdAt)}
@@ -234,7 +230,7 @@ const ReportsPage = () => {
                 {report.reporter?.username ? (
                   <Link
                     href={`/${report.reporter.username}`}
-                    className="font-medium text-primary hover:underline"
+                    className="text-primary font-medium hover:underline"
                   >
                     {report.reporter.name}
                   </Link>
@@ -245,14 +241,14 @@ const ReportsPage = () => {
             </div>
 
             {report.type === "user" && report.reportedUser && (
-              <div className="rounded-lg bg-muted/50 p-3">
+              <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-sm font-medium">Utilisateur signalé :</p>
                 <div className="mt-1 flex items-center gap-2">
                   <User className="h-4 w-4" />
                   {report.reportedUser.username ? (
                     <Link
                       href={`/${report.reportedUser.username}`}
-                      className="font-medium text-primary hover:underline"
+                      className="text-primary font-medium hover:underline"
                     >
                       {report.reportedUser.name}
                     </Link>
@@ -269,18 +265,18 @@ const ReportsPage = () => {
             )}
 
             {report.type === "post" && report.reportedPost && (
-              <div className="rounded-lg bg-muted/50 p-3">
+              <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-sm font-medium">Post signalé :</p>
                 <div className="mt-1">
                   <p className="line-clamp-2 text-sm">
                     {report.reportedPost.content}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Par{" "}
                     {report.reportedPost.author?.username ? (
                       <Link
                         href={`/${report.reportedPost.author.username}`}
-                        className="font-medium text-primary hover:underline"
+                        className="text-primary font-medium hover:underline"
                       >
                         {report.reportedPost.author.name}
                       </Link>
@@ -313,9 +309,9 @@ const ReportsPage = () => {
   const rejectedReports = allReports.filter((r) => r.status === "rejected")
 
   return (
-    <main className="flex h-full min-h-screen w-full flex-col border-l border-r border-muted max-lg:pb-16 sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-16">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Signalements</h1>
           <div className="flex items-center space-x-2">
@@ -339,7 +335,7 @@ const ReportsPage = () => {
               <div className="text-2xl font-bold text-yellow-600">
                 {reportsStats.pending}
               </div>
-              <p className="text-xs text-muted-foreground">En attente</p>
+              <p className="text-muted-foreground text-xs">En attente</p>
             </CardContent>
           </Card>
           <Card>
@@ -347,7 +343,7 @@ const ReportsPage = () => {
               <div className="text-2xl font-bold text-blue-600">
                 {reportsStats.reviewing}
               </div>
-              <p className="text-xs text-muted-foreground">En révision</p>
+              <p className="text-muted-foreground text-xs">En révision</p>
             </CardContent>
           </Card>
           <Card>
@@ -355,7 +351,7 @@ const ReportsPage = () => {
               <div className="text-2xl font-bold text-green-600">
                 {reportsStats.resolved}
               </div>
-              <p className="text-xs text-muted-foreground">Résolus</p>
+              <p className="text-muted-foreground text-xs">Résolus</p>
             </CardContent>
           </Card>
           <Card>
@@ -363,7 +359,7 @@ const ReportsPage = () => {
               <div className="text-2xl font-bold text-red-600">
                 {reportsStats.rejected}
               </div>
-              <p className="text-xs text-muted-foreground">Rejetés</p>
+              <p className="text-muted-foreground text-xs">Rejetés</p>
             </CardContent>
           </Card>
         </div>
@@ -374,7 +370,7 @@ const ReportsPage = () => {
             <TabsTrigger value="pending" className="relative">
               En attente
               {pendingReports.length > 0 && (
-                <Badge className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center bg-red-600 p-0 text-xs text-red-100">
+                <Badge className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center bg-red-600 p-0 text-xs text-red-100">
                   {pendingReports.length}
                 </Badge>
               )}
@@ -459,7 +455,7 @@ const ReportsPage = () => {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     Motif
                   </p>
                   <p className="font-medium">
@@ -467,7 +463,7 @@ const ReportsPage = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     Date
                   </p>
                   <p className="font-medium">
@@ -475,13 +471,13 @@ const ReportsPage = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     Signalé par
                   </p>
                   {selectedReport.reporter?.username ? (
                     <Link
                       href={`/${selectedReport.reporter.username}`}
-                      className="font-medium text-primary hover:underline"
+                      className="text-primary font-medium hover:underline"
                     >
                       {selectedReport.reporter.name}
                     </Link>
@@ -494,13 +490,13 @@ const ReportsPage = () => {
                 {selectedReport.type === "user" &&
                   selectedReport.reportedUser && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-muted-foreground text-sm font-medium">
                         Utilisateur signalé
                       </p>
                       {selectedReport.reportedUser.username ? (
                         <Link
                           href={`/${selectedReport.reportedUser.username}`}
-                          className="font-medium text-primary hover:underline"
+                          className="text-primary font-medium hover:underline"
                         >
                           {selectedReport.reportedUser.name}
                         </Link>
@@ -514,13 +510,13 @@ const ReportsPage = () => {
                 {selectedReport.type === "post" &&
                   selectedReport.reportedPost?.author && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">
+                      <p className="text-muted-foreground text-sm font-medium">
                         Auteur du post
                       </p>
                       {selectedReport.reportedPost.author.username ? (
                         <Link
                           href={`/${selectedReport.reportedPost.author.username}`}
-                          className="font-medium text-primary hover:underline"
+                          className="text-primary font-medium hover:underline"
                         >
                           {selectedReport.reportedPost.author.name}
                         </Link>
@@ -535,17 +531,17 @@ const ReportsPage = () => {
 
               {selectedReport.description && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     Description
                   </p>
-                  <p className="rounded-lg bg-muted p-3 text-sm">
+                  <p className="bg-muted rounded-lg p-3 text-sm">
                     {selectedReport.description}
                   </p>
                 </div>
               )}
 
               <div>
-                <p className="mb-2 text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground mb-2 text-sm font-medium">
                   Notes administratives
                 </p>
                 <Textarea
@@ -592,7 +588,7 @@ const ReportsPage = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="text-center text-sm text-muted-foreground">
+                <div className="text-muted-foreground text-center text-sm">
                   Ce signalement a été traité le{" "}
                   {formatDate(selectedReport.reviewedAt!)}
                   {selectedReport.reviewedByUser && (

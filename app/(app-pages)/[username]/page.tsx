@@ -4,7 +4,8 @@ import { useQuery } from "convex/react"
 import { Loader2 } from "lucide-react"
 import { notFound } from "next/navigation"
 import { use } from "react"
-import { UserProfileLayout } from "@/components/profile/user-profile-layout"
+import { UserProfileLayout } from "@/components/domains/users"
+import { PageContainer } from "@/components/layout"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 
@@ -20,14 +21,16 @@ const UserProfilePage = ({
     username: username,
   })
 
-  // La logique de l'abonnement/suggestions est désormais gérée par RightSidebarRouter
+  // La logique de l'abonnement/suggestions est désormais gérée par RightSidebar
 
   if (userProfile === undefined) {
     return (
-      <div className="border-muted flex h-screen w-[50%] flex-col items-center justify-center border-r border-l max-[500px]:pb-16 max-lg:w-[50%] max-sm:w-full">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
-        <p className="text-muted-foreground mt-4 text-sm">Chargement...</p>
-      </div>
+      <PageContainer hideHeader>
+        <div className="flex h-screen flex-col items-center justify-center">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground mt-4 text-sm">Chargement...</p>
+        </div>
+      </PageContainer>
     )
   }
 

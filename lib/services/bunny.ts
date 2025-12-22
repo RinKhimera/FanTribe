@@ -155,7 +155,7 @@ export const uploadBunnyAsset = async ({
           },
         )
         videoData = createRes.data
-      } catch (e: any) {
+      } catch (e) {
         logger.error("Bunny video creation failed", e, {
           userId,
           fileName: videoFileName,
@@ -186,7 +186,7 @@ export const uploadBunnyAsset = async ({
           },
         )
         onProgress?.(100)
-      } catch (e: any) {
+      } catch (e) {
         logger.error("Bunny video upload failed", e, {
           videoGuid: videoData.guid,
           userId,
@@ -226,7 +226,7 @@ export const uploadBunnyAsset = async ({
           },
         )
         onProgress?.(100)
-      } catch (e: any) {
+      } catch (e) {
         logger.error("Bunny image upload failed", e, {
           fileName,
           userId,
@@ -301,7 +301,7 @@ const getOrCreateUserCollection = async (userId: string): Promise<string> => {
 
     // Chercher si la collection existe déjà
     const existingCollection = collections.find(
-      (col: any) => col.name === userCollectionName,
+      (col: { name: string; guid: string }) => col.name === userCollectionName,
     )
 
     if (existingCollection) {

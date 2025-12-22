@@ -23,10 +23,10 @@ export default function SuperuserLayout({
   // État de chargement
   if (isLoading || currentUser === undefined) {
     return (
-      <div className="flex h-full min-h-screen w-full items-center justify-center border-l border-r border-muted sm:w-[80%] lg:w-[60%]">
+      <div className="border-muted flex h-full min-h-screen w-full items-center justify-center border-r border-l">
         <div className="text-center">
-          <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-          <p className="text-lg text-muted-foreground">
+          <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+          <p className="text-muted-foreground text-lg">
             Vérification des permissions...
           </p>
         </div>
@@ -37,10 +37,10 @@ export default function SuperuserLayout({
   // Redirection en cours pour les utilisateurs non autorisés
   if (!currentUser || currentUser.accountType !== "SUPERUSER") {
     return (
-      <div className="flex h-full min-h-screen w-full items-center justify-center border-l border-r border-muted sm:w-[80%] lg:w-[60%]">
+      <div className="border-muted flex h-full min-h-screen w-full items-center justify-center border-r border-l">
         <div className="text-center">
-          <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-          <p className="text-lg text-muted-foreground">
+          <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+          <p className="text-muted-foreground text-lg">
             Redirection en cours...
           </p>
         </div>

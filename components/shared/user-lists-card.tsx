@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { logger } from "@/lib/config/logger"
 
 interface UserCardProps {
   user: {
@@ -53,7 +54,10 @@ export const UserListsCard = ({
         })
       }
     } catch (error) {
-      console.error("Error toggling block status:", error)
+      logger.error("Failed to toggle block status", error, {
+        userId: user.id,
+        isBlockedPage,
+      })
       toast.error("Une erreur s'est produite !", {
         description: "Veuillez vérifier votre connexion internet et réessayer",
       })

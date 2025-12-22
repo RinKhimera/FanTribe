@@ -1,5 +1,31 @@
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 
+// ============================================================================
+// Types basés sur le schema Convex (utilisent Doc<> pour cohérence)
+// ============================================================================
+
+/**
+ * Type utilisateur étendu avec union undefined pour les queries conditionnelles
+ * @deprecated Préférer Doc<"users"> | undefined directement
+ */
+export type UserProps = Doc<"users"> | undefined
+
+/**
+ * Type pour les messages enrichis avec les infos du sender
+ */
+export type MessageProps = {
+  _id: Id<"messages">
+  content: string
+  _creationTime: number
+  messageType: "text" | "image" | "video"
+  read?: boolean
+  conversation: Id<"conversations">
+  sender: Doc<"users"> | null
+}
+
+/**
+ * Type pour les conversations enrichies avec métadonnées temps réel
+ */
 export type ConversationProps =
   | {
       _id: Id<"conversations">
@@ -26,43 +52,78 @@ export type ConversationProps =
     }
   | undefined
 
-export type UserProps =
-  | {
-      _id: Id<"users">
-      _creationTime: number
-      name?: string
-      username?: string
-      email: string
-      image?: string
-      imageBanner?: string
-      bio?: string
-      location?: string
-      socials?: string[] | []
-      following?: string[] | undefined
-      followers?: string[] | undefined
-      accountType: string
-      isOnline: boolean
-      tokenIdentifier: string
-      externalId?: string
-    }
-  | undefined
-
-export type MessageProps = {
-  _id: string
-  content: string
-  _creationTime: number
-  messageType: "text" | "image" | "video"
-  read: boolean
-  sender: {
-    _id: Id<"users">
-    image: string
-    name?: string
-    tokenIdentifier: string
-    email: string
-    _creationTime: number
-    isOnline: boolean
-  }
+/**
+ * Type pour les candidatures créateur enrichies avec user et facteurs de risque
+ */
+export type Application = Doc<"creatorApplications"> & {
+  user:
+    | (Doc<"users"> & {
+        creatorApplicationStatus?: "none" | "pending" | "approved" | "rejected"
+      })
+    | null
+  riskFactors?: Array<{ message: string; level: "FAIBLE" | "MODÉRÉ" | "GRAVE" }>
 }
+
+// ============================================================================
+// Types pour les signalements (enrichis avec relations)
+// ============================================================================
+
+/**
+ * Type pour les posts signalés enrichis avec l'auteur
+ */
+export interface ReportedPost {
+  _id: Id<"posts">
+  _creationTime: number
+  content: string
+  medias: string[]
+  visibility: "public" | "subscribers_only"
+  author: Doc<"users"> | null
+}
+
+/**
+ * Type pour les commentaires signalés enrichis avec l'auteur et le post
+ */
+export interface ReportedComment {
+  _id: Id<"comments">
+  _creationTime: number
+  content: string
+  post: Doc<"posts"> | null
+  author: Doc<"users"> | null
+}
+
+export interface Report {
+  _id: Id<"reports">
+  _creationTime: number
+  reporterId: Id<"users">
+  reportedUserId?: Id<"users">
+  reportedPostId?: Id<"posts">
+  reportedCommentId?: Id<"comments">
+  type: "user" | "post" | "comment"
+  reason:
+    | "spam"
+    | "harassment"
+    | "inappropriate_content"
+    | "fake_account"
+    | "copyright"
+    | "violence"
+    | "hate_speech"
+    | "other"
+  description?: string
+  status: "pending" | "reviewing" | "resolved" | "rejected"
+  adminNotes?: string
+  reviewedBy?: Id<"users">
+  reviewedAt?: number
+  createdAt: number
+  reporter: Doc<"users"> | null
+  reportedUser: Doc<"users"> | null
+  reportedPost: ReportedPost | null
+  reportedComment: ReportedComment | null
+  reviewedByUser: Doc<"users"> | null
+}
+
+// ============================================================================
+// Types pour les services de paiement
+// ============================================================================
 
 export type PaymentStatus = {
   depositId: string
@@ -86,7 +147,6 @@ export type PaymentStatus = {
     [key: string]: string
   }
   metadata: {
-    // [key: string]: string
     creatorId: Id<"users">
     creatorUsername: string
   }
@@ -101,7 +161,7 @@ export type CinetPayResponse = {
     status: string
     payment_method: string
     description: string
-    metadata: any | null
+    metadata: unknown
     operator_id: string | null
     payment_date: string
     fund_availability_date: string
@@ -109,98 +169,10 @@ export type CinetPayResponse = {
   api_response_id: string
 }
 
-export type Application = {
-  _id: Id<"creatorApplications">
-  _creationTime: number
-  userId: Id<"users">
-  status: "pending" | "approved" | "rejected"
-  personalInfo: {
-    fullName: string
-    dateOfBirth: string
-    address: string
-    phoneNumber: string
-  }
-  applicationReason: string
-  identityDocuments: Array<{
-    type: "identity_card" | "passport" | "driving_license" | "selfie"
-    url: string
-    publicId: string
-    uploadedAt: number
-  }>
-  submittedAt: number
-  reviewedAt?: number
-  adminNotes?: string
-  user: {
-    _id: Id<"users">
-    _creationTime: number
-    username?: string
-    imageBanner?: string
-    bio?: string
-    location?: string
-    socials?: string[]
-    bookmarks?: Id<"posts">[]
-    isOnline: boolean
-    tokenIdentifier: string
-    externalId?: string
-    accountType: "USER" | "CREATOR" | "SUPERUSER"
-    creatorApplicationStatus?: "none" | "pending" | "approved" | "rejected"
-    name: string
-    email: string
-    image: string
-  } | null
-  riskFactors?: Array<{ message: string; level: "FAIBLE" | "MODÉRÉ" | "GRAVE" }>
-}
+// ============================================================================
+// Types pour Bunny.net CDN
+// ============================================================================
 
-export interface Report {
-  _id: string
-  _creationTime: number
-  reporterId: string
-  reportedUserId?: string
-  reportedPostId?: string
-  type: "user" | "post" | "comment"
-  reason:
-    | "spam"
-    | "harassment"
-    | "inappropriate_content"
-    | "fake_account"
-    | "copyright"
-    | "violence"
-    | "hate_speech"
-    | "other"
-  description?: string
-  status: "pending" | "reviewing" | "resolved" | "rejected"
-  adminNotes?: string
-  reviewedBy?: string
-  reviewedAt?: number
-  createdAt: number
-  reporter?: {
-    _id: string
-    name: string
-    username?: string
-    email: string
-  }
-  reportedUser?: {
-    _id: string
-    name: string
-    username?: string
-    email: string
-  }
-  reportedPost?: {
-    _id: string
-    content: string
-    author?: {
-      _id: string
-      name: string
-      username?: string
-    }
-  }
-  reviewedByUser?: {
-    _id: string
-    name: string
-  }
-}
-
-// Bunny.net Video API Types détaillés
 export interface BunnyVideoGetResponse {
   videoLibraryId: number
   guid: string
@@ -251,7 +223,6 @@ export interface BunnyVideoUploadResponse {
   statusCode: number
 }
 
-// Status des vidéos Bunny.net
 export enum BunnyVideoStatus {
   CREATED = 0,
   UPLOADED = 1,
@@ -261,7 +232,6 @@ export enum BunnyVideoStatus {
   ERROR = 5,
 }
 
-// Types pour les réponses dans votre API
 export interface BunnyApiResponse {
   success: boolean
   url: string

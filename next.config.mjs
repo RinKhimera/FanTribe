@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs"
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -12,10 +14,6 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "res.cloudinary.com",
-      },
-      {
-        protocol: "https",
         hostname: "img.clerk.com",
       },
       {
@@ -25,6 +23,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "cdn.fantribe.io",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
       },
     ],
   },
@@ -45,4 +47,16 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  org: "khimera-9h",
+  project: "fantribe",
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  tunnelRoute: "/monitoring",
+  webpack: {
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+})

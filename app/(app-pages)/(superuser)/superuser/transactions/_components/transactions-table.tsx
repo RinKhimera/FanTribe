@@ -53,6 +53,25 @@ type SortField =
   | "amount"
 type SortOrder = "asc" | "desc"
 
+const SortIcon = ({
+  field,
+  sortField,
+  sortOrder,
+}: {
+  field: SortField
+  sortField: SortField
+  sortOrder: SortOrder
+}) => {
+  if (sortField !== field) {
+    return <ArrowUpDown className="ml-2 h-4 w-4" />
+  }
+  return sortOrder === "asc" ? (
+    <ArrowUp className="ml-2 h-4 w-4" />
+  ) : (
+    <ArrowDown className="ml-2 h-4 w-4" />
+  )
+}
+
 export function TransactionsTable({
   transactions,
   isLoading,
@@ -108,18 +127,6 @@ export function TransactionsTable({
     }
   }
 
-  // Icône de tri
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="ml-2 h-4 w-4" />
-    }
-    return sortOrder === "asc" ? (
-      <ArrowUp className="ml-2 h-4 w-4" />
-    ) : (
-      <ArrowDown className="ml-2 h-4 w-4" />
-    )
-  }
-
   const getProviderBadge = (provider: string) => {
     if (provider.toLowerCase() === "stripe") {
       return <Badge variant="default">Stripe</Badge>
@@ -160,7 +167,11 @@ export function TransactionsTable({
                     className="h-auto p-0 font-medium hover:bg-transparent"
                   >
                     Date
-                    <SortIcon field="date" />
+                    <SortIcon
+                      field="date"
+                      sortField={sortField}
+                      sortOrder={sortOrder}
+                    />
                   </Button>
                 </TableHead>
                 <TableHead className="min-w-[150px]">
@@ -170,7 +181,11 @@ export function TransactionsTable({
                     className="h-auto p-0 font-medium hover:bg-transparent"
                   >
                     Créatrice
-                    <SortIcon field="creator" />
+                    <SortIcon
+                      field="creator"
+                      sortField={sortField}
+                      sortOrder={sortOrder}
+                    />
                   </Button>
                 </TableHead>
                 <TableHead className="hidden min-w-[150px] md:table-cell">
@@ -180,7 +195,11 @@ export function TransactionsTable({
                     className="h-auto p-0 font-medium hover:bg-transparent"
                   >
                     Abonné
-                    <SortIcon field="subscriber" />
+                    <SortIcon
+                      field="subscriber"
+                      sortField={sortField}
+                      sortOrder={sortOrder}
+                    />
                   </Button>
                 </TableHead>
                 <TableHead className="w-[120px]">
@@ -191,7 +210,11 @@ export function TransactionsTable({
                   >
                     <span className="hidden lg:inline">Fournisseur</span>
                     <span className="lg:hidden">Fournisseur</span>
-                    <SortIcon field="provider" />
+                    <SortIcon
+                      field="provider"
+                      sortField={sortField}
+                      sortOrder={sortOrder}
+                    />
                   </Button>
                 </TableHead>
                 <TableHead className="hidden w-[100px] sm:table-cell">
@@ -201,7 +224,11 @@ export function TransactionsTable({
                     className="h-auto p-0 font-medium hover:bg-transparent"
                   >
                     Devise
-                    <SortIcon field="currency" />
+                    <SortIcon
+                      field="currency"
+                      sortField={sortField}
+                      sortOrder={sortOrder}
+                    />
                   </Button>
                 </TableHead>
                 <TableHead className="w-[180px] text-right">
@@ -211,7 +238,11 @@ export function TransactionsTable({
                     className="ml-auto h-auto p-0 font-medium hover:bg-transparent"
                   >
                     Montant
-                    <SortIcon field="amount" />
+                    <SortIcon
+                      field="amount"
+                      sortField={sortField}
+                      sortOrder={sortOrder}
+                    />
                   </Button>
                 </TableHead>
               </TableRow>

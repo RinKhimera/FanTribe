@@ -2,7 +2,7 @@
 
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { ResponsiveLayout } from "@/components/shared/responsive-layout"
+import { AppLayout } from "@/components/layout"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 export default function DashboardLayout({
@@ -49,7 +49,5 @@ export default function DashboardLayout({
     )
   }
 
-  return (
-    <ResponsiveLayout currentUser={currentUser}>{children}</ResponsiveLayout>
-  )
+  return <AppLayout currentUser={currentUser}>{children}</AppLayout>
 }

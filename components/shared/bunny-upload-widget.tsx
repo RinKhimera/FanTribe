@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react"
 import { toast } from "sonner"
+import { logger } from "@/lib/config"
 import { uploadBunnyAsset } from "@/lib/services/bunny"
 
 interface BunnyUploadWidgetProps {
@@ -102,7 +103,7 @@ export const BunnyUploadWidget = ({
 
       toast.success("Fichier uploadé avec succès")
     } catch (error) {
-      console.error("Erreur upload:", error)
+      logger.error("Erreur upload fichier", error, { fileName, userId })
       const errorMsg = "Erreur lors de l'upload du fichier"
       toast.error(errorMsg)
       onError?.(errorMsg)
