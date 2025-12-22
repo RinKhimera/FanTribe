@@ -22,8 +22,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { detectRiskFactors, getRiskBadge } from "@/utils/validators/detect-risk-factors"
-import { getStatusBadge } from "@/utils/ui/get-status-badge"
+import { getStatusBadge } from "@/lib/ui"
+import { detectRiskFactors, getRiskBadge } from "@/lib/validators"
 
 interface ApplicationDetailsProps {
   params: Promise<{ application: Id<"creatorApplications"> }>
@@ -111,7 +111,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
   // Cas où l'application n'existe pas (ID invalide ou application supprimée)
   if (application === null) {
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l sm:w-[80%] lg:w-[60%]">
+      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l">
         <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
           <h1 className="text-xl font-bold">Candidature introuvable</h1>
         </div>
@@ -144,7 +144,7 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-12 sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-12">
       {/* Header avec bouton retour */}
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">

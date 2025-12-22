@@ -20,11 +20,11 @@ export const USD_TO_XAF_RATE = 562.2
 /**
  * Convertir USD → XAF ou XAF → USD
  */
-export function convertCurrency(
+export const convertCurrency = (
   amount: number,
   from: Currency,
   to: Currency,
-): number {
+): number => {
   if (from === to) return amount
 
   if (from === "USD" && to === "XAF") {
@@ -43,7 +43,7 @@ export function convertCurrency(
  * @example formatCurrency(5, "USD") → "$5.00"
  * @example formatCurrency(2811, "XAF") → "2 811 FCFA"
  */
-export function formatCurrency(amount: number, currency: Currency): string {
+export const formatCurrency = (amount: number, currency: Currency): string => {
   if (currency === "USD") {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -67,11 +67,11 @@ export function formatCurrency(amount: number, currency: Currency): string {
  * @example formatDualCurrency(2811, "XAF", "USD") → "2 811 FCFA (~$5.00)"
  * @example formatDualCurrency(5, "USD", "XAF") → "$5.00 (~2 811 FCFA)"
  */
-export function formatDualCurrency(
+export const formatDualCurrency = (
   amount: number,
   originalCurrency: Currency,
   showConversion: boolean = true,
-): string {
+): string => {
   if (!showConversion) {
     return formatCurrency(amount, originalCurrency)
   }

@@ -17,11 +17,11 @@ export default function Error({ error, reset }: ErrorProps) {
   }, [error])
 
   return (
-    <div className="flex h-full min-h-screen w-[50%] flex-col border-l border-r border-muted max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
-      <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+    <div className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
+      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-lg"
         >
           <ArrowLeft className="size-6" />
           Retour à l&apos;accueil
@@ -29,25 +29,25 @@ export default function Error({ error, reset }: ErrorProps) {
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10">
-          <AlertTriangle className="h-12 w-12 text-destructive" />
+        <div className="bg-destructive/10 mb-8 flex h-24 w-24 items-center justify-center rounded-full">
+          <AlertTriangle className="text-destructive h-12 w-12" />
         </div>
 
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-6xl font-bold text-destructive">Oops!</h1>
-          <h2 className="mb-4 text-2xl font-semibold text-foreground">
+          <h1 className="text-destructive mb-2 text-6xl font-bold">Oops!</h1>
+          <h2 className="text-foreground mb-4 text-2xl font-semibold">
             Une erreur est survenue
           </h2>
-          <p className="max-w-md text-muted-foreground">
+          <p className="text-muted-foreground max-w-md">
             Quelque chose s&apos;est mal passé. Cela peut être temporaire,
             essayez de rafraîchir la page ou revenez à l&apos;accueil.
           </p>
           {process.env.NODE_ENV === "development" && (
-            <details className="mt-4 max-w-md rounded-lg bg-muted p-4 text-left text-sm">
-              <summary className="cursor-pointer font-medium text-destructive">
+            <details className="bg-muted mt-4 max-w-md rounded-lg p-4 text-left text-sm">
+              <summary className="text-destructive cursor-pointer font-medium">
                 Détails de l&apos;erreur pour les développeurs
               </summary>
-              <pre className="mt-2 whitespace-pre-wrap break-words text-xs">
+              <pre className="mt-2 text-xs wrap-break-word whitespace-pre-wrap">
                 {error.message}
               </pre>
             </details>

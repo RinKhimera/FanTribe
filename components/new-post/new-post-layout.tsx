@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { logger } from "@/lib/config/logger"
 import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
@@ -56,22 +57,31 @@ export const NewPostLayout = () => {
 
   const isPostCreatedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediasRef = useRef(medias) // Ref pour accéder à la valeur actuelle dans le cleanup
+
+  // Synchroniser la ref avec le state
+  useEffect(() => {
+    mediasRef.current = medias
+  }, [medias])
 
   useEffect(() => {
     return () => {
       // Nettoie tous les assets si le post n'a pas été créé
-      if (medias.length > 0 && !isPostCreatedRef.current) {
-        medias.forEach(async (media) => {
+      // Utiliser mediasRef.current pour avoir la valeur actuelle au moment de l'unmount
+      if (mediasRef.current.length > 0 && !isPostCreatedRef.current) {
+        mediasRef.current.forEach(async (media) => {
           try {
             await deleteDraftWithAsset({ mediaId: media.publicId })
           } catch (error) {
-            console.error("Erreur lors de la suppression de l'asset:", error)
+            logger.error("Failed to delete draft asset", error, {
+              mediaId: media.publicId,
+            })
           }
         })
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deleteDraftWithAsset])
+  }, [])
 
   const createPost = useMutation(api.posts.createPost)
 
@@ -162,18 +172,18 @@ export const NewPostLayout = () => {
           } else {
             toast.error(`Erreur upload ${file.name}: ${result.error}`)
           }
-        } catch (e: any) {
+        } catch (e) {
           setUploadProgress((prev) => {
             const np = { ...prev }
             delete np[fileKey]
             return np
           })
-          console.error(e)
+          logger.error("Failed to upload file", e, { fileName: file.name })
           toast.error(`Erreur upload ${file.name}`)
         }
       }
     } catch (error) {
-      console.error("Upload error:", error)
+      logger.error("Upload error", error)
       toast.error("Erreur lors de l'upload")
     } finally {
       setIsUploading(false)
@@ -191,7 +201,7 @@ export const NewPostLayout = () => {
       await deleteDraftWithAsset({ mediaId: media.publicId })
       toast.success("Média supprimé avec succès")
     } catch (error) {
-      console.error("Erreur lors de la suppression:", error)
+      logger.error("Failed to delete media", error, { mediaId: media.publicId })
       toast.error("Erreur lors de la suppression du média")
     }
   }
@@ -218,7 +228,7 @@ export const NewPostLayout = () => {
         toast.success("Votre publication a été partagée")
         router.push("/")
       } catch (error) {
-        console.error(error)
+        logger.error("Failed to create post", error)
         toast.error("Une erreur s'est produite !", {
           description:
             "Veuillez vérifier votre connexion internet et réessayer",
@@ -228,7 +238,7 @@ export const NewPostLayout = () => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col border-r border-l max-lg:w-[80%] max-sm:w-full">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l">
       <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
         Nouvelle publication
       </h1>
@@ -274,7 +284,7 @@ export const NewPostLayout = () => {
                               <Button
                                 type="button"
                                 size={"icon"}
-                                className="bg-muted absolute top-3 right-[10px] z-10 size-8"
+                                className="bg-muted absolute top-3 right-2.5 z-10 size-8"
                                 onClick={() => handleRemoveMedia(index)}
                               >
                                 <CircleX size={22} />

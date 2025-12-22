@@ -14,6 +14,48 @@
   }
 }
 
+/* ============================================
+   LAYOUT SYSTEM - Design Tokens
+   ============================================ */
+
+:root {
+  /* Layout Container */
+  --layout-max-width: 1280px;
+  --layout-gap: 0;
+
+  /* Left Sidebar */
+  --sidebar-left-width: clamp(68px, 18vw, 260px);
+  --sidebar-left-padding: 0.5rem;
+  --sidebar-left-width-compact: 68px;
+  --sidebar-left-width-full: 260px;
+
+  /* Right Sidebar */
+  --sidebar-right-width: clamp(280px, 28vw, 380px);
+  --sidebar-right-padding: 1.5rem;
+
+  /* Split Panel (pour layouts messages/user-lists) */
+  --content-split-nav-width: 40%;
+  --content-split-main-width: 60%;
+
+  /* Header */
+  --header-height: 64px;
+  --header-padding: 1rem;
+
+  /* Mobile Navigation */
+  --mobile-nav-height: 64px;
+
+  /* Navigation Item */
+  --nav-item-height: 48px;
+  --nav-item-gap: 4px;
+}
+
+/* Large screens adjustments */
+@media (width >= 1024px) {
+  :root {
+    --sidebar-left-padding: 2.5rem;
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

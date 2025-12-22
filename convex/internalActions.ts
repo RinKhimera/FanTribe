@@ -565,7 +565,7 @@ export const deleteMultipleBunnyAssets = action({
                 method: "DELETE",
                 headers: {
                   AccessKey: videoAccessKey,
-                } as any,
+                } as Record<string, string>,
               },
             )
 
@@ -609,7 +609,7 @@ export const deleteMultipleBunnyAssets = action({
                 method: "DELETE",
                 headers: {
                   AccessKey: storageAccessKey,
-                } as any,
+                } as Record<string, string>,
               },
             )
 

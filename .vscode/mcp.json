@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/khimera-9h/fantribe",
+      "type": "http"
+    }
+  }
+}

@@ -10,11 +10,7 @@ import { clientEnv } from "@/lib/config/env.client"
 
 const convex = new ConvexReactClient(clientEnv.NEXT_PUBLIC_CONVEX_URL)
 
-export default function ConvexClientProvider({
-  children,
-}: {
-  children: ReactNode
-}) {
+const ConvexClientProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ClerkProvider
       localization={frFR}
@@ -29,3 +25,5 @@ export default function ConvexClientProvider({
     </ClerkProvider>
   )
 }
+
+export default ConvexClientProvider

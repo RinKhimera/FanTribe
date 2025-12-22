@@ -17,9 +17,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { getStatusBadge } from "@/lib/ui"
+import { detectRiskFactors, getRiskBadge } from "@/lib/validators"
 import { Application } from "@/types"
-import { detectRiskFactors, getRiskBadge } from "@/utils/validators/detect-risk-factors"
-import { getStatusBadge } from "@/utils/ui/get-status-badge"
 
 const CreatorApplicationsPage = () => {
   const { currentUser } = useCurrentUser()
@@ -189,7 +189,7 @@ const CreatorApplicationsPage = () => {
   ).length
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l">
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Candidatures Créateur</h1>

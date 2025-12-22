@@ -5,7 +5,7 @@
 
 const isDev = process.env.NODE_ENV === "development"
 
-type LogContext = Record<string, any>
+type LogContext = Record<string, unknown>
 
 export const logger = {
   /**
@@ -20,7 +20,7 @@ export const logger = {
   /**
    * Log d'erreur (toujours actif)
    */
-  error: (message: string, error?: any, context?: LogContext) => {
+  error: (message: string, error?: unknown, context?: LogContext) => {
     console.error(`❌ ${message}`, {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,

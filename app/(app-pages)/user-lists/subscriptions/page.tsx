@@ -45,9 +45,9 @@ const SubscriptionsPage = () => {
       case "all":
         return subscriptions
       case "active":
-        return subscriptions.filter((s: any) => s.status === "active")
+        return subscriptions.filter((s) => s.status === "active")
       case "expired":
-        return subscriptions.filter((s: any) => s.status === "expired")
+        return subscriptions.filter((s) => s.status === "expired")
       default:
         return []
     }
@@ -78,7 +78,7 @@ const SubscriptionsPage = () => {
     return (
       <div className="@container">
         <div className="grid gap-3 @lg:grid-cols-2">
-          {filteredUsers.map((sub: any) => {
+          {filteredUsers.map((sub) => {
             const details = sub.creatorUser
             if (!details) return null
             return (

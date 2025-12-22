@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { PageContainer } from "@/components/layout"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 export default function MessagesLayout({
@@ -23,28 +24,32 @@ export default function MessagesLayout({
   // État de chargement
   if (isLoading || currentUser === undefined) {
     return (
-      <div className="flex h-full min-h-screen w-full items-center justify-center border-l border-r border-muted sm:w-[80%] lg:w-[60%]">
-        <div className="text-center">
-          <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-          <p className="text-lg text-muted-foreground">
-            Vérification des permissions...
-          </p>
+      <PageContainer variant="wide" hideHeader>
+        <div className="flex h-full min-h-screen items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+            <p className="text-muted-foreground text-lg">
+              Vérification des permissions...
+            </p>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     )
   }
 
   // Redirection en cours pour les utilisateurs non autorisés
   if (!currentUser || currentUser.accountType !== "SUPERUSER") {
     return (
-      <div className="flex h-full min-h-screen w-full items-center justify-center border-l border-r border-muted sm:w-[80%] lg:w-[60%]">
-        <div className="text-center">
-          <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-          <p className="text-lg text-muted-foreground">
-            Redirection en cours...
-          </p>
+      <PageContainer variant="wide" hideHeader>
+        <div className="flex h-full min-h-screen items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+            <p className="text-muted-foreground text-lg">
+              Redirection en cours...
+            </p>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     )
   }
 

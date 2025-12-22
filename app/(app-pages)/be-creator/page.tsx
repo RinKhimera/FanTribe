@@ -81,7 +81,7 @@ const BeCreatorPage = () => {
 
   if (!currentUser) {
     return (
-      <main className="flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-l border-r border-muted max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
+      <main className="border-muted flex h-full min-h-screen w-full flex-col items-center justify-center border-r border-l max-[500px]:pb-16">
         <div className="animate-pulse text-lg">Chargement...</div>
       </main>
     )
@@ -93,14 +93,14 @@ const BeCreatorPage = () => {
     currentUser.accountType === "SUPERUSER"
   ) {
     return (
-      <main className="flex h-full min-h-screen w-[50%] flex-col border-l border-r border-muted max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
-        <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
+        <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
           <h1 className="text-2xl font-bold">Compte Créateur</h1>
         </div>
         <div className="flex flex-1 items-center justify-center p-6">
           <Card className="mx-auto max-w-md text-center">
             <CardHeader>
-              <Crown className="mx-auto mb-4 h-16 w-16 text-primary" />
+              <Crown className="text-primary mx-auto mb-4 h-16 w-16" />
               <CardTitle>Vous êtes déjà créateur !</CardTitle>
               <CardDescription>
                 Votre compte créateur est actif. Vous pouvez publier du contenu.
@@ -209,19 +209,19 @@ const BeCreatorPage = () => {
   }
 
   return (
-    <main className="flex h-full min-h-screen w-[50%] flex-col border-l border-r border-muted max-lg:w-[80%] max-sm:w-full max-[500px]:pb-16">
-      <div className="sticky top-0 z-20 border-b border-muted bg-background/95 p-4 backdrop-blur-sm">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
+      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <h1 className="text-2xl font-bold">Devenir Créateur</h1>
       </div>
 
       <div className="flex-1 p-6">
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 text-center">
-            <Crown className="mx-auto mb-4 h-16 w-16 text-primary" />
+            <Crown className="text-primary mx-auto mb-4 h-16 w-16" />
             <h2 className="mb-4 text-3xl font-bold">
               Passez au compte Créateur
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-muted-foreground text-lg">
               Débloquez toutes les fonctionnalités pour partager votre contenu
               et développer votre audience.
             </p>
@@ -231,7 +231,7 @@ const BeCreatorPage = () => {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
+                <Shield className="text-primary h-5 w-5" />
                 Processus de vérification
               </CardTitle>
               <CardDescription>
@@ -242,12 +242,12 @@ const BeCreatorPage = () => {
               <div className="space-y-4">
                 {verificationSteps.map((step, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <div className="mt-1 rounded-full bg-primary/10 p-2">
+                    <div className="bg-primary/10 mt-1 rounded-full p-2">
                       {step.icon}
                     </div>
                     <div>
                       <h3 className="font-semibold">{step.title}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {step.description}
                       </p>
                     </div>
@@ -261,7 +261,7 @@ const BeCreatorPage = () => {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-primary" />
+                <Star className="text-primary h-5 w-5" />
                 Fonctionnalités Créateur
               </CardTitle>
               <CardDescription>
@@ -275,7 +275,7 @@ const BeCreatorPage = () => {
                     <div className="mt-1">{feature.icon}</div>
                     <div>
                       <h3 className="font-semibold">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {feature.description}
                       </p>
                     </div>
@@ -286,7 +286,7 @@ const BeCreatorPage = () => {
             <CardFooter>{renderApplicationStatus()}</CardFooter>
           </Card>
 
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-muted-foreground text-center text-sm">
             <p>
               En postulant, vous acceptez nos{" "}
               <Link href="/terms" className="text-primary hover:underline">

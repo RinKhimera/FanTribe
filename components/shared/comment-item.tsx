@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import React from "react"
-import { CommentEllipsis } from "@/components/post/comment-ellipsis"
+import { CommentEllipsis } from "@/components/domains/posts"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Doc } from "@/convex/_generated/dataModel"
-import { formatPostDate } from "@/utils/formatters/format-post-date"
+import { formatPostDate } from "@/lib/formatters"
 
 type CommentItemProps = {
   comment: {

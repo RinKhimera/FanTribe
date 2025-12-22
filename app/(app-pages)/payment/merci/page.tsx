@@ -9,7 +9,7 @@ const MerciPage = () => {
   const search = useSearchParams()
   const username = search.get("username")
   return (
-    <main className="border-muted flex h-full min-h-screen w-[50%] flex-col items-center justify-center border-r border-l max-lg:w-full">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col items-center justify-center border-r border-l">
       <div className="flex flex-col items-center gap-10">
         <CircleCheckBig size={80} />
 

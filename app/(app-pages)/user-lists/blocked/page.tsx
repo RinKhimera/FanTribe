@@ -92,7 +92,7 @@ const BlockedPage = () => {
     return (
       <div className="@container">
         <div className="grid gap-3 @lg:grid-cols-2">
-          {filteredUsers.map((blockedUser: any) => {
+          {filteredUsers.map((blockedUser) => {
             const details = blockedUser.blockedUserDetails!
 
             return (

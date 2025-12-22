@@ -42,9 +42,9 @@ const SubscribersPage = () => {
       case "all":
         return subscribers
       case "active":
-        return subscribers.filter((s: any) => s.status === "active")
+        return subscribers.filter((s) => s.status === "active")
       case "expired":
-        return subscribers.filter((s: any) => s.status === "expired")
+        return subscribers.filter((s) => s.status === "expired")
       default:
         return []
     }

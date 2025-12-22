@@ -1,8 +1,8 @@
 import { getAuthToken } from "@/app/auth"
-import { NotificationsLayout } from "@/components/notifications/notification-layout"
+import { NotificationsLayout } from "@/components/domains/notifications"
 
 const NotificationsPage = async () => {
-  const token = await getAuthToken()
+  await getAuthToken()
 
   return <NotificationsLayout />
 }

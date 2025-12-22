@@ -418,7 +418,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
   if (!report) {
     if (report === null) {
       return (
-        <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l sm:w-[80%] lg:w-[60%]">
+        <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l">
           <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
             <div className="flex items-center gap-4">
               <Link href="/superuser/reports">
@@ -462,7 +462,7 @@ const ReportDetails = ({ params }: ReportDetailsProps) => {
     (report.status === "pending" || report.status === "reviewing")
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-12 sm:w-[80%] lg:w-[60%]">
+    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-12">
       {/* Header */}
       <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">
