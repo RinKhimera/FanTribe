@@ -11,9 +11,11 @@
     "lint-check": "eslint . --max-warnings 0",
     "build-check": "npm run type-check && npm run lint-check",
     "fix-lint": "eslint . --fix",
-    "test": "vitest",
+    "test": "vitest run && vitest run -c vitest.convex.config.mts",
+    "test:watch": "vitest",
     "test:convex": "vitest -c vitest.convex.config.mts",
-    "test:convex:run": "vitest run -c vitest.convex.config.mts"
+    "test:convex:run": "vitest run -c vitest.convex.config.mts",
+    "test:coverage": "vitest run --coverage && vitest run -c vitest.convex.config.mts --coverage"
   },
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.1.6",
@@ -82,6 +84,7 @@
     "@types/react-dom": "19.2.3",
     "@types/uuid": "^11.0.0",
     "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.0.16",
     "convex-test": "^0.0.41",
     "eslint": "^9",
     "eslint-config-next": "^16.1.0",

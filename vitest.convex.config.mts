@@ -4,6 +4,7 @@ import { defineConfig } from "vitest/config"
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
+    name: "convex",
     // Convex functions run in an edge-like environment
     environment: "node",
     server: {
@@ -12,5 +13,14 @@ export default defineConfig({
       },
     },
     include: ["tests/convex/**/*.test.ts"],
+    coverage: {
+      include: ["convex/**/*.ts"],
+      exclude: [
+        "**/*.test.ts",
+        "convex/_generated/**",
+        "convex/auth.config.ts",
+        "convex/http.ts",
+      ],
+    },
   },
 })
