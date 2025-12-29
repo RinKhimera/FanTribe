@@ -50,20 +50,23 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     [medias],
   )
 
+  // Extract video GUIDs once and memoize them
+  const videoGuids = useMemo(() => {
+    return medias
+      .filter((url) =>
+        url.startsWith("https://iframe.mediadelivery.net/embed/"),
+      )
+      .map((url) => extractVideoGuidFromUrl(url))
+      .filter((guid): guid is string => guid !== null)
+  }, [medias])
+
+  // Create a stable key from video GUIDs to prevent unnecessary refetches
+  const videoGuidsKey = useMemo(() => videoGuids.join(","), [videoGuids])
+
   // Récupérer les métadonnées des vidéos au montage du composant
   useEffect(() => {
     const fetchVideoMetadata = async () => {
-      if (!canView || !medias || medias.length === 0) return
-
-      // Filtrer les vidéos et extraire les GUIDs
-      const videoGuids = medias
-        .filter((url) =>
-          url.startsWith("https://iframe.mediadelivery.net/embed/"),
-        )
-        .map((url) => extractVideoGuidFromUrl(url))
-        .filter((guid): guid is string => guid !== null)
-
-      if (videoGuids.length === 0) return
+      if (!canView || videoGuids.length === 0) return
 
       try {
         // Appeler l'API route pour récupérer les métadonnées
@@ -95,7 +98,8 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     }
 
     fetchVideoMetadata()
-  }, [medias, canView])
+    // Use videoGuidsKey instead of medias to prevent refetching on every render
+  }, [videoGuidsKey, canView, videoGuids])
 
   useEffect(() => {
     if (!carouselApi) return

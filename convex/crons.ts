@@ -25,6 +25,14 @@ crons.interval(
   internal.notificationQueue.processNextBatches,
 )
 
+// Vérification des utilisateurs inactifs toutes les 2 minutes
+// Marque comme hors ligne ceux qui n'ont pas envoyé de heartbeat
+crons.interval(
+  "mark-stale-users-offline",
+  { minutes: 2 },
+  internal.users.markStaleUsersOffline,
+)
+
 // Nettoyage des batches terminés (une fois par jour à 04:00 UTC)
 crons.daily(
   "cleanup-notification-batches",

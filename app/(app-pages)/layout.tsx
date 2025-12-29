@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AppLayout } from "@/components/layout"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { usePresence } from "@/hooks/usePresence"
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,9 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const { currentUser, isLoading } = useCurrentUser()
+
+  // Start presence tracking (heartbeat every 2 minutes)
+  usePresence()
 
   // État de chargement pendant l'auth ou le chargement de l'utilisateur
   if (isLoading || currentUser === undefined) {

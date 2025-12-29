@@ -12,6 +12,7 @@ export default defineSchema({
     location: v.optional(v.string()),
     socials: v.optional(v.array(v.string())),
     isOnline: v.boolean(),
+    activeSessions: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
     tokenIdentifier: v.string(),
     externalId: v.optional(v.string()),

@@ -127,35 +127,133 @@ export const getSuggestedCreators = query({
   },
 })
 
-export const setUserOnline = internalMutation({
-  args: { tokenIdentifier: v.string() },
+// Session management for presence (called by Clerk webhooks)
+export const incrementUserSession = internalMutation({
+  args: { externalId: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (query) =>
-        query.eq("tokenIdentifier", args.tokenIdentifier),
-      )
-      .unique()
+    const user = await userByExternalId(ctx, args.externalId)
+    if (!user) {
+      console.warn(`User not found for externalId: ${args.externalId}`)
+      return
+    }
 
-    if (!user) throw new ConvexError("User not found")
-
-    await ctx.db.patch(user._id, { isOnline: true })
+    const currentSessions = user.activeSessions ?? 0
+    await ctx.db.patch(user._id, {
+      activeSessions: currentSessions + 1,
+      isOnline: true,
+      lastSeenAt: Date.now(),
+    })
   },
 })
 
-export const setUserOffline = internalMutation({
-  args: { tokenIdentifier: v.string() },
+export const decrementUserSession = internalMutation({
+  args: { externalId: v.string() },
   handler: async (ctx, args) => {
+    const user = await userByExternalId(ctx, args.externalId)
+    if (!user) {
+      console.warn(`User not found for externalId: ${args.externalId}`)
+      return
+    }
+
+    const currentSessions = user.activeSessions ?? 1
+    const newSessionCount = Math.max(0, currentSessions - 1)
+
+    await ctx.db.patch(user._id, {
+      activeSessions: newSessionCount,
+      isOnline: newSessionCount > 0,
+      lastSeenAt: Date.now(),
+    })
+  },
+})
+
+// Heartbeat mutation for client-side presence updates (2 min interval)
+export const updatePresenceHeartbeat = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
     const user = await ctx.db
       .query("users")
-      .withIndex("by_tokenIdentifier", (query) =>
-        query.eq("tokenIdentifier", args.tokenIdentifier),
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
-    if (!user) throw new ConvexError("User not found")
+    if (!user) return null
 
-    await ctx.db.patch(user._id, { isOnline: false })
+    await ctx.db.patch(user._id, {
+      isOnline: true,
+      lastSeenAt: Date.now(),
+    })
+
+    return { success: true }
+  },
+})
+
+// Mark user as offline (called on page unload or visibility hidden)
+export const setUserOffline = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!user) return null
+
+    // Only set offline if no active sessions from webhooks
+    const activeSessions = user.activeSessions ?? 0
+    if (activeSessions === 0) {
+      await ctx.db.patch(user._id, {
+        isOnline: false,
+        lastSeenAt: Date.now(),
+      })
+    } else {
+      // Just update lastSeenAt if there are still active sessions
+      await ctx.db.patch(user._id, {
+        lastSeenAt: Date.now(),
+      })
+    }
+
+    return { success: true }
+  },
+})
+
+// Internal mutation for cron job to mark stale users offline
+export const markStaleUsersOffline = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const TWO_MINUTES_AGO = Date.now() - 2 * 60 * 1000
+
+    // Get all users who are online but haven't been seen in 2+ minutes
+    const onlineUsers = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("isOnline"), true))
+      .collect()
+
+    let markedOfflineCount = 0
+    for (const user of onlineUsers) {
+      const lastSeen = user.lastSeenAt ?? 0
+      if (lastSeen < TWO_MINUTES_AGO) {
+        await ctx.db.patch(user._id, {
+          isOnline: false,
+          activeSessions: 0,
+        })
+        markedOfflineCount++
+      }
+    }
+
+    if (markedOfflineCount > 0) {
+      console.log(`Marked ${markedOfflineCount} stale users as offline`)
+    }
+
+    return { markedOfflineCount }
   },
 })
 
