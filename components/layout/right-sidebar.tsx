@@ -34,13 +34,10 @@ export const RightSidebar = () => {
 
   const segments = (pathname || "/").split("/").filter(Boolean)
   const first = segments[0] || ""
-  const second = segments[1] || ""
 
   // Routes sans sidebar droite
   const hiddenRoutes = new Set(["messages", "user-lists"])
 
-  // Pages superuser sans sidebar
-  const hiddenSuperuserPages = new Set(["transactions"])
 
   // Routes réservées (non-username)
   const reserved = new Set([
@@ -74,7 +71,8 @@ export const RightSidebar = () => {
 
   // Conditions de masquage
   if (hiddenRoutes.has(first)) return null
-  if (first === "superuser" && hiddenSuperuserPages.has(second)) return null
+  // Masquer pour toutes les pages superuser
+  if (first === "superuser") return null
 
   // Pas sur un profil → suggestions
   if (!maybeUsername) {

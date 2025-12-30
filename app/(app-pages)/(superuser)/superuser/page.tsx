@@ -2,28 +2,26 @@
 
 import { useQuery } from "convex/react"
 import {
-  Activity,
   AlertTriangle,
-  BarChart3,
-  Clock,
+  ArrowRight,
   DollarSign,
-  Eye,
   FileText,
-  MessageSquare,
-  Shield,
-  TrendingUp,
+  UserCheck,
   UserPlus,
   Users,
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
+import { SuperuserStatsCard } from "@/components/superuser"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { cn } from "@/lib/utils"
 
-const SuperUserPage = () => {
+export default function SuperUserPage() {
   const { currentUser } = useCurrentUser()
 
   const [dateRange] = useState(() => {
@@ -34,394 +32,338 @@ const SuperUserPage = () => {
     }
   })
 
-  const [weekAgo] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000)
-
-  // Queries pour récupérer les statistiques
-  const allApplications = useQuery(
-    api.creatorApplications.getAllApplications,
+  // Use the new consolidated dashboard stats query
+  const dashboardStats = useQuery(
+    api.superuser.getDashboardStats,
     currentUser?.accountType === "SUPERUSER" ? {} : "skip",
   )
 
-  const allPosts = useQuery(
-    api.posts.getAllPosts,
-    currentUser?.accountType === "SUPERUSER" ? {} : "skip",
-  )
-
-  const allUsers = useQuery(
-    api.users.getUsers,
-    currentUser?.accountType === "SUPERUSER" ? {} : "skip",
-  )
-
-  const reportsStats = useQuery(
-    api.reports.getReportsStats,
-    currentUser?.accountType === "SUPERUSER" ? {} : "skip",
-  )
-
-  // Récupérer les statistiques des transactions (2 dernières semaines)
+  // Transaction summary for revenue
   const transactionsSummary = useQuery(
     api.transactions.getTransactionsSummary,
     currentUser?.accountType === "SUPERUSER" ? dateRange : "skip",
   )
 
-  // Calcul des statistiques
-  const pendingApplications =
-    allApplications?.filter((app) => app.status === "pending") || []
-  const approvedApplications =
-    allApplications?.filter((app) => app.status === "approved") || []
-  const rejectedApplications =
-    allApplications?.filter((app) => app.status === "rejected") || []
+  // Reports stats
+  const reportsStats = useQuery(
+    api.reports.getReportsStats,
+    currentUser?.accountType === "SUPERUSER" ? {} : "skip",
+  )
 
-  const totalUsers = allUsers?.length || 0
-  const totalPosts = allPosts?.length || 0
-  const totalApplications = allApplications?.length || 0
+  const isLoading = !dashboardStats
 
-  const creatorUsers =
-    allUsers?.filter((user) => user.accountType === "CREATOR") || []
-  const regularUsers =
-    allUsers?.filter((user) => user.accountType === "USER") || []
-
-  // Posts récents (7 derniers jours)
-  const recentPosts =
-    allPosts?.filter((post) => {
-      return post._creationTime > weekAgo
-    }) || []
-
-  const isLoading = !allApplications || !allPosts || !allUsers
+  // Format currency
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Dashboard Administrateur</h1>
-          <Badge variant="outline" className="hidden sm:inline-flex">
-            <Shield className="mr-1 h-3 w-3" />
-            SuperUser
-          </Badge>
-        </div>
-      </div>
+    <div className="flex h-full flex-col overflow-y-auto">
+      {/* Content */}
+      <div className="flex-1 space-y-6 p-6">
+        {/* Stats Grid */}
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Vue d&apos;ensemble
+            </h2>
+            <span className="text-muted-foreground text-xs">
+              Mis à jour en temps réel
+            </span>
+          </div>
 
-      <div className="flex-1 space-y-6 p-4">
-        {/* Statistiques principales */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex-1 text-sm font-medium">
-                Utilisateurs Total
-              </CardTitle>
-              <Users className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading ? "..." : totalUsers}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {creatorUsers.length} créateurs • {regularUsers.length}{" "}
-                utilisateurs
-              </p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <SuperuserStatsCard
+              title="Utilisateurs"
+              value={dashboardStats?.users.total ?? 0}
+              subtitle={`${dashboardStats?.users.creators ?? 0} créateurs • ${dashboardStats?.users.regular ?? 0} membres`}
+              icon={Users}
+              colorScheme="blue"
+              isLoading={isLoading}
+            />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex-1 text-sm font-medium">
-                Posts Publiés
-              </CardTitle>
-              <FileText className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading ? "..." : totalPosts}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {recentPosts.length} cette semaine
-              </p>
-            </CardContent>
-          </Card>
+            <SuperuserStatsCard
+              title="Publications"
+              value={dashboardStats?.posts.total ?? 0}
+              subtitle={`${dashboardStats?.posts.thisWeek ?? 0} cette semaine`}
+              icon={FileText}
+              trend={
+                dashboardStats?.posts.trend !== undefined
+                  ? {
+                      value: dashboardStats.posts.trend,
+                      isPositive: dashboardStats.posts.trend >= 0,
+                    }
+                  : undefined
+              }
+              colorScheme="purple"
+              isLoading={isLoading}
+            />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex-1 text-sm font-medium">
-                Candidatures
-              </CardTitle>
-              <UserPlus className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading ? "..." : totalApplications}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {pendingApplications.length} en attente
-              </p>
-            </CardContent>
-          </Card>
+            <SuperuserStatsCard
+              title="Revenus (14j)"
+              value={
+                transactionsSummary
+                  ? formatCurrency(
+                      transactionsSummary.totalAmount,
+                      transactionsSummary.currency,
+                    )
+                  : "—"
+              }
+              subtitle={`${transactionsSummary?.totalTransactions ?? 0} transactions`}
+              icon={DollarSign}
+              colorScheme="green"
+              isLoading={!transactionsSummary}
+            />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex-1 text-sm font-medium">
-                Revenus (2 semaines)
-              </CardTitle>
-              <DollarSign className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {!transactionsSummary
-                  ? "..."
-                  : new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: transactionsSummary.currency,
-                      minimumFractionDigits: 0,
-                    }).format(transactionsSummary.totalAmount)}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {transactionsSummary?.totalTransactions || 0} transactions
-              </p>
-            </CardContent>
-          </Card>
+            <SuperuserStatsCard
+              title="En attente"
+              value={dashboardStats?.applications.pending ?? 0}
+              subtitle="Candidatures à traiter"
+              icon={UserPlus}
+              colorScheme="orange"
+              isLoading={isLoading}
+            />
+          </div>
+        </section>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex-1 text-sm font-medium">
-                Taux d&apos;Approbation
-              </CardTitle>
-              <TrendingUp className="text-muted-foreground ml-2 h-6 w-6 shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading
-                  ? "..."
-                  : totalApplications > 0
-                    ? `${Math.round((approvedApplications.length / totalApplications) * 100)}%`
-                    : "0%"}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {approvedApplications.length} approuvées
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Quick Actions */}
+        <section>
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">
+            Actions requises
+          </h2>
 
-        {/* Actions rapides */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Candidatures Créateur
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">
-                    En attente de traitement
-                  </p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Pending Applications Card */}
+            <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-md">
+              <div className="from-orange-500/5 via-amber-500/5 to-transparent absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+              <CardHeader className="relative pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
+                    <UserPlus className="h-4 w-4" />
+                  </div>
+                  Candidatures Créateur
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="relative space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-muted-foreground text-sm">
+                      En attente de traitement
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      {isLoading ? (
+                        <Skeleton className="h-6 w-12" />
+                      ) : (
+                        <Badge
+                          variant={
+                            (dashboardStats?.applications.pending ?? 0) > 0
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className="text-sm font-bold"
+                        >
+                          {dashboardStats?.applications.pending ?? 0}
+                        </Badge>
+                      )}
+                      <span className="text-muted-foreground text-xs">
+                        candidature(s)
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link href="/superuser/creator-applications">
+                    <Button
+                      size="sm"
+                      className="gap-2 transition-transform group-hover:translate-x-0.5"
+                    >
+                      Examiner
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Stats row */}
+                <div className="border-border/50 flex gap-6 border-t pt-3">
                   <div className="flex items-center gap-2">
-                    <Badge variant="destructive" className="text-xs">
-                      {pendingApplications.length}
-                    </Badge>
-                    <span className="text-muted-foreground text-xs">
-                      candidatures
+                    <UserCheck className="text-emerald-500 h-4 w-4" />
+                    <span className="text-sm">
+                      <span className="font-medium">
+                        {dashboardStats?.applications.approved ?? 0}
+                      </span>
+                      <span className="text-muted-foreground ml-1">
+                        approuvées
+                      </span>
+                    </span>
+                  </div>
+                  <div className="text-muted-foreground flex items-center gap-1 text-sm">
+                    <span className="font-medium">
+                      {dashboardStats?.applications.approvalRate ?? 0}%
+                    </span>
+                    <span>taux</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pending Reports Card */}
+            <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-md">
+              <div className="from-rose-500/5 via-pink-500/5 to-transparent absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+              <CardHeader className="relative pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 text-white shadow-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                  </div>
+                  Signalements
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="relative space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-muted-foreground text-sm">
+                      Signalements actifs
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      {!reportsStats ? (
+                        <Skeleton className="h-6 w-12" />
+                      ) : (
+                        <Badge
+                          variant={
+                            (reportsStats?.pending ?? 0) > 0
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className="text-sm font-bold"
+                        >
+                          {reportsStats?.pending ?? 0}
+                        </Badge>
+                      )}
+                      <span className="text-muted-foreground text-xs">
+                        à traiter
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link href="/superuser/reports">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 transition-transform group-hover:translate-x-0.5"
+                    >
+                      Voir tout
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Stats row */}
+                <div className="border-border/50 flex gap-6 border-t pt-3">
+                  <div className="text-sm">
+                    <span className="font-medium">
+                      {reportsStats?.postReports ?? 0}
+                    </span>
+                    <span className="text-muted-foreground ml-1">posts</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">
+                      {reportsStats?.userReports ?? 0}
+                    </span>
+                    <span className="text-muted-foreground ml-1">
+                      utilisateurs
+                    </span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">
+                      {reportsStats?.commentReports ?? 0}
+                    </span>
+                    <span className="text-muted-foreground ml-1">
+                      commentaires
                     </span>
                   </div>
                 </div>
-                <Link href="/superuser/creator-applications">
-                  <Button variant="outline" size="sm">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Examiner
-                  </Button>
-                </Link>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Approuvées</span>
-                  <span className="font-medium text-green-600">
-                    {approvedApplications.length}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Rejetées</span>
-                  <span className="font-medium text-red-600">
-                    {rejectedApplications.length}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Platform Health */}
+        <section>
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">
+            Santé de la plateforme
+          </h2>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Signalements
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Signalements actifs</p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {reportsStats?.pending || 0}
-                    </Badge>
-                    <span className="text-muted-foreground text-xs">
-                      à traiter
-                    </span>
-                  </div>
-                </div>
-                <Link href="/superuser/reports">
-                  <Button variant="outline" size="sm">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Voir tout
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Posts signalés</span>
-                  <span className="font-medium">
-                    {reportsStats?.postReports || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Utilisateurs signalés</span>
-                  <span className="font-medium">
-                    {reportsStats?.userReports || 0}
-                  </span>
-                </div>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+                <HealthMetric
+                  label="Système"
+                  status="healthy"
+                  value="Opérationnel"
+                />
+                <HealthMetric
+                  label="Base de données"
+                  status="healthy"
+                  value="Connectée"
+                />
+                <HealthMetric
+                  label="Paiements"
+                  status="healthy"
+                  value="Actifs"
+                />
+                <HealthMetric
+                  label="Dernière sync"
+                  status="info"
+                  value={new Date().toLocaleTimeString("fr-FR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                />
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Statistiques détaillées */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Aperçu de l&apos;activité
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm font-medium">Activité récente</span>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Posts cette semaine</span>
-                    <span className="font-medium">{recentPosts.length}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Nouveaux utilisateurs</span>
-                    <span className="font-medium">-</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium">Contenu</span>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Posts publics</span>
-                    <span className="font-medium">
-                      {allPosts?.filter(
-                        (p) => !p.visibility || p.visibility === "public",
-                      ).length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Posts privés</span>
-                    <span className="font-medium">
-                      {allPosts?.filter(
-                        (p) => p.visibility === "subscribers_only",
-                      ).length || 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm font-medium">Statut</span>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Système</span>
-                    <Badge variant="secondary" className="text-xs">
-                      Actif
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Dernière MAJ</span>
-                    <span className="text-xs font-medium">
-                      {new Date().toLocaleDateString("fr-FR")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Actions d'administration */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Actions d&apos;administration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Link href="/superuser/creator-applications">
-                <Button
-                  variant="outline"
-                  className="flex h-auto w-full flex-col items-center gap-2 p-4"
-                >
-                  <UserPlus className="h-6 w-6" />
-                  <span className="font-medium">Candidatures</span>
-                  <span className="text-muted-foreground text-xs">
-                    Gérer les demandes créateur
-                  </span>
-                </Button>
-              </Link>
-
-              <Link href="/superuser/reports">
-                <Button
-                  variant="outline"
-                  className="flex h-auto w-full flex-col items-center gap-2 p-4"
-                >
-                  <AlertTriangle className="h-6 w-6" />
-                  <span className="font-medium">Signalements</span>
-                  <span className="text-muted-foreground text-xs">
-                    Modérer le contenu
-                  </span>
-                </Button>
-              </Link>
-
-              <Link href="/superuser/transactions">
-                <Button
-                  variant="outline"
-                  className="flex h-auto w-full flex-col items-center gap-2 p-4"
-                >
-                  <BarChart3 className="h-6 w-6" />
-                  <span className="font-medium">Transactions</span>
-                  <span className="text-muted-foreground text-xs">
-                    Suivi des paiements
-                  </span>
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        </section>
       </div>
-    </main>
+    </div>
   )
 }
 
-export default SuperUserPage
+function HealthMetric({
+  label,
+  status,
+  value,
+}: {
+  label: string
+  status: "healthy" | "warning" | "error" | "info"
+  value: string
+}) {
+  const statusColors = {
+    healthy: "bg-emerald-500",
+    warning: "bg-amber-500",
+    error: "bg-rose-500",
+    info: "bg-blue-500",
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className={cn(
+          "h-2.5 w-2.5 rounded-full",
+          statusColors[status],
+          status === "healthy" && "animate-pulse",
+        )}
+      />
+      <div>
+        <p className="text-muted-foreground text-xs">{label}</p>
+        <p className="text-sm font-medium">{value}</p>
+      </div>
+    </div>
+  )
+}

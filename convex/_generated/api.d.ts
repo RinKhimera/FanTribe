@@ -31,6 +31,7 @@ import type * as notifications from "../notifications.js";
 import type * as posts from "../posts.js";
 import type * as reports from "../reports.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as superuser from "../superuser.js";
 import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 import type * as validationDocuments from "../validationDocuments.js";
@@ -65,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   posts: typeof posts;
   reports: typeof reports;
   subscriptions: typeof subscriptions;
+  superuser: typeof superuser;
   transactions: typeof transactions;
   users: typeof users;
   validationDocuments: typeof validationDocuments;

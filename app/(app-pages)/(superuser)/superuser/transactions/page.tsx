@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -85,89 +86,65 @@ export default function TransactionsDashboardPage() {
     currentUser?.accountType === "SUPERUSER" ? {} : "skip",
   )
 
-  // Vérifier les permissions
+  // Loading state
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex h-[50vh] items-center justify-center">
-          <div className="border-primary h-12 w-12 animate-spin rounded-full border-b-2"></div>
+      <div className="flex h-full flex-col overflow-y-auto">
+        <div className="flex-1 space-y-4 p-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-64 rounded-lg" />
+            <Skeleton className="h-64 rounded-lg" />
+          </div>
+          <Skeleton className="h-96 rounded-lg" />
         </div>
-      </div>
-    )
-  }
-
-  if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Accès refusé</CardTitle>
-            <CardDescription>
-              Vous n&apos;avez pas les permissions nécessaires pour accéder à
-              cette page.
-            </CardDescription>
-          </CardHeader>
-        </Card>
       </div>
     )
   }
 
   return (
-    <div className="border-muted flex min-h-screen w-full flex-col border-r border-l">
-      <div className="container mx-auto space-y-6 p-6">
-        {/* En-tête */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight">
-                  Dashboard des Transactions
-                </h1>
-                {USE_TEST_DATA && (
-                  <Badge variant="secondary" className="text-xs">
-                    🧪 Mode Test
-                  </Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground mt-2">
-                Suivi des paiements et performances des créatrices
-              </p>
-              {USE_TEST_DATA && (
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Les données affichées sont fictives à des fins de
-                  démonstration
-                </p>
-              )}
-            </div>
+    <div className="flex h-full flex-col overflow-y-auto">
+      <div className="flex-1 space-y-4 p-4">
+        {/* Header with test mode badge */}
+        {USE_TEST_DATA && (
+          <div className="flex items-center justify-between">
+            <Badge variant="secondary" className="gap-1.5">
+              <span className="text-base">🧪</span>
+              Mode Test - Données fictives
+            </Badge>
           </div>
-        </div>
+        )}
 
         {/* Cartes de résumé */}
         <TransactionsSummaryCards summary={summary} isLoading={!summary} />
 
         {/* Top et Low Earners */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <TopEarnersCard
             title="Top Earners"
             description="Les 5 créatrices avec les meilleurs revenus"
             earners={summary?.topEarners || []}
-            icon={<TrendingUp className="h-5 w-5 text-green-500" />}
+            icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
             isLoading={!summary}
           />
           <TopEarnersCard
             title="Low Earners"
             description="Les 5 créatrices avec les revenus les plus faibles"
             earners={summary?.lowEarners || []}
-            icon={<TrendingDown className="h-5 w-5 text-orange-500" />}
+            icon={<TrendingDown className="h-5 w-5 text-amber-500" />}
             isLoading={!summary}
           />
         </div>
 
         {/* Tableau des transactions */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowDownUp className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ArrowDownUp className="h-4 w-4" />
               Transactions détaillées
             </CardTitle>
             <CardDescription>
@@ -220,6 +197,13 @@ export default function TransactionsDashboardPage() {
             />
           </CardContent>
         </Card>
+
+        {/* Results count */}
+        {transactions && transactions.length > 0 && (
+          <p className="text-muted-foreground text-center text-xs">
+            {transactions.length} transaction(s) affichée(s)
+          </p>
+        )}
       </div>
     </div>
   )
