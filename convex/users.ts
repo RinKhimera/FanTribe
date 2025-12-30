@@ -417,3 +417,188 @@ export const searchUsers = query({
     return filteredUsers.slice(0, 10)
   },
 })
+
+// Toggle pinned post (max 3 pinned posts)
+export const togglePinnedPost = mutation({
+  args: { postId: v.id("posts") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (!user) throw new ConvexError("User not found")
+
+    const post = await ctx.db.get(args.postId)
+    if (!post || post.author !== user._id) {
+      throw new ConvexError("Post not found or unauthorized")
+    }
+
+    const pinnedPosts = user.pinnedPostIds || []
+    const isPinned = pinnedPosts.includes(args.postId)
+
+    if (isPinned) {
+      // Unpin
+      await ctx.db.patch(user._id, {
+        pinnedPostIds: pinnedPosts.filter((id) => id !== args.postId),
+      })
+      return { pinned: false }
+    } else {
+      // Pin (max 3)
+      if (pinnedPosts.length >= 3) {
+        throw new ConvexError("Maximum 3 posts épinglés autorisés")
+      }
+      await ctx.db.patch(user._id, {
+        pinnedPostIds: [...pinnedPosts, args.postId],
+      })
+      return { pinned: true }
+    }
+  },
+})
+
+// Get pinned posts for a user
+export const getPinnedPosts = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId)
+    if (!user || !user.pinnedPostIds?.length) return []
+
+    const posts = await Promise.all(
+      user.pinnedPostIds.map((id) => ctx.db.get(id))
+    )
+
+    // Filter out deleted posts and enrich with author data
+    return posts
+      .filter((post): post is NonNullable<typeof post> => post !== null)
+      .map((post) => ({
+        ...post,
+        author: user,
+      }))
+  },
+})
+
+// Update social links with platform metadata
+export const updateSocialLinks = mutation({
+  args: {
+    socialLinks: v.array(
+      v.object({
+        platform: v.union(
+          v.literal("twitter"),
+          v.literal("instagram"),
+          v.literal("tiktok"),
+          v.literal("youtube"),
+          v.literal("website"),
+          v.literal("other")
+        ),
+        url: v.string(),
+        username: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (!user) throw new ConvexError("User not found")
+
+    await ctx.db.patch(user._id, { socialLinks: args.socialLinks })
+  },
+})
+
+// Add badge to user (SUPERUSER only)
+export const addBadge = mutation({
+  args: {
+    userId: v.id("users"),
+    badgeType: v.union(
+      v.literal("verified"),
+      v.literal("top_creator"),
+      v.literal("founding_member"),
+      v.literal("popular"),
+      v.literal("rising_star")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
+      throw new ConvexError("Unauthorized - SUPERUSER required")
+    }
+
+    const targetUser = await ctx.db.get(args.userId)
+    if (!targetUser) throw new ConvexError("User not found")
+
+    const existingBadges = targetUser.badges || []
+    const hasBadge = existingBadges.some((b) => b.type === args.badgeType)
+
+    if (!hasBadge) {
+      await ctx.db.patch(args.userId, {
+        badges: [
+          ...existingBadges,
+          { type: args.badgeType, awardedAt: Date.now() },
+        ],
+      })
+    }
+
+    return { success: true }
+  },
+})
+
+// Remove badge from user (SUPERUSER only)
+export const removeBadge = mutation({
+  args: {
+    userId: v.id("users"),
+    badgeType: v.union(
+      v.literal("verified"),
+      v.literal("top_creator"),
+      v.literal("founding_member"),
+      v.literal("popular"),
+      v.literal("rising_star")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
+      throw new ConvexError("Unauthorized - SUPERUSER required")
+    }
+
+    const targetUser = await ctx.db.get(args.userId)
+    if (!targetUser) throw new ConvexError("User not found")
+
+    const existingBadges = targetUser.badges || []
+
+    await ctx.db.patch(args.userId, {
+      badges: existingBadges.filter((b) => b.type !== args.badgeType),
+    })
+
+    return { success: true }
+  },
+})

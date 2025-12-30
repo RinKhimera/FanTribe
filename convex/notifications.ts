@@ -164,3 +164,128 @@ export const insertNewPostNotification = internalMutation({
     })
   },
 })
+
+// Mark all notifications as read
+export const markAllAsRead = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (!user) throw new ConvexError("User not found")
+
+    const unreadNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_recipient_read", (q) =>
+        q.eq("recipientId", user._id).eq("read", false)
+      )
+      .collect()
+
+    await Promise.all(
+      unreadNotifications.map((n) => ctx.db.patch(n._id, { read: true }))
+    )
+
+    return { count: unreadNotifications.length }
+  },
+})
+
+// Delete a notification
+export const deleteNotification = mutation({
+  args: { notificationId: v.id("notifications") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (!user) throw new ConvexError("User not found")
+
+    const notification = await ctx.db.get(args.notificationId)
+    if (!notification) throw new ConvexError("Notification not found")
+
+    // Verify ownership
+    if (notification.recipientId !== user._id) {
+      throw new ConvexError("Unauthorized")
+    }
+
+    await ctx.db.delete(args.notificationId)
+  },
+})
+
+// Get notifications filtered by type
+export const getNotificationsByType = query({
+  args: {
+    type: v.optional(
+      v.union(
+        v.literal("like"),
+        v.literal("comment"),
+        v.literal("newSubscription"),
+        v.literal("renewSubscription"),
+        v.literal("newPost"),
+        v.literal("all")
+      )
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (!user) throw new ConvexError("User not found")
+
+    let notifications
+    if (args.type && args.type !== "all") {
+      notifications = await ctx.db
+        .query("notifications")
+        .withIndex("by_recipient_type", (q) =>
+          q.eq("recipientId", user._id).eq("type", args.type!)
+        )
+        .order("desc")
+        .collect()
+    } else {
+      notifications = await ctx.db
+        .query("notifications")
+        .withIndex("by_recipient", (q) => q.eq("recipientId", user._id))
+        .order("desc")
+        .collect()
+    }
+
+    // Enrich with sender, post, comment data
+    const enrichedNotifications = await Promise.all(
+      notifications.map(async (notification) => {
+        const sender = await ctx.db.get(notification.sender)
+        let post = null
+        let comment = null
+
+        if (notification.post) {
+          post = await ctx.db.get(notification.post)
+        }
+        if (notification.comment) {
+          comment = await ctx.db.get(notification.comment)
+        }
+
+        return { ...notification, sender, post, comment }
+      })
+    )
+
+    return enrichedNotifications
+  },
+})

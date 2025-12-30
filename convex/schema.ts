@@ -11,6 +11,40 @@ export default defineSchema({
     bio: v.optional(v.string()),
     location: v.optional(v.string()),
     socials: v.optional(v.array(v.string())),
+    // Enriched social links with platform metadata
+    socialLinks: v.optional(
+      v.array(
+        v.object({
+          platform: v.union(
+            v.literal("twitter"),
+            v.literal("instagram"),
+            v.literal("tiktok"),
+            v.literal("youtube"),
+            v.literal("website"),
+            v.literal("other")
+          ),
+          url: v.string(),
+          username: v.optional(v.string()),
+        })
+      )
+    ),
+    // Badge system
+    badges: v.optional(
+      v.array(
+        v.object({
+          type: v.union(
+            v.literal("verified"),
+            v.literal("top_creator"),
+            v.literal("founding_member"),
+            v.literal("popular"),
+            v.literal("rising_star")
+          ),
+          awardedAt: v.number(),
+        })
+      )
+    ),
+    // Pinned posts (max 3)
+    pinnedPostIds: v.optional(v.array(v.id("posts"))),
     isOnline: v.boolean(),
     activeSessions: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
@@ -167,8 +201,19 @@ export default defineSchema({
   })
     .index("by_post", ["post"])
     .index("by_recipient", ["recipientId"])
+    .index("by_recipient_type", ["recipientId", "type"])
+    .index("by_recipient_read", ["recipientId", "read"])
     .index("by_type_post_sender", ["type", "post", "sender"])
     .index("by_type_comment_sender", ["type", "comment", "sender"]),
+
+  // User stats for public display (denormalized for performance)
+  userStats: defineTable({
+    userId: v.id("users"),
+    postsCount: v.number(),
+    subscribersCount: v.number(),
+    totalLikes: v.number(),
+    lastUpdated: v.number(),
+  }).index("by_userId", ["userId"]),
 
   blocks: defineTable({
     blockerId: v.id("users"),

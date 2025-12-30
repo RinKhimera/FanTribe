@@ -1,7 +1,8 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { SwitchCamera, X } from "lucide-react"
+import { motion } from "motion/react"
+import { Camera, Loader2, Trash2, Upload } from "lucide-react"
 import Image from "next/image"
 import { useTransition } from "react"
 import { toast } from "sonner"
@@ -9,6 +10,7 @@ import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
+import { imageLoadVariants } from "@/lib/animations"
 import { logger } from "@/lib/config/logger"
 import { deleteBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
@@ -19,23 +21,16 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
   const updateProfileImage = useMutation(api.users.updateProfileImage)
   const updateBannerImage = useMutation(api.users.updateBannerImage)
 
-  // Fonction helper pour extraire le mediaId depuis l'URL Bunny
   const extractMediaIdFromUrl = (url: string): string | null => {
     try {
-      // Pour les images: https://cdn.fantribe.io/userId/randomId.ext
-      // On veut récupérer "userId/randomId.ext" comme mediaId
       const urlParts = url.split("/")
-
-      // Trouver l'index du domaine cdn.fantribe.io et récupérer tout ce qui suit
       const domainIndex = urlParts.findIndex((part) =>
-        part.includes("cdn.fantribe.io"),
+        part.includes("cdn.fantribe.io")
       )
       if (domainIndex !== -1 && urlParts.length > domainIndex + 1) {
-        // Récupérer tous les segments après le domaine (userId/randomId.ext)
         const mediaIdParts = urlParts.slice(domainIndex + 1)
         return mediaIdParts.join("/") || null
       }
-
       return null
     } catch {
       return null
@@ -49,7 +44,6 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
   }) => {
     startTransition(async () => {
       try {
-        // Supprimer l'ancienne image de profil si elle existe et n'est pas le placeholder
         if (
           currentUser?.image &&
           !currentUser.image.includes("placeholder.jpg") &&
@@ -62,7 +56,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
             } catch (error) {
               logger.warn(
                 "Impossible de supprimer l'ancienne image de profil",
-                { error, oldMediaId },
+                { error, oldMediaId }
               )
             }
           }
@@ -90,7 +84,6 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
   }) => {
     startTransition(async () => {
       try {
-        // Supprimer l'ancienne bannière si elle existe et n'est pas le placeholder
         if (
           currentUser?.imageBanner &&
           !currentUser.imageBanner.includes("placeholder.jpg") &&
@@ -131,7 +124,6 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           bannerUrl: "https://cdn.fantribe.io/fantribe/placeholder.jpg",
           tokenIdentifier: currentUser?.tokenIdentifier || "",
         })
-
         toast.success("Votre photo de bannière a été supprimée")
       } catch (error) {
         logger.error("Failed to delete banner image", error)
@@ -144,90 +136,131 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
   }
 
   return (
-    <div className="relative">
-      <div>
-        <AspectRatio ratio={3 / 1} className="bg-muted relative">
-          <Image
-            src={
-              currentUser?.imageBanner ||
-              "https://cdn.fantribe.io/fantribe/placeholder.jpg"
-            }
-            alt={currentUser?.name as string}
-            className="object-cover"
-            fill
-          />
+    <div>
+      {/* Banner */}
+      <div className="group relative">
+        <AspectRatio ratio={3 / 1} className="bg-muted">
+          <motion.div
+            variants={imageLoadVariants}
+            initial="initial"
+            animate="animate"
+            className="relative h-full w-full"
+          >
+            <Image
+              src={
+                currentUser?.imageBanner ||
+                "https://cdn.fantribe.io/fantribe/placeholder.jpg"
+              }
+              alt={currentUser?.name as string}
+              className="object-cover"
+              fill
+            />
+          </motion.div>
 
-          <div className="absolute inset-0 flex items-center justify-center gap-6 bg-black/60 transition duration-300 hover:opacity-100 md:opacity-0">
-            <BunnyUploadWidget
-              userId={(currentUser?._id as string) || ""}
-              fileName={`${currentUser?._id}/banner`}
-              uploadType="image"
-              onSuccess={handleUploadBanner}
-            >
-              {({ open }) => {
-                return (
-                  <div
-                    className={cn(
-                      "bg-accent hover:bg-accent/60 flex size-11 cursor-pointer items-center justify-center rounded-full text-white transition",
-                      { "cursor-not-allowed": isPending },
-                    )}
-                    onClick={() => open()}
-                  >
-                    <SwitchCamera />
-                  </div>
-                )
-              }}
-            </BunnyUploadWidget>
+          {/* Hover overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            className="absolute inset-0 flex items-center justify-center gap-4 bg-black/60 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+          >
+            {isPending ? (
+              <div className="flex size-12 items-center justify-center rounded-full bg-white/20">
+                <Loader2 className="size-6 animate-spin text-white" />
+              </div>
+            ) : (
+              <>
+                <BunnyUploadWidget
+                  userId={(currentUser?._id as string) || ""}
+                  fileName={`${currentUser?._id}/banner`}
+                  uploadType="image"
+                  onSuccess={handleUploadBanner}
+                >
+                  {({ open }) => (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => open()}
+                      className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30"
+                    >
+                      <Upload className="size-5" />
+                    </motion.button>
+                  )}
+                </BunnyUploadWidget>
 
-            <div
-              className={cn(
-                "bg-accent hover:bg-accent/60 flex size-11 cursor-pointer items-center justify-center rounded-full text-white transition",
-                { "cursor-not-allowed": isPending },
-              )}
-              onClick={isPending ? undefined : handleDeleteBanner}
-            >
-              <X />
-            </div>
-          </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleDeleteBanner}
+                  className="hover:bg-destructive/80 flex size-12 items-center justify-center rounded-full bg-white/20 text-white transition-colors"
+                >
+                  <Trash2 className="size-5" />
+                </motion.button>
+              </>
+            )}
+          </motion.div>
         </AspectRatio>
+
+        {/* Upload hint */}
+        <div className="text-muted-foreground pointer-events-none absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-xs opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+          <Camera className="size-3" />
+          <span>Cliquez pour modifier</span>
+        </div>
       </div>
 
-      <div className="absolute -bottom-[48px] left-5 max-sm:-bottom-[38px]">
+      {/* Avatar - positioned to overlap banner */}
+      <div className="-mt-14 mb-4 px-4 sm:-mt-16 sm:px-6">
         <BunnyUploadWidget
           userId={(currentUser?._id as string) || ""}
           fileName={`${currentUser?._id}/profile`}
           uploadType="image"
           onSuccess={handleUploadProfile}
         >
-          {({ open }) => {
-            return (
+          {({ open }) => (
+            <motion.div
+              variants={imageLoadVariants}
+              initial="initial"
+              animate="animate"
+              whileHover={{ scale: 1.05 }}
+              className="group relative inline-block"
+            >
               <Avatar
                 className={cn(
-                  "border-accent relative size-36 cursor-pointer border-4 object-none object-center max-sm:size-24",
-                  { "cursor-not-allowed": isPending },
+                  "ring-background size-28 cursor-pointer ring-4 transition-shadow hover:shadow-xl sm:size-32",
+                  { "pointer-events-none opacity-50": isPending }
                 )}
-                onClick={() => open()}
+                onClick={() => !isPending && open()}
               >
                 {currentUser?.image ? (
                   <AvatarImage
                     src={currentUser.image}
-                    width={600}
-                    height={600}
                     className="object-cover"
                     alt={currentUser?.name || "Profile image"}
                   />
                 ) : (
-                  <AvatarFallback>XO</AvatarFallback>
+                  <AvatarFallback className="bg-muted text-3xl">
+                    {currentUser?.name?.charAt(0) || "?"}
+                  </AvatarFallback>
                 )}
-
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-300 hover:opacity-100">
-                  <div className="bg-accent flex size-11 items-center justify-center rounded-full text-white">
-                    <SwitchCamera />
-                  </div>
-                </div>
               </Avatar>
-            )
-          }}
+
+              {/* Avatar overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileHover={{ opacity: 1 }}
+                className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={() => !isPending && open()}
+              >
+                {isPending ? (
+                  <Loader2 className="size-8 animate-spin text-white" />
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <Camera className="size-6 text-white" />
+                    <span className="text-xs text-white">Modifier</span>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
         </BunnyUploadWidget>
       </div>
     </div>
