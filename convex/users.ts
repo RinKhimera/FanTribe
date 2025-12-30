@@ -109,6 +109,16 @@ export const getUsers = query({
   },
 })
 
+// Fisher-Yates shuffle algorithm for unbiased randomization
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
 export const getSuggestedCreators = query({
   // Le refreshKey permet de forcer une nouvelle randomisation
   args: { refreshKey: v.optional(v.number()) },
@@ -121,8 +131,8 @@ export const getSuggestedCreators = query({
       .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
       .collect()
 
-    // Mélanger aléatoirement et prendre les 48 premiers
-    const shuffled = creators.sort(() => 0.5 - Math.random())
+    // Mélanger avec Fisher-Yates (distribution uniforme) et prendre les 48 premiers
+    const shuffled = fisherYatesShuffle(creators)
     return shuffled.slice(0, 48)
   },
 })
@@ -394,8 +404,23 @@ export const searchUsers = query({
 
     if (!currentUser) return []
 
-    // Récupérer tous les utilisateurs (sauf l'utilisateur actuel)
-    const allUsers = await ctx.db
+    const searchTermLower = args.searchTerm.toLowerCase().trim()
+    if (!searchTermLower) return []
+
+    // Utiliser le search index pour la recherche par nom (full-text search)
+    const nameResults = await ctx.db
+      .query("users")
+      .withSearchIndex("search_users", (q) => q.search("name", searchTermLower))
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("_id"), currentUser._id),
+          q.neq(q.field("username"), undefined),
+        ),
+      )
+      .take(10)
+
+    // Recherche par username (substring match - nécessite un filtre en mémoire)
+    const usersWithUsername = await ctx.db
       .query("users")
       .filter((q) =>
         q.and(
@@ -405,16 +430,24 @@ export const searchUsers = query({
       )
       .collect()
 
-    // Recherche flexible (contient le terme)
-    const searchTermLower = args.searchTerm.toLowerCase()
-    const filteredUsers = allUsers.filter(
-      (user) =>
-        user.name?.toLowerCase().includes(searchTermLower) ||
-        user.username?.toLowerCase().includes(searchTermLower),
-    )
+    // Filtrer par username avec early termination
+    const usernameResults: typeof usersWithUsername = []
+    const seenIds = new Set(nameResults.map((u) => u._id))
 
-    // Limiter à 10 résultats
-    return filteredUsers.slice(0, 10)
+    for (const user of usersWithUsername) {
+      if (
+        !seenIds.has(user._id) &&
+        user.username?.toLowerCase().includes(searchTermLower)
+      ) {
+        usernameResults.push(user)
+        seenIds.add(user._id)
+        if (usernameResults.length >= 10) break
+      }
+    }
+
+    // Combiner les résultats (name results prioritaires)
+    const combined = [...nameResults, ...usernameResults]
+    return combined.slice(0, 10)
   },
 })
 

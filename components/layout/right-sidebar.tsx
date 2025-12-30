@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react"
 import { usePathname } from "next/navigation"
 import { SubscriptionSidebar } from "@/components/domains/subscriptions"
-import { SuggestionSidebar } from "@/components/shared/suggestion-sidebar"
+import { SuggestionSidebar } from "@/components/shared/suggestions"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { cn } from "@/lib/utils"

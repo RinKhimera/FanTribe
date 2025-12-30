@@ -262,7 +262,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           openImage(media)
         }}
         className={cn(
-          "group relative flex w-full overflow-hidden focus:outline-none",
+          "group relative flex w-full cursor-pointer overflow-hidden focus:outline-none",
           !isInCarousel && "mt-3 rounded-xl",
         )}
         onContextMenu={(e) => e.preventDefault()}

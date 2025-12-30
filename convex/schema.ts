@@ -59,7 +59,11 @@ export default defineSchema({
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_username", ["username"])
     .index("byExternalId", ["externalId"])
-    .index("by_accountType", ["accountType"]),
+    .index("by_accountType", ["accountType"])
+    .searchIndex("search_users", {
+      searchField: "name",
+      filterFields: ["accountType", "username"],
+    }),
 
   creatorApplications: defineTable({
     userId: v.id("users"),

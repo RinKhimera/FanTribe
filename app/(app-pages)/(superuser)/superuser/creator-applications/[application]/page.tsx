@@ -22,17 +22,12 @@ import Image from "next/image"
 import Link from "next/link"
 import { use, useState, useTransition } from "react"
 import { toast } from "sonner"
+import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
@@ -73,10 +68,8 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
   const [adminNotes, setAdminNotes] = useState("")
   const [notesInitialized, setNotesInitialized] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [selectedImage, setSelectedImage] = useState<{
-    url: string
-    alt: string
-  } | null>(null)
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState(0)
   const [isEditingStatus, setIsEditingStatus] = useState(false)
 
   const application = useQuery(
@@ -317,13 +310,11 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                     </span>
                   </div>
                   <button
-                    onClick={() =>
-                      setSelectedImage({
-                        url: doc.url,
-                        alt: documentTypeLabels[doc.type] ?? doc.type,
-                      })
-                    }
-                    className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted transition-all hover:ring-2 hover:ring-primary/50"
+                    onClick={() => {
+                      setViewerIndex(index)
+                      setViewerOpen(true)
+                    }}
+                    className="relative aspect-video w-full cursor-pointer overflow-hidden rounded-lg border bg-muted transition-all hover:ring-2 hover:ring-primary/50"
                   >
                     <Image
                       src={doc.url}
@@ -462,28 +453,14 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
         </Card>
       </div>
 
-      {/* Image Dialog */}
-      <Dialog
-        open={selectedImage !== null}
-        onOpenChange={() => setSelectedImage(null)}
-      >
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{selectedImage?.alt}</DialogTitle>
-          </DialogHeader>
-          <div className="flex items-center justify-center">
-            {selectedImage && (
-              <Image
-                src={selectedImage.url}
-                alt={selectedImage.alt}
-                width={800}
-                height={600}
-                className="max-h-[70vh] rounded-lg object-contain"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Fullscreen Image Viewer */}
+      <FullscreenImageViewer
+        medias={application.identityDocuments.map((doc) => doc.url)}
+        index={viewerIndex}
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        onIndexChange={setViewerIndex}
+      />
     </div>
   )
 }
