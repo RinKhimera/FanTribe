@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
-import { formSectionVariants, itemVariants } from "@/lib/animations"
+import { itemVariants } from "@/lib/animations"
 import { logger } from "@/lib/config/logger"
 import { cn } from "@/lib/utils"
 import { profileFormSchema } from "@/schemas/profile"
@@ -90,6 +90,7 @@ export const EditProfileForm = ({
   })
 
   const { watch } = form
+  // eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form's watch is intentionally used here
   const watchUsername = watch("username")
 
   const checkUsername = useQuery(api.users.getAvailableUsername, {

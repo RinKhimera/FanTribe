@@ -1,7 +1,7 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { fullscreenVariants } from "@/lib/animations"
@@ -27,14 +27,14 @@ export const FullscreenImageViewer = ({
   const startY = useRef<number | null>(null)
   const startX = useRef<number | null>(null)
   const [isMounted, setIsMounted] = useState<boolean>(open)
-  const [isClosing, setIsClosing] = useState<boolean>(false)
+  const [, setIsClosing] = useState<boolean>(false)
   const ANIMATION_MS = 200
 
   const handleMountState = useEffectEvent(
     (mounted: boolean, closing: boolean) => {
       setIsMounted(mounted)
       setIsClosing(closing)
-    }
+    },
   )
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export const FullscreenImageViewer = ({
       const next = index + dir
       onIndexChange?.(next)
     },
-    [index, total, open, onIndexChange]
+    [index, total, open, onIndexChange],
   )
 
   useEffect(() => {
@@ -138,7 +138,7 @@ export const FullscreenImageViewer = ({
           transition={{ duration: 0.2 }}
           className={cn(
             "fixed inset-0 z-[999] flex items-center justify-center select-none",
-            className
+            className,
           )}
           role="dialog"
           aria-modal="true"
@@ -190,7 +190,7 @@ export const FullscreenImageViewer = ({
                 "glass-button absolute top-1/2 left-4 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full transition-all",
                 index === 0
                   ? "cursor-not-allowed opacity-30"
-                  : "hover:scale-110"
+                  : "hover:scale-110",
               )}
             >
               <ChevronLeft className="size-6 text-white" />
@@ -213,7 +213,7 @@ export const FullscreenImageViewer = ({
                 "glass-button absolute top-1/2 right-4 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full transition-all",
                 index === total - 1
                   ? "cursor-not-allowed opacity-30"
-                  : "hover:scale-110"
+                  : "hover:scale-110",
               )}
             >
               <ChevronRight className="size-6 text-white" />
@@ -239,7 +239,7 @@ export const FullscreenImageViewer = ({
                     "relative size-12 overflow-hidden rounded-lg transition-all",
                     i === index
                       ? "ring-primary ring-2 ring-offset-2 ring-offset-black/50"
-                      : "opacity-60 hover:opacity-100"
+                      : "opacity-60 hover:opacity-100",
                   )}
                 >
                   {isVideo(m) ? (
@@ -338,7 +338,7 @@ export const FullscreenImageViewer = ({
                       />
                     )}
                   </motion.div>
-                ) : null
+                ) : null,
               )}
             </AnimatePresence>
           </motion.div>

@@ -78,7 +78,7 @@ interface PinnedPostCardProps {
   isOwner: boolean
 }
 
-const PinnedPostCard = ({ post, username, isOwner }: PinnedPostCardProps) => {
+const PinnedPostCard = ({ post, username }: PinnedPostCardProps) => {
   const hasMedia = post.medias && post.medias.length > 0
   const firstMedia = hasMedia ? post.medias[0] : null
   const isVideo =

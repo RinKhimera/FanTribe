@@ -185,14 +185,14 @@ export const UserGallery = ({
   )
 
   // Split items into columns for masonry layout
-  const columns = useMemo(() => {
+  const columns = (() => {
     if (!userGallery) return [[], [], []]
     const cols: typeof userGallery[] = [[], [], []]
     userGallery.forEach((item, index) => {
       cols[index % 3].push(item)
     })
     return cols
-  }, [userGallery])
+  })()
 
   if (!userGallery) {
     return (

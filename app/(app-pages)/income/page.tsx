@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react"
 import { Calendar, DollarSign, TrendingUp, Wallet } from "lucide-react"
+import { PageContainer } from "@/components/layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
@@ -23,10 +24,7 @@ const IncomePage = () => {
   // Vérification des permissions
   if (isUserLoading) {
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-        <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-          Revenus
-        </h1>
+      <PageContainer title="Revenus">
         <div className="space-y-6 p-4">
           <Skeleton className="h-12 w-64" />
           <div className="grid gap-4 md:grid-cols-3">
@@ -35,7 +33,7 @@ const IncomePage = () => {
             <Skeleton className="h-40" />
           </div>
         </div>
-      </main>
+      </PageContainer>
     )
   }
 
@@ -50,10 +48,7 @@ const IncomePage = () => {
     })
 
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-        <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-          Revenus
-        </h1>
+      <PageContainer title="Revenus">
         <div className="flex flex-1 items-center justify-center p-4">
           <div className="max-w-md space-y-4 text-center">
             <div className="border-destructive/50 bg-destructive/10 rounded-lg border p-6">
@@ -67,7 +62,7 @@ const IncomePage = () => {
             </div>
           </div>
         </div>
-      </main>
+      </PageContainer>
     )
   }
 
@@ -91,11 +86,7 @@ const IncomePage = () => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-      <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-        Revenus
-      </h1>
-
+    <PageContainer title="Revenus">
       <div className="space-y-6 p-4">
         {/* Description */}
         <p className="text-muted-foreground">
@@ -223,7 +214,7 @@ const IncomePage = () => {
           </div>
         )}
       </div>
-    </main>
+    </PageContainer>
   )
 }
 

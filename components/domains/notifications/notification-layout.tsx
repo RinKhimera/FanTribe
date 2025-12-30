@@ -2,7 +2,8 @@
 
 import { useConvexAuth, useQuery } from "convex/react"
 import { AnimatePresence, motion } from "motion/react"
-import { Bell, Inbox } from "lucide-react"
+import { Inbox } from "lucide-react"
+// Note: motion is still used for list animations below
 import { useMemo, useState } from "react"
 import { PageContainer } from "@/components/layout"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -35,36 +36,19 @@ export const NotificationsLayout = () => {
 
   return (
     <PageContainer
-      headerContent={
-        <div className="flex items-center gap-3">
-          <motion.div
-            initial={{ rotate: -20, scale: 0.8 }}
-            animate={{ rotate: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Bell className="size-6" />
-          </motion.div>
-          <span className="text-xl font-bold">Notifications</span>
-        </div>
-      }
-    >
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-[calc(var(--header-height))] z-20 px-4 pb-4 pt-2"
-      >
-        {/* Header with filter dropdown and actions */}
-        <div className="flex items-center justify-between gap-4">
+      title="Notifications"
+      secondaryBar={
+        <div className="flex items-center justify-between gap-4 px-4 py-2">
           <NotificationFilterTabs
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
           />
           <NotificationActions unreadCount={unreadCount} />
         </div>
-      </motion.div>
-
+      }
+    >
       {/* Content area */}
-      <div className="px-4 pb-8">
+      <div className="px-4 py-4">
         {isLoading ? (
           <NotificationsSkeleton />
         ) : userNotifications?.length === 0 ? (
@@ -77,7 +61,7 @@ export const NotificationsLayout = () => {
             className="space-y-3"
           >
             <AnimatePresence mode="popLayout">
-              {userNotifications?.map((notification, index) => (
+              {userNotifications?.map((notification) => (
                 <motion.div
                   key={notification._id}
                   variants={itemVariants}

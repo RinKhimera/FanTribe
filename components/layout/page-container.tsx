@@ -1,5 +1,6 @@
 "use client"
 
+import type { LucideIcon } from "lucide-react"
 import React from "react"
 import { cn } from "@/lib/utils"
 import { PageHeader } from "./page-header"
@@ -16,10 +17,20 @@ export type PageContainerProps = {
   children: React.ReactNode
   /** Titre affiché dans le header sticky (optionnel) */
   title?: string
+  /** Icône optionnelle affichée à côté du titre */
+  headerIcon?: LucideIcon
   /** Contenu personnalisé pour le header (remplace le titre) */
   headerContent?: React.ReactNode
+  /** Action à afficher à gauche du header (bouton retour, etc.) */
+  headerLeftAction?: React.ReactNode
   /** Actions à afficher à droite du header */
+  headerRightAction?: React.ReactNode
+  /** @deprecated Utiliser headerRightAction à la place */
   headerActions?: React.ReactNode
+  /** Barre secondaire sticky sous le header (tabs, filtres) */
+  secondaryBar?: React.ReactNode
+  /** Classes pour la barre secondaire */
+  secondaryBarClassName?: string
   /** Variant de largeur du conteneur */
   variant?: PageContainerVariant
   /** Masquer le header sticky */
@@ -36,6 +47,7 @@ export type PageContainerProps = {
  * Gère :
  * - Les bordures latérales cohérentes
  * - Le header sticky avec titre
+ * - La barre secondaire (tabs, filtres)
  * - L'espacement pour la navigation mobile
  *
  * Note: Ce composant remplit automatiquement l'espace disponible
@@ -48,12 +60,22 @@ export type PageContainerProps = {
  * </PageContainer>
  *
  * @example
- * // Page avec header personnalisé et actions
+ * // Page avec header et barre secondaire
  * <PageContainer
  *   title="Messages"
- *   headerActions={<NewMessageButton />}
+ *   headerRightAction={<NewMessageButton />}
+ *   secondaryBar={<FilterTabs />}
  * >
  *   <MessagesList />
+ * </PageContainer>
+ *
+ * @example
+ * // Page avec bouton retour
+ * <PageContainer
+ *   title="Détails"
+ *   headerLeftAction={<BackButton />}
+ * >
+ *   <Content />
  * </PageContainer>
  *
  * @example
@@ -66,13 +88,21 @@ export type PageContainerProps = {
 export const PageContainer = ({
   children,
   title,
+  headerIcon,
   headerContent,
+  headerLeftAction,
+  headerRightAction,
   headerActions,
+  secondaryBar,
+  secondaryBarClassName,
   variant = "default",
   hideHeader = false,
   className,
   contentClassName,
 }: PageContainerProps) => {
+  // Support pour l'ancien prop "headerActions" (rétrocompatibilité)
+  const resolvedRightAction = headerRightAction ?? headerActions
+
   return (
     <div
       className={cn(
@@ -81,13 +111,20 @@ export const PageContainer = ({
         // Bordures latérales (sauf variant full)
         variant !== "full" && "border-muted border-r border-l",
         // Mobile padding pour la navigation bottom
-        "max-[500px]:pb-(--mobile-nav-height)",
+        "max-[500px]:pb-[var(--mobile-nav-height)]",
         className,
       )}
     >
       {/* Header sticky optionnel */}
       {!hideHeader && (title || headerContent) && (
-        <PageHeader title={title} actions={headerActions}>
+        <PageHeader
+          title={title}
+          icon={headerIcon}
+          leftAction={headerLeftAction}
+          rightAction={resolvedRightAction}
+          secondaryBar={secondaryBar}
+          secondaryBarClassName={secondaryBarClassName}
+        >
           {headerContent}
         </PageHeader>
       )}

@@ -2,7 +2,7 @@
 
 import { useMutation } from "convex/react"
 import { motion } from "motion/react"
-import { Check, Ellipsis, Eye, EyeOff, Trash2 } from "lucide-react"
+import { Check, Ellipsis, EyeOff, Trash2 } from "lucide-react"
 import { useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
