@@ -3,41 +3,73 @@
 import { useMutation, useQuery } from "convex/react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { Camera, Check, Edit, FileText, Shield, User, X } from "lucide-react"
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Calendar,
+  Camera,
+  Check,
+  ExternalLink,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldAlert,
+  User,
+  X,
+} from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { use, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { getStatusBadge } from "@/lib/ui"
-import { detectRiskFactors, getRiskBadge } from "@/lib/validators"
+import { detectRiskFactors } from "@/lib/validators"
+import { cn } from "@/lib/utils"
 
 interface ApplicationDetailsProps {
   params: Promise<{ application: Id<"creatorApplications"> }>
 }
 
-const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
+const statusConfig = {
+  pending: {
+    label: "En attente",
+    className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  },
+  approved: {
+    label: "Approuvé",
+    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  },
+  rejected: {
+    label: "Rejeté",
+    className: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  },
+}
+
+const documentTypeLabels: Record<string, string> = {
+  identity_card: "Carte d'identité",
+  passport: "Passeport",
+  driving_license: "Permis de conduire",
+  selfie: "Selfie",
+}
+
+export default function ApplicationDetails({ params }: ApplicationDetailsProps) {
   const { application: applicationId } = use(params)
   const { currentUser } = useCurrentUser()
   const [adminNotes, setAdminNotes] = useState("")
+  const [notesInitialized, setNotesInitialized] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [selectedImage, setSelectedImage] = useState<{
-    url: string
-    alt: string
-  } | null>(null)
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState(0)
   const [isEditingStatus, setIsEditingStatus] = useState(false)
 
   const application = useQuery(
@@ -47,7 +79,6 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
       : "skip",
   )
 
-  // Query pour toutes les applications (pour la détection de risques)
   const allApplications = useQuery(
     api.creatorApplications.getAllApplications,
     currentUser?.accountType === "SUPERUSER" ? {} : "skip",
@@ -56,6 +87,12 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
   const reviewApplication = useMutation(
     api.creatorApplications.reviewApplication,
   )
+
+  // Initialize admin notes during render (not in useEffect to avoid cascading renders)
+  if (application?.adminNotes && !notesInitialized) {
+    setAdminNotes(application.adminNotes)
+    setNotesInitialized(true)
+  }
 
   const handleReview = (decision: "approved" | "rejected") => {
     if (!application) return
@@ -67,12 +104,12 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
           decision,
           adminNotes: adminNotes || undefined,
         })
-
         toast.success(
           decision === "approved"
-            ? "Candidature approuvée ✅"
-            : "Candidature rejetée ❌",
+            ? "Candidature approuvée"
+            : "Candidature rejetée",
         )
+        setIsEditingStatus(false)
       } catch (error) {
         console.error(error)
         toast.error("Erreur lors de la révision")
@@ -81,109 +118,93 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
   }
 
   const formatDate = (timestamp: number) => {
-    return format(new Date(timestamp), "dd/MM/yyyy 'à' HH:mm", { locale: fr })
+    return format(new Date(timestamp), "d MMM yyyy 'à' HH:mm", { locale: fr })
   }
 
-  const getDocumentTypeLabel = (type: string) => {
-    switch (type) {
-      case "identity_card":
-        return "Carte d'identité"
-      case "passport":
-        return "Passeport"
-      case "driving_license":
-        return "Permis de conduire"
-      case "selfie":
-        return "Selfie"
-      default:
-        return type
-    }
-  }
-
-  // États de chargement
+  // Loading state
   if (!application || !allApplications) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse text-lg">Chargement...</div>
-      </div>
-    )
+    return <LoadingSkeleton />
   }
 
-  // Cas où l'application n'existe pas (ID invalide ou application supprimée)
+  // Not found state
   if (application === null) {
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l">
-        <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
-          <h1 className="text-xl font-bold">Candidature introuvable</h1>
+      <div className="flex h-full flex-col items-center justify-center p-8">
+        <div className="bg-muted/50 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+          <FileText className="text-muted-foreground h-8 w-8" />
         </div>
-        <div className="flex flex-1 items-center justify-center p-6">
-          <Card className="max-w-md text-center">
-            <CardHeader>
-              <CardTitle>Candidature introuvable</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                Cette candidature n&apos;existe pas ou a été supprimée.
-              </p>
-              <Link href="/superuser/creator-applications">
-                <Button className="w-full">Retour aux candidatures</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+        <h2 className="mb-2 text-xl font-semibold">Candidature introuvable</h2>
+        <p className="text-muted-foreground mb-6 text-center">
+          Cette candidature n&apos;existe pas ou a été supprimée.
+        </p>
+        <Link href="/superuser/creator-applications">
+          <Button>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour aux candidatures
+          </Button>
+        </Link>
+      </div>
     )
   }
 
-  // Calcul des facteurs de risque
   const riskFactors = detectRiskFactors(application, allApplications)
   const hasRisk = riskFactors.length > 0
-
-  // Initialiser les notes admin
-  if (adminNotes === "" && application.adminNotes) {
-    setAdminNotes(application.adminNotes)
-  }
+  const status = statusConfig[application.status] ?? statusConfig.pending
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-12">
-      {/* Header avec bouton retour */}
-      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">
-              Candidature de {application.personalInfo.fullName}
+    <div className="flex h-full flex-col overflow-y-auto">
+      <div className="flex-1 space-y-6 p-4 md:p-6">
+        {/* Back link + Status header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Link
+              href="/superuser/creator-applications"
+              className="text-muted-foreground hover:text-foreground mb-2 inline-flex items-center gap-1 text-sm transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour aux candidatures
+            </Link>
+            <h1 className="text-2xl font-bold">
+              {application.personalInfo.fullName}
             </h1>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
+              <Calendar className="h-3.5 w-3.5" />
               Soumise le {formatDate(application.submittedAt)}
-              {application.reviewedAt && (
-                <span className="ml-2">
-                  • Traitée le {formatDate(application.reviewedAt)}
-                </span>
-              )}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {getStatusBadge(application.status)}
-            {hasRisk &&
-              application.status === "pending" &&
-              getRiskBadge(riskFactors)}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className={cn("text-sm", status.className)}>
+              {status.label}
+            </Badge>
+            {hasRisk && application.status === "pending" && (
+              <Badge
+                variant="outline"
+                className="border-orange-500/30 bg-orange-500/10 text-orange-600"
+              >
+                <AlertTriangle className="mr-1 h-3 w-3" />
+                {riskFactors.length} risque(s)
+              </Badge>
+            )}
           </div>
         </div>
-      </div>
 
-      <div className="flex-1 space-y-6 p-6">
-        {/* Alertes de risque */}
+        {/* Risk Alert */}
         {hasRisk && application.status === "pending" && (
-          <Alert className="border-orange-500 bg-orange-950/50 text-orange-100">
-            <Shield className="h-4 w-4 text-orange-400" />
-            <AlertTitle className="text-orange-200">
-              Candidature à risque détectée
-            </AlertTitle>
-            <AlertDescription className="text-orange-300">
-              <ul className="mt-2 space-y-1">
+          <Alert className="border-orange-500/30 bg-orange-500/5">
+            <ShieldAlert className="h-4 w-4 text-orange-500" />
+            <AlertDescription>
+              <p className="mb-2 font-medium text-orange-700 dark:text-orange-400">
+                Facteurs de risque détectés
+              </p>
+              <ul className="space-y-1">
                 {riskFactors.map((factor, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="font-medium text-orange-400">•</span>
-                    <span>{factor.message}</span>
+                  <li
+                    key={index}
+                    className="text-muted-foreground flex items-start gap-2 text-sm"
+                  >
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-orange-500" />
+                    {factor.message}
                   </li>
                 ))}
               </ul>
@@ -191,131 +212,135 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
           </Alert>
         )}
 
-        {/* Informations utilisateur */}
+        {/* User Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="h-5 w-5" />
-              Informations utilisateur
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Link href={`/${application.user?.username}`}>
-              <div className="hover:bg-muted/50 flex cursor-pointer items-center space-x-4 rounded-lg p-2 transition-colors">
-                <div className="bg-muted flex h-12 w-12 items-center justify-center overflow-hidden rounded-full">
-                  {application.user?.image ? (
-                    <Image
-                      src={application.user.image}
-                      alt={application.user.name}
-                      width={48}
-                      height={48}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="h-6 w-6" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">{application.user?.name}</h3>
-                  <p className="text-muted-foreground text-sm">
-                    @{application.user?.username || "N/A"} •{" "}
-                    {application.user?.email}
+          <CardContent className="p-4">
+            <Link
+              href={`/${application.user?.username}`}
+              className="group flex items-center gap-4"
+            >
+              <Avatar className="h-14 w-14 border-2">
+                <AvatarImage src={application.user?.image} />
+                <AvatarFallback className="text-lg font-medium">
+                  {application.personalInfo.fullName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-lg font-semibold">
+                    {application.user?.name}
                   </p>
+                  <ExternalLink className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-60" />
                 </div>
-                <div className="text-muted-foreground text-xs">
-                  Cliquez pour voir le profil
-                </div>
+                <p className="text-muted-foreground truncate text-sm">
+                  @{application.user?.username}
+                </p>
+                <p className="text-muted-foreground truncate text-xs">
+                  {application.user?.email}
+                </p>
               </div>
             </Link>
           </CardContent>
         </Card>
 
-        {/* Informations personnelles */}
+        {/* Personal Info Grid */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <User className="h-4 w-4" />
               Informations personnelles
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">
-                Nom complet
-              </p>
-              <p className="font-medium">{application.personalInfo.fullName}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">
-                Date de naissance
-              </p>
-              <p className="font-medium">
-                {application.personalInfo.dateOfBirth}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">
-                Téléphone
-              </p>
-              <p className="font-medium">
-                {application.personalInfo.phoneNumber}
-              </p>
-            </div>
-            <div className="md:col-span-2">
-              <p className="text-muted-foreground text-sm font-medium">
-                Adresse
-              </p>
-              <p className="font-medium">{application.personalInfo.address}</p>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <InfoField
+              icon={User}
+              label="Nom complet"
+              value={application.personalInfo.fullName}
+            />
+            <InfoField
+              icon={Calendar}
+              label="Date de naissance"
+              value={application.personalInfo.dateOfBirth}
+            />
+            <InfoField
+              icon={Phone}
+              label="Téléphone"
+              value={application.personalInfo.phoneNumber}
+            />
+            <InfoField
+              icon={Mail}
+              label="Email"
+              value={application.user?.email ?? "—"}
+            />
+            <div className="sm:col-span-2">
+              <InfoField
+                icon={MapPin}
+                label="Adresse"
+                value={application.personalInfo.address}
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Documents d'identité */}
+        {/* Identity Documents */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Camera className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Camera className="h-4 w-4" />
               Documents d&apos;identité
+              <Badge variant="secondary" className="ml-auto">
+                {application.identityDocuments.length} fichier(s)
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {application.identityDocuments.map((doc, index) => (
-                <div key={index} className="space-y-2">
+                <div key={index} className="group space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
-                      {getDocumentTypeLabel(doc.type)}
+                      {documentTypeLabels[doc.type] ?? doc.type}
                     </span>
-                    <Badge variant={"outline"}>
+                    <span className="text-muted-foreground text-xs">
                       {formatDate(doc.uploadedAt)}
-                    </Badge>
+                    </span>
                   </div>
-                  <div
-                    className="bg-muted relative aspect-video cursor-pointer overflow-hidden rounded-lg border transition-opacity hover:opacity-90"
-                    onClick={() =>
-                      setSelectedImage({
-                        url: doc.url,
-                        alt: getDocumentTypeLabel(doc.type),
-                      })
-                    }
+                  <button
+                    onClick={() => {
+                      setViewerIndex(index)
+                      setViewerOpen(true)
+                    }}
+                    className="relative aspect-video w-full cursor-pointer overflow-hidden rounded-lg border bg-muted transition-all hover:ring-2 hover:ring-primary/50"
                   >
                     <Image
                       src={doc.url}
-                      alt={getDocumentTypeLabel(doc.type)}
+                      alt={documentTypeLabels[doc.type] ?? doc.type}
                       fill
-                      className="object-cover"
+                      className="object-cover transition-transform group-hover:scale-105"
                     />
-                  </div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+                      <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        Agrandir
+                      </span>
+                    </div>
+                  </button>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Motivations */}
+        {/* Motivation */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Motivations</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="h-4 w-4" />
+              Motivation
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -324,17 +349,10 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
           </CardContent>
         </Card>
 
-        {/* Notes admin */}
+        {/* Admin Notes */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              Notes administratives
-              {isEditingStatus && (
-                <span className="text-muted-foreground ml-2 text-sm font-normal">
-                  (Modifiable)
-                </span>
-              )}
-            </CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Notes administratives</CardTitle>
           </CardHeader>
           <CardContent>
             {application.status === "pending" || isEditingStatus ? (
@@ -342,12 +360,12 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
                 placeholder="Ajoutez des notes sur cette candidature..."
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                className="min-h-20"
+                className="min-h-24 resize-none"
               />
             ) : (
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-sm whitespace-pre-wrap">
-                  {application.adminNotes || "Aucune note administrative"}
+              <div className="bg-muted/50 min-h-24 rounded-lg p-4">
+                <p className="text-muted-foreground text-sm whitespace-pre-wrap">
+                  {application.adminNotes || "Aucune note"}
                 </p>
               </div>
             )}
@@ -355,128 +373,155 @@ const ApplicationDetails = ({ params }: ApplicationDetailsProps) => {
         </Card>
 
         {/* Actions */}
-        <Card className="@container">
-          <CardHeader>
-            <CardTitle className="text-lg">Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card className="border-2">
+          <CardContent className="p-4">
             {application.status === "pending" ? (
-              <div className="flex flex-col gap-3 @md:flex-row">
+              <div className="space-y-3">
+                <p className="text-muted-foreground text-sm">
+                  Décision pour cette candidature
+                </p>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    onClick={() => handleReview("approved")}
+                    disabled={isPending}
+                    className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Check className="h-4 w-4" />
+                    Approuver
+                  </Button>
+                  <Button
+                    onClick={() => handleReview("rejected")}
+                    disabled={isPending}
+                    variant="destructive"
+                    className="flex-1 gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Rejeter
+                  </Button>
+                </div>
+              </div>
+            ) : isEditingStatus ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Modifier le statut</p>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    onClick={() => handleReview("approved")}
+                    disabled={isPending}
+                    className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Check className="h-4 w-4" />
+                    Approuver
+                  </Button>
+                  <Button
+                    onClick={() => handleReview("rejected")}
+                    disabled={isPending}
+                    variant="destructive"
+                    className="flex-1 gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Rejeter
+                  </Button>
+                </div>
                 <Button
-                  onClick={() => handleReview("approved")}
-                  disabled={isPending}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  variant="ghost"
+                  onClick={() => setIsEditingStatus(false)}
+                  className="w-full"
                 >
-                  <Check className="mr-2 h-4 w-4" />
-                  Approuver
-                </Button>
-                <Button
-                  onClick={() => handleReview("rejected")}
-                  disabled={isPending}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Rejeter
+                  Annuler
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="flex flex-col gap-3 @md:flex-row @md:items-center @md:justify-between">
-                  <div>
-                    <p className="text-muted-foreground text-sm font-medium">
-                      Statut actuel
-                    </p>
-                    <div className="mt-1 flex items-center gap-2">
-                      {getStatusBadge(application.status)}
-                      <span className="text-muted-foreground text-sm">
-                        • Traitée le {formatDate(application.reviewedAt!)}
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditingStatus(true)}
-                    className="gap-2 @md:mt-0"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Modifier
-                  </Button>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-muted-foreground text-sm">Traitée le</p>
+                  <p className="font-medium">
+                    {application.reviewedAt
+                      ? formatDate(application.reviewedAt)
+                      : "—"}
+                  </p>
                 </div>
-
-                {isEditingStatus && (
-                  <div className="bg-muted/50 space-y-3 rounded-lg border p-4">
-                    <p className="text-sm font-medium">
-                      Modifier le statut de la candidature
-                    </p>
-                    <div className="flex flex-col gap-3 @md:flex-row">
-                      <Button
-                        onClick={() => {
-                          handleReview("approved")
-                          setIsEditingStatus(false)
-                        }}
-                        disabled={isPending}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                      >
-                        <Check className="mr-2 h-4 w-4" />
-                        Approuver
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          handleReview("rejected")
-                          setIsEditingStatus(false)
-                        }}
-                        disabled={isPending}
-                        variant="destructive"
-                        className="flex-1"
-                      >
-                        <X className="mr-2 h-4 w-4" />
-                        Rejeter
-                      </Button>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditingStatus(false)}
-                      className="w-full"
-                    >
-                      Annuler
-                    </Button>
-                  </div>
-                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingStatus(true)}
+                >
+                  Modifier le statut
+                </Button>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Dialog pour afficher l'image en grand */}
-      <Dialog
-        open={selectedImage !== null}
-        onOpenChange={() => setSelectedImage(null)}
-      >
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{selectedImage?.alt}</DialogTitle>
-          </DialogHeader>
-          <div className="flex items-center justify-center">
-            <div className="relative max-h-[80vh] max-w-full overflow-hidden rounded-lg">
-              {selectedImage && (
-                <Image
-                  src={selectedImage.url}
-                  alt={selectedImage.alt}
-                  width={800}
-                  height={600}
-                  className="object-contain"
-                />
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </main>
+      {/* Fullscreen Image Viewer */}
+      <FullscreenImageViewer
+        medias={application.identityDocuments.map((doc) => doc.url)}
+        index={viewerIndex}
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        onIndexChange={setViewerIndex}
+      />
+    </div>
   )
 }
 
-export default ApplicationDetails
+function InfoField({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="bg-muted mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md">
+        <Icon className="text-muted-foreground h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-muted-foreground text-xs">{label}</p>
+        <p className="truncate font-medium">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="flex h-full flex-col overflow-y-auto p-6">
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-4">
+            <Skeleton className="h-14 w-14 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-48" />
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <div className="space-y-1">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-5 w-32" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

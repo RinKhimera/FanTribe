@@ -7,6 +7,7 @@ export default defineConfig({
     name: "convex",
     // Convex functions run in an edge-like environment
     environment: "node",
+    setupFiles: ["./vitest.convex.setup.ts"],
     server: {
       deps: {
         inline: ["convex-test"],

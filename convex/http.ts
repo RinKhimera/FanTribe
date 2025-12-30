@@ -41,6 +41,28 @@ http.route({
         break
       }
 
+      case "session.created": {
+        const userId = event.data.user_id
+        if (userId) {
+          await ctx.runMutation(internal.users.incrementUserSession, {
+            externalId: userId,
+          })
+        }
+        break
+      }
+
+      case "session.ended":
+      case "session.removed":
+      case "session.revoked": {
+        const userId = event.data.user_id
+        if (userId) {
+          await ctx.runMutation(internal.users.decrementUserSession, {
+            externalId: userId,
+          })
+        }
+        break
+      }
+
       default:
         console.log("Ignored Clerk webhook event", event.type)
     }

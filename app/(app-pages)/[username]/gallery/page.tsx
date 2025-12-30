@@ -1,29 +1,27 @@
-import { fetchQuery } from "convex/nextjs"
-import { notFound, redirect } from "next/navigation"
-import { getAuthToken } from "@/app/auth"
-import { UserGalleryLayout } from "@/components/domains/users"
-import { api } from "@/convex/_generated/api"
+"use client"
 
-const UserGalleryPage = async (props: {
+import { useQuery } from "convex/react"
+import { use } from "react"
+import { UserGallery } from "@/components/domains/users"
+import { api } from "@/convex/_generated/api"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+
+const UserGalleryPage = ({
+  params,
+}: {
   params: Promise<{ username: string }>
 }) => {
-  const params = await props.params
-  const token = await getAuthToken()
-  const currentUser = await fetchQuery(api.users.getCurrentUser, undefined, {
-    token,
+  const { username } = use(params)
+  const { currentUser } = useCurrentUser()
+
+  const userProfile = useQuery(api.users.getUserProfile, {
+    username: username,
   })
 
-  if (!currentUser?.username) redirect("/onboarding")
+  // Layout handles loading and not found states
+  if (!userProfile || !currentUser) return null
 
-  const userProfile = await fetchQuery(api.users.getUserProfile, {
-    username: params.username,
-  })
-
-  if (userProfile === null) notFound()
-
-  return (
-    <UserGalleryLayout currentUser={currentUser} userProfile={userProfile} />
-  )
+  return <UserGallery authorId={userProfile._id} currentUser={currentUser} />
 }
 
 export default UserGalleryPage

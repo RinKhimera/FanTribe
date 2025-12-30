@@ -41,7 +41,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="text-primary break-all hover:underline"
+                className="text-primary break-all hover:text-primary/80 hover:underline transition-colors"
               >
                 {part}
               </a>
@@ -58,7 +58,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
                   key={`${partIndex}-${mentionIndex}`}
                   href={`/${username}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="text-primary hover:underline"
+                  className="text-primary hover:text-primary/80 hover:underline transition-colors font-medium"
                 >
                   {mentionPart}
                 </Link>
@@ -72,7 +72,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
                 return (
                   <span
                     key={`${partIndex}-${mentionIndex}-${hashtagIndex}`}
-                    className="text-primary cursor-pointer hover:underline"
+                    className="text-primary cursor-pointer hover:text-primary/80 transition-colors"
                   >
                     {hashtagPart}
                   </span>
@@ -91,21 +91,21 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
     <div className="px-4">
       <div
         className={cn(
-          "text-foreground text-[15px] leading-relaxed whitespace-pre-wrap",
-          "wrap-break-word",
+          "text-foreground text-[15px] leading-[1.65] whitespace-pre-wrap",
+          "wrap-break-word tracking-[0.01em]",
         )}
       >
         {displayedLines.map((line, index) => formatLine(line, index))}
 
         {shouldTruncate && (
           <>
-            <span className="text-muted-foreground">...</span>
+            <span className="text-muted-foreground/60">...</span>
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 setIsExpanded(true)
               }}
-              className="text-primary ml-1 font-medium hover:underline"
+              className="ml-1.5 font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               Voir plus
             </button>
@@ -118,7 +118,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
               e.stopPropagation()
               setIsExpanded(false)
             }}
-            className="text-muted-foreground ml-1 text-sm hover:underline"
+            className="text-muted-foreground/70 ml-1.5 text-sm hover:text-primary transition-colors"
           >
             Réduire
           </button>

@@ -366,6 +366,9 @@ export const deleteReportedContentAndResolve = mutation({
         ...bookmarks.map((b) => ctx.db.delete(b._id)),
         ...notifications.map((n) => ctx.db.delete(n._id)),
       ])
+
+      // Supprimer le post lui-même
+      await ctx.db.delete(report.reportedPostId)
     } else if (report.type === "comment" && report.reportedCommentId) {
       const comment = await ctx.db.get(report.reportedCommentId)
       if (comment) {

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { PageContainer } from "@/components/layout"
 import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { Button } from "@/components/ui/button"
 import {
@@ -297,18 +298,14 @@ const ApplyCreatorPage = () => {
 
   if (!currentUser) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <PageContainer title="Candidature Créateur" contentClassName="items-center justify-center">
         Chargement...
-      </div>
+      </PageContainer>
     )
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
-        <h1 className="text-2xl font-bold">Candidature Créateur</h1>
-      </div>
-
+    <PageContainer title="Candidature Créateur">
       <div className="flex-1 p-6">
         <div className="mx-auto max-w-2xl">
           <Form {...form}>
@@ -598,7 +595,7 @@ const ApplyCreatorPage = () => {
           </Form>
         </div>
       </div>
-    </main>
+    </PageContainer>
   )
 }
 

@@ -5,11 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import ReactPlayer from "react-player"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-} from "@/components/ui/dialog"
+import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { ConversationProps, MessageProps, UserProps } from "@/types"
 import { ChatBubbleAvatar } from "./chat-bubble-avatar"
 import { DateIndicator } from "./date-indicator"
@@ -67,16 +63,17 @@ export const MessageBox = ({
           />
           <div className="bg-accent relative z-20 flex max-w-fit flex-col rounded-3xl rounded-bl-md px-4 py-2 shadow-md">
             {renderMessageContent()}
-            {open && (
-              <ImageDialog
-                src={message.content}
-                open={open}
-                onClose={() => setOpen(false)}
-              />
-            )}
             <MessageTime time={time} isFromCurrentUser={isFromCurrentUser} />
           </div>
         </div>
+        {message.messageType === "image" && (
+          <FullscreenImageViewer
+            medias={[message.content]}
+            index={0}
+            open={open}
+            onClose={() => setOpen(false)}
+          />
+        )}
       </>
     )
   }
@@ -87,13 +84,6 @@ export const MessageBox = ({
       <div className="ml-auto flex w-2/3 gap-1">
         <div className="bg-muted relative z-20 ml-auto flex max-w-fit flex-col rounded-3xl rounded-br-md px-4 py-1.5 shadow-md">
           {renderMessageContent()}
-          {open && (
-            <ImageDialog
-              src={message.content}
-              open={open}
-              onClose={() => setOpen(false)}
-            />
-          )}
           <MessageTime
             time={time}
             isFromCurrentUser={isFromCurrentUser}
@@ -101,6 +91,14 @@ export const MessageBox = ({
           />
         </div>
       </div>
+      {message.messageType === "image" && (
+        <FullscreenImageViewer
+          medias={[message.content]}
+          index={0}
+          open={open}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
   )
 }
@@ -157,36 +155,6 @@ const VideoMessage = ({ message }: { message: MessageProps }) => {
       controls={true}
       // light={true}
     />
-  )
-}
-
-const ImageDialog = ({
-  src,
-  onClose,
-  open,
-}: {
-  open: boolean
-  src: string
-  onClose: () => void
-}) => {
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        if (!isOpen) onClose()
-      }}
-    >
-      <DialogContent className="min-w-[750px]">
-        <DialogDescription className="relative flex h-[450px] justify-center">
-          <Image
-            src={src}
-            fill
-            className="rounded-lg object-contain"
-            alt="image"
-          />
-        </DialogDescription>
-      </DialogContent>
-    </Dialog>
   )
 }
 

@@ -1,51 +1,128 @@
 "use client"
 
-import { useMutation, useQuery } from "convex/react"
-import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { useQuery } from "convex/react"
 import {
   AlertTriangle,
   Calendar,
-  Check,
-  Edit,
-  Eye,
+  ChevronRight,
+  Flag,
   MessageSquare,
+  ShieldAlert,
   User,
-  X,
 } from "lucide-react"
 import Link from "next/link"
-import { useState, useTransition } from "react"
-import { toast } from "sonner"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useMemo } from "react"
+import { SuperuserFiltersBar, type FilterDefinition } from "@/components/superuser"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { Report } from "@/types"
+import { useSuperuserFilters } from "@/hooks/useSuperuserFilters"
+import { cn } from "@/lib/utils"
 
-const ReportsPage = () => {
+const filterDefinitions: FilterDefinition[] = [
+  {
+    key: "status",
+    label: "Statut",
+    type: "multi-select",
+    options: [
+      { value: "pending", label: "En attente" },
+      { value: "reviewing", label: "En révision" },
+      { value: "resolved", label: "Résolu" },
+      { value: "rejected", label: "Rejeté" },
+    ],
+  },
+  {
+    key: "type",
+    label: "Type",
+    type: "multi-select",
+    options: [
+      { value: "user", label: "Utilisateur" },
+      { value: "post", label: "Publication" },
+      { value: "comment", label: "Commentaire" },
+    ],
+  },
+  {
+    key: "reason",
+    label: "Motif",
+    type: "multi-select",
+    options: [
+      { value: "spam", label: "Spam" },
+      { value: "harassment", label: "Harcèlement" },
+      { value: "inappropriate_content", label: "Contenu inapproprié" },
+      { value: "fake_account", label: "Faux compte" },
+      { value: "copyright", label: "Droits d'auteur" },
+      { value: "violence", label: "Violence" },
+      { value: "hate_speech", label: "Discours de haine" },
+      { value: "other", label: "Autre" },
+    ],
+  },
+]
+
+const statusConfig = {
+  pending: {
+    label: "En attente",
+    className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  },
+  reviewing: {
+    label: "En révision",
+    className: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  },
+  resolved: {
+    label: "Résolu",
+    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  },
+  rejected: {
+    label: "Rejeté",
+    className: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+  },
+}
+
+const typeConfig = {
+  user: {
+    label: "Utilisateur",
+    icon: User,
+    className: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  },
+  post: {
+    label: "Publication",
+    icon: MessageSquare,
+    className: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+  },
+  comment: {
+    label: "Commentaire",
+    icon: MessageSquare,
+    className: "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
+  },
+}
+
+const reasonLabels: Record<string, string> = {
+  spam: "Spam",
+  harassment: "Harcèlement",
+  inappropriate_content: "Contenu inapproprié",
+  fake_account: "Faux compte",
+  copyright: "Droits d'auteur",
+  violence: "Violence",
+  hate_speech: "Discours de haine",
+  other: "Autre",
+}
+
+export default function ReportsPage() {
   const { currentUser } = useCurrentUser()
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
-  const [adminNotes, setAdminNotes] = useState("")
-  const [isPending, startTransition] = useTransition()
+  const { getFilterAll } = useSuperuserFilters()
 
-  // Queries
   const allReports = useQuery(
     api.reports.getAllReports,
     currentUser?.accountType === "SUPERUSER" ? {} : "skip",
@@ -56,552 +133,323 @@ const ReportsPage = () => {
     currentUser?.accountType === "SUPERUSER" ? {} : "skip",
   )
 
-  // Mutation
-  const updateReportStatus = useMutation(api.reports.updateReportStatus)
+  // Create stable dependency key from reports data
+  const reportsKey = allReports?.map((r) => `${r._id}-${r.status}`).join(",") ?? ""
+
+  const { filteredReports, urgentCount } = useMemo(() => {
+    if (!allReports) {
+      return { filteredReports: [], urgentCount: 0 }
+    }
+
+    const statusFilters = getFilterAll("status")
+    const typeFilters = getFilterAll("type")
+    const reasonFilters = getFilterAll("reason")
+
+    let filtered = [...allReports]
+
+    if (statusFilters.length > 0) {
+      filtered = filtered.filter((r) => statusFilters.includes(r.status))
+    }
+
+    if (typeFilters.length > 0) {
+      filtered = filtered.filter((r) => typeFilters.includes(r.type))
+    }
+
+    if (reasonFilters.length > 0) {
+      filtered = filtered.filter((r) => reasonFilters.includes(r.reason))
+    }
+
+    // Sort: pending first, then reviewing, then by date desc
+    filtered.sort((a, b) => {
+      const statusOrder = { pending: 0, reviewing: 1, resolved: 2, rejected: 3 }
+      const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 4
+      const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 4
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return b.createdAt - a.createdAt
+    })
+
+    const urgentCount = allReports.filter(
+      (r) => r.status === "pending" && ["harassment", "violence", "hate_speech"].includes(r.reason)
+    ).length
+
+    return { filteredReports: filtered, urgentCount }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportsKey, getFilterAll])
 
   const formatDate = (timestamp: number) => {
-    return format(new Date(timestamp), "dd/MM/yyyy 'à' HH:mm", { locale: fr })
-  }
-
-  const getReasonLabel = (reason: string) => {
-    const labels: Record<string, string> = {
-      spam: "Spam",
-      harassment: "Harcèlement",
-      inappropriate_content: "Contenu inapproprié",
-      fake_account: "Faux compte",
-      copyright: "Violation de droits d'auteur",
-      violence: "Violence",
-      hate_speech: "Discours de haine",
-      other: "Autre",
-    }
-    return labels[reason] || reason
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge
-            variant="outline"
-            className="border-yellow-500 bg-yellow-600 text-yellow-100"
-          >
-            En attente
-          </Badge>
-        )
-      case "reviewing":
-        return (
-          <Badge
-            variant="outline"
-            className="border-blue-500 bg-blue-600 text-blue-100"
-          >
-            En révision
-          </Badge>
-        )
-      case "resolved":
-        return (
-          <Badge
-            variant="outline"
-            className="border-green-500 bg-green-600 text-green-100"
-          >
-            Résolu
-          </Badge>
-        )
-      case "rejected":
-        return (
-          <Badge
-            variant="outline"
-            className="border-red-500 bg-red-600 text-red-100"
-          >
-            Rejeté
-          </Badge>
-        )
-      default:
-        return (
-          <Badge
-            variant="outline"
-            className="border-gray-500 bg-gray-600 text-gray-100"
-          >
-            {status}
-          </Badge>
-        )
-    }
-  }
-
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case "user":
-        return (
-          <Badge
-            variant="outline"
-            className="border-blue-400 bg-blue-100 text-blue-800 dark:border-blue-600 dark:bg-blue-800 dark:text-blue-200"
-          >
-            <User className="mr-1 h-3 w-3" />
-            Utilisateur
-          </Badge>
-        )
-      case "post":
-        return (
-          <Badge
-            variant="outline"
-            className="border-purple-400 bg-purple-100 text-purple-800 dark:border-purple-600 dark:bg-purple-800 dark:text-purple-200"
-          >
-            <MessageSquare className="mr-1 h-3 w-3" />
-            Post
-          </Badge>
-        )
-      case "comment":
-        return (
-          <Badge
-            variant="outline"
-            className="border-green-400 bg-green-100 text-green-800 dark:border-green-600 dark:bg-green-800 dark:text-green-200"
-          >
-            <MessageSquare className="mr-1 h-3 w-3" />
-            Commentaire
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">{type}</Badge>
-    }
-  }
-
-  const handleStatusUpdate = (reportId: Id<"reports">, status: string) => {
-    startTransition(async () => {
-      try {
-        await updateReportStatus({
-          reportId,
-          status: status as "pending" | "reviewing" | "resolved" | "rejected",
-          adminNotes: adminNotes || undefined,
-        })
-
-        toast.success("Statut mis à jour avec succès")
-        setSelectedReport(null)
-        setAdminNotes("")
-      } catch (error) {
-        console.error(error)
-        toast.error("Erreur lors de la mise à jour")
-      }
+    return new Date(timestamp).toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     })
   }
 
-  const renderReportCard = (report: Report) => {
-    return (
-      <Card key={report._id} className="transition-shadow hover:shadow-md">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                {getTypeBadge(report.type)}
-                {getStatusBadge(report.status)}
-              </div>
-            </div>
-            <Link href={`/superuser/reports/${report._id}`}>
-              <Button variant="outline" size="sm">
-                <Eye className="mr-1 h-4 w-4" />
-                Voir détails
-              </Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">
-                Motif du signalement
-              </p>
-              <p className="font-medium">{getReasonLabel(report.reason)}</p>
-            </div>
-
-            {report.description && (
-              <div>
-                <p className="text-muted-foreground text-sm font-medium">
-                  Description
-                </p>
-                <p className="line-clamp-2 text-sm">{report.description}</p>
-              </div>
-            )}
-
-            <div className="text-muted-foreground flex flex-col space-y-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div className="flex items-center">
-                <Calendar className="mr-1 h-4 w-4" />
-                Signalé le {formatDate(report.createdAt)}
-              </div>
-              <div>
-                Signalé par{" "}
-                {report.reporter?.username ? (
-                  <Link
-                    href={`/${report.reporter.username}`}
-                    className="text-primary font-medium hover:underline"
-                  >
-                    {report.reporter.name}
-                  </Link>
-                ) : (
-                  <span className="font-medium">{report.reporter?.name}</span>
-                )}
-              </div>
-            </div>
-
-            {report.type === "user" && report.reportedUser && (
-              <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-sm font-medium">Utilisateur signalé :</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {report.reportedUser.username ? (
-                    <Link
-                      href={`/${report.reportedUser.username}`}
-                      className="text-primary font-medium hover:underline"
-                    >
-                      {report.reportedUser.name}
-                    </Link>
-                  ) : (
-                    <span className="font-medium">
-                      {report.reportedUser.name}
-                    </span>
-                  )}
-                  <span className="text-muted-foreground">
-                    @{report.reportedUser.username}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {report.type === "post" && report.reportedPost && (
-              <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-sm font-medium">Post signalé :</p>
-                <div className="mt-1">
-                  <p className="line-clamp-2 text-sm">
-                    {report.reportedPost.content}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Par{" "}
-                    {report.reportedPost.author?.username ? (
-                      <Link
-                        href={`/${report.reportedPost.author.username}`}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        {report.reportedPost.author.name}
-                      </Link>
-                    ) : (
-                      <span className="font-medium">
-                        {report.reportedPost.author?.name}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    )
+  const getContentPreview = (report: NonNullable<typeof allReports>[number]) => {
+    if (report.type === "user" && report.reportedUser) {
+      return `@${report.reportedUser.username || report.reportedUser.name}`
+    }
+    if (report.type === "post" && report.reportedPost) {
+      return report.reportedPost.content?.slice(0, 60) + (report.reportedPost.content?.length > 60 ? "..." : "") || "Post sans texte"
+    }
+    if (report.type === "comment" && report.reportedComment) {
+      return report.reportedComment.content?.slice(0, 60) + (report.reportedComment.content?.length > 60 ? "..." : "") || "Commentaire"
+    }
+    return "Contenu supprimé"
   }
 
-  if (!allReports || !reportsStats) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse text-lg">Chargement...</div>
-      </div>
-    )
-  }
-
-  const pendingReports = allReports.filter((r) => r.status === "pending")
-  const reviewingReports = allReports.filter((r) => r.status === "reviewing")
-  const resolvedReports = allReports.filter((r) => r.status === "resolved")
-  const rejectedReports = allReports.filter((r) => r.status === "rejected")
+  const isLoading = !allReports || !reportsStats
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-lg:pb-16">
-      {/* Header */}
-      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Signalements</h1>
-          <div className="flex items-center space-x-2">
-            <Badge className="border-slate-500 bg-slate-600 text-slate-100">
-              {reportsStats.total} total
-            </Badge>
-            {reportsStats.pending > 0 && (
-              <Badge className="border-red-500 bg-red-600 text-red-100">
-                {reportsStats.pending} en attente
-              </Badge>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 p-3">
-        {/* Statistiques */}
-        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Card>
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-yellow-600">
-                {reportsStats.pending}
-              </div>
-              <p className="text-muted-foreground text-xs">En attente</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-blue-600">
-                {reportsStats.reviewing}
-              </div>
-              <p className="text-muted-foreground text-xs">En révision</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-green-600">
-                {reportsStats.resolved}
-              </div>
-              <p className="text-muted-foreground text-xs">Résolus</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="text-2xl font-bold text-red-600">
-                {reportsStats.rejected}
-              </div>
-              <p className="text-muted-foreground text-xs">Rejetés</p>
-            </CardContent>
-          </Card>
+    <div className="flex h-full flex-col overflow-y-auto">
+      <div className="flex-1 space-y-4 p-4">
+        {/* Stats Summary */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard
+            label="En attente"
+            value={reportsStats?.pending ?? 0}
+            icon={Flag}
+            color="amber"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="En révision"
+            value={reportsStats?.reviewing ?? 0}
+            icon={ShieldAlert}
+            color="sky"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Résolus"
+            value={reportsStats?.resolved ?? 0}
+            icon={Flag}
+            color="emerald"
+            isLoading={isLoading}
+          />
+          <StatCard
+            label="Rejetés"
+            value={reportsStats?.rejected ?? 0}
+            icon={Flag}
+            color="rose"
+            isLoading={isLoading}
+          />
         </div>
 
-        {/* Onglets */}
-        <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="pending" className="relative">
-              En attente
-              {pendingReports.length > 0 && (
-                <Badge className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center bg-red-600 p-0 text-xs text-red-100">
-                  {pendingReports.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="reviewing">
-              En révision ({reviewingReports.length})
-            </TabsTrigger>
-            <TabsTrigger value="resolved">
-              Résolus ({resolvedReports.length})
-            </TabsTrigger>
-            <TabsTrigger value="rejected">
-              Rejetés ({rejectedReports.length})
-            </TabsTrigger>
-          </TabsList>
+        {/* Urgent Alert */}
+        {urgentCount > 0 && (
+          <Alert className="border-red-500/30 bg-red-500/5">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertDescription className="text-red-700 dark:text-red-400">
+              <span className="font-semibold">{urgentCount}</span>{" "}
+              signalement(s) urgent(s) en attente (harcèlement, violence, discours de haine)
+            </AlertDescription>
+          </Alert>
+        )}
 
-          <TabsContent value="pending" className="mt-6">
-            {pendingReports.length === 0 ? (
-              <Card className="p-8 text-center">
-                <CardHeader>
-                  <CardTitle>Aucun signalement en attente</CardTitle>
-                  <CardDescription>
-                    Tous les signalements ont été traités.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+        {/* Filters */}
+        <SuperuserFiltersBar filters={filterDefinitions} />
+
+        {/* Table */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            {isLoading ? (
+              <TableSkeleton />
+            ) : filteredReports.length === 0 ? (
+              <EmptyState />
             ) : (
-              <>
-                {pendingReports.length > 0 && (
-                  <Alert className="mb-4 border-orange-500 bg-orange-950/50 text-orange-100">
-                    <AlertTriangle className="h-4 w-4 text-orange-400" />
-                    <AlertTitle className="text-orange-200">
-                      Signalements en attente
-                    </AlertTitle>
-                    <AlertDescription className="text-orange-300">
-                      {pendingReports.length} signalement(s) nécessite(nt) votre
-                      attention.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <div className="space-y-4">
-                  {pendingReports.map(renderReportCard)}
-                </div>
-              </>
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[100px]">Type</TableHead>
+                    <TableHead className="w-[140px]">Motif</TableHead>
+                    <TableHead className="hidden lg:table-cell">Signalé par</TableHead>
+                    <TableHead>Contenu</TableHead>
+                    <TableHead className="w-[110px]">Statut</TableHead>
+                    <TableHead className="hidden md:table-cell w-[100px]">Date</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredReports.map((report, idx) => {
+                    const status = statusConfig[report.status as keyof typeof statusConfig] ?? statusConfig.pending
+                    const type = typeConfig[report.type as keyof typeof typeConfig] ?? typeConfig.user
+                    const TypeIcon = type.icon
+                    const isUrgent = report.status === "pending" &&
+                      ["harassment", "violence", "hate_speech"].includes(report.reason)
+
+                    return (
+                      <TableRow
+                        key={report._id}
+                        className={cn(
+                          "group cursor-pointer transition-colors",
+                          isUrgent && "bg-red-500/5 hover:bg-red-500/10",
+                        )}
+                        style={{ animationDelay: `${idx * 30}ms` }}
+                      >
+                        <TableCell>
+                          <Link
+                            href={`/superuser/reports/${report._id}`}
+                            className="flex items-center"
+                          >
+                            <Badge
+                              variant="outline"
+                              className={cn("gap-1 font-medium", type.className)}
+                            >
+                              <TypeIcon className="h-3 w-3" />
+                              <span className="hidden sm:inline">{type.label}</span>
+                            </Badge>
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Link href={`/superuser/reports/${report._id}`}>
+                            <div className="flex items-center gap-1.5">
+                              {isUrgent && (
+                                <AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                              )}
+                              <span className="text-sm font-medium truncate max-w-[120px]">
+                                {reasonLabels[report.reason] || report.reason}
+                              </span>
+                            </div>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <Link
+                            href={`/superuser/reports/${report._id}`}
+                            className="flex items-center gap-2"
+                          >
+                            <Avatar className="h-7 w-7 border">
+                              <AvatarImage src={report.reporter?.image} />
+                              <AvatarFallback className="text-[10px] font-medium">
+                                {report.reporter?.name
+                                  ?.split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .slice(0, 2) || "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm text-muted-foreground truncate max-w-[100px]">
+                              @{report.reporter?.username || "inconnu"}
+                            </span>
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Link href={`/superuser/reports/${report._id}`}>
+                            <p className="text-sm text-muted-foreground line-clamp-1 max-w-[200px]">
+                              {getContentPreview(report)}
+                            </p>
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn("font-medium", status.className)}
+                          >
+                            {status.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {formatDate(report.createdAt)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Link href={`/superuser/reports/${report._id}`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             )}
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="reviewing" className="mt-6">
-            <div className="space-y-4">
-              {reviewingReports.map(renderReportCard)}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="resolved" className="mt-6">
-            <div className="space-y-4">
-              {resolvedReports.map(renderReportCard)}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="rejected" className="mt-6">
-            <div className="space-y-4">
-              {rejectedReports.map(renderReportCard)}
-            </div>
-          </TabsContent>
-        </Tabs>
+        {/* Results count */}
+        {!isLoading && filteredReports.length > 0 && (
+          <p className="text-muted-foreground text-center text-xs">
+            {filteredReports.length} résultat(s)
+          </p>
+        )}
       </div>
-
-      {/* Dialog pour les détails du signalement */}
-      <Dialog
-        open={selectedReport !== null}
-        onOpenChange={() => setSelectedReport(null)}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Détails du signalement</DialogTitle>
-          </DialogHeader>
-          {selectedReport && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                {getTypeBadge(selectedReport.type)}
-                {getStatusBadge(selectedReport.status)}
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-muted-foreground text-sm font-medium">
-                    Motif
-                  </p>
-                  <p className="font-medium">
-                    {getReasonLabel(selectedReport.reason)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm font-medium">
-                    Date
-                  </p>
-                  <p className="font-medium">
-                    {formatDate(selectedReport.createdAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm font-medium">
-                    Signalé par
-                  </p>
-                  {selectedReport.reporter?.username ? (
-                    <Link
-                      href={`/${selectedReport.reporter.username}`}
-                      className="text-primary font-medium hover:underline"
-                    >
-                      {selectedReport.reporter.name}
-                    </Link>
-                  ) : (
-                    <p className="font-medium">
-                      {selectedReport.reporter?.name}
-                    </p>
-                  )}
-                </div>
-                {selectedReport.type === "user" &&
-                  selectedReport.reportedUser && (
-                    <div>
-                      <p className="text-muted-foreground text-sm font-medium">
-                        Utilisateur signalé
-                      </p>
-                      {selectedReport.reportedUser.username ? (
-                        <Link
-                          href={`/${selectedReport.reportedUser.username}`}
-                          className="text-primary font-medium hover:underline"
-                        >
-                          {selectedReport.reportedUser.name}
-                        </Link>
-                      ) : (
-                        <p className="font-medium">
-                          {selectedReport.reportedUser.name}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                {selectedReport.type === "post" &&
-                  selectedReport.reportedPost?.author && (
-                    <div>
-                      <p className="text-muted-foreground text-sm font-medium">
-                        Auteur du post
-                      </p>
-                      {selectedReport.reportedPost.author.username ? (
-                        <Link
-                          href={`/${selectedReport.reportedPost.author.username}`}
-                          className="text-primary font-medium hover:underline"
-                        >
-                          {selectedReport.reportedPost.author.name}
-                        </Link>
-                      ) : (
-                        <p className="font-medium">
-                          {selectedReport.reportedPost.author.name}
-                        </p>
-                      )}
-                    </div>
-                  )}
-              </div>
-
-              {selectedReport.description && (
-                <div>
-                  <p className="text-muted-foreground text-sm font-medium">
-                    Description
-                  </p>
-                  <p className="bg-muted rounded-lg p-3 text-sm">
-                    {selectedReport.description}
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <p className="text-muted-foreground mb-2 text-sm font-medium">
-                  Notes administratives
-                </p>
-                <Textarea
-                  placeholder="Ajouter des notes sur ce signalement..."
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  className="min-h-20"
-                />
-              </div>
-
-              {selectedReport.status === "pending" ||
-              selectedReport.status === "reviewing" ? (
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button
-                    onClick={() =>
-                      handleStatusUpdate(selectedReport._id, "reviewing")
-                    }
-                    disabled={isPending}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Edit className="mr-2 h-4 w-4" />
-                    Mettre en révision
-                  </Button>
-                  <Button
-                    onClick={() =>
-                      handleStatusUpdate(selectedReport._id, "resolved")
-                    }
-                    disabled={isPending}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    <Check className="mr-2 h-4 w-4" />
-                    Résoudre
-                  </Button>
-                  <Button
-                    onClick={() =>
-                      handleStatusUpdate(selectedReport._id, "rejected")
-                    }
-                    disabled={isPending}
-                    variant="destructive"
-                    className="flex-1"
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Rejeter
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-muted-foreground text-center text-sm">
-                  Ce signalement a été traité le{" "}
-                  {formatDate(selectedReport.reviewedAt!)}
-                  {selectedReport.reviewedByUser && (
-                    <span> par {selectedReport.reviewedByUser.name}</span>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </main>
+    </div>
   )
 }
 
-export default ReportsPage
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  color,
+  isLoading,
+}: {
+  label: string
+  value: number
+  icon: React.ElementType
+  color: "amber" | "sky" | "emerald" | "rose"
+  isLoading?: boolean
+}) {
+  const colorClasses = {
+    amber: "text-amber-500",
+    sky: "text-sky-500",
+    emerald: "text-emerald-500",
+    rose: "text-rose-500",
+  }
+
+  return (
+    <Card className="p-3">
+      <div className="flex items-center gap-3">
+        <div className={cn("text-muted-foreground", colorClasses[color])}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          {isLoading ? (
+            <Skeleton className="h-6 w-8" />
+          ) : (
+            <p className="text-xl font-bold">{value}</p>
+          )}
+          <p className="text-muted-foreground text-xs">{label}</p>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function TableSkeleton() {
+  return (
+    <div className="p-4 space-y-3">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="flex items-center gap-4">
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-7 w-7 rounded-full hidden lg:block" />
+          <div className="flex-1">
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-12">
+      <div className="bg-muted/50 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+        <Flag className="text-muted-foreground h-6 w-6" />
+      </div>
+      <h3 className="mb-1 font-medium">Aucun signalement</h3>
+      <p className="text-muted-foreground text-sm">
+        Aucun signalement ne correspond aux filtres sélectionnés.
+      </p>
+    </div>
+  )
+}

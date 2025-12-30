@@ -1,11 +1,9 @@
 import { UserProfile } from "@clerk/nextjs"
+import { PageContainer } from "@/components/layout"
 
 const AccountPage = () => {
   return (
-    <main className="border-muted flex h-full min-h-screen w-full max-w-3xl flex-col border-r border-l max-[500px]:pb-16">
-      <h1 className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-        Compte
-      </h1>
+    <PageContainer title="Compte" className="max-w-3xl">
       {/* Container pour UserProfile avec scroll si débordement */}
       <div className="flex-1 overflow-x-auto overflow-y-auto p-2 sm:p-4">
         <UserProfile
@@ -23,7 +21,7 @@ const AccountPage = () => {
           }}
         />
       </div>
-    </main>
+    </PageContainer>
   )
 }
 

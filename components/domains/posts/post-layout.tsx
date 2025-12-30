@@ -4,6 +4,7 @@ import { useQuery } from "convex/react"
 import { Loader } from "lucide-react"
 import { notFound } from "next/navigation"
 import React from "react"
+import { PageContainer } from "@/components/layout"
 import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
@@ -23,29 +24,20 @@ export const PostLayout = ({
 
   if (post === undefined || currentUser === undefined)
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-        <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-          Publication
-        </h1>
-
+      <PageContainer title="Publication">
         <div className="flex flex-1 flex-col items-center justify-center">
           <Loader className="text-primary animate-spin" size={60} />
         </div>
-      </main>
+      </PageContainer>
     )
 
   if (post === null) notFound()
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l">
-      <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-        Publication
-      </h1>
-
+    <PageContainer title="Publication">
       <PostCard post={post} currentUser={currentUser} />
-
       <CreateComment currentUser={currentUser} postId={post._id} />
       <CommentFeed postId={post._id} />
-    </main>
+    </PageContainer>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
+import { motion, AnimatePresence } from "motion/react"
 import {
   Bookmark,
   CheckCircle,
@@ -8,7 +9,7 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react"
-import { useTransition } from "react"
+import { useTransition, useState, useCallback } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { heartPulseVariants, bookmarkVariants } from "@/lib/animations"
 import { logger } from "@/lib/config"
 import { cn } from "@/lib/utils"
 
@@ -59,6 +61,21 @@ export const PostActions = ({
   const addBookmark = useMutation(api.bookmarks.addBookmark)
   const removeBookmark = useMutation(api.bookmarks.removeBookmark)
 
+  // Track animation triggers
+  const [shouldAnimateLike, setShouldAnimateLike] = useState(false)
+  const [shouldAnimateBookmark, setShouldAnimateBookmark] = useState(false)
+
+  // Animation trigger functions
+  const triggerLikeAnimation = useCallback(() => {
+    setShouldAnimateLike(true)
+    setTimeout(() => setShouldAnimateLike(false), 500)
+  }, [])
+
+  const triggerBookmarkAnimation = useCallback(() => {
+    setShouldAnimateBookmark(true)
+    setTimeout(() => setShouldAnimateBookmark(false), 500)
+  }, [])
+
   // Handlers
   const handleToggleLike = () => {
     if (disabled || isLikePending) return
@@ -68,6 +85,7 @@ export const PostActions = ({
           await unlikePost({ postId })
         } else {
           await likePost({ postId })
+          triggerLikeAnimation()
         }
       } catch (error) {
         logger.error("Erreur toggle like", error, { postId, isLiked })
@@ -85,6 +103,7 @@ export const PostActions = ({
           toast.success("Retiré des collections")
         } else {
           await addBookmark({ postId })
+          triggerBookmarkAnimation()
           toast.success("Ajouté aux collections")
         }
       } catch (error) {
@@ -131,9 +150,12 @@ export const PostActions = ({
 
   return (
     <div className="px-4">
-      <div className="border-border/50 flex items-center justify-between border-t pt-2">
+      {/* Subtle divider */}
+      <div className="h-px bg-border mb-3" />
+
+      <div className="flex items-center justify-between">
         {/* Left actions group */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {/* Like button */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -146,25 +168,40 @@ export const PostActions = ({
                 }}
                 disabled={disabled || isLikePending}
                 className={cn(
-                  "group h-9 gap-1.5 rounded-full px-3 transition-all duration-200",
+                  "group h-10 gap-2 rounded-full px-4 transition-all duration-300",
                   disabled && "cursor-not-allowed opacity-50",
                   isLiked
                     ? "text-red-500 hover:bg-red-500/10"
                     : "text-muted-foreground hover:bg-red-500/10 hover:text-red-500",
                 )}
               >
-                <Heart
-                  className={cn(
-                    "size-[18px] transition-transform duration-200",
-                    "group-hover:scale-110",
-                    isLiked && "fill-current",
+                <motion.div
+                  variants={heartPulseVariants}
+                  animate={shouldAnimateLike ? "liked" : "initial"}
+                >
+                  <Heart
+                    className={cn(
+                      "size-5 transition-all duration-300",
+                      isLiked && "fill-current drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]",
+                    )}
+                  />
+                </motion.div>
+                <AnimatePresence mode="wait">
+                  {likeCount > 0 && (
+                    <motion.span
+                      key={likeCount}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className={cn(
+                        "text-sm font-semibold tabular-nums",
+                        isLiked && "text-red-500",
+                      )}
+                    >
+                      {formatCount(likeCount)}
+                    </motion.span>
                   )}
-                />
-                {likeCount > 0 && (
-                  <span className="text-sm font-medium tabular-nums">
-                    {formatCount(likeCount)}
-                  </span>
-                )}
+                </AnimatePresence>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={4}>
@@ -184,21 +221,25 @@ export const PostActions = ({
                 }}
                 disabled={disabled}
                 className={cn(
-                  "group h-9 gap-1.5 rounded-full px-3 transition-all duration-200",
+                  "group h-10 gap-2 rounded-full px-4 transition-all duration-300",
                   disabled && "cursor-not-allowed opacity-50",
                   isCommentsOpen
-                    ? "text-blue-500 hover:bg-blue-500/10"
-                    : "text-muted-foreground hover:bg-blue-500/10 hover:text-blue-500",
+                    ? "text-primary hover:bg-primary/10"
+                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
                 )}
               >
                 <MessageCircle
                   className={cn(
-                    "size-[18px] transition-transform duration-200",
+                    "size-5 transition-transform duration-300",
                     "group-hover:scale-110",
+                    isCommentsOpen && "fill-primary/30",
                   )}
                 />
                 {commentCount > 0 && (
-                  <span className="text-sm font-medium tabular-nums">
+                  <span className={cn(
+                    "text-sm font-semibold tabular-nums",
+                    isCommentsOpen && "text-primary",
+                  )}>
                     {formatCount(commentCount)}
                   </span>
                 )}
@@ -220,11 +261,11 @@ export const PostActions = ({
                   handleShare()
                 }}
                 className={cn(
-                  "group h-9 rounded-full px-3 transition-all duration-200",
+                  "group h-10 rounded-full px-4 transition-all duration-300",
                   "text-muted-foreground hover:bg-primary/10 hover:text-primary",
                 )}
               >
-                <Share2 className="size-[18px] transition-transform duration-200 group-hover:scale-110" />
+                <Share2 className="size-5 transition-transform duration-300 group-hover:scale-110" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={4}>
@@ -247,20 +288,24 @@ export const PostActions = ({
                 }}
                 disabled={disabled || isBookmarkPending}
                 className={cn(
-                  "group h-9 rounded-full px-3 transition-all duration-200",
+                  "group h-10 rounded-full px-4 transition-all duration-300",
                   disabled && "cursor-not-allowed opacity-50",
                   isBookmarked
                     ? "text-primary hover:bg-primary/10"
                     : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
                 )}
               >
-                <Bookmark
-                  className={cn(
-                    "size-[18px] transition-transform duration-200",
-                    "group-hover:scale-110",
-                    isBookmarked && "fill-current",
-                  )}
-                />
+                <motion.div
+                  variants={bookmarkVariants}
+                  animate={shouldAnimateBookmark ? "bookmarked" : "initial"}
+                >
+                  <Bookmark
+                    className={cn(
+                      "size-5 transition-all duration-300",
+                      isBookmarked && "fill-primary",
+                    )}
+                  />
+                </motion.div>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={4}>

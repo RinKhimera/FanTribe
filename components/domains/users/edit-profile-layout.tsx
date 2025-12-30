@@ -1,9 +1,11 @@
 "use client"
 
+import { motion } from "motion/react"
+import { Sparkles } from "lucide-react"
 import { EditProfileForm } from "@/components/shared/edit-profile-form"
 import { ImageUploadInfo } from "@/components/shared/image-upload-info"
-import { Label } from "@/components/ui/label"
 import { Doc } from "@/convex/_generated/dataModel"
+import { pageVariants } from "@/lib/animations"
 import { UpdateImages } from "./update-images"
 
 type EditProfileLayoutProps = {
@@ -14,22 +16,43 @@ type EditProfileLayoutProps = {
 
 export const EditProfileLayout = ({
   currentUser,
-  userProfile,
 }: EditProfileLayoutProps) => {
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-      <h1 className="border-muted sticky top-0 z-20 border-b p-4 text-2xl font-bold backdrop-blur-sm">
-        {userProfile?.name}
-      </h1>
+    <motion.main
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16"
+    >
+      {/* Content */}
+      <div className="flex-1 space-y-6 p-4">
+        {/* Images section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass-card overflow-hidden rounded-2xl"
+        >
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="text-primary size-4" />
+              <span className="font-medium">Photos</span>
+            </div>
+            <ImageUploadInfo />
+          </div>
+          <UpdateImages currentUser={currentUser} />
+        </motion.section>
 
-      <div className="flex items-center justify-between px-2">
-        <Label>Photo de bannière et de profil</Label>
-        <ImageUploadInfo />
+        {/* Form section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <EditProfileForm currentUser={currentUser} />
+        </motion.section>
       </div>
-
-      <UpdateImages currentUser={currentUser} />
-
-      <EditProfileForm currentUser={currentUser} />
-    </main>
+    </motion.main>
   )
 }

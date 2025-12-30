@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { PageContainer } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -81,9 +82,9 @@ const BeCreatorPage = () => {
 
   if (!currentUser) {
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col items-center justify-center border-r border-l max-[500px]:pb-16">
+      <PageContainer title="Devenir Créateur" contentClassName="items-center justify-center">
         <div className="animate-pulse text-lg">Chargement...</div>
-      </main>
+      </PageContainer>
     )
   }
 
@@ -93,10 +94,7 @@ const BeCreatorPage = () => {
     currentUser.accountType === "SUPERUSER"
   ) {
     return (
-      <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-        <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
-          <h1 className="text-2xl font-bold">Compte Créateur</h1>
-        </div>
+      <PageContainer title="Compte Créateur">
         <div className="flex flex-1 items-center justify-center p-6">
           <Card className="mx-auto max-w-md text-center">
             <CardHeader>
@@ -113,7 +111,7 @@ const BeCreatorPage = () => {
             </CardFooter>
           </Card>
         </div>
-      </main>
+      </PageContainer>
     )
   }
 
@@ -209,11 +207,7 @@ const BeCreatorPage = () => {
   }
 
   return (
-    <main className="border-muted flex h-full min-h-screen w-full flex-col border-r border-l max-[500px]:pb-16">
-      <div className="border-muted bg-background/95 sticky top-0 z-20 border-b p-4 backdrop-blur-sm">
-        <h1 className="text-2xl font-bold">Devenir Créateur</h1>
-      </div>
-
+    <PageContainer title="Devenir Créateur">
       <div className="flex-1 p-6">
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 text-center">
@@ -304,7 +298,7 @@ const BeCreatorPage = () => {
           </div>
         </div>
       </div>
-    </main>
+    </PageContainer>
   )
 }
 

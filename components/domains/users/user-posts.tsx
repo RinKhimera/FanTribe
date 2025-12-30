@@ -16,7 +16,7 @@ export const UserPosts = ({
   currentUser,
 }: {
   authorId: Id<"users">
-  currentUser: Doc<"users"> | undefined
+  currentUser: Doc<"users"> | null | undefined
 }) => {
   const [allPosts, setAllPosts] = useState<PostWithAuthor[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
