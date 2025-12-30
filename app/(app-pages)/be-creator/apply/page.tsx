@@ -25,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -340,7 +341,13 @@ const ApplyCreatorPage = () => {
                       <FormItem>
                         <FormLabel>Date de naissance</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DatePicker
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Selectionner votre date de naissance"
+                            fromYear={1940}
+                            toYear={new Date().getFullYear() - 18}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
