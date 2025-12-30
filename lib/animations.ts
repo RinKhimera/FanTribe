@@ -235,3 +235,205 @@ export const pinnedBadgeVariants: Variants = {
     transition: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] },
   },
 }
+
+// ============================================
+// PREMIUM ANIMATION VARIANTS
+// ============================================
+
+// Premium post card entrance with subtle gold glow
+export const premiumCardVariants: Variants = {
+  initial: { opacity: 0, y: 16, scale: 0.98 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.45,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    scale: 0.98,
+    transition: { duration: 0.25, ease: "easeIn" },
+  },
+}
+
+// Like button heart pulse animation
+export const heartPulseVariants: Variants = {
+  initial: { scale: 1 },
+  liked: {
+    scale: [1, 1.35, 0.9, 1.15, 1],
+    transition: {
+      duration: 0.45,
+      ease: [0.34, 1.56, 0.64, 1],
+      times: [0, 0.2, 0.4, 0.7, 1],
+    },
+  },
+}
+
+// Profile hover card appearance
+export const hoverCardVariants: Variants = {
+  initial: { opacity: 0, scale: 0.92, y: 10 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.25,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 6,
+    transition: { duration: 0.18, ease: "easeIn" },
+  },
+}
+
+// Locked content reveal animation
+export const lockedContentVariants: Variants = {
+  locked: {
+    filter: "blur(28px)",
+    scale: 1.15,
+  },
+  unlocked: {
+    filter: "blur(0px)",
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
+}
+
+// Premium button shimmer effect
+export const buttonShimmerVariants: Variants = {
+  rest: { backgroundPosition: "200% 0" },
+  hover: {
+    backgroundPosition: "-200% 0",
+    transition: {
+      duration: 1.8,
+      repeat: Infinity,
+      ease: "linear",
+    },
+  },
+}
+
+// Action button micro-interaction
+export const actionButtonVariants: Variants = {
+  rest: { scale: 1, rotate: 0 },
+  hover: {
+    scale: 1.12,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+  tap: {
+    scale: 0.92,
+    transition: { duration: 0.1 },
+  },
+}
+
+// Bookmark toggle animation
+export const bookmarkVariants: Variants = {
+  initial: { scale: 1, rotate: 0 },
+  bookmarked: {
+    scale: [1, 1.3, 1.1, 1],
+    rotate: [0, -8, 4, 0],
+    transition: {
+      duration: 0.4,
+      ease: [0.34, 1.56, 0.64, 1],
+    },
+  },
+}
+
+// Comment section expand/collapse
+export const commentSectionVariants: Variants = {
+  collapsed: {
+    height: 0,
+    opacity: 0,
+    transition: {
+      height: { duration: 0.3, ease: "easeIn" },
+      opacity: { duration: 0.15 },
+    },
+  },
+  expanded: {
+    height: "auto",
+    opacity: 1,
+    transition: {
+      height: { duration: 0.35, ease: "easeOut" },
+      opacity: { duration: 0.25, delay: 0.1 },
+    },
+  },
+}
+
+// Premium feed stagger container
+export const premiumFeedContainerVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+}
+
+// Premium feed item
+export const premiumFeedItemVariants: Variants = {
+  initial: { opacity: 0, y: 20 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
+}
+
+// Gold shimmer loader
+export const goldShimmerVariants: Variants = {
+  initial: { x: "-100%" },
+  animate: {
+    x: "100%",
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      ease: "linear",
+    },
+  },
+}
+
+// Premium avatar hover
+export const premiumAvatarVariants: Variants = {
+  rest: {
+    scale: 1,
+    boxShadow: "0 0 0 2.5px var(--background), 0 0 0 4px rgba(255,255,255,0.15)",
+  },
+  hover: {
+    scale: 1.06,
+    boxShadow: "0 0 0 2.5px var(--background), 0 0 0 4px var(--gold-400), 0 4px 24px rgba(184,139,74,0.25)",
+    transition: { duration: 0.3, ease: "easeOut" },
+  },
+}
+
+// Emoji picker pop animation
+export const emojiPopVariants: Variants = {
+  initial: { scale: 0.8, opacity: 0 },
+  animate: (i: number) => ({
+    scale: 1,
+    opacity: 1,
+    transition: {
+      delay: i * 0.03,
+      duration: 0.2,
+      ease: [0.34, 1.56, 0.64, 1],
+    },
+  }),
+  hover: {
+    scale: 1.3,
+    transition: { duration: 0.15 },
+  },
+  tap: { scale: 0.9 },
+}

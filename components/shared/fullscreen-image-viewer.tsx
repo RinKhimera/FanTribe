@@ -146,18 +146,23 @@ export const FullscreenImageViewer = ({
           onContextMenu={(e) => e.preventDefault()}
         >
           {/* Backdrop with blur */}
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" />
 
           {/* Close button - glass style */}
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
             onClick={onClose}
             aria-label="Fermer"
-            className="glass-button absolute top-4 right-4 z-10 flex size-11 items-center justify-center rounded-full transition-all hover:scale-110"
+            className={cn(
+              "absolute top-4 right-4 z-10 flex size-12 items-center justify-center rounded-full",
+              "bg-white/10 backdrop-blur-xl border border-white/20",
+              "transition-all duration-300",
+              "hover:scale-110 hover:bg-white/20",
+            )}
           >
-            <X className="size-5 text-white" />
+            <X className="size-5 text-white/90" />
           </motion.button>
 
           {/* Counter badge */}
@@ -165,11 +170,17 @@ export const FullscreenImageViewer = ({
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="glass-card absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-full px-4 py-2"
+              transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
+              className={cn(
+                "absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-2.5",
+                "bg-black/40 backdrop-blur-xl border border-white/20",
+                "shadow-[0_4px_20px_rgba(0,0,0,0.3)]",
+              )}
             >
-              <span className="text-sm font-medium text-white">
-                {index + 1} / {total}
+              <span className="text-sm font-semibold tracking-wide">
+                <span className="text-white">{index + 1}</span>
+                <span className="text-white/50 mx-1.5">/</span>
+                <span className="text-white/80">{total}</span>
               </span>
             </motion.div>
           )}
@@ -179,7 +190,7 @@ export const FullscreenImageViewer = ({
             <motion.button
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
               onClick={(e) => {
                 e.stopPropagation()
                 go(-1)
@@ -187,13 +198,18 @@ export const FullscreenImageViewer = ({
               aria-label="Précédent"
               disabled={index === 0}
               className={cn(
-                "glass-button absolute top-1/2 left-4 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full transition-all",
+                "absolute top-1/2 left-4 z-10 flex size-14 -translate-y-1/2 items-center justify-center rounded-full",
+                "bg-white/10 backdrop-blur-xl border border-white/20",
+                "transition-all duration-300",
                 index === 0
                   ? "cursor-not-allowed opacity-30"
-                  : "hover:scale-110",
+                  : "hover:scale-110 hover:bg-white/20",
               )}
             >
-              <ChevronLeft className="size-6 text-white" />
+              <ChevronLeft className={cn(
+                "size-7 transition-colors duration-300",
+                index === 0 ? "text-white/50" : "text-white/90",
+              )} />
             </motion.button>
           )}
 
@@ -202,7 +218,7 @@ export const FullscreenImageViewer = ({
             <motion.button
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
               onClick={(e) => {
                 e.stopPropagation()
                 go(1)
@@ -210,13 +226,18 @@ export const FullscreenImageViewer = ({
               aria-label="Suivant"
               disabled={index === total - 1}
               className={cn(
-                "glass-button absolute top-1/2 right-4 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full transition-all",
+                "absolute top-1/2 right-4 z-10 flex size-14 -translate-y-1/2 items-center justify-center rounded-full",
+                "bg-white/10 backdrop-blur-xl border border-white/20",
+                "transition-all duration-300",
                 index === total - 1
                   ? "cursor-not-allowed opacity-30"
-                  : "hover:scale-110",
+                  : "hover:scale-110 hover:bg-white/20",
               )}
             >
-              <ChevronRight className="size-6 text-white" />
+              <ChevronRight className={cn(
+                "size-7 transition-colors duration-300",
+                index === total - 1 ? "text-white/50" : "text-white/90",
+              )} />
             </motion.button>
           )}
 
@@ -225,27 +246,43 @@ export const FullscreenImageViewer = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="glass-card absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-2xl p-2"
+              transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
+              className={cn(
+                "absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-2xl p-2.5",
+                "bg-black/50 backdrop-blur-xl border border-white/10",
+                "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+              )}
             >
               {medias.slice(0, 7).map((m, i) => (
-                <button
+                <motion.button
                   key={m + i}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={(e) => {
                     e.stopPropagation()
                     onIndexChange?.(i)
                   }}
                   className={cn(
-                    "relative size-12 overflow-hidden rounded-lg transition-all",
+                    "relative size-14 overflow-hidden rounded-xl transition-all duration-300",
                     i === index
-                      ? "ring-primary ring-2 ring-offset-2 ring-offset-black/50"
-                      : "opacity-60 hover:opacity-100",
+                      ? "ring-2 ring-white ring-offset-2 ring-offset-black/80"
+                      : "opacity-50 hover:opacity-100 ring-1 ring-white/10",
                   )}
                 >
                   {isVideo(m) ? (
-                    <div className="bg-muted/50 flex h-full w-full items-center justify-center">
-                      <div className="bg-primary/20 flex size-6 items-center justify-center rounded-full">
-                        <div className="border-l-primary ml-0.5 size-0 border-y-4 border-l-6 border-y-transparent" />
+                    <div className="bg-black/60 flex h-full w-full items-center justify-center">
+                      <div className={cn(
+                        "flex size-7 items-center justify-center rounded-full",
+                        i === index
+                          ? "bg-white"
+                          : "bg-white/20",
+                      )}>
+                        <div className={cn(
+                          "ml-0.5 size-0 border-y-4 border-l-6 border-y-transparent",
+                          i === index
+                            ? "border-l-black"
+                            : "border-l-white",
+                        )} />
                       </div>
                     </div>
                   ) : (
@@ -254,14 +291,17 @@ export const FullscreenImageViewer = ({
                       alt={`Thumbnail ${i + 1}`}
                       fill
                       className="object-cover"
-                      sizes="48px"
+                      sizes="56px"
                     />
                   )}
-                </button>
+                </motion.button>
               ))}
               {total > 7 && (
-                <div className="flex size-12 items-center justify-center rounded-lg bg-white/10">
-                  <span className="text-xs font-medium text-white">
+                <div className={cn(
+                  "flex size-14 items-center justify-center rounded-xl",
+                  "bg-white/20 border border-white/30",
+                )}>
+                  <span className="text-sm font-semibold text-white">
                     +{total - 7}
                   </span>
                 </div>
@@ -313,7 +353,10 @@ export const FullscreenImageViewer = ({
                   >
                     {isVideo(m) ? (
                       <div
-                        className="relative w-full max-w-5xl overflow-hidden rounded-2xl"
+                        className={cn(
+                          "relative w-full max-w-5xl overflow-hidden rounded-2xl",
+                          "ring-1 ring-white/10 shadow-[0_25px_80px_-12px_rgba(0,0,0,0.6)]",
+                        )}
                         style={{ aspectRatio: "16 / 9" }}
                       >
                         <iframe
@@ -330,7 +373,11 @@ export const FullscreenImageViewer = ({
                         width={1600}
                         height={1200}
                         priority
-                        className="max-h-[80vh] w-auto rounded-2xl object-contain shadow-2xl select-none"
+                        className={cn(
+                          "max-h-[80vh] w-auto rounded-2xl object-contain select-none",
+                          "ring-1 ring-white/10",
+                          "shadow-[0_25px_80px_-12px_rgba(0,0,0,0.6)]",
+                        )}
                         draggable={false}
                         onDragStart={(e) => e.preventDefault()}
                         onContextMenu={(e) => e.preventDefault()}

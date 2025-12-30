@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery } from "convex/react"
+import { motion } from "motion/react"
 import { useState } from "react"
 import { SubscriptionModal } from "@/components/domains/subscriptions"
 import { CommentSection } from "@/components/shared/comment-section"
@@ -11,6 +12,7 @@ import { PostMedia } from "@/components/shared/post-media"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
+import { premiumCardVariants } from "@/lib/animations"
 import { cn } from "@/lib/utils"
 
 // ExtendedPost is a type that represents a post with an extended author field.
@@ -68,29 +70,31 @@ export const PostCard = ({
   return (
     <>
       <TooltipProvider>
-        <article
+        <motion.article
+          variants={premiumCardVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
           className={cn(
-            // Base styles
+            // Base styles - Premium glass styling
             "group relative",
-            "bg-background",
-            "border-border/50 border-b",
-            "transition-colors duration-200",
-            "hover:bg-muted/30",
+            "glass-post-card",
             // Variants
             variant === "featured" && [
-              "border-primary/20 rounded-xl border",
-              "from-primary/5 bg-linear-to-b to-transparent",
+              "rounded-2xl border border-primary/20",
+              "bg-gradient-to-b from-primary/5 to-transparent",
+              "shadow-[0_4px_24px_hsl(var(--primary)/15%)]",
             ],
-            variant === "compact" && "py-2",
+            variant === "compact" && "py-1",
           )}
         >
           {/* Main content wrapper */}
           <div
             className={cn(
-              "flex flex-col gap-3",
-              variant === "default" && "py-4",
+              "flex flex-col gap-4",
+              variant === "default" && "py-5",
               variant === "compact" && "py-2",
-              variant === "featured" && "py-5",
+              variant === "featured" && "py-6",
             )}
           >
             {/* Header: Avatar, Author info, Date, Actions */}
@@ -139,7 +143,7 @@ export const PostCard = ({
               onClose={toggleComments}
             />
           </div>
-        </article>
+        </motion.article>
       </TooltipProvider>
 
       {/* Modale d'abonnement */}

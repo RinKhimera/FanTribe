@@ -78,7 +78,7 @@ export const PageHeader = ({
           "sticky top-0 z-20",
           "flex items-center justify-between",
           "min-h-[var(--header-height)]",
-          !hideBottomBorder && "border-b border-white/[0.08]",
+          !hideBottomBorder && "border-b border-border",
           "px-[var(--header-padding)] py-3",
           "frosted",
           className,

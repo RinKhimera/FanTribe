@@ -1,11 +1,12 @@
 "use client"
 
-import { ImagePlus } from "lucide-react"
+import { ImagePlus, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import TextareaAutosize from "react-textarea-autosize"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
+import { cn } from "@/lib/utils"
 
 export const CreatePost = ({
   currentUser,
@@ -27,27 +28,38 @@ export const CreatePost = ({
 
   return (
     <div
-      className="border-muted relative flex cursor-pointer items-stretch space-x-3 border-b px-4 py-5 max-sm:hidden"
+      className={cn(
+        "relative cursor-pointer max-sm:hidden",
+        "mx-4 my-4 p-5 rounded-2xl",
+        "glass-premium",
+        "border border-primary/10",
+        "hover:border-primary/25 transition-all duration-300",
+        "hover:shadow-[0_4px_24px_hsl(var(--primary)/25%)]",
+      )}
       onClick={handleCreatePostClick}
     >
-      <Avatar>
-        <AvatarImage
-          src={currentUser?.image || ""}
-          width={100}
-          height={100}
-          className="aspect-square h-full w-full object-cover"
-          alt={currentUser?.username || "Profile image"}
-        />
-        <AvatarFallback className="size-11">
-          <div className="animate-pulse rounded-full bg-gray-500"></div>
-        </AvatarFallback>
-      </Avatar>
+      <div className="flex items-start gap-4">
+        <Avatar className="size-12 shrink-0">
+          <AvatarImage
+            src={currentUser?.image || ""}
+            width={100}
+            height={100}
+            className="aspect-square h-full w-full object-cover"
+            alt={currentUser?.username || "Profile image"}
+          />
+          <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
+            {currentUser?.name?.charAt(0) || "?"}
+          </AvatarFallback>
+        </Avatar>
 
-      <div className="w-full">
-        <div className="flex h-full w-full flex-col">
+        <div className="flex-1">
           <TextareaAutosize
-            placeholder="Partager une publication"
-            className="mt-1 h-full w-full cursor-pointer resize-none border-none bg-transparent text-xl outline-hidden"
+            placeholder="Partager une publication..."
+            className={cn(
+              "w-full cursor-pointer resize-none border-none bg-transparent",
+              "text-lg placeholder:text-muted-foreground/50",
+              "outline-none focus:outline-none",
+            )}
             onClick={(e) => {
               e.stopPropagation()
               handleCreatePostClick()
@@ -57,34 +69,41 @@ export const CreatePost = ({
             maxRows={4}
           />
 
-          <div
-            className="mt-2 flex w-full cursor-pointer items-center justify-between"
-            onClick={handleCreatePostClick}
-          >
+          {/* Divider */}
+          <div className="h-px bg-border my-4" />
+
+          <div className="flex items-center justify-between">
             {currentUser !== undefined && (
-              <div className="-ml-2">
-                <Button
-                  type="button"
-                  size={"icon"}
-                  className="rounded-full p-2 transition"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleCreatePostClick()
-                  }}
-                >
-                  <ImagePlus size={20} />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className={cn(
+                  "rounded-full h-10 w-10",
+                  "hover:bg-primary/10 hover:text-primary",
+                  "transition-all duration-200",
+                )}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleCreatePostClick()
+                }}
+              >
+                <ImagePlus className="size-5" />
+              </Button>
             )}
 
             <Button
-              className="w-fit rounded-full px-4 py-2 font-bold"
+              className={cn(
+                "rounded-full px-6 h-10",
+                "font-semibold tracking-wide",
+              )}
               onClick={(e) => {
                 e.stopPropagation()
                 handleCreatePostClick()
               }}
               type="button"
             >
+              <Sparkles className="size-4 mr-2" />
               Publier
             </Button>
           </div>
