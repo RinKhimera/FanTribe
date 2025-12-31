@@ -58,26 +58,24 @@ export const SplitPanelLayout = ({
 
       {/* Panneaux */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Panneau de navigation (gauche) */}
+        {/* Panneau de navigation (gauche) - caché sur mobile, les pages ont leurs propres Tabs */}
         <div
           className={cn(
             "w-(--content-split-nav-width)",
             "border-muted border-r",
             "overflow-y-auto",
-            // Sur mobile, toujours visible (la logique de masquage sera dans les pages)
-            "max-lg:w-full lg:w-(--content-split-nav-width)",
+            "max-lg:hidden lg:block lg:w-(--content-split-nav-width)",
           )}
         >
           {navigationPanel}
         </div>
 
-        {/* Panneau de contenu (droite) */}
+        {/* Panneau de contenu (droite) - visible sur mobile avec Tabs intégrés */}
         <div
           className={cn(
             "w-(--content-split-main-width)",
             "overflow-y-auto",
-            // Sur mobile/tablet, prend toute la largeur quand visible
-            "max-lg:hidden lg:block lg:w-(--content-split-main-width)",
+            "max-lg:w-full lg:w-(--content-split-main-width)",
           )}
         >
           {children}

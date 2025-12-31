@@ -7,6 +7,7 @@ import {
   Globe,
   LoaderCircle,
   Lock,
+  Pin,
   Share2,
   Sparkles,
   Trash2,
@@ -48,6 +49,7 @@ type PostEllipsisProps = {
   postAuthorId?: Id<"users">
   visibility?: "public" | "subscribers_only"
   postAuthorUsername?: string
+  isPinned?: boolean
 }
 
 export const PostEllipsis = ({
@@ -56,9 +58,12 @@ export const PostEllipsis = ({
   postAuthorId,
   visibility = "public",
   postAuthorUsername,
+  isPinned,
 }: PostEllipsisProps) => {
   const [isPending, startTransition] = useTransition()
   const [isUpdatePending, setIsUpdatePending] = useState(false)
+  const [showMaxPinnedDialog, setShowMaxPinnedDialog] = useState(false)
+  const [isPinPending, setIsPinPending] = useState(false)
 
   // Déterminer si l'utilisateur courant est l'auteur du post
   const isAuthor = postAuthorId === currentUser._id
@@ -66,6 +71,7 @@ export const PostEllipsis = ({
 
   const deletePost = useMutation(api.posts.deletePost)
   const updatePostVisibility = useMutation(api.posts.updatePostVisibility)
+  const togglePinnedPost = useMutation(api.users.togglePinnedPost)
 
   // Construction de l'URL complète du post pour le partage
   const host = typeof window !== "undefined" ? window.location.origin : ""
@@ -147,6 +153,31 @@ export const PostEllipsis = ({
       })
   }
 
+  const handlePinToggle = async (replaceOldest = false) => {
+    setIsPinPending(true)
+    try {
+      const result = await togglePinnedPost({ postId, replaceOldest })
+      if (result.maxReached) {
+        setShowMaxPinnedDialog(true)
+        setIsPinPending(false)
+        return
+      }
+      if (result.pinned) {
+        toast.success("Publication épinglée", {
+          description: "Cette publication apparaîtra en haut de votre profil",
+        })
+      } else {
+        toast.success("Publication désépinglée")
+      }
+      setShowMaxPinnedDialog(false)
+    } catch (error) {
+      logger.error("Erreur épinglage post", error, { postId })
+      toast.error("Erreur lors de l'épinglage")
+    } finally {
+      setIsPinPending(false)
+    }
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -179,6 +210,17 @@ export const PostEllipsis = ({
             </DropdownMenuRadioGroup>
             <DropdownMenuSeparator />
           </>
+        )}
+
+        {/* Option d'épinglage - uniquement pour l'auteur */}
+        {isAuthor && (
+          <DropdownMenuItem
+            onClick={() => handlePinToggle()}
+            disabled={isPinPending}
+          >
+            <Pin className="mr-2 size-4" />
+            {isPinned ? "Désépingler du profil" : "Épingler au profil"}
+          </DropdownMenuItem>
         )}
 
         {/* Option de partage (disponible pour tous) */}
@@ -243,6 +285,33 @@ export const PostEllipsis = ({
           )}
         </DropdownMenuGroup>
       </DropdownMenuContent>
+
+      {/* Dialogue de confirmation pour le remplacement du post épinglé */}
+      <AlertDialog open={showMaxPinnedDialog} onOpenChange={setShowMaxPinnedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limite atteinte</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous avez déjà 3 publications épinglées. Si vous continuez,
+              la plus ancienne sera automatiquement désépinglée pour faire
+              place à cette publication.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handlePinToggle(true)}
+              disabled={isPinPending}
+            >
+              {isPinPending ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                "Remplacer"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DropdownMenu>
   )
 }

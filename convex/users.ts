@@ -453,7 +453,10 @@ export const searchUsers = query({
 
 // Toggle pinned post (max 3 pinned posts)
 export const togglePinnedPost = mutation({
-  args: { postId: v.id("posts") },
+  args: {
+    postId: v.id("posts"),
+    replaceOldest: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -484,7 +487,14 @@ export const togglePinnedPost = mutation({
     } else {
       // Pin (max 3)
       if (pinnedPosts.length >= 3) {
-        throw new ConvexError("Maximum 3 posts épinglés autorisés")
+        if (args.replaceOldest) {
+          // Remove oldest (first) and add new post
+          const newPinnedPosts = [...pinnedPosts.slice(1), args.postId]
+          await ctx.db.patch(user._id, { pinnedPostIds: newPinnedPosts })
+          return { pinned: true, replaced: pinnedPosts[0] }
+        }
+        // Return maxReached flag instead of throwing error
+        return { pinned: false, maxReached: true }
       }
       await ctx.db.patch(user._id, {
         pinnedPostIds: [...pinnedPosts, args.postId],

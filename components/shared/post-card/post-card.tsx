@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 // ExtendedPost is a type that represents a post with an extended author field.
 type ExtendedPost = Omit<Doc<"posts">, "author"> & {
   author: Doc<"users"> | null | undefined
+  isPinned?: boolean
 }
 
 type PostCardProps = {
@@ -106,6 +107,7 @@ export const PostCard = ({
               currentUser={currentUser}
               canViewMedia={canViewMedia}
               onRequireSubscribe={() => setIsSubscriptionModalOpen(true)}
+              isPinned={post.isPinned}
             />
 
             {/* Content: Post text */}

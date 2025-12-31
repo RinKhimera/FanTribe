@@ -34,12 +34,12 @@ export default function UserProfileLayout({
           creatorId: userProfile._id,
           subscriberId: currentUser._id,
         }
-      : "skip"
+      : "skip",
   )
 
   const canSubscribeCheck = useQuery(
     api.subscriptions.canUserSubscribe,
-    userProfile?._id ? { creatorId: userProfile._id } : "skip"
+    userProfile?._id ? { creatorId: userProfile._id } : "skip",
   )
 
   const canSubscribe = canSubscribeCheck?.canSubscribe || false

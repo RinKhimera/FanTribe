@@ -15,7 +15,6 @@ import {
   UserProfileBadgeInline,
   UserProfileBadges,
 } from "./user-profile-badges"
-import { UserPinnedPosts } from "./user-pinned-posts"
 import { UserProfileStats } from "./user-profile-stats"
 import { UserReportButton } from "./user-report-button"
 import { UserSocialLinks } from "./user-social-links"
@@ -29,7 +28,6 @@ type UserProfileHeroProps = {
   userProfile: Doc<"users">
   subscriptionStatus: FollowSubscriptionStatus | null | undefined
   canSubscribe: boolean
-  showPinnedPosts?: boolean
 }
 
 export const UserProfileHero = ({
@@ -37,7 +35,6 @@ export const UserProfileHero = ({
   userProfile,
   subscriptionStatus,
   canSubscribe,
-  showPinnedPosts = true,
 }: UserProfileHeroProps) => {
   const isOwnProfile = currentUser?.username === userProfile.username
 
@@ -239,14 +236,6 @@ export const UserProfileHero = ({
           </motion.div>
         )}
 
-        {/* Pinned Posts */}
-        {showPinnedPosts && (
-          <UserPinnedPosts
-            userId={userProfile._id}
-            username={userProfile.username}
-            currentUserId={currentUser?._id}
-          />
-        )}
       </div>
 
       {/* Fullscreen avatar viewer */}

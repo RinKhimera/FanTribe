@@ -2,7 +2,7 @@
 
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { BadgeCheck, Lock } from "lucide-react"
+import { BadgeCheck, Lock, Pin } from "lucide-react"
 import Link from "next/link"
 import { PostEllipsis } from "@/components/domains/posts"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -24,6 +24,7 @@ type PostHeaderProps = {
   currentUser: Doc<"users">
   canViewMedia: boolean
   onRequireSubscribe: () => void
+  isPinned?: boolean
 }
 
 export const PostHeader = ({
@@ -34,6 +35,7 @@ export const PostHeader = ({
   currentUser,
   canViewMedia,
   onRequireSubscribe,
+  isPinned,
 }: PostHeaderProps) => {
   const isOwnPost = currentUser._id === author?._id
   const isVerified =
@@ -58,8 +60,8 @@ export const PostHeader = ({
             <Avatar className="size-12">
               <AvatarImage
                 src={author.image}
-                width={100}
-                height={100}
+                width={48}
+                height={48}
                 alt={author.username || "Profile image"}
                 className="aspect-square object-cover"
               />
@@ -161,8 +163,20 @@ export const PostHeader = ({
         </div>
       </div>
 
-      {/* Actions (ellipsis + visibility) */}
+      {/* Actions (ellipsis + visibility + pinned) */}
       <div className="flex items-center gap-0.5">
+        {isPinned && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex size-8 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+                <Pin className="size-3.5 text-primary" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" sideOffset={4}>
+              <p className="text-xs">Publication épinglée</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
         {visibility === "subscribers_only" && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -181,6 +195,7 @@ export const PostHeader = ({
           postAuthorId={author?._id}
           visibility={visibility}
           postAuthorUsername={author?.username}
+          isPinned={isPinned}
         />
       </div>
     </div>

@@ -156,13 +156,13 @@ export const FullscreenImageViewer = ({
             onClick={onClose}
             aria-label="Fermer"
             className={cn(
-              "absolute top-4 right-4 z-10 flex size-12 items-center justify-center rounded-full",
-              "bg-white/10 backdrop-blur-xl border border-white/20",
+              "absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex size-10 items-center justify-center rounded-full",
+              "bg-white/10 backdrop-blur-md border border-white/20",
               "transition-all duration-300",
-              "hover:scale-110 hover:bg-white/20",
+              "hover:scale-105 hover:bg-white/20",
             )}
           >
-            <X className="size-5 text-white/90" />
+            <X className="size-4 text-white/90" />
           </motion.button>
 
           {/* Counter badge */}
@@ -172,14 +172,13 @@ export const FullscreenImageViewer = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
               className={cn(
-                "absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-2.5",
-                "bg-black/40 backdrop-blur-xl border border-white/20",
-                "shadow-[0_4px_20px_rgba(0,0,0,0.3)]",
+                "absolute top-3 sm:top-4 left-1/2 z-10 -translate-x-1/2 rounded-full px-3 py-1.5 sm:px-4 sm:py-2",
+                "bg-black/50 backdrop-blur-md border border-white/20",
               )}
             >
-              <span className="text-sm font-semibold tracking-wide">
+              <span className="text-xs sm:text-sm font-medium tracking-wide">
                 <span className="text-white">{index + 1}</span>
-                <span className="text-white/50 mx-1.5">/</span>
+                <span className="text-white/50 mx-1">/</span>
                 <span className="text-white/80">{total}</span>
               </span>
             </motion.div>
@@ -198,16 +197,16 @@ export const FullscreenImageViewer = ({
               aria-label="Précédent"
               disabled={index === 0}
               className={cn(
-                "absolute top-1/2 left-4 z-10 flex size-14 -translate-y-1/2 items-center justify-center rounded-full",
-                "bg-white/10 backdrop-blur-xl border border-white/20",
+                "absolute top-1/2 left-3 sm:left-6 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full",
+                "bg-white/10 backdrop-blur-md border border-white/20",
                 "transition-all duration-300",
                 index === 0
                   ? "cursor-not-allowed opacity-30"
-                  : "hover:scale-110 hover:bg-white/20",
+                  : "hover:scale-105 hover:bg-white/20",
               )}
             >
               <ChevronLeft className={cn(
-                "size-7 transition-colors duration-300",
+                "size-5 transition-colors duration-300",
                 index === 0 ? "text-white/50" : "text-white/90",
               )} />
             </motion.button>
@@ -226,16 +225,16 @@ export const FullscreenImageViewer = ({
               aria-label="Suivant"
               disabled={index === total - 1}
               className={cn(
-                "absolute top-1/2 right-4 z-10 flex size-14 -translate-y-1/2 items-center justify-center rounded-full",
-                "bg-white/10 backdrop-blur-xl border border-white/20",
+                "absolute top-1/2 right-3 sm:right-6 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full",
+                "bg-white/10 backdrop-blur-md border border-white/20",
                 "transition-all duration-300",
                 index === total - 1
                   ? "cursor-not-allowed opacity-30"
-                  : "hover:scale-110 hover:bg-white/20",
+                  : "hover:scale-105 hover:bg-white/20",
               )}
             >
               <ChevronRight className={cn(
-                "size-7 transition-colors duration-300",
+                "size-5 transition-colors duration-300",
                 index === total - 1 ? "text-white/50" : "text-white/90",
               )} />
             </motion.button>
@@ -248,8 +247,8 @@ export const FullscreenImageViewer = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
               className={cn(
-                "absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-2xl p-2.5",
-                "bg-black/50 backdrop-blur-xl border border-white/10",
+                "absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 rounded-xl p-1.5",
+                "bg-black/60 backdrop-blur-md border border-white/10",
                 "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
               )}
             >
@@ -263,22 +262,22 @@ export const FullscreenImageViewer = ({
                     onIndexChange?.(i)
                   }}
                   className={cn(
-                    "relative size-14 overflow-hidden rounded-xl transition-all duration-300",
+                    "relative size-9 sm:size-10 md:size-12 overflow-hidden rounded-lg transition-all duration-300",
                     i === index
-                      ? "ring-2 ring-white ring-offset-2 ring-offset-black/80"
+                      ? "ring-2 ring-white ring-offset-1 ring-offset-black/80"
                       : "opacity-50 hover:opacity-100 ring-1 ring-white/10",
                   )}
                 >
                   {isVideo(m) ? (
                     <div className="bg-black/60 flex h-full w-full items-center justify-center">
                       <div className={cn(
-                        "flex size-7 items-center justify-center rounded-full",
+                        "flex size-5 sm:size-6 items-center justify-center rounded-full",
                         i === index
                           ? "bg-white"
                           : "bg-white/20",
                       )}>
                         <div className={cn(
-                          "ml-0.5 size-0 border-y-4 border-l-6 border-y-transparent",
+                          "ml-0.5 size-0 border-y-[3px] border-l-[5px] border-y-transparent",
                           i === index
                             ? "border-l-black"
                             : "border-l-white",
@@ -291,22 +290,27 @@ export const FullscreenImageViewer = ({
                       alt={`Thumbnail ${i + 1}`}
                       fill
                       className="object-cover"
-                      sizes="56px"
+                      sizes="48px"
                     />
                   )}
                 </motion.button>
               ))}
               {total > 7 && (
                 <div className={cn(
-                  "flex size-14 items-center justify-center rounded-xl",
+                  "flex size-9 sm:size-10 md:size-12 items-center justify-center rounded-lg",
                   "bg-white/20 border border-white/30",
                 )}>
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-xs font-semibold text-white">
                     +{total - 7}
                   </span>
                 </div>
               )}
             </motion.div>
+          )}
+
+          {/* Gradient protection for bottom thumbnails */}
+          {total > 1 && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
           )}
 
           {/* Image container */}
@@ -315,7 +319,7 @@ export const FullscreenImageViewer = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className="relative flex max-h-[80vh] w-full max-w-5xl items-center justify-center px-16"
+            className="relative flex h-full w-full items-center justify-center px-4 sm:px-8 md:px-16"
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => {
               const t = e.touches[0]
@@ -374,7 +378,7 @@ export const FullscreenImageViewer = ({
                         height={1200}
                         priority
                         className={cn(
-                          "max-h-[80vh] w-auto rounded-2xl object-contain select-none",
+                          "max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)] w-auto max-w-full rounded-xl object-contain select-none",
                           "ring-1 ring-white/10",
                           "shadow-[0_25px_80px_-12px_rgba(0,0,0,0.6)]",
                         )}

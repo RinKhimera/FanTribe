@@ -1,6 +1,6 @@
 "use client"
 
-import { Image as ImageIcon, Lock, Sparkles } from "lucide-react"
+import { Lock, Sparkles } from "lucide-react"
 import Image from "next/image"
 import React, { useEffect, useMemo, useState } from "react"
 import { extractVideoGuidFromUrl } from "@/app/api/bunny/helper/get-video"
@@ -350,47 +350,42 @@ export const PostMedia: React.FC<PostMediaProps> = ({
             })}
           </CarouselContent>
 
-          {/* Navigation buttons with glass style */}
+          {/* Navigation buttons - subtle rounded style */}
           <CarouselPrevious
             variant="secondary"
             size="icon"
             className={cn(
-              "left-3 size-10",
-              "glass-premium border-border",
-              "hover:border-primary/40 hover:shadow-[0_4px_24px_hsl(var(--primary)/25%)]",
-              "transition-all duration-300",
+              "left-2 size-8 rounded-full",
+              "bg-black/40 backdrop-blur-sm border-0",
+              "hover:bg-black/60",
+              "transition-all duration-200",
             )}
           />
           <CarouselNext
             variant="secondary"
             size="icon"
             className={cn(
-              "right-3 size-10",
-              "glass-premium border-border",
-              "hover:border-primary/40 hover:shadow-[0_4px_24px_hsl(var(--primary)/25%)]",
-              "transition-all duration-300",
+              "right-2 size-8 rounded-full",
+              "bg-black/40 backdrop-blur-sm border-0",
+              "hover:bg-black/60",
+              "transition-all duration-200",
             )}
           />
         </Carousel>
 
-        {/* Slide indicator - Pill style */}
+        {/* Slide indicator - Minimal style */}
         {slideCount > 1 && (
-          <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2">
+          <div className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2">
             <div
               className={cn(
-                "flex items-center gap-2 rounded-full px-4 py-2",
-                "glass-premium",
-                "text-xs font-semibold",
+                "flex items-center gap-1 rounded-full px-2 py-1",
+                "bg-black/50 backdrop-blur-sm",
+                "text-[10px] font-medium text-white",
               )}
             >
-              <ImageIcon size={13} className="text-primary" />
-              <span className="tabular-nums text-primary">
-                {currentSlide + 1}
-              </span>
-              <span className="text-muted-foreground/50">/</span>
-              <span className="tabular-nums text-muted-foreground">
-                {slideCount}
-              </span>
+              <span className="tabular-nums">{currentSlide + 1}</span>
+              <span className="opacity-60">/</span>
+              <span className="tabular-nums opacity-80">{slideCount}</span>
             </div>
           </div>
         )}

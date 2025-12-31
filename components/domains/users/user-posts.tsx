@@ -9,6 +9,7 @@ import { Doc, Id } from "@/convex/_generated/dataModel"
 
 type PostWithAuthor = Doc<"posts"> & {
   author: Doc<"users"> | null | undefined
+  isPinned?: boolean
 }
 
 export const UserPosts = ({
@@ -25,7 +26,7 @@ export const UserPosts = ({
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  const result = useQuery(api.posts.getUserPosts, {
+  const result = useQuery(api.posts.getUserPostsWithPinned, {
     authorId,
     paginationOpts: {
       numItems: 20,

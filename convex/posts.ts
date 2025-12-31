@@ -213,6 +213,56 @@ export const getUserPosts = query({
   },
 })
 
+// Get user posts with pinned posts first (for profile display)
+export const getUserPostsWithPinned = query({
+  args: {
+    authorId: v.id("users"),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const author = await ctx.db.get(args.authorId)
+    if (!author) throw createAppError("USER_NOT_FOUND")
+
+    const pinnedPostIds = author.pinnedPostIds || []
+    const isFirstPage = !args.paginationOpts.cursor
+
+    // Fetch regular posts with pagination
+    const paginationResult = await ctx.db
+      .query("posts")
+      .withIndex("by_author", (q) => q.eq("author", author._id))
+      .order("desc")
+      .paginate(args.paginationOpts)
+
+    if (isFirstPage && pinnedPostIds.length > 0) {
+      // Fetch pinned posts in order (maintains pinnedPostIds order)
+      const pinnedPosts = await Promise.all(
+        pinnedPostIds.map((id) => ctx.db.get(id))
+      )
+      const validPinnedPosts = pinnedPosts
+        .filter((p): p is NonNullable<typeof p> => p !== null)
+        .map((post) => ({ ...post, author, isPinned: true as const }))
+
+      // Filter out pinned posts from regular posts to avoid duplicates
+      const regularPosts = paginationResult.page
+        .filter((post) => !pinnedPostIds.includes(post._id))
+        .map((post) => ({ ...post, author, isPinned: false as const }))
+
+      return {
+        ...paginationResult,
+        page: [...validPinnedPosts, ...regularPosts],
+      }
+    }
+
+    // Subsequent pages - exclude pinned posts (already shown on first page)
+    return {
+      ...paginationResult,
+      page: paginationResult.page
+        .filter((post) => !pinnedPostIds.includes(post._id))
+        .map((post) => ({ ...post, author, isPinned: false as const })),
+    }
+  },
+})
+
 export const getUserGallery = query({
   args: { authorId: v.id("users") },
   handler: async (ctx, args) => {
