@@ -1,10 +1,19 @@
 "use client"
 
 import { motion, AnimatePresence } from "motion/react"
+import { FileText, Shield, Cookie } from "lucide-react"
+import Link from "next/link"
 import { SuggestionSearch } from "./suggestion-search"
 import { SuggestionCarousel } from "./suggestion-carousel"
 import { SuggestionSearchResults } from "./suggestion-search-results"
 import { useSuggestions } from "./use-suggestions"
+import { cn } from "@/lib/utils"
+
+const legalLinks = [
+  { href: "/terms", label: "Conditions", icon: FileText },
+  { href: "/privacy", label: "Confidentialité", icon: Shield },
+  { href: "/cookies", label: "Cookies", icon: Cookie },
+]
 
 const containerVariants = {
   initial: { opacity: 0 },
@@ -93,6 +102,32 @@ export const SuggestionSidebar = () => {
             </motion.div>
           )}
         </AnimatePresence>
+      </motion.div>
+
+      {/* Legal Links */}
+      <motion.div
+        variants={itemVariants}
+        className="border-t border-border/40 pt-4"
+      >
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          {legalLinks.map((link) => {
+            const Icon = link.icon
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "flex items-center gap-1.5",
+                  "text-xs text-muted-foreground",
+                  "transition-colors duration-200 hover:text-primary",
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {link.label}
+              </Link>
+            )
+          })}
+        </div>
       </motion.div>
     </motion.div>
   )

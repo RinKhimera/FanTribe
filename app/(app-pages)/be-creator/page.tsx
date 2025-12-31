@@ -1,301 +1,419 @@
 "use client"
 
-import { useQuery } from "convex/react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useMutation, useQuery } from "convex/react"
+import { AnimatePresence, motion } from "motion/react"
+import { useEffect, useRef, useState, useTransition } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 import {
-  Camera,
-  CheckCircle,
-  Crown,
-  FileText,
-  RotateCcw,
-  Shield,
-  Star,
-  XCircle,
-  Zap,
-} from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+  AlreadyCreator,
+  ApplicationStatus,
+  ApplicationStepper,
+  applicationSchema,
+  ApplicationFormData,
+  motivationOptions,
+  StepDocuments,
+  StepIntroduction,
+  StepPersonalInfo,
+  UploadedDocument,
+  UploadedDocuments,
+} from "@/components/be-creator"
 import { PageContainer } from "@/components/layout"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Form } from "@/components/ui/form"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { stepSlideVariants } from "@/lib/animations"
+import { deleteBunnyAsset } from "@/lib/services/bunny"
 
 const BeCreatorPage = () => {
-  const router = useRouter()
   const { currentUser } = useCurrentUser()
+  const [currentStep, setCurrentStep] = useState(1)
+  const [[, direction], setPage] = useState([1, 0])
+  const [isPending, startTransition] = useTransition()
+  const [isValidating, setIsValidating] = useState(false)
 
-  // Vérifier s'il y a déjà une demande en cours
-  const existingApplication = useQuery(
-    api.creatorApplications.getUserApplication,
-    currentUser ? { userId: currentUser._id } : "skip",
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocuments>(
+    {}
   )
 
-  const handleStartApplication = () => {
-    if (!currentUser) return
+  // Convex mutations and queries
+  const existingApplication = useQuery(
+    api.creatorApplications.getUserApplication,
+    currentUser ? { userId: currentUser._id } : "skip"
+  )
 
-    // Rediriger vers le formulaire de candidature
-    router.push("/be-creator/apply")
+  const submitApplication = useMutation(
+    api.creatorApplications.submitApplication
+  )
+  const createDraftDocument = useMutation(
+    api.validationDocuments.createDraftDocument
+  )
+  const deleteDraftDocument = useMutation(
+    api.validationDocuments.deleteDraftDocument
+  )
+
+  // Refs for cleanup
+  const isApplicationSubmittedRef = useRef(false)
+  const uploadedDocumentsRef = useRef<UploadedDocuments>({})
+
+  // Keep ref in sync
+  useEffect(() => {
+    uploadedDocumentsRef.current = uploadedDocuments
+  }, [uploadedDocuments])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (!isApplicationSubmittedRef.current) {
+        const currentDocs = uploadedDocumentsRef.current
+        Object.values(currentDocs).forEach((doc) => {
+          if (doc?.mediaId) {
+            deleteBunnyAsset(doc.mediaId, "image").catch((error: unknown) => {
+              console.error(
+                "Erreur lors de la suppression du document:",
+                error
+              )
+            })
+            deleteDraftDocument({ mediaUrl: doc.mediaId }).catch(
+              (error: unknown) => {
+                console.error(
+                  "Erreur lors de la suppression du brouillon:",
+                  error
+                )
+              }
+            )
+          }
+        })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Form setup
+  const form = useForm<ApplicationFormData>({
+    resolver: zodResolver(applicationSchema),
+    defaultValues: {
+      fullName: currentUser?.name || "",
+      dateOfBirth: "",
+      address: "",
+      phoneNumber: "",
+      applicationReason: undefined,
+      customReason: "",
+    },
+    mode: "onChange",
+  })
+
+  // Update form default when user loads
+  useEffect(() => {
+    if (currentUser?.name && !form.getValues("fullName")) {
+      form.setValue("fullName", currentUser.name)
+    }
+  }, [currentUser?.name, form])
+
+  // Navigation helpers
+  const goToStep = (step: number) => {
+    const newDirection = step > currentStep ? 1 : -1
+    setPage([step, newDirection])
+    setCurrentStep(step)
   }
 
-  const features = [
-    {
-      icon: <Zap className="h-6 w-6 text-yellow-500" />,
-      title: "Publier du contenu",
-      description: "Créez et partagez vos posts avec votre audience",
-    },
-    {
-      icon: <Star className="h-6 w-6 text-blue-500" />,
-      title: "Contenu exclusif",
-      description: "Proposez du contenu premium à vos abonnés",
-    },
-    {
-      icon: <Crown className="h-6 w-6 text-purple-500" />,
-      title: "Monétisation",
-      description: "Gagnez de l'argent grâce à vos abonnés",
-    },
-  ]
+  const validateAndGoNext = async () => {
+    setIsValidating(true)
+    try {
+      let isValid = true
 
-  const verificationSteps = [
-    {
-      icon: <FileText className="h-5 w-5" />,
-      title: "Remplir le formulaire",
-      description: "Informations personnelles et motivations",
-    },
-    {
-      icon: <Camera className="h-5 w-5" />,
-      title: "Vérification d'identité",
-      description: "Photo de pièce d'identité + selfie",
-    },
-    {
-      icon: <Shield className="h-5 w-5" />,
-      title: "Validation",
-      description: "Examen par notre équipe (24-48h)",
-    },
-  ]
+      if (currentStep === 2) {
+        isValid = await form.trigger([
+          "fullName",
+          "dateOfBirth",
+          "address",
+          "phoneNumber",
+        ])
+      }
 
+      if (isValid) {
+        goToStep(currentStep + 1)
+      }
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  // Document upload handlers
+  const handleUploadSuccess = (
+    type: "identityCard" | "selfie",
+    result: { url: string; mediaId: string; type: "image" | "video" }
+  ) => {
+    const uploadedDoc: UploadedDocument = {
+      url: result.url,
+      mediaId: result.mediaId,
+      uploadedAt: Date.now(),
+    }
+
+    setUploadedDocuments((prev) => ({ ...prev, [type]: uploadedDoc }))
+
+    if (currentUser) {
+      createDraftDocument({
+        userId: currentUser._id,
+        mediaUrl: result.url,
+        documentType: type === "identityCard" ? "identity_card" : "selfie",
+      }).catch((error) => {
+        console.error("Erreur lors de l'enregistrement du brouillon:", error)
+      })
+    }
+
+    toast.success(
+      `${type === "identityCard" ? "Pièce d'identité" : "Selfie"} ajouté`
+    )
+  }
+
+  const handleRemoveDocument = async (type: "identityCard" | "selfie") => {
+    const document = uploadedDocuments[type]
+    if (!document) return
+
+    try {
+      await deleteBunnyAsset(document.mediaId, "image")
+      await deleteDraftDocument({ mediaUrl: document.mediaId })
+      setUploadedDocuments((prev) => ({
+        ...prev,
+        [type]: undefined,
+      }))
+      toast.success("Document supprimé")
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error)
+      toast.error("Erreur lors de la suppression")
+    }
+  }
+
+  // Form submission
+  const handleSubmit = async () => {
+    if (!currentUser) return
+
+    // Validate form
+    const isValid = await form.trigger()
+    if (!isValid) {
+      toast.error("Veuillez corriger les erreurs du formulaire")
+      return
+    }
+
+    // Check documents
+    if (!uploadedDocuments.identityCard || !uploadedDocuments.selfie) {
+      toast.error("Veuillez uploader tous les documents requis")
+      return
+    }
+
+    const data = form.getValues()
+
+    // Validate custom reason
+    if (data.applicationReason === "autre" && !data.customReason?.trim()) {
+      toast.error("Veuillez préciser votre motivation")
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        const documents = [
+          {
+            type: "identity_card" as const,
+            url: uploadedDocuments.identityCard!.url,
+            publicId: uploadedDocuments.identityCard!.mediaId,
+            uploadedAt: uploadedDocuments.identityCard!.uploadedAt,
+          },
+          {
+            type: "selfie" as const,
+            url: uploadedDocuments.selfie!.url,
+            publicId: uploadedDocuments.selfie!.mediaId,
+            uploadedAt: uploadedDocuments.selfie!.uploadedAt,
+          },
+        ]
+
+        // Build final reason
+        const finalReason =
+          data.applicationReason === "autre"
+            ? data.customReason
+            : motivationOptions.find(
+                (opt) => opt.value === data.applicationReason
+              )?.label
+
+        await submitApplication({
+          userId: currentUser._id,
+          personalInfo: {
+            fullName: data.fullName,
+            dateOfBirth: data.dateOfBirth,
+            address: data.address,
+            phoneNumber: `+237${data.phoneNumber}`,
+          },
+          applicationReason: finalReason || "",
+          identityDocuments: documents,
+        })
+
+        isApplicationSubmittedRef.current = true
+
+        toast.success("Candidature soumise avec succès !", {
+          description: "Nous examinerons votre demande sous 24-48h.",
+        })
+
+        // Move to step 4 (success state) or reload
+        goToStep(4)
+
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      } catch (error) {
+        console.error(error)
+        toast.error("Erreur lors de la soumission", {
+          description: "Veuillez réessayer plus tard.",
+        })
+      }
+    })
+  }
+
+  // Loading state
   if (!currentUser) {
     return (
-      <PageContainer title="Devenir Créateur" contentClassName="items-center justify-center">
-        <div className="animate-pulse text-lg">Chargement...</div>
+      <PageContainer
+        title="Devenir Créateur"
+        contentClassName="items-center justify-center"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <span className="text-muted-foreground">Chargement...</span>
+        </div>
       </PageContainer>
     )
   }
 
-  // Si l'utilisateur est déjà créateur
+  // Already a creator
   if (
     currentUser.accountType === "CREATOR" ||
     currentUser.accountType === "SUPERUSER"
   ) {
     return (
       <PageContainer title="Compte Créateur">
-        <div className="flex flex-1 items-center justify-center p-6">
-          <Card className="mx-auto max-w-md text-center">
-            <CardHeader>
-              <Crown className="text-primary mx-auto mb-4 h-16 w-16" />
-              <CardTitle>Vous êtes déjà créateur !</CardTitle>
-              <CardDescription>
-                Votre compte créateur est actif. Vous pouvez publier du contenu.
-              </CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button asChild className="w-full">
-                <Link href="/new-post">Créer un post</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
+        <AlreadyCreator />
       </PageContainer>
     )
   }
 
-  // Affichage selon le statut de la demande
-  const renderApplicationStatus = () => {
-    if (!existingApplication) {
-      return (
-        <Button onClick={handleStartApplication} className="w-full" size="lg">
-          <Crown className="mr-2 h-4 w-4" />
-          Commencer ma candidature
-        </Button>
-      )
-    }
+  // Has existing application
+  if (existingApplication) {
+    return (
+      <PageContainer title="Devenir Créateur">
+        <ApplicationStatus
+          application={existingApplication}
+          onReapply={() => {
+            // Reset form and start fresh
+            form.reset()
+            setUploadedDocuments({})
+            setCurrentStep(1)
+            setPage([1, 0])
+          }}
+        />
+      </PageContainer>
+    )
+  }
 
-    switch (existingApplication.status) {
-      case "pending":
+  // Render step content
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
         return (
-          <div className="space-y-4 text-center">
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
-              <div className="mb-2 flex items-center justify-center">
-                <Shield className="mr-2 h-5 w-5 text-yellow-600" />
-                <span className="font-medium text-yellow-800 dark:text-yellow-200">
-                  Candidature en cours d&apos;examen
-                </span>
-              </div>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                Nous examinons votre demande. Vous recevrez une réponse sous
-                24-48h.
-              </p>
-            </div>
-            <Button disabled className="w-full">
-              Candidature soumise
-            </Button>
-          </div>
+          <StepIntroduction
+            key="step-1"
+            onNext={() => goToStep(2)}
+          />
         )
-
-      case "approved":
+      case 2:
         return (
-          <div className="space-y-4 text-center">
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
-              <div className="mb-2 flex items-center justify-center">
-                <CheckCircle className="mr-2 h-5 w-5 text-green-600" />
-                <span className="font-medium text-green-800 dark:text-green-200">
-                  Candidature approuvée !
-                </span>
-              </div>
-              <p className="text-sm text-green-700 dark:text-green-300">
-                Félicitations ! Votre compte créateur est maintenant actif.
-              </p>
-            </div>
-            <Button className="w-full" onClick={() => router.push("/new-post")}>
-              <Crown className="mr-2 h-4 w-4" />
-              Commencer à créer
-            </Button>
-          </div>
+          <StepPersonalInfo
+            key="step-2"
+            form={form}
+            onNext={validateAndGoNext}
+            onPrevious={() => goToStep(1)}
+            isValidating={isValidating}
+          />
         )
-
-      case "rejected":
+      case 3:
         return (
-          <div className="space-y-4 text-center">
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-              <div className="mb-2 flex items-center justify-center">
-                <XCircle className="mr-2 h-5 w-5 text-red-600" />
-                <span className="font-medium text-red-800 dark:text-red-200">
-                  Candidature refusée
-                </span>
-              </div>
-              {existingApplication.adminNotes && (
-                <p className="mt-2 text-sm text-red-700 dark:text-red-300">
-                  Raison : {existingApplication.adminNotes}
-                </p>
-              )}
-            </div>
-            <Button
-              onClick={handleStartApplication}
-              variant="outline"
-              className="w-full"
-            >
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Postuler à nouveau
-            </Button>
-          </div>
+          <StepDocuments
+            key="step-3"
+            form={form}
+            userId={currentUser._id}
+            uploadedDocuments={uploadedDocuments}
+            onUploadSuccess={handleUploadSuccess}
+            onRemoveDocument={handleRemoveDocument}
+            onPrevious={() => goToStep(2)}
+            onSubmit={handleSubmit}
+            isSubmitting={isPending}
+          />
         )
-
+      case 4:
+        return (
+          <motion.div
+            key="step-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-12 text-center"
+          >
+            <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-green-500/10">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
+              >
+                <svg
+                  className="size-10 text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </motion.div>
+            </div>
+            <h2 className="mb-2 text-2xl font-bold text-gold-gradient">
+              Candidature envoyée !
+            </h2>
+            <p className="text-muted-foreground">
+              Vous recevrez une réponse sous 24-48h.
+            </p>
+          </motion.div>
+        )
       default:
-        return (
-          <Button onClick={handleStartApplication} className="w-full" size="lg">
-            <Crown className="mr-2 h-4 w-4" />
-            Commencer ma candidature
-          </Button>
-        )
+        return null
     }
   }
 
   return (
     <PageContainer title="Devenir Créateur">
-      <div className="flex-1 p-6">
+      <div className="flex-1 overflow-hidden p-4 md:p-6">
         <div className="mx-auto max-w-2xl">
-          <div className="mb-8 text-center">
-            <Crown className="text-primary mx-auto mb-4 h-16 w-16" />
-            <h2 className="mb-4 text-3xl font-bold">
-              Passez au compte Créateur
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Débloquez toutes les fonctionnalités pour partager votre contenu
-              et développer votre audience.
-            </p>
-          </div>
+          {/* Stepper */}
+          <ApplicationStepper currentStep={currentStep} />
 
-          {/* Processus de vérification */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="text-primary h-5 w-5" />
-                Processus de vérification
-              </CardTitle>
-              <CardDescription>
-                Votre sécurité et celle de la communauté sont nos priorités
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {verificationSteps.map((step, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="bg-primary/10 mt-1 rounded-full p-2">
-                      {step.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{step.title}</h3>
-                      <p className="text-muted-foreground text-sm">
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Fonctionnalités */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="text-primary h-5 w-5" />
-                Fonctionnalités Créateur
-              </CardTitle>
-              <CardDescription>
-                Ce que vous débloquez en devenant créateur
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="mt-1">{feature.icon}</div>
-                    <div>
-                      <h3 className="font-semibold">{feature.title}</h3>
-                      <p className="text-muted-foreground text-sm">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter>{renderApplicationStatus()}</CardFooter>
-          </Card>
-
-          <div className="text-muted-foreground text-center text-sm">
-            <p>
-              En postulant, vous acceptez nos{" "}
-              <Link href="/terms" className="text-primary hover:underline">
-                conditions d&apos;utilisation
-              </Link>{" "}
-              et notre{" "}
-              <Link
-                href="/creator-policy"
-                className="text-primary hover:underline"
-              >
-                politique créateur
-              </Link>
-              .
-            </p>
-          </div>
+          {/* Step Content with Animation */}
+          <Form {...form}>
+            <form onSubmit={(e) => e.preventDefault()}>
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={currentStep}
+                  custom={direction}
+                  variants={stepSlideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                >
+                  {renderStep()}
+                </motion.div>
+              </AnimatePresence>
+            </form>
+          </Form>
         </div>
       </div>
     </PageContainer>
