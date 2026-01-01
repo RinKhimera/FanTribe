@@ -5,7 +5,7 @@ import { Doc } from "../../../convex/_generated/dataModel"
 import schema from "../../../convex/schema"
 
 describe("subscriptions", () => {
-  it("should create a new subscription via followUser", async () => {
+  it("should create a new subscription via processPaymentAtomic", async () => {
     const t = convexTest(schema)
 
     const creatorId = await t.run(async (ctx) => {
@@ -32,16 +32,21 @@ describe("subscriptions", () => {
       })
     })
 
-    const result = await t.mutation(internal.subscriptions.followUser, {
-      transactionId: "tx_123",
-      creatorId,
-      subscriberId,
-      startDate: new Date().toISOString(),
-      amountPaid: 1000,
-    })
+    const result = await t.mutation(
+      internal.internalActions.processPaymentAtomic,
+      {
+        provider: "test",
+        providerTransactionId: "tx_123",
+        creatorId,
+        subscriberId,
+        amount: 1000,
+        currency: "XAF",
+        startedAt: new Date().toISOString(),
+      },
+    )
 
-    expect(result.renewed).toBe(false)
-    expect(result.reactivated).toBe(false)
+    expect(result.success).toBe(true)
+    expect(result.action).toBe("created")
 
     const sub = await t.run(async (ctx) => {
       return (await ctx.db.get(result.subscriptionId!)) as Doc<"subscriptions">
@@ -79,29 +84,40 @@ describe("subscriptions", () => {
     })
 
     // Create initial sub
-    const initial = await t.mutation(internal.subscriptions.followUser, {
-      transactionId: "tx_1",
-      creatorId,
-      subscriberId,
-      startDate: new Date().toISOString(),
-      amountPaid: 1000,
-    })
+    const initial = await t.mutation(
+      internal.internalActions.processPaymentAtomic,
+      {
+        provider: "test",
+        providerTransactionId: "tx_1",
+        creatorId,
+        subscriberId,
+        amount: 1000,
+        currency: "XAF",
+        startedAt: new Date().toISOString(),
+      },
+    )
 
     const subBefore = await t.run(
       async (ctx) =>
         (await ctx.db.get(initial.subscriptionId!)) as Doc<"subscriptions">,
     )
 
-    // Renew
-    const result = await t.mutation(internal.subscriptions.followUser, {
-      transactionId: "tx_2",
-      creatorId,
-      subscriberId,
-      startDate: new Date().toISOString(),
-      amountPaid: 1000,
-    })
+    // Renew with a different transaction ID
+    const result = await t.mutation(
+      internal.internalActions.processPaymentAtomic,
+      {
+        provider: "test",
+        providerTransactionId: "tx_2",
+        creatorId,
+        subscriberId,
+        amount: 1000,
+        currency: "XAF",
+        startedAt: new Date().toISOString(),
+      },
+    )
 
-    expect(result.renewed).toBe(true)
+    expect(result.success).toBe(true)
+    expect(result.action).toBe("renewed")
 
     const subAfter = await t.run(
       async (ctx) =>

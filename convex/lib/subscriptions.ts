@@ -17,6 +17,7 @@ export const getActiveSubscribedCreatorIds = async (
   subscriberId: Id<"users">,
   type: SubscriptionType = "content_access",
 ): Promise<Set<Id<"users">>> => {
+  const now = Date.now()
   const subs = await ctx.db
     .query("subscriptions")
     .withIndex("by_subscriber_type", (q) =>
@@ -24,13 +25,19 @@ export const getActiveSubscribedCreatorIds = async (
     )
     .collect()
 
+  // Verifier status ET endDate pour eviter la fenetre entre expiration reelle
+  // et execution du cron journalier
   return new Set(
-    subs.filter((s) => s.status === "active").map((s) => s.creator),
+    subs
+      .filter((s) => s.status === "active" && s.endDate > now)
+      .map((s) => s.creator),
   )
 }
 
 /**
  * Vérifie si un utilisateur a un abonnement actif à un créateur
+ * Verifie status === "active" ET endDate > now pour eviter la fenetre
+ * entre expiration reelle et execution du cron journalier
  */
 export const hasActiveSubscription = async (
   ctx: DbCtx,
@@ -38,6 +45,7 @@ export const hasActiveSubscription = async (
   creatorId: Id<"users">,
   type: SubscriptionType = "content_access",
 ): Promise<boolean> => {
+  const now = Date.now()
   const sub = await ctx.db
     .query("subscriptions")
     .withIndex("by_creator_subscriber", (q) =>
@@ -47,7 +55,7 @@ export const hasActiveSubscription = async (
     .filter((q) => q.eq(q.field("status"), "active"))
     .first()
 
-  return sub !== null
+  return sub !== null && sub.endDate > now
 }
 
 /**
