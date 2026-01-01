@@ -70,6 +70,9 @@ export const RightSidebarRouter = () => {
   if (currentUser?.username === userProfile.username)
     return <SuggestionSidebar />
 
+  // Non-créateur -> suggestions (pas de subscription possible)
+  if (userProfile.accountType !== "CREATOR") return <SuggestionSidebar />
+
   const canSubscribe = !!canSubscribeCheck?.canSubscribe
   if (canSubscribe) {
     return (

@@ -11,9 +11,11 @@ import {
   Check,
   ExternalLink,
   FileText,
+  History,
   Mail,
   MapPin,
   Phone,
+  RefreshCw,
   ShieldAlert,
   User,
   X,
@@ -177,6 +179,21 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
             <Badge variant="outline" className={cn("text-sm", status.className)}>
               {status.label}
             </Badge>
+            {/* Badge tentative multiple */}
+            {(application.attemptNumber ?? 1) > 1 && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-sm font-semibold",
+                  (application.attemptNumber ?? 1) >= 3
+                    ? "border-red-500/30 bg-red-500/10 text-red-600"
+                    : "border-orange-500/30 bg-orange-500/10 text-orange-600"
+                )}
+              >
+                <RefreshCw className="mr-1 h-3 w-3" />
+                Tentative #{application.attemptNumber}
+              </Badge>
+            )}
             {hasRisk && application.status === "pending" && (
               <Badge
                 variant="outline"
@@ -246,6 +263,66 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
             </Link>
           </CardContent>
         </Card>
+
+        {/* Historique des tentatives - visible uniquement si tentative > 1 */}
+        {(application.attemptNumber ?? 1) > 1 && (
+          <Alert
+            className={cn(
+              (application.attemptNumber ?? 1) >= 3
+                ? "border-red-500/30 bg-red-500/5"
+                : "border-orange-500/30 bg-orange-500/5"
+            )}
+          >
+            <History
+              className={cn(
+                "h-4 w-4",
+                (application.attemptNumber ?? 1) >= 3
+                  ? "text-red-500"
+                  : "text-orange-500"
+              )}
+            />
+            <AlertDescription>
+              <p
+                className={cn(
+                  "mb-2 font-medium",
+                  (application.attemptNumber ?? 1) >= 3
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-orange-700 dark:text-orange-400"
+                )}
+              >
+                Historique des candidatures
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">
+                    Numéro de tentative:
+                  </span>
+                  <span className="font-semibold">
+                    {application.attemptNumber}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">
+                    Nombre de rejets précédents:
+                  </span>
+                  <span className="font-semibold">
+                    {application.rejectionCount ?? 0}
+                  </span>
+                </div>
+                {application.previousRejectionReason && (
+                  <div className="mt-2 rounded-lg bg-background/50 p-3">
+                    <p className="text-muted-foreground mb-1 text-xs font-medium">
+                      Raison du rejet précédent:
+                    </p>
+                    <p className="text-sm italic">
+                      &quot;{application.previousRejectionReason}&quot;
+                    </p>
+                  </div>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Personal Info Grid */}
         <Card>

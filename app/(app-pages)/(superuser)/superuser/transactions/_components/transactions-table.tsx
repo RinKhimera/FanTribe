@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Id } from "@/convex/_generated/dataModel"
-import { type Currency, formatDualCurrency } from "@/lib/services/currency"
+import { type Currency, formatDualCurrency } from "@/lib/formatters/currency"
 
 interface Transaction {
   _id: Id<"transactions">

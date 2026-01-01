@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react"
 import { Pencil } from "lucide-react"
-import { useEffect, useEffectEvent, useState, useTransition } from "react"
+import { useEffect, useEffectEvent, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { logger } from "@/lib/config/logger"
+import { useAsyncHandler } from "@/hooks"
 
 interface EditPostDialogProps {
   postId: Id<"posts">
@@ -28,12 +28,20 @@ interface EditPostDialogProps {
 export const EditPostDialog = ({ postId }: EditPostDialogProps) => {
   const [open, setOpen] = useState(false)
   const [content, setContent] = useState("")
-  const [isPending, startTransition] = useTransition()
 
   // Récupérer le post actuel pour pré-remplir le contenu
   // Utiliser "skip" quand le dialog est fermé pour éviter les requêtes inutiles
   const post = useQuery(api.posts.getPost, open ? { postId } : "skip")
   const updatePost = useMutation(api.posts.updatePost)
+
+  const { execute, isPending } = useAsyncHandler({
+    successMessage: "Publication modifiée",
+    successDescription: "Votre publication a été mise à jour avec succès.",
+    errorMessage: "Erreur lors de la modification",
+    errorDescription: "Une erreur s'est produite. Veuillez réessayer.",
+    logContext: { postId },
+    onSuccess: () => setOpen(false),
+  })
 
   // Utiliser useEffectEvent pour fermer le dialog si le post est supprimé
   const closeDialogIfDeleted = useEffectEvent(() => {
@@ -63,25 +71,12 @@ export const EditPostDialog = ({ postId }: EditPostDialogProps) => {
       return
     }
 
-    startTransition(async () => {
-      try {
-        await updatePost({
-          postId,
-          content: content.trim(),
-        })
-
-        toast.success("Publication modifiée", {
-          description: "Votre publication a été mise à jour avec succès.",
-        })
-
-        setOpen(false)
-      } catch (error) {
-        logger.error("Failed to update post", error, { postId })
-        toast.error("Erreur lors de la modification", {
-          description: "Une erreur s'est produite. Veuillez réessayer.",
-        })
-      }
-    })
+    execute(() =>
+      updatePost({
+        postId,
+        content: content.trim(),
+      })
+    )
   }
 
   return (

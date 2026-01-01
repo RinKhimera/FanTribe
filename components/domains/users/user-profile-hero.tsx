@@ -5,7 +5,7 @@ import { MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useState } from "react"
-import { SubscriptionDialog } from "@/components/domains/subscriptions"
+import { SubscriptionButton } from "@/components/domains/subscriptions"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -27,14 +27,12 @@ type UserProfileHeroProps = {
   currentUser: Doc<"users"> | null | undefined
   userProfile: Doc<"users">
   subscriptionStatus: FollowSubscriptionStatus | null | undefined
-  canSubscribe: boolean
 }
 
 export const UserProfileHero = ({
   currentUser,
   userProfile,
   subscriptionStatus,
-  canSubscribe,
 }: UserProfileHeroProps) => {
   const isOwnProfile = currentUser?.username === userProfile.username
 
@@ -192,48 +190,13 @@ export const UserProfileHero = ({
         </motion.div>
 
         {/* Subscription section */}
-        {!isOwnProfile && canSubscribe && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="mb-4"
-          >
-            {subscriptionStatus ? (
-              (() => {
-                switch (subscriptionStatus.status) {
-                  case "expired":
-                    return (
-                      <SubscriptionDialog userProfile={userProfile} type="renew" />
-                    )
-                  case "canceled":
-                    return (
-                      <SubscriptionDialog
-                        userProfile={userProfile}
-                        type="subscribe"
-                      />
-                    )
-                  case "active":
-                  case "pending":
-                    return (
-                      <SubscriptionDialog
-                        userProfile={userProfile}
-                        type="unsubscribe"
-                      />
-                    )
-                  default:
-                    return (
-                      <SubscriptionDialog
-                        userProfile={userProfile}
-                        type="subscribe"
-                      />
-                    )
-                }
-              })()
-            ) : (
-              <SubscriptionDialog userProfile={userProfile} type="subscribe" />
-            )}
-          </motion.div>
+        {!isOwnProfile && userProfile.accountType === "CREATOR" && (
+          <div className="mb-4">
+            <SubscriptionButton
+              userProfile={userProfile}
+              subscriptionStatus={subscriptionStatus}
+            />
+          </div>
         )}
 
       </div>

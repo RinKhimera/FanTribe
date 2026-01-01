@@ -1,7 +1,65 @@
+import crypto from "crypto"
 import { fetchAction } from "convex/nextjs"
+import { z } from "zod"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { CinetPayResponse } from "@/types"
+
+// Schema de validation pour les metadata CinetPay
+const CinetPayMetadataSchema = z.object({
+  creatorId: z.string().min(1, "creatorId is required"),
+  subscriberId: z.string().min(1, "subscriberId is required"),
+  type: z.string().optional(),
+  action: z.string().optional(),
+})
+
+/**
+ * Verifie la signature HMAC du webhook CinetPay
+ * @see https://docs.cinetpay.com/api/1.0-fr/checkout/hmac
+ */
+function verifyCinetPayHmac(
+  body: Record<string, string>,
+  xToken: string | null,
+): boolean {
+  const secretKey = process.env.CINETPAY_SECRET_KEY
+  if (!secretKey || !xToken) return false
+
+  // Champs a concatener dans l'ordre exact selon la doc CinetPay
+  const fields = [
+    "cpm_site_id",
+    "cpm_trans_id",
+    "cpm_trans_date",
+    "cpm_amount",
+    "cpm_currency",
+    "signature",
+    "payment_method",
+    "cel_phone_num",
+    "cpm_phone_prefixe",
+    "cpm_language",
+    "cpm_version",
+    "cpm_payment_config",
+    "cpm_page_action",
+    "cpm_custom",
+    "cpm_designation",
+    "cpm_error_message",
+  ]
+
+  const data = fields.map((f) => body[f] || "").join("")
+  const expectedToken = crypto
+    .createHmac("sha256", secretKey)
+    .update(data)
+    .digest("hex")
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(xToken),
+      Buffer.from(expectedToken),
+    )
+  } catch {
+    // Si les buffers ont des tailles differentes, timingSafeEqual throw
+    return false
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -27,39 +85,81 @@ export async function POST(request: Request) {
       body.site_id ||
       process.env.NEXT_PUBLIC_CINETPAY_SITE_ID!
 
-    // Extraire ou utiliser les métadonnées
-    let creatorId: Id<"users"> | undefined
-    let subscriberId: Id<"users"> | undefined
-    let amountPaid: number | undefined
+    // MODE TEST: Ignorer la vérification HMAC et CinetPay
+    // En production, la verification est activee
+    // Pour tester en local, utiliser ngrok pour exposer le serveur
+    const testMode = process.env.NODE_ENV !== "production"
 
-    // Parsing des métadonnées (soit depuis cpm_custom ou directement depuis le body pour les tests)
-    if (body.cpm_custom) {
-      try {
-        const metadataObj = JSON.parse(body.cpm_custom)
-        creatorId = metadataObj.creatorId as Id<"users">
-        subscriberId = metadataObj.subscriberId as Id<"users">
-      } catch (e) {
-        console.error("Error parsing metadata:", e)
+    // Verification HMAC en production
+    if (!testMode) {
+      const xToken = request.headers.get("x-token")
+      if (!verifyCinetPayHmac(body, xToken)) {
+        console.error("CinetPay HMAC verification failed")
+        return Response.json(
+          { error: "Invalid HMAC signature" },
+          { status: 401 },
+        )
       }
-    } else {
-      // Pour les tests Postman, permettre de passer directement les IDs
-      creatorId = body.creatorId as Id<"users">
-      subscriberId = body.subscriberId as Id<"users">
-      amountPaid = body.amountPaid ? Number(body.amountPaid) : 1000
     }
 
-    // Validation des données requises
-    if (!creatorId || !subscriberId) {
+    // Extraire et valider les métadonnées avec Zod
+    let creatorId: Id<"users">
+    let subscriberId: Id<"users">
+    let amountPaid: number | undefined
+
+    if (body.cpm_custom) {
+      // Production: metadata depuis cpm_custom
+      try {
+        const rawMetadata = JSON.parse(body.cpm_custom)
+        const parseResult = CinetPayMetadataSchema.safeParse(rawMetadata)
+
+        if (!parseResult.success) {
+          console.error("Invalid metadata format:", parseResult.error.flatten())
+          return Response.json(
+            {
+              error: "Invalid metadata format",
+              details: parseResult.error.flatten(),
+            },
+            { status: 400 },
+          )
+        }
+
+        creatorId = parseResult.data.creatorId as Id<"users">
+        subscriberId = parseResult.data.subscriberId as Id<"users">
+      } catch (e) {
+        console.error("Error parsing cpm_custom JSON:", e)
+        return Response.json(
+          { error: "Invalid cpm_custom JSON format" },
+          { status: 400 },
+        )
+      }
+    } else if (testMode) {
+      // Test mode: permettre les IDs directement dans le body
+      const parseResult = CinetPayMetadataSchema.safeParse({
+        creatorId: body.creatorId,
+        subscriberId: body.subscriberId,
+      })
+
+      if (!parseResult.success) {
+        return Response.json(
+          {
+            error: "Missing required parameters: creatorId and subscriberId",
+            details: parseResult.error.flatten(),
+          },
+          { status: 400 },
+        )
+      }
+
+      creatorId = parseResult.data.creatorId as Id<"users">
+      subscriberId = parseResult.data.subscriberId as Id<"users">
+      amountPaid = body.amountPaid ? Number(body.amountPaid) : 1000
+    } else {
+      // Production sans cpm_custom = erreur
       return Response.json(
-        { error: "Missing required parameters: creatorId and subscriberId" },
+        { error: "Missing cpm_custom metadata" },
         { status: 400 },
       )
     }
-
-    // MODE TEST: Ignorer la vérification CinetPay et simuler une transaction réussie
-    // Pour la production, vous remettrez le code de vérification CinetPay
-    const testMode =
-      process.env.NODE_ENV !== "production" || body.test_mode === "true"
 
     if (testMode) {
       console.log("🧪 TEST MODE: Bypassing CinetPay verification")

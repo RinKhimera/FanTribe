@@ -3,16 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "convex/react"
 import { motion } from "motion/react"
-import {
-  ArrowLeft,
-  CircleX,
-  Globe,
-  ImagePlus,
-  LoaderCircle,
-  Lock,
-  Sparkles,
-} from "lucide-react"
-import Image from "next/image"
+import { ArrowLeft, LoaderCircle, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
@@ -30,12 +21,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { logger } from "@/lib/config/logger"
@@ -43,6 +28,14 @@ import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
 import { BunnyApiResponse } from "@/types"
+import {
+  MediaPreviewGrid,
+  MediaUploadButton,
+  UploadProgress,
+  VisibilitySelector,
+  type MediaItem,
+  type PostVisibility,
+} from "./components"
 
 export const NewPostLayout = () => {
   const router = useRouter()
@@ -54,17 +47,13 @@ export const NewPostLayout = () => {
     api.assetsDraft.deleteDraftWithoutAsset,
   )
 
-  const [medias, setMedias] = useState<
-    { url: string; publicId: string; type: "image" | "video" }[]
-  >([])
+  const [medias, setMedias] = useState<MediaItem[]>([])
   const [isPending, startTransition] = useTransition()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
-    {},
+    {}
   )
-  const [visibility, setVisibility] = useState<"public" | "subscribers_only">(
-    "public",
-  )
+  const [visibility, setVisibility] = useState<PostVisibility>("public")
 
   const isPostCreatedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -316,85 +305,16 @@ export const NewPostLayout = () => {
                             />
 
                             {/* Media Preview Grid */}
-                            {medias.length > 0 && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="mt-4 grid grid-cols-2 gap-3"
-                              >
-                                {medias.map((media, index) => (
-                                  <motion.div
-                                    key={media.publicId}
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    className="group relative overflow-hidden rounded-xl"
-                                  >
-                                    <Button
-                                      type="button"
-                                      size="icon"
-                                      variant="secondary"
-                                      className={cn(
-                                        "absolute top-2 right-2 z-10 size-8",
-                                        "bg-black/60 hover:bg-black/80",
-                                        "opacity-0 group-hover:opacity-100",
-                                        "transition-opacity duration-200",
-                                      )}
-                                      onClick={() => handleRemoveMedia(index)}
-                                    >
-                                      <CircleX className="size-5 text-white" />
-                                    </Button>
-
-                                    {media.type === "video" ? (
-                                      <div className="aspect-video w-full rounded-xl overflow-hidden bg-muted">
-                                        <iframe
-                                          src={media.url}
-                                          loading="lazy"
-                                          className="w-full h-full"
-                                          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                          allowFullScreen
-                                        />
-                                      </div>
-                                    ) : (
-                                      <Image
-                                        src={media.url}
-                                        alt=""
-                                        width={500}
-                                        height={300}
-                                        className="aspect-video w-full rounded-xl object-cover"
-                                      />
-                                    )}
-                                  </motion.div>
-                                ))}
-                              </motion.div>
-                            )}
+                            <MediaPreviewGrid
+                              medias={medias}
+                              onRemove={handleRemoveMedia}
+                            />
 
                             {/* Upload Progress */}
-                            {isUploading &&
-                              Object.keys(uploadProgress).length > 0 && (
-                                <div className="mt-4 space-y-2">
-                                  {Object.entries(uploadProgress).map(
-                                    ([key, prog]) => (
-                                      <div
-                                        key={key}
-                                        className="flex items-center gap-3"
-                                      >
-                                        <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
-                                          <motion.div
-                                            className="h-full bg-primary rounded-full"
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${prog}%` }}
-                                            transition={{ duration: 0.3 }}
-                                          />
-                                        </div>
-                                        <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
-                                          {prog}%
-                                        </span>
-                                      </div>
-                                    ),
-                                  )}
-                                </div>
-                              )}
+                            <UploadProgress
+                              progress={uploadProgress}
+                              isUploading={isUploading}
+                            />
 
                             {/* Divider */}
                             <div className="h-px bg-border my-5" />
@@ -413,86 +333,21 @@ export const NewPostLayout = () => {
                                 />
 
                                 {/* Media Button */}
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className={cn(
-                                    "rounded-full h-10 gap-2",
-                                    "hover:bg-primary/10 hover:text-primary hover:border-primary/30",
-                                    "transition-all duration-200",
-                                    (isPending ||
-                                      isUploading ||
-                                      medias.length >= 5) &&
-                                      "opacity-50 cursor-not-allowed",
-                                  )}
-                                  onClick={() => fileInputRef.current?.click()}
-                                  disabled={
-                                    isPending ||
-                                    isUploading ||
-                                    medias.length >= 5
+                                <MediaUploadButton
+                                  mediaCount={medias.length}
+                                  maxMedia={5}
+                                  isPending={isPending}
+                                  isUploading={isUploading}
+                                  onUploadClick={() =>
+                                    fileInputRef.current?.click()
                                   }
-                                >
-                                  {isUploading ? (
-                                    <LoaderCircle className="size-4 animate-spin" />
-                                  ) : (
-                                    <ImagePlus className="size-4" />
-                                  )}
-                                  <span className="hidden sm:inline">
-                                    {isUploading
-                                      ? "Upload..."
-                                      : medias.length >= 5
-                                        ? "Limite atteinte"
-                                        : `Média (${medias.length}/5)`}
-                                  </span>
-                                </Button>
+                                />
 
                                 {/* Visibility Selector */}
-                                <Select
-                                  defaultValue="public"
-                                  onValueChange={(value) =>
-                                    setVisibility(
-                                      value as "public" | "subscribers_only",
-                                    )
-                                  }
-                                >
-                                  <SelectTrigger
-                                    className={cn(
-                                      "h-10 w-auto rounded-full bg-transparent",
-                                      "border-border hover:bg-muted/50",
-                                      "transition-all duration-200",
-                                    )}
-                                  >
-                                    {visibility === "public" ? (
-                                      <div className="flex items-center gap-2">
-                                        <Globe className="size-4 text-green-500" />
-                                        <span className="hidden sm:inline text-sm">
-                                          Tout le monde
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center gap-2">
-                                        <Lock className="size-4 text-primary" />
-                                        <span className="hidden sm:inline text-sm">
-                                          Fans uniquement
-                                        </span>
-                                      </div>
-                                    )}
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="public">
-                                      <div className="flex items-center gap-2">
-                                        <Globe className="size-4 text-green-500" />
-                                        <span>Tout le monde</span>
-                                      </div>
-                                    </SelectItem>
-                                    <SelectItem value="subscribers_only">
-                                      <div className="flex items-center gap-2">
-                                        <Lock className="size-4 text-primary" />
-                                        <span>Fans uniquement</span>
-                                      </div>
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <VisibilitySelector
+                                  value={visibility}
+                                  onChange={setVisibility}
+                                />
                               </div>
 
                               {/* Submit Button */}

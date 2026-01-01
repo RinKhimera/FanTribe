@@ -34,11 +34,16 @@ export const initializeCinetPayPayment = async (
       apikey: process.env.NEXT_PUBLIC_CINETPAY_API_KEY,
       site_id: process.env.NEXT_PUBLIC_CINETPAY_SITE_ID,
       transaction_id: transactionId,
-      amount: paymentData.amount || 1000,
+      // amount: paymentData.amount || 1000,
+      amount: 100,
       currency: "XAF",
       description: paymentData.description || "Abonnement mensuel",
-      notify_url: "https://fantribe.io/api/notification",
-      return_url: "https://fantribe.io/api/return",
+      notify_url:
+        process.env.NEXT_PUBLIC_CINETPAY_NOTIFY_URL ||
+        "https://fantribe.io/api/notification",
+      return_url:
+        process.env.NEXT_PUBLIC_CINETPAY_RETURN_URL ||
+        "https://fantribe.io/api/return",
       channels: "ALL",
       metadata: metadataString,
       lang: "FR",

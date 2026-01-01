@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   "/payment/(.*)",
   "/terms(.*)",
   "/privacy(.*)",
+  "/cookies(.*)",
 ])
 
 export const proxy = clerkMiddleware(async (auth, req) => {

@@ -11,10 +11,12 @@ import {
   X,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState, useEffect } from "react"
+import { ResultItem, ResultSection } from "./components"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { api } from "@/convex/_generated/api"
+import { useDebounce } from "@/hooks"
 import { cn } from "@/lib/utils"
 
 type SearchCategory = "all" | "users" | "applications" | "reports"
@@ -55,17 +57,11 @@ export function SuperuserSearch() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const [debouncedQuery, setDebouncedQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [category, setCategory] = useState<SearchCategory>("all")
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(query)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [query])
+  // Use centralized debounce hook
+  const debouncedQuery = useDebounce(query, 300)
 
   // Search results
   const searchResults = useQuery(
@@ -405,60 +401,5 @@ export function SuperuserSearch() {
         </div>
       )}
     </div>
-  )
-}
-
-function ResultSection({
-  title,
-  icon: Icon,
-  color,
-  children,
-}: {
-  title: string
-  icon: React.ElementType
-  color: "blue" | "orange" | "rose"
-  children: React.ReactNode
-}) {
-  const colorClasses = {
-    blue: "text-blue-500",
-    orange: "text-orange-500",
-    rose: "text-rose-500",
-  }
-
-  return (
-    <div className="mb-2 last:mb-0">
-      <div className="mb-1 flex items-center gap-1.5 px-2">
-        <Icon className={cn("h-3 w-3", colorClasses[color])} />
-        <span className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">
-          {title}
-        </span>
-      </div>
-      <div className="space-y-0.5">{children}</div>
-    </div>
-  )
-}
-
-function ResultItem({
-  isSelected,
-  onClick,
-  children,
-}: {
-  isSelected: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5",
-        "text-left transition-colors",
-        isSelected
-          ? "bg-primary/10 text-primary"
-          : "hover:bg-muted",
-      )}
-    >
-      {children}
-    </button>
   )
 }

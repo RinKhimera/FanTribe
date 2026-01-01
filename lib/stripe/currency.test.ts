@@ -3,7 +3,7 @@ import {
   convertStripeAmount,
   isZeroDecimalCurrency,
   ZERO_DECIMAL_CURRENCIES,
-} from "./currency"
+} from "@/lib/formatters/currency"
 
 describe("isZeroDecimalCurrency", () => {
   it("should return true for zero-decimal currencies", () => {

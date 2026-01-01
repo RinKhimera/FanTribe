@@ -11,7 +11,6 @@ export default defineSchema({
     bio: v.optional(v.string()),
     location: v.optional(v.string()),
     socials: v.optional(v.array(v.string())),
-    // Enriched social links with platform metadata
     socialLinks: v.optional(
       v.array(
         v.object({
@@ -21,14 +20,13 @@ export default defineSchema({
             v.literal("tiktok"),
             v.literal("youtube"),
             v.literal("website"),
-            v.literal("other")
+            v.literal("other"),
           ),
           url: v.string(),
           username: v.optional(v.string()),
-        })
-      )
+        }),
+      ),
     ),
-    // Badge system
     badges: v.optional(
       v.array(
         v.object({
@@ -37,13 +35,12 @@ export default defineSchema({
             v.literal("top_creator"),
             v.literal("founding_member"),
             v.literal("popular"),
-            v.literal("rising_star")
+            v.literal("rising_star"),
           ),
           awardedAt: v.number(),
-        })
-      )
+        }),
+      ),
     ),
-    // Pinned posts (max 3)
     pinnedPostIds: v.optional(v.array(v.id("posts"))),
     isOnline: v.boolean(),
     activeSessions: v.optional(v.number()),
@@ -95,6 +92,11 @@ export default defineSchema({
     adminNotes: v.optional(v.string()),
     submittedAt: v.number(),
     reviewedAt: v.optional(v.number()),
+    attemptNumber: v.optional(v.number()),
+    rejectionCount: v.optional(v.number()),
+    previousRejectionReason: v.optional(v.string()),
+    reapplicationAllowedAt: v.optional(v.number()),
+    previousApplicationId: v.optional(v.id("creatorApplications")),
   })
     .index("by_userId", ["userId"])
     .index("by_status", ["status"]),
@@ -187,7 +189,7 @@ export default defineSchema({
       v.literal("failed"),
       v.literal("refunded"),
     ),
-    provider: v.string(), // ex: stripe, paypal
+    provider: v.string(),
     providerTransactionId: v.string(),
   })
     .index("by_subscription", ["subscriptionId"])
@@ -210,7 +212,6 @@ export default defineSchema({
     .index("by_type_post_sender", ["type", "post", "sender"])
     .index("by_type_comment_sender", ["type", "comment", "sender"]),
 
-  // User stats for public display (denormalized for performance)
   userStats: defineTable({
     userId: v.id("users"),
     postsCount: v.number(),
@@ -280,11 +281,10 @@ export default defineSchema({
     .index("by_mediaUrl", ["mediaUrl"])
     .index("by_mediaId", ["mediaId"]),
 
-  // Queue de notifications pour fan-out robuste (créateurs avec beaucoup d'abonnés)
   pendingNotifications: defineTable({
-    type: v.string(), // "newPost", "like", etc.
+    type: v.string(),
     sender: v.id("users"),
-    recipientIds: v.array(v.id("users")), // Batch de destinataires
+    recipientIds: v.array(v.id("users")),
     post: v.optional(v.id("posts")),
     comment: v.optional(v.id("comments")),
     status: v.union(
@@ -295,7 +295,7 @@ export default defineSchema({
     ),
     attempts: v.number(),
     lastAttemptAt: v.optional(v.number()),
-    processedCount: v.number(), // Nombre de notifications créées
+    processedCount: v.number(),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),
   })

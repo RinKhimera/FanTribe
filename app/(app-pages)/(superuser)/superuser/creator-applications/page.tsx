@@ -6,6 +6,7 @@ import {
   Calendar,
   ChevronRight,
   FileText,
+  RefreshCw,
   ShieldAlert,
   UserCheck,
   UserX,
@@ -251,9 +252,26 @@ export default function CreatorApplicationsPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                              <p className="truncate font-medium">
-                                {application.personalInfo.fullName}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="truncate font-medium">
+                                  {application.personalInfo.fullName}
+                                </p>
+                                {/* Badge tentative multiple */}
+                                {(application.attemptNumber ?? 1) > 1 && (
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "shrink-0 text-[10px] font-semibold",
+                                      (application.attemptNumber ?? 1) >= 3
+                                        ? "border-red-500/30 bg-red-500/10 text-red-600"
+                                        : "border-orange-500/30 bg-orange-500/10 text-orange-600"
+                                    )}
+                                  >
+                                    <RefreshCw className="mr-1 h-2.5 w-2.5" />
+                                    Tentative #{application.attemptNumber}
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-muted-foreground truncate text-xs">
                                 @{application.user?.username} •{" "}
                                 {application.user?.email}

@@ -1,11 +1,8 @@
 "use client"
 
-import { Lock, Sparkles } from "lucide-react"
 import Image from "next/image"
-import React, { useEffect, useMemo, useState } from "react"
-import { extractVideoGuidFromUrl } from "@/app/api/bunny/helper/get-video"
+import React, { useEffect, useEffectEvent, useMemo, useState } from "react"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
-import { Button } from "@/components/ui/button"
 import {
   Carousel,
   type CarouselApi,
@@ -14,10 +11,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { useVideoMetadata } from "@/hooks"
 import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators"
-import { logger } from "@/lib/config"
 import { cn } from "@/lib/utils"
-import type { BunnyVideoGetResponse } from "@/types"
+import { LockedContentOverlay } from "./post-media/locked-content-overlay"
 
 interface PostMediaProps {
   medias: string[]
@@ -34,12 +31,14 @@ export const PostMedia: React.FC<PostMediaProps> = ({
 }) => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>()
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [slideCount, setSlideCount] = useState(0)
-  const [videoMetadata, setVideoMetadata] = useState<
-    Record<string, BunnyVideoGetResponse>
-  >({})
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
+
+  // Use the centralized video metadata hook
+  const { metadata: videoMetadata } = useVideoMetadata({
+    mediaUrls: medias,
+    enabled: canView,
+  })
 
   // Liste des seules images (exclut les vidéos)
   const imageMedias = useMemo(
@@ -50,154 +49,40 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     [medias],
   )
 
-  // Extract video GUIDs once and memoize them
-  const videoGuids = useMemo(() => {
-    return medias
-      .filter((url) =>
-        url.startsWith("https://iframe.mediadelivery.net/embed/"),
-      )
-      .map((url) => extractVideoGuidFromUrl(url))
-      .filter((guid): guid is string => guid !== null)
-  }, [medias])
+  // Compute slideCount from API instead of storing in state
+  const slideCount = carouselApi?.scrollSnapList().length ?? 0
 
-  // Create a stable key from video GUIDs to prevent unnecessary refetches
-  const videoGuidsKey = useMemo(() => videoGuids.join(","), [videoGuids])
-
-  // Récupérer les métadonnées des vidéos au montage du composant
-  useEffect(() => {
-    const fetchVideoMetadata = async () => {
-      if (!canView || videoGuids.length === 0) return
-
-      try {
-        // Appeler l'API route pour récupérer les métadonnées
-        const response = await fetch("/api/bunny/metadata", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ videoGuids }),
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const result = await response.json()
-
-        if (result.success && result.data) {
-          setVideoMetadata(result.data)
-        } else {
-          throw new Error("Invalid response from metadata API")
-        }
-      } catch (error) {
-        logger.error(
-          "Erreur lors de la récupération des métadonnées vidéos",
-          error,
-        )
-      }
+  // Use useEffectEvent to avoid calling setState synchronously in effect
+  const syncCurrentSlide = useEffectEvent(() => {
+    if (carouselApi) {
+      setCurrentSlide(carouselApi.selectedScrollSnap())
     }
-
-    fetchVideoMetadata()
-    // Use videoGuidsKey instead of medias to prevent refetching on every render
-  }, [videoGuidsKey, canView, videoGuids])
+  })
 
   useEffect(() => {
     if (!carouselApi) return
-    setSlideCount(carouselApi.scrollSnapList().length)
-    setCurrentSlide(carouselApi.selectedScrollSnap())
-    carouselApi.on("select", () =>
-      setCurrentSlide(carouselApi.selectedScrollSnap()),
-    )
+
+    syncCurrentSlide()
+
+    carouselApi.on("select", syncCurrentSlide)
+    carouselApi.on("reInit", syncCurrentSlide)
+
+    return () => {
+      carouselApi.off("select", syncCurrentSlide)
+      carouselApi.off("reInit", syncCurrentSlide)
+    }
   }, [carouselApi])
 
   if (!medias || medias.length === 0) return null
 
-  // Detect if first media is an image (for artistic blur preview)
-  const firstMedia = medias[0]
-  const isFirstMediaImage =
-    firstMedia && !firstMedia.startsWith("https://iframe.mediadelivery.net/embed/")
-
   // Locked content view - Premium artistic blur design
   if (!canView) {
     return (
-      <div
-        className={cn(
-          "relative mt-3 w-full overflow-hidden rounded-2xl",
-          "aspect-video",
-        )}
-      >
-        {/* Artistic blurred preview of actual image */}
-        {isFirstMediaImage && (
-          <Image
-            src={firstMedia}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, 600px"
-            className="blur-artistic object-cover"
-            draggable={false}
-          />
-        )}
-
-        {/* Fallback gradient if no image */}
-        {!isFirstMediaImage && (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/30 to-primary/40 opacity-40" />
-        )}
-
-        {/* Premium overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]">
-          <div
-            className="h-full w-full"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
-        </div>
-
-        {/* Content card */}
-        <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
-          <div className="glass-premium p-8 text-center max-w-sm">
-            {/* Lock icon */}
-            <div
-              className={cn(
-                "mx-auto mb-5 flex size-16 items-center justify-center rounded-full",
-                "bg-primary",
-              )}
-            >
-              <Lock className="size-7 text-primary-foreground" />
-            </div>
-
-            {/* Title */}
-            <h3 className="mb-2 text-xl font-bold tracking-tight text-foreground">
-              Contenu Exclusif
-            </h3>
-
-            <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-              Ce contenu est réservé aux abonnés de{" "}
-              <span className="font-semibold text-primary">
-                @{authorUsername}
-              </span>
-            </p>
-
-            <Button
-              size="lg"
-              className={cn(
-                "rounded-full px-8 h-11",
-                "font-semibold tracking-wide",
-              )}
-              onClick={(e) => {
-                e.stopPropagation()
-                onRequireSubscribe()
-              }}
-            >
-              <Sparkles className="mr-2 size-4" />
-              S&apos;abonner
-            </Button>
-          </div>
-        </div>
-      </div>
+      <LockedContentOverlay
+        firstMedia={medias[0]}
+        authorUsername={authorUsername}
+        onRequireSubscribe={onRequireSubscribe}
+      />
     )
   }
 
@@ -356,7 +241,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
             size="icon"
             className={cn(
               "left-2 size-8 rounded-full",
-              "bg-black/40 backdrop-blur-sm border-0",
+              "border-0 bg-black/40 backdrop-blur-sm",
               "hover:bg-black/60",
               "transition-all duration-200",
             )}
@@ -366,7 +251,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
             size="icon"
             className={cn(
               "right-2 size-8 rounded-full",
-              "bg-black/40 backdrop-blur-sm border-0",
+              "border-0 bg-black/40 backdrop-blur-sm",
               "hover:bg-black/60",
               "transition-all duration-200",
             )}

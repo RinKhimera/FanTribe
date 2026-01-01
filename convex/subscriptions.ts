@@ -1,5 +1,4 @@
 import { ConvexError, v } from "convex/values"
-import { Id } from "./_generated/dataModel"
 import {
   internalMutation,
   internalQuery,
@@ -81,99 +80,6 @@ export const cancelSubscription = mutation({
   },
 })
 
-// INTERNAL: mutation pour créer/renouveler/relancer une souscription lors d'un paiement
-export const followUser = internalMutation({
-  args: {
-    transactionId: v.string(), // provider transaction id
-    creatorId: v.id("users"),
-    subscriberId: v.id("users"),
-    startDate: v.string(), // ISO date
-    amountPaid: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const periodDays = 30 // durée de souscription
-    const startMs = Date.parse(args.startDate) || Date.now()
-    const now = Date.now()
-
-    // Chercher souscription existante
-    let sub = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_creator_subscriber", (q) =>
-        q.eq("creator", args.creatorId).eq("subscriber", args.subscriberId),
-      )
-      .filter((q) => q.eq(q.field("type"), "content_access"))
-      .first()
-
-    let renewed = false
-    let reactivated = false
-
-    if (!sub) {
-      const newSubId = await ctx.db.insert("subscriptions", {
-        subscriber: args.subscriberId,
-        creator: args.creatorId,
-        startDate: startMs,
-        endDate: startMs + periodDays * 24 * 60 * 60 * 1000,
-        amountPaid: args.amountPaid ?? 0,
-        currency: "EUR",
-        renewalCount: 0,
-        lastUpdateTime: now,
-        type: "content_access",
-        status: "active",
-      })
-      sub = (await ctx.db.get(newSubId))!
-    } else {
-      // Souscription existante
-      if (sub.status === "active" && sub.endDate > now) {
-        // Renouvellement: étendre endDate
-        const newEnd = sub.endDate + periodDays * 24 * 60 * 60 * 1000
-        await ctx.db.patch(sub._id, {
-          endDate: newEnd,
-          renewalCount: sub.renewalCount + 1,
-          lastUpdateTime: now,
-        })
-        renewed = true
-      } else {
-        // Réactivation (expirée / canceled / pending)
-        await ctx.db.patch(sub._id, {
-          startDate: startMs,
-          endDate: startMs + periodDays * 24 * 60 * 60 * 1000,
-          status: "active",
-          renewalCount: sub.renewalCount + 1,
-          lastUpdateTime: now,
-        })
-        reactivated = true
-      }
-    }
-
-    // Enregistrer transaction (si pas déjà présente)
-    const existingTx = await ctx.db
-      .query("transactions")
-      .withIndex("by_subscriber", (q) =>
-        q.eq("subscriberId", args.subscriberId),
-      )
-      .filter((q) => q.eq(q.field("providerTransactionId"), args.transactionId))
-      .first()
-    if (!existingTx) {
-      await ctx.db.insert("transactions", {
-        subscriptionId: sub._id as Id<"subscriptions">,
-        subscriberId: args.subscriberId,
-        creatorId: args.creatorId,
-        amount: args.amountPaid ?? 0,
-        currency: "EUR",
-        status: "succeeded",
-        provider: "stripe",
-        providerTransactionId: args.transactionId,
-      })
-    }
-
-    return {
-      subscriptionId: sub._id as Id<"subscriptions">,
-      renewed,
-      reactivated,
-    }
-  },
-})
-
 // INTERNAL: retrouver une souscription via transaction provider id
 export const getSubscriptionByTransactionId = internalQuery({
   args: { transactionId: v.string() },
@@ -189,7 +95,7 @@ export const getSubscriptionByTransactionId = internalQuery({
   },
 })
 
-// INTERNAL: cron pour marquer les souscriptions expirées
+// INTERNAL: cron pour marquer les souscriptions expirées et notifier les utilisateurs
 export const checkAndUpdateExpiredSubscriptions = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -201,13 +107,23 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
       .collect()
 
     let updated = 0
+    let notified = 0
     for (const s of active) {
       if (s.endDate <= now) {
         await ctx.db.patch(s._id, { status: "expired", lastUpdateTime: now })
         updated++
+
+        // Notifier l'abonné que sa souscription a expiré
+        await ctx.db.insert("notifications", {
+          type: "subscription_expired",
+          recipientId: s.subscriber,
+          sender: s.creator,
+          read: false,
+        })
+        notified++
       }
     }
-    return { scanned: active.length, expiredUpdated: updated }
+    return { scanned: active.length, expiredUpdated: updated, notified }
   },
 })
 
@@ -309,6 +225,12 @@ export const canUserSubscribe = query({
 
     if (currentUser._id === args.creatorId) {
       return { canSubscribe: false, reason: "self" }
+    }
+
+    // Vérifier que le créateur est bien un CREATOR
+    const creator = await ctx.db.get(args.creatorId)
+    if (!creator || creator.accountType !== "CREATOR") {
+      return { canSubscribe: false, reason: "not_creator" }
     }
 
     const existing = await ctx.db

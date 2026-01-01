@@ -185,6 +185,12 @@ export const applySubscriptionPayment = internalMutation({
       currency,
     } = args
 
+    // Vérifier que le créateur est bien un CREATOR
+    const creator = await ctx.db.get(creatorId)
+    if (!creator || creator.accountType !== "CREATOR") {
+      throw new Error("Cannot subscribe to non-creator user")
+    }
+
     let sub = await ctx.db
       .query("subscriptions")
       .withIndex("by_creator_subscriber", (q) =>
@@ -289,17 +295,24 @@ export const recordTransactionIfAbsent = internalMutation({
   },
 })
 
-export const processPayment = action({
+/**
+ * Mutation ATOMIQUE pour traiter un paiement de souscription.
+ * Combine la verification d'idempotence, l'application du paiement sur la souscription,
+ * et l'enregistrement de la transaction dans une seule mutation.
+ *
+ * Cela evite les race conditions entre le webhook et l'URL de retour qui
+ * pourraient arriver en meme temps.
+ */
+export const processPaymentAtomic = internalMutation({
   args: {
-    provider: v.string(), // 'cinetpay'
+    provider: v.string(),
     providerTransactionId: v.string(),
     creatorId: v.id("users"),
     subscriberId: v.id("users"),
     amount: v.number(),
     currency: v.string(),
-    subscriptionType: v.optional(v.string()), // future
     paymentMethod: v.optional(v.string()),
-    startedAt: v.optional(v.string()), // ISO
+    startedAt: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<ProcessPaymentResult> => {
     const {
@@ -309,22 +322,24 @@ export const processPayment = action({
       subscriberId,
       amount,
       currency,
-      paymentMethod,
       startedAt,
     } = args
 
-    // 1. Idempotence: transaction déjà enregistrée ?
-    const existingTx = await ctx.runQuery(
-      internal.internalActions.getTransactionByProviderTransactionId,
-      { providerTransactionId },
-    )
-    if (existingTx) {
-      const sub = await ctx.runQuery(
-        internal.internalActions.getSubscriptionById,
-        {
-          subscriptionId: existingTx.subscriptionId,
-        },
+    const now = Date.now()
+    const startMs = startedAt ? Date.parse(startedAt) : now
+    const durationMs = 30 * 24 * 60 * 60 * 1000 // 30 jours
+
+    // 1. IDEMPOTENCE: Verifier si la transaction existe deja (ATOMIQUE)
+    const existingTx = await ctx.db
+      .query("transactions")
+      .withIndex("by_providerTransactionId", (q) =>
+        q.eq("providerTransactionId", providerTransactionId),
       )
+      .first()
+
+    if (existingTx) {
+      // Transaction deja traitee, recuperer la souscription
+      const sub = await ctx.db.get(existingTx.subscriptionId)
       return {
         success: true,
         message: "Already processed",
@@ -341,49 +356,144 @@ export const processPayment = action({
       }
     }
 
-    // 2. Appliquer paiement à la souscription
-    const startMs = startedAt ? Date.parse(startedAt) : Date.now()
-    const durationMs = 30 * 24 * 60 * 60 * 1000 // 30 jours
-    const subResult = await ctx.runMutation(
-      internal.internalActions.applySubscriptionPayment,
-      {
-        creatorId,
-        subscriberId,
-        amountPaid: amount,
-        startMs,
-        durationMs,
-        currency: currency.toUpperCase(),
-      },
-    )
-
-    // 3. Enregistrer la transaction (idempotent)
-    const txResult = await ctx.runMutation(
-      internal.internalActions.recordTransactionIfAbsent,
-      {
-        subscriptionId: subResult.subscriptionId,
+    // Vérifier que le créateur est bien un CREATOR
+    const creator = await ctx.db.get(creatorId)
+    if (!creator || creator.accountType !== "CREATOR") {
+      return {
+        success: false,
+        message: "Cannot subscribe to non-creator user",
+        subscriptionId: null,
+        alreadyProcessed: false,
+        action: "noop",
+        transactionId: undefined,
         providerTransactionId,
         provider,
-        amount,
+      }
+    }
+
+    // 2. APPLIQUER LE PAIEMENT SUR LA SOUSCRIPTION
+    let sub = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_creator_subscriber", (q) =>
+        q.eq("creator", creatorId).eq("subscriber", subscriberId),
+      )
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .first()
+
+    let action: "created" | "renewed" | "reactivated" | "noop" = "noop"
+    let previousEndDate: number | undefined
+    let newEndDate: number | undefined
+    let renewalCount: number | undefined
+
+    if (!sub) {
+      // Nouvelle souscription
+      const newSubId = await ctx.db.insert("subscriptions", {
+        subscriber: subscriberId,
+        creator: creatorId,
+        startDate: startMs,
+        endDate: startMs + durationMs,
+        amountPaid: amount,
         currency: currency.toUpperCase(),
-        subscriberId,
-        creatorId,
-        paymentMethod,
-      },
-    )
+        renewalCount: 0,
+        lastUpdateTime: now,
+        type: "content_access",
+        status: "active",
+      })
+      sub = (await ctx.db.get(newSubId))!
+      action = "created"
+      previousEndDate = sub.endDate
+      newEndDate = sub.endDate
+      renewalCount = 0
+    } else {
+      previousEndDate = sub.endDate
+      if (sub.status === "active" && sub.endDate > now) {
+        // Renouvellement: etendre la date de fin
+        newEndDate = sub.endDate + durationMs
+        await ctx.db.patch(sub._id, {
+          endDate: newEndDate,
+          renewalCount: sub.renewalCount + 1,
+          lastUpdateTime: now,
+        })
+        action = "renewed"
+        renewalCount = sub.renewalCount + 1
+      } else {
+        // Reactivation: reset les dates
+        newEndDate = startMs + durationMs
+        await ctx.db.patch(sub._id, {
+          startDate: startMs,
+          endDate: newEndDate,
+          renewalCount: sub.renewalCount + 1,
+          lastUpdateTime: now,
+          status: "active",
+        })
+        action = "reactivated"
+        renewalCount = sub.renewalCount + 1
+      }
+    }
+
+    // 3. ENREGISTRER LA TRANSACTION
+    const txId = await ctx.db.insert("transactions", {
+      subscriptionId: sub._id as Id<"subscriptions">,
+      subscriberId,
+      creatorId,
+      amount,
+      currency: currency.toUpperCase(),
+      status: "succeeded",
+      provider,
+      providerTransactionId,
+    })
 
     return {
       success: true,
       message: "Payment processed",
-      subscriptionId: subResult.subscriptionId,
+      subscriptionId: sub._id as Id<"subscriptions">,
       status: "active",
-      action: subResult.action,
-      renewalCount: subResult.renewalCount,
-      previousEndDate: subResult.previousEndDate,
-      newEndDate: subResult.newEndDate,
-      transactionId: txResult.transactionId,
+      action,
+      renewalCount,
+      previousEndDate,
+      newEndDate,
+      transactionId: txId as Id<"transactions">,
       providerTransactionId,
       provider,
     }
+  },
+})
+
+/**
+ * Action publique pour traiter un paiement.
+ * Delegue le traitement a la mutation atomique processPaymentAtomic
+ * pour eviter les race conditions.
+ *
+ * @deprecated Utiliser processPaymentAtomic directement depuis les fonctions Convex.
+ * Cette action est conservee pour la compatibilite avec les webhooks externes.
+ */
+export const processPayment = action({
+  args: {
+    provider: v.string(),
+    providerTransactionId: v.string(),
+    creatorId: v.id("users"),
+    subscriberId: v.id("users"),
+    amount: v.number(),
+    currency: v.string(),
+    subscriptionType: v.optional(v.string()),
+    paymentMethod: v.optional(v.string()),
+    startedAt: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<ProcessPaymentResult> => {
+    // Deleguer a la mutation atomique pour eviter les race conditions
+    return await ctx.runMutation(
+      internal.internalActions.processPaymentAtomic,
+      {
+        provider: args.provider,
+        providerTransactionId: args.providerTransactionId,
+        creatorId: args.creatorId,
+        subscriberId: args.subscriberId,
+        amount: args.amount,
+        currency: args.currency,
+        paymentMethod: args.paymentMethod,
+        startedAt: args.startedAt,
+      },
+    )
   },
 })
 

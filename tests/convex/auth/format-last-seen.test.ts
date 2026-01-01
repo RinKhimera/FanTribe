@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   formatLastSeen,
   formatLastSeenShort,
-} from "../../../lib/formatters/format-last-seen"
+} from "@/lib/formatters/date"
 
 describe("formatLastSeen", () => {
   describe("online status", () => {
