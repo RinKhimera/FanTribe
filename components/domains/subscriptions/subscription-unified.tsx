@@ -3,12 +3,16 @@
 import { useMutation, useQuery } from "convex/react"
 import {
   Check,
+  CreditCard,
   Crown,
   LoaderCircle,
   MessageCircle,
+  Shield,
+  Smartphone,
   Star,
   X,
 } from "lucide-react"
+import { motion } from "motion/react"
 import Image from "next/image"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -95,6 +99,7 @@ export const SubscriptionUnified = ({
         still_valid_until_expiry:
           "Abonnement encore valide jusqu'à son expiration",
         not_authenticated: "Veuillez vous connecter pour vous abonner",
+        not_creator: "Cet utilisateur n'est pas un créateur",
       }
       const msg = canSubscribe?.reason
         ? reasonMap[canSubscribe.reason] ||
@@ -210,10 +215,10 @@ export const SubscriptionUnified = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-sm overflow-hidden border-0 p-0 shadow-2xl">
+      <DialogContent className="max-w-sm overflow-hidden border-primary/10 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
         {/* Header avec image de fond */}
         <div className="relative">
-          <div className="h-32 overflow-hidden">
+          <div className="h-36 overflow-hidden">
             <Image
               className="h-full w-full object-cover"
               src={
@@ -222,9 +227,9 @@ export const SubscriptionUnified = ({
               }
               alt={creator?.name as string}
               width={400}
-              height={128}
+              height={144}
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-primary/10" />
           </div>
 
           {/* Bouton fermer (seulement en mode controlled) */}
@@ -239,27 +244,43 @@ export const SubscriptionUnified = ({
             </Button>
           )}
 
-          {/* Avatar centré */}
-          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+          {/* Avatar centré avec glow */}
+          <motion.div
+            className="absolute -bottom-14 left-1/2 -translate-x-1/2"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
             <div className="relative">
-              <Avatar className="border-background h-24 w-24 border-4 shadow-xl">
+              {/* Glow effect */}
+              <div className="absolute inset-0 scale-110 rounded-full bg-primary/20 blur-xl" />
+              <Avatar className="ring-primary/40 ring-offset-background relative h-28 w-28 ring-4 ring-offset-2 shadow-xl">
                 <AvatarImage src={creator?.image} className="object-cover" />
-                <AvatarFallback className="bg-muted">
-                  <div className="bg-muted-foreground/20 h-full w-full animate-pulse rounded-full" />
+                <AvatarFallback className="bg-muted text-2xl">
+                  {creator?.name?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
               {type !== "unsubscribe" && (
-                <div className="bg-primary absolute -right-1 -bottom-1 rounded-full p-1">
-                  <Crown className="text-primary-foreground h-4 w-4" />
-                </div>
+                <motion.div
+                  className="absolute -right-1 -bottom-1 rounded-full bg-primary p-1.5 shadow-lg"
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Crown className="h-4 w-4 text-primary-foreground" />
+                </motion.div>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Contenu principal */}
-        <div className="px-6 pt-16 pb-6">
-          <div className="text-center">
+        <div className="px-6 pt-[4.5rem] pb-6">
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
             <DialogTitle className="text-xl font-bold">
               {dialogContent.title}
             </DialogTitle>
@@ -268,51 +289,59 @@ export const SubscriptionUnified = ({
                 {dialogContent.description}
               </DialogDescription>
             )}
-          </div>
+          </motion.div>
 
-          {/* Avantages avec icônes modernes (pour subscribe et renew) */}
+          {/* Avantages avec glass-card effect */}
           {dialogContent.showFeatures && (
-            <div className="mt-6 space-y-4">
-              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
-                  <Star className="text-primary h-4 w-4" />
+            <motion.div
+              className="mt-6 space-y-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
+                  <Star className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-sm font-medium">
                   {type === "subscribe"
                     ? "Contenu exclusif et premium"
-                    : "Accès complet au contenu de cet utilisateur"}
+                    : "Accès complet au contenu"}
                 </div>
               </div>
 
-              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
-                  <MessageCircle className="text-primary h-4 w-4" />
+              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
+                  <MessageCircle className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-sm font-medium">
                   {type === "subscribe"
                     ? "Accès à la communauté privée"
-                    : "Message direct avec cet utilisateur"}
+                    : "Messages directs"}
                 </div>
               </div>
 
-              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
-                  <Check className="text-primary h-4 w-4" />
+              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
+                  <Check className="h-4 w-4 text-white" />
                 </div>
-                <div className="text-sm font-medium">
-                  {type === "subscribe"
-                    ? "Sans engagement"
-                    : "Annuler votre abonnement à tout moment"}
-                </div>
+                <div className="text-sm font-medium">Sans engagement</div>
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* Prix et bouton */}
-          <div className="mt-6">
+          {/* Prix avec animation */}
+          <motion.div
+            className="mt-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25 }}
+          >
             {type !== "unsubscribe" && (
-              <div className="mb-4 text-center">
-                <div className="text-3xl font-bold">1000 XAF</div>
+              <div className="mb-5 text-center">
+                <div className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-4xl font-bold text-transparent">
+                  1000 XAF
+                </div>
                 <div className="text-muted-foreground text-sm">par mois</div>
               </div>
             )}
@@ -321,7 +350,7 @@ export const SubscriptionUnified = ({
               <Button
                 className={cn(
                   "w-full text-lg font-semibold shadow-lg transition-all",
-                  "hover:bg-destructive/90 bg-destructive text-destructive-foreground",
+                  "bg-destructive text-destructive-foreground hover:bg-destructive/90",
                   { "pointer-events-none opacity-70": isPending },
                 )}
                 onClick={handleUnsubscribe}
@@ -338,49 +367,57 @@ export const SubscriptionUnified = ({
                 )}
               </Button>
             ) : (
-              <div className="grid grid-cols-1 gap-3">
-                <Button
-                  className={cn(
-                    "from-primary to-primary/80 w-full rounded-xl bg-linear-to-r text-lg font-semibold shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl",
-                    { "pointer-events-none opacity-70": isPending },
-                  )}
-                  onClick={handleSubscribe}
-                  disabled={isPending}
-                  size="lg"
-                >
-                  {isPaymentPending ? (
-                    <div className="flex items-center gap-2">
-                      <LoaderCircle className="h-5 w-5 animate-spin" />
-                      Traitement CinetPay...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Crown className="h-5 w-5" />
-                      Payer avec OM/MOMO
-                    </div>
-                  )}
-                </Button>
+              <div className="space-y-3">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    className={cn(
+                      "w-full rounded-xl bg-gradient-to-r from-primary via-primary/95 to-primary/85 text-lg font-semibold",
+                      "shadow-lg shadow-primary/25 transition-shadow hover:shadow-xl hover:shadow-primary/35",
+                      { "pointer-events-none opacity-70": isPending },
+                    )}
+                    onClick={handleSubscribe}
+                    disabled={isPending}
+                    size="lg"
+                  >
+                    {isPaymentPending ? (
+                      <div className="flex items-center gap-2">
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                        Traitement...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="h-5 w-5" />
+                        Payer avec OM/MOMO
+                      </div>
+                    )}
+                  </Button>
+                </motion.div>
 
-                <Button
-                  variant="outline"
-                  className={cn("w-full text-lg font-semibold", {
-                    "pointer-events-none opacity-70": isPending,
-                  })}
-                  onClick={handleSubscribeStripe}
-                  disabled={isPending}
-                  size="lg"
-                >
-                  {isStripePending ? (
-                    <div className="flex items-center gap-2">
-                      <LoaderCircle className="h-5 w-5 animate-spin" />
-                      Redirection Stripe...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      Payer avec Stripe (carte)
-                    </div>
-                  )}
-                </Button>
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full rounded-xl border-primary/30 text-lg font-semibold backdrop-blur-sm",
+                      "transition-colors hover:border-primary/50 hover:bg-primary/5",
+                      { "pointer-events-none opacity-70": isPending },
+                    )}
+                    onClick={handleSubscribeStripe}
+                    disabled={isPending}
+                    size="lg"
+                  >
+                    {isStripePending ? (
+                      <div className="flex items-center gap-2">
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                        Redirection...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-5 w-5" />
+                        Payer avec carte
+                      </div>
+                    )}
+                  </Button>
+                </motion.div>
               </div>
             )}
 
@@ -397,11 +434,14 @@ export const SubscriptionUnified = ({
             )}
 
             {type !== "unsubscribe" && (
-              <p className="text-muted-foreground mt-3 text-center text-xs">
-                Paiement sécurisé • Annulation facile
-              </p>
+              <div className="text-muted-foreground mt-4 flex items-center justify-center gap-2 text-xs">
+                <Shield className="h-3.5 w-3.5" />
+                <span>Paiement sécurisé</span>
+                <span>•</span>
+                <span>Annulation facile</span>
+              </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>

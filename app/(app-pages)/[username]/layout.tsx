@@ -37,13 +37,6 @@ export default function UserProfileLayout({
       : "skip",
   )
 
-  const canSubscribeCheck = useQuery(
-    api.subscriptions.canUserSubscribe,
-    userProfile?._id ? { creatorId: userProfile._id } : "skip",
-  )
-
-  const canSubscribe = canSubscribeCheck?.canSubscribe || false
-
   if (userProfile === undefined) {
     return (
       <PageContainer hideHeader>
@@ -64,7 +57,6 @@ export default function UserProfileLayout({
         currentUser={currentUser}
         userProfile={userProfile}
         subscriptionStatus={subscriptionStatus}
-        canSubscribe={canSubscribe}
       />
       <UserProfileTabs username={username} />
       {children}
