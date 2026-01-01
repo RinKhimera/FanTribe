@@ -32,6 +32,7 @@ const BeCreatorPage = () => {
   const [[, direction], setPage] = useState([1, 0])
   const [isPending, startTransition] = useTransition()
   const [isValidating, setIsValidating] = useState(false)
+  const [isReapplying, setIsReapplying] = useState(false)
 
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocuments>(
     {}
@@ -296,18 +297,20 @@ const BeCreatorPage = () => {
     )
   }
 
-  // Has existing application
-  if (existingApplication) {
+  // Has existing application (and not reapplying)
+  if (existingApplication && !isReapplying) {
     return (
       <PageContainer title="Devenir Créateur">
         <ApplicationStatus
           application={existingApplication}
-          onReapply={() => {
+          userId={currentUser._id}
+          onReapplySuccess={() => {
             // Reset form and start fresh
             form.reset()
             setUploadedDocuments({})
             setCurrentStep(1)
             setPage([1, 0])
+            setIsReapplying(true)
           }}
         />
       </PageContainer>

@@ -95,6 +95,13 @@ export default defineSchema({
     adminNotes: v.optional(v.string()),
     submittedAt: v.number(),
     reviewedAt: v.optional(v.number()),
+    // Tracking des tentatives pour soft locks
+    attemptNumber: v.optional(v.number()), // 1, 2, 3...
+    rejectionCount: v.optional(v.number()), // Nombre de rejets précédents
+    previousRejectionReason: v.optional(v.string()), // Raison du rejet précédent
+    reapplicationAllowedAt: v.optional(v.number()), // Timestamp pour soft lock
+    // Lien vers la candidature précédente (historique chaîné)
+    previousApplicationId: v.optional(v.id("creatorApplications")),
   })
     .index("by_userId", ["userId"])
     .index("by_status", ["status"]),

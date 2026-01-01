@@ -1,15 +1,20 @@
 "use client"
 
-import { motion } from "motion/react"
+import { useMutation } from "convex/react"
 import {
   CheckCircle,
+  Clock,
   Crown,
+  HeadphonesIcon,
   RotateCcw,
   Shield,
   XCircle,
 } from "lucide-react"
+import { motion } from "motion/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,19 +23,46 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { api } from "@/convex/_generated/api"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 import { stepContentVariants, stepItemVariants } from "@/lib/animations"
-import { Doc } from "@/convex/_generated/dataModel"
 
 interface ApplicationStatusProps {
   application: Doc<"creatorApplications">
-  onReapply?: () => void
+  userId: Id<"users">
+  onReapplySuccess?: () => void // Simplifié - plus de données à passer
+}
+
+// Helper pour formater le temps restant
+const formatTimeRemaining = (timestamp: number): string => {
+  const now = Date.now()
+  const diff = timestamp - now
+  if (diff <= 0) return "maintenant"
+
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+  if (hours > 0) {
+    return `${hours}h${minutes > 0 ? ` ${minutes}min` : ""}`
+  }
+  return `${minutes} minutes`
 }
 
 export const ApplicationStatus = ({
   application,
-  onReapply,
+  userId,
+  onReapplySuccess,
 }: ApplicationStatusProps) => {
   const router = useRouter()
+  const [isRequesting, setIsRequesting] = useState(false)
+  const [lockInfo, setLockInfo] = useState<{
+    mustContactSupport?: boolean
+    waitUntil?: number | null
+  } | null>(null)
+
+  const requestReapplication = useMutation(
+    api.creatorApplications.requestReapplication
+  )
 
   if (application.status === "pending") {
     return (
@@ -102,6 +134,31 @@ export const ApplicationStatus = ({
   }
 
   if (application.status === "rejected") {
+    const handleReapply = async () => {
+      setIsRequesting(true)
+      setLockInfo(null)
+
+      try {
+        const result = await requestReapplication({ userId })
+
+        if (result.canReapply) {
+          toast.success("Vous pouvez maintenant soumettre une nouvelle candidature")
+          onReapplySuccess?.() // Simplifié - plus de données
+        } else if (result.mustContactSupport) {
+          setLockInfo({ mustContactSupport: true })
+        } else if (result.waitUntil) {
+          setLockInfo({ waitUntil: result.waitUntil })
+        }
+      } catch (error) {
+        console.error("Erreur lors de la demande de repostulation:", error)
+        toast.error("Une erreur est survenue")
+      } finally {
+        setIsRequesting(false)
+      }
+    }
+
+    const rejectionCount = application.rejectionCount ?? 1
+
     return (
       <motion.div
         variants={stepContentVariants}
@@ -125,16 +182,67 @@ export const ApplicationStatus = ({
                 )}
               </CardDescription>
             </CardHeader>
-            <CardFooter>
-              <Button
-                variant="outline"
-                className="btn-premium-outline w-full"
-                size="lg"
-                onClick={onReapply}
-              >
-                <RotateCcw className="mr-2 size-4" />
-                Postuler à nouveau
-              </Button>
+            <CardFooter className="flex flex-col gap-3">
+              {/* Message de soft lock */}
+              {lockInfo?.mustContactSupport && (
+                <div className="flex w-full items-center gap-2 rounded-lg bg-orange-500/10 p-3 text-sm text-orange-600 dark:text-orange-400">
+                  <HeadphonesIcon className="size-4 shrink-0" />
+                  <span>
+                    Vous avez atteint le nombre maximum de tentatives. Veuillez
+                    contacter le support pour continuer.
+                  </span>
+                </div>
+              )}
+
+              {lockInfo?.waitUntil && (
+                <div className="flex w-full items-center gap-2 rounded-lg bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
+                  <Clock className="size-4 shrink-0" />
+                  <span>
+                    Vous pourrez repostuler dans{" "}
+                    {formatTimeRemaining(lockInfo.waitUntil)}
+                  </span>
+                </div>
+              )}
+
+              {/* Bouton repostuler */}
+              {lockInfo?.mustContactSupport ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="btn-premium-outline w-full"
+                  size="lg"
+                >
+                  <Link href="/support">
+                    <HeadphonesIcon className="mr-2 size-4" />
+                    Contacter le support
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="btn-premium-outline w-full"
+                  size="lg"
+                  onClick={handleReapply}
+                  disabled={isRequesting || !!lockInfo?.waitUntil}
+                >
+                  {isRequesting ? (
+                    <>
+                      <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Vérification...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="mr-2 size-4" />
+                      Postuler à nouveau
+                      {rejectionCount > 1 && (
+                        <span className="ml-1 text-xs opacity-70">
+                          (tentative {rejectionCount + 1})
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Button>
+              )}
             </CardFooter>
           </Card>
         </motion.div>

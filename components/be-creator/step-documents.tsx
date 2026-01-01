@@ -130,7 +130,7 @@ export const StepDocuments = ({
                   <BunnyUploadWidget
                     userId={userId}
                     uploadType="image"
-                    fileName={`creatorApplications/id-${userId}`}
+                    fileName={`creatorApplications/${userId}/identity-card`}
                     onSuccess={(result) =>
                       onUploadSuccess("identityCard", result)
                     }
@@ -180,7 +180,7 @@ export const StepDocuments = ({
                   <BunnyUploadWidget
                     userId={userId}
                     uploadType="image"
-                    fileName={`creatorApplications/selfie-${userId}`}
+                    fileName={`creatorApplications/${userId}/selfie`}
                     onSuccess={(result) => onUploadSuccess("selfie", result)}
                   >
                     {({ open }) => (
@@ -227,7 +227,7 @@ export const StepDocuments = ({
                           whileTap={{ scale: 0.99 }}
                           className={`flex cursor-pointer items-start space-x-3 rounded-lg border p-4 transition-colors ${
                             field.value === option.value
-                              ? "border-[var(--gold-400)] bg-[var(--gold-400)]/5"
+                              ? "border-(--gold-400) bg-(--gold-400)/5"
                               : "border-muted hover:border-primary/30 hover:bg-muted/30"
                           }`}
                           onPointerDown={() => field.onChange(option.value)}
@@ -274,7 +274,7 @@ export const StepDocuments = ({
                       <FormControl>
                         <Textarea
                           placeholder="Décrivez votre motivation spécifique..."
-                          className="input-premium mt-2 min-h-[80px] resize-none"
+                          className="input-premium mt-2 min-h-20 resize-none"
                           {...field}
                         />
                       </FormControl>
