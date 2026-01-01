@@ -6,7 +6,7 @@ import { Id } from "@/convex/_generated/dataModel"
 import { env } from "@/lib/config/env"
 import { clientEnv } from "@/lib/config/env.client"
 import { stripe } from "@/lib/services/stripe"
-import { convertStripeAmount } from "@/lib/stripe/currency"
+import { convertStripeAmount } from "@/lib/formatters/currency"
 
 export async function POST(request: Request) {
   let event: Stripe.Event

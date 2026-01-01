@@ -2,9 +2,8 @@
 
 import { useMutation } from "convex/react"
 import { Flag } from "lucide-react"
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
-// import { sendReportEmail } from "@/actions/send-report-email"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -25,7 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { logger } from "@/lib/config/logger"
+import { useAsyncHandler } from "@/hooks"
 import { DropdownMenuItem } from "../ui/dropdown-menu"
 
 interface ReportDialogProps {
@@ -48,9 +47,22 @@ export const ReportDialog = ({
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [description, setDescription] = useState("")
-  const [isPending, startTransition] = useTransition()
 
   const createReport = useMutation(api.reports.createReport)
+
+  const { execute, isPending } = useAsyncHandler({
+    successMessage: "Signalement envoyé",
+    successDescription:
+      "Votre signalement a été transmis à nos équipes de modération.",
+    errorMessage: "Erreur lors du signalement",
+    errorDescription: "Une erreur s'est produite. Veuillez réessayer.",
+    logContext: { type, reason },
+    onSuccess: () => {
+      setOpen(false)
+      setReason("")
+      setDescription("")
+    },
+  })
 
   const reasons = [
     { value: "spam", label: "Spam" },
@@ -69,49 +81,24 @@ export const ReportDialog = ({
       return
     }
 
-    startTransition(async () => {
-      try {
-        await createReport({
-          reportedUserId,
-          reportedPostId,
-          reportedCommentId,
-          type,
-          reason: reason as
-            | "spam"
-            | "harassment"
-            | "inappropriate_content"
-            | "fake_account"
-            | "copyright"
-            | "violence"
-            | "hate_speech"
-            | "other",
-          description: description || undefined,
-        })
-
-        // await sendReportEmail({
-        //   reportType: type,
-        //   reason,
-        //   description,
-        //   reporterUsername: currentUser?.username!,
-        //   reportedUsername: username,
-        //   reportedContent: reportedPostId ? "Post content here" : undefined,
-        // })
-
-        toast.success("Signalement envoyé", {
-          description:
-            "Votre signalement a été transmis à nos équipes de modération.",
-        })
-
-        setOpen(false)
-        setReason("")
-        setDescription("")
-      } catch (error) {
-        logger.error("Failed to create report", error, { type, reason })
-        toast.error("Erreur lors du signalement", {
-          description: "Une erreur s'est produite. Veuillez réessayer.",
-        })
-      }
-    })
+    execute(() =>
+      createReport({
+        reportedUserId,
+        reportedPostId,
+        reportedCommentId,
+        type,
+        reason: reason as
+          | "spam"
+          | "harassment"
+          | "inappropriate_content"
+          | "fake_account"
+          | "copyright"
+          | "violence"
+          | "hate_speech"
+          | "other",
+        description: description || undefined,
+      })
+    )
   }
 
   const getDialogTitle = () => {

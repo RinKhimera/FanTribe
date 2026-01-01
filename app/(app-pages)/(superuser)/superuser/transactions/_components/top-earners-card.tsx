@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { type Currency, formatDualCurrency } from "@/lib/services/currency"
+import { type Currency, formatDualCurrency } from "@/lib/formatters/currency"
 
 interface Earner {
   creatorId: string

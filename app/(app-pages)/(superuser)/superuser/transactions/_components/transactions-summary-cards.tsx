@@ -2,7 +2,7 @@
 
 import { DollarSign, Receipt, TrendingUp, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { type Currency, formatDualCurrency } from "@/lib/services/currency"
+import { type Currency, formatDualCurrency } from "@/lib/formatters/currency"
 
 interface TransactionsSummaryCardsProps {
   summary?: {
