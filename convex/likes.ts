@@ -1,25 +1,11 @@
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
-import type { MutationCtx, QueryCtx } from "./_generated/server"
-
-// Helper récupération utilisateur courant
-const getCurrentUser = async (ctx: MutationCtx | QueryCtx) => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) throw new ConvexError("Not authenticated")
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier),
-    )
-    .unique()
-  if (!user) throw new ConvexError("User not found")
-  return user
-}
+import { getAuthenticatedUser } from "./lib/auth"
 
 export const likePost = mutation({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
 
     const post = await ctx.db.get(args.postId)
     if (!post) throw new ConvexError("Post not found")
@@ -63,7 +49,7 @@ export const likePost = mutation({
 export const unlikePost = mutation({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
 
     const existing = await ctx.db
       .query("likes")
@@ -102,7 +88,7 @@ export const countLikes = query({
 export const isLiked = query({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
     const existing = await ctx.db
       .query("likes")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -129,7 +115,7 @@ export const getPostLikes = query({
 export const getUserLikedPosts = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
     const limit = args.limit ?? 50
     const likes = await ctx.db
       .query("likes")

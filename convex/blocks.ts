@@ -1,25 +1,11 @@
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
-import type { MutationCtx, QueryCtx } from "./_generated/server"
-
-// Helper user courant
-const getCurrentUser = async (ctx: MutationCtx | QueryCtx) => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) throw new ConvexError("Not authenticated")
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier),
-    )
-    .unique()
-  if (!user) throw new ConvexError("User not found")
-  return user
-}
+import { getAuthenticatedUser } from "./lib/auth"
 
 export const blockUser = mutation({
   args: { targetUserId: v.id("users") },
   handler: async (ctx, args) => {
-    const me = await getCurrentUser(ctx)
+    const me = await getAuthenticatedUser(ctx)
     if (me._id === args.targetUserId)
       throw new ConvexError("Cannot block yourself")
 
@@ -42,7 +28,7 @@ export const blockUser = mutation({
 export const unblockUser = mutation({
   args: { targetUserId: v.id("users") },
   handler: async (ctx, args) => {
-    const me = await getCurrentUser(ctx)
+    const me = await getAuthenticatedUser(ctx)
     const existing = await ctx.db
       .query("blocks")
       .withIndex("by_blocker_blocked", (q) =>
@@ -59,7 +45,7 @@ export const unblockUser = mutation({
 export const getBlockedUsers = query({
   args: {},
   handler: async (ctx) => {
-    const me = await getCurrentUser(ctx)
+    const me = await getAuthenticatedUser(ctx)
     const blocks = await ctx.db
       .query("blocks")
       .withIndex("by_blocker", (q) => q.eq("blockerId", me._id))
@@ -80,7 +66,7 @@ export const getBlockedUsers = query({
 export const isBlocked = query({
   args: { targetUserId: v.id("users") },
   handler: async (ctx, args) => {
-    const me = await getCurrentUser(ctx)
+    const me = await getAuthenticatedUser(ctx)
     if (me._id === args.targetUserId)
       return { iBlocked: false, blockedMe: false, any: false }
 
@@ -106,7 +92,7 @@ export const isBlocked = query({
 export const blockingStatus = query({
   args: { otherUserId: v.id("users") },
   handler: async (ctx, args) => {
-    const me = await getCurrentUser(ctx)
+    const me = await getAuthenticatedUser(ctx)
     if (me._id === args.otherUserId)
       return { iBlocked: false, blockedMe: false, any: false }
 

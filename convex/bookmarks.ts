@@ -1,25 +1,11 @@
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
-import type { MutationCtx, QueryCtx } from "./_generated/server"
-
-// Récupération utilisateur courant via tokenIdentifier
-const getCurrentUser = async (ctx: MutationCtx | QueryCtx) => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) throw new ConvexError("Not authenticated")
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier),
-    )
-    .unique()
-  if (!user) throw new ConvexError("User not found")
-  return user
-}
+import { getAuthenticatedUser } from "./lib/auth"
 
 export const addBookmark = mutation({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
 
     // Vérifier existence du post
     const post = await ctx.db.get(args.postId)
@@ -48,7 +34,7 @@ export const addBookmark = mutation({
 export const removeBookmark = mutation({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
 
     const existing = await ctx.db
       .query("bookmarks")
@@ -68,7 +54,7 @@ export const removeBookmark = mutation({
 export const getUserBookmarks = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
 
     const bookmarks = await ctx.db
       .query("bookmarks")
@@ -98,7 +84,7 @@ export const getUserBookmarks = query({
 export const isBookmarked = query({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
 
     const existing = await ctx.db
       .query("bookmarks")

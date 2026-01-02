@@ -36,3 +36,6 @@ export {
   createNotificationBatch,
   type NotificationType,
 } from "./notifications"
+
+// Batch fetching utilities
+export { batchGetUsers, batchGetPosts, batchGetComments } from "./batch"

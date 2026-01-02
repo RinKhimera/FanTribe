@@ -126,10 +126,12 @@ export const getSuggestedCreators = query({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
 
+    // Limit fetch to 200 creators max to avoid loading thousands
+    // Still provides good randomization diversity for 48 results
     const creators = await ctx.db
       .query("users")
       .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
-      .collect()
+      .take(200)
 
     // Mélanger avec Fisher-Yates (distribution uniforme) et prendre les 48 premiers
     const shuffled = fisherYatesShuffle(creators)
@@ -244,20 +246,24 @@ export const markStaleUsersOffline = internalMutation({
     // Get all users who are online but haven't been seen in 2+ minutes
     const onlineUsers = await ctx.db
       .query("users")
-      .filter((q) => q.eq(q.field("isOnline"), true))
+      .withIndex("by_isOnline", (q) => q.eq("isOnline", true))
       .collect()
 
-    let markedOfflineCount = 0
-    for (const user of onlineUsers) {
-      const lastSeen = user.lastSeenAt ?? 0
-      if (lastSeen < TWO_MINUTES_AGO) {
-        await ctx.db.patch(user._id, {
+    // Filter stale users and batch update
+    const staleUsers = onlineUsers.filter(
+      (user) => (user.lastSeenAt ?? 0) < TWO_MINUTES_AGO
+    )
+
+    await Promise.all(
+      staleUsers.map((user) =>
+        ctx.db.patch(user._id, {
           isOnline: false,
           activeSessions: 0,
         })
-        markedOfflineCount++
-      }
-    }
+      )
+    )
+
+    const markedOfflineCount = staleUsers.length
 
     if (markedOfflineCount > 0) {
       console.log(`Marked ${markedOfflineCount} stale users as offline`)

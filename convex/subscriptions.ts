@@ -5,21 +5,7 @@ import {
   mutation,
   query,
 } from "./_generated/server"
-import type { MutationCtx, QueryCtx } from "./_generated/server"
-
-// Helper récupération user courant
-const getCurrentUser = async (ctx: MutationCtx | QueryCtx) => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) throw new ConvexError("Not authenticated")
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier),
-    )
-    .unique()
-  if (!user) throw new ConvexError("User not found")
-  return user
-}
+import { getAuthenticatedUser } from "./lib/auth"
 
 // PUBLIC: obtenir la souscription entre deux utilisateurs (content_access par défaut)
 export const getFollowSubscription = query({
@@ -64,7 +50,7 @@ export const listCreatorSubscribers = query({
 export const cancelSubscription = mutation({
   args: { subscriptionId: v.id("subscriptions") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
     const sub = await ctx.db.get(args.subscriptionId)
     if (!sub) throw new ConvexError("Subscription not found")
     if (sub.subscriber !== user._id && sub.creator !== user._id) {
@@ -100,37 +86,49 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now()
-    // Récupérer les actives (index by_status)
+
+    // Use new index by_status_endDate for more efficient filtering
     const active = await ctx.db
       .query("subscriptions")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("by_status_endDate", (q) => q.eq("status", "active"))
       .collect()
 
-    let updated = 0
-    let notified = 0
-    for (const s of active) {
-      if (s.endDate <= now) {
-        await ctx.db.patch(s._id, { status: "expired", lastUpdateTime: now })
-        updated++
+    // Filter expired subscriptions in memory
+    const expired = active.filter((s) => s.endDate <= now)
 
-        // Notifier l'abonné que sa souscription a expiré
-        await ctx.db.insert("notifications", {
+    if (expired.length === 0) {
+      return { scanned: active.length, expiredUpdated: 0, notified: 0 }
+    }
+
+    // Batch update: patches and notifications in parallel
+    await Promise.all([
+      // Batch patch all expired subscriptions
+      ...expired.map((s) =>
+        ctx.db.patch(s._id, { status: "expired", lastUpdateTime: now })
+      ),
+      // Batch insert notifications
+      ...expired.map((s) =>
+        ctx.db.insert("notifications", {
           type: "subscription_expired",
           recipientId: s.subscriber,
           sender: s.creator,
           read: false,
         })
-        notified++
-      }
+      ),
+    ])
+
+    return {
+      scanned: active.length,
+      expiredUpdated: expired.length,
+      notified: expired.length,
     }
-    return { scanned: active.length, expiredUpdated: updated, notified }
   },
 })
 
 export const getMyContentAccessSubscriptionsStats = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
     // Souscriptions où l'utilisateur est abonné (subscriber)
     const subs = await ctx.db
       .query("subscriptions")
@@ -142,18 +140,23 @@ export const getMyContentAccessSubscriptionsStats = query({
       return { subscriptions: [], creatorsCount: 0, postsCount: 0 }
 
     const creatorIds = [...new Set(subs.map((s) => s.creator))]
-    // Récupération posts pour chaque creator (compte seulement)
-    let postsCount = 0
-    for (const creatorId of creatorIds) {
-      const posts = await ctx.db
-        .query("posts")
-        .withIndex("by_author", (q) => q.eq("author", creatorId))
-        .collect()
-      postsCount += posts.length
-    }
 
-    // Enrichir créateurs
-    const creators = await Promise.all(creatorIds.map((id) => ctx.db.get(id)))
+    // Parallel fetch: creators + post counts
+    const [creators, postCounts] = await Promise.all([
+      Promise.all(creatorIds.map((id) => ctx.db.get(id))),
+      Promise.all(
+        creatorIds.map(async (creatorId) => {
+          // TODO: Ideally denormalize postsCount in userStats table
+          const posts = await ctx.db
+            .query("posts")
+            .withIndex("by_author", (q) => q.eq("author", creatorId))
+            .collect()
+          return posts.length
+        })
+      ),
+    ])
+
+    const postsCount = postCounts.reduce((a, b) => a + b, 0)
     const creatorMap = new Map(creatorIds.map((id, i) => [id, creators[i]]))
 
     const enriched = subs.map((s) => ({
@@ -172,7 +175,7 @@ export const getMyContentAccessSubscriptionsStats = query({
 export const getMySubscribersStats = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
     // Souscriptions où l'utilisateur est le créateur
     const subs = await ctx.db
       .query("subscriptions")
@@ -184,17 +187,23 @@ export const getMySubscribersStats = query({
       return { subscribers: [], subscribersCount: 0, postsCount: 0 }
 
     const subscriberIds = [...new Set(subs.map((s) => s.subscriber))]
-    // Compter les posts de tous les abonnés
-    let postsCount = 0
-    for (const subId of subscriberIds) {
-      const posts = await ctx.db
-        .query("posts")
-        .withIndex("by_author", (q) => q.eq("author", subId))
-        .collect()
-      postsCount += posts.length
-    }
 
-    const users = await Promise.all(subscriberIds.map((id) => ctx.db.get(id)))
+    // Parallel fetch: subscribers + post counts
+    const [users, postCounts] = await Promise.all([
+      Promise.all(subscriberIds.map((id) => ctx.db.get(id))),
+      Promise.all(
+        subscriberIds.map(async (subId) => {
+          // TODO: Ideally denormalize postsCount in userStats table
+          const posts = await ctx.db
+            .query("posts")
+            .withIndex("by_author", (q) => q.eq("author", subId))
+            .collect()
+          return posts.length
+        })
+      ),
+    ])
+
+    const postsCount = postCounts.reduce((a, b) => a + b, 0)
     const userMap = new Map(subscriberIds.map((id, i) => [id, users[i]]))
 
     const enriched = subs.map((s) => ({
@@ -218,7 +227,7 @@ export const canUserSubscribe = query({
     let currentUser = null
 
     try {
-      currentUser = await getCurrentUser(ctx)
+      currentUser = await getAuthenticatedUser(ctx)
     } catch {
       return { canSubscribe: false, reason: "not_authenticated" }
     }

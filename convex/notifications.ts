@@ -16,75 +16,75 @@ export const getUserNotifications = query({
 
     if (!user) throw new ConvexError("User not found")
 
-    const userNotifications = await ctx.db
+    const notifications = await ctx.db
       .query("notifications")
       .withIndex("by_recipient", (q) => q.eq("recipientId", user._id))
       .order("desc")
       .collect()
 
-    const userNotificationsWithDetails = await Promise.all(
-      userNotifications.map(async (notification) => {
-        const sender = await ctx.db
-          .query("users")
-          .withIndex("by_id", (q) => q.eq("_id", notification.sender))
-          .unique()
+    if (notifications.length === 0) return []
 
-        let post
-        if (notification.post) {
-          post = await ctx.db
-            .query("posts")
-            .withIndex("by_id", (q) => q.eq("_id", notification.post!))
-            .unique()
-        }
+    // Batch fetch: collect all unique IDs first
+    const senderIds = [...new Set(notifications.map((n) => n.sender))]
+    const postIds = [
+      ...new Set(
+        notifications.filter((n) => n.post).map((n) => n.post!)
+      ),
+    ]
+    const commentIds = [
+      ...new Set(
+        notifications.filter((n) => n.comment).map((n) => n.comment!)
+      ),
+    ]
 
-        let comment
-        if (notification.comment) {
-          comment = await ctx.db
-            .query("comments")
-            .withIndex("by_id", (q) => q.eq("_id", notification.comment!))
-            .unique()
-        }
+    // Fetch all related data in parallel batches
+    const [senders, posts, comments] = await Promise.all([
+      Promise.all(senderIds.map((id) => ctx.db.get(id))),
+      Promise.all(postIds.map((id) => ctx.db.get(id))),
+      Promise.all(commentIds.map((id) => ctx.db.get(id))),
+    ])
 
-        const recipientId = await ctx.db
-          .query("users")
-          .withIndex("by_id", (q) => q.eq("_id", notification.recipientId))
-          .unique()
-
-        return { ...notification, sender, post, comment, recipientId }
-      }),
+    // Create lookup maps for O(1) access
+    const senderMap = new Map(
+      senders.filter(Boolean).map((s) => [s!._id, s])
+    )
+    const postMap = new Map(
+      posts.filter(Boolean).map((p) => [p!._id, p])
+    )
+    const commentMap = new Map(
+      comments.filter(Boolean).map((c) => [c!._id, c])
     )
 
-    return userNotificationsWithDetails
+    // Enrich notifications using maps (no N+1!)
+    return notifications.map((notification) => ({
+      ...notification,
+      sender: senderMap.get(notification.sender) ?? null,
+      post: notification.post ? postMap.get(notification.post) ?? null : null,
+      comment: notification.comment
+        ? commentMap.get(notification.comment) ?? null
+        : null,
+      recipientId: user, // Already have the user object
+    }))
   },
 })
 
 export const markNotificationAsRead = mutation({
   args: { notificationId: v.id("notifications") },
   handler: async (ctx, args) => {
-    // Trouver la notif à marquer comme lue
-    const notification = await ctx.db
-      .query("notifications")
-      .withIndex("by_id", (q) => q.eq("_id", args.notificationId))
-      .unique()
-
+    const notification = await ctx.db.get(args.notificationId)
     if (!notification) throw new ConvexError("Notification not found")
 
-    await ctx.db.patch(notification._id, { read: true })
+    await ctx.db.patch(args.notificationId, { read: true })
   },
 })
 
 export const markNotificationAsUnread = mutation({
   args: { notificationId: v.id("notifications") },
   handler: async (ctx, args) => {
-    // Trouver la notif à marquer comme non lue
-    const notification = await ctx.db
-      .query("notifications")
-      .withIndex("by_id", (q) => q.eq("_id", args.notificationId))
-      .unique()
-
+    const notification = await ctx.db.get(args.notificationId)
     if (!notification) throw new ConvexError("Notification not found")
 
-    await ctx.db.patch(notification._id, { read: false })
+    await ctx.db.patch(args.notificationId, { read: false })
   },
 })
 
@@ -268,24 +268,41 @@ export const getNotificationsByType = query({
         .collect()
     }
 
-    // Enrich with sender, post, comment data
-    const enrichedNotifications = await Promise.all(
-      notifications.map(async (notification) => {
-        const sender = await ctx.db.get(notification.sender)
-        let post = null
-        let comment = null
+    if (notifications.length === 0) return []
 
-        if (notification.post) {
-          post = await ctx.db.get(notification.post)
-        }
-        if (notification.comment) {
-          comment = await ctx.db.get(notification.comment)
-        }
+    // Batch fetch: collect all unique IDs first
+    const senderIds = [...new Set(notifications.map((n) => n.sender))]
+    const postIds = [
+      ...new Set(notifications.filter((n) => n.post).map((n) => n.post!)),
+    ]
+    const commentIds = [
+      ...new Set(notifications.filter((n) => n.comment).map((n) => n.comment!)),
+    ]
 
-        return { ...notification, sender, post, comment }
-      })
+    // Fetch all related data in parallel batches
+    const [senders, posts, comments] = await Promise.all([
+      Promise.all(senderIds.map((id) => ctx.db.get(id))),
+      Promise.all(postIds.map((id) => ctx.db.get(id))),
+      Promise.all(commentIds.map((id) => ctx.db.get(id))),
+    ])
+
+    // Create lookup maps for O(1) access
+    const senderMap = new Map(
+      senders.filter(Boolean).map((s) => [s!._id, s])
+    )
+    const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id, p]))
+    const commentMap = new Map(
+      comments.filter(Boolean).map((c) => [c!._id, c])
     )
 
-    return enrichedNotifications
+    // Enrich notifications using maps (no N+1!)
+    return notifications.map((notification) => ({
+      ...notification,
+      sender: senderMap.get(notification.sender) ?? null,
+      post: notification.post ? postMap.get(notification.post) ?? null : null,
+      comment: notification.comment
+        ? commentMap.get(notification.comment) ?? null
+        : null,
+    }))
   },
 })

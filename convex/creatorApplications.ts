@@ -43,23 +43,22 @@ export const submitApplication = mutation({
       throw new Error("Unauthorized")
     }
 
-    // Vérifier qu'il n'y a pas de candidature en cours (pending ou approved)
-    const existingActiveApplication = await ctx.db
+    // Single query: fetch all applications and filter in memory
+    const allApplications = await ctx.db
       .query("creatorApplications")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.neq(q.field("status"), "rejected"))
-      .first()
+      .collect()
+
+    // Check for active application (pending or approved)
+    const existingActiveApplication = allApplications.find(
+      (a) => a.status !== "rejected"
+    )
 
     if (existingActiveApplication) {
       throw new Error("Une candidature est déjà en cours")
     }
 
     // Backend = source de vérité: calculer les stats depuis la DB
-    const allApplications = await ctx.db
-      .query("creatorApplications")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .collect()
-
     const attemptNumber = allApplications.length + 1
     const rejectedApps = allApplications.filter((a) => a.status === "rejected")
     const rejectionCount = rejectedApps.length
@@ -93,30 +92,24 @@ export const getUserApplication = query({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
 
-    // Priorité: pending > approved > rejected (la plus récente)
-    const pending = await ctx.db
+    // Single query: fetch all and prioritize in memory
+    const applications = await ctx.db
       .query("creatorApplications")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.eq(q.field("status"), "pending"))
-      .first()
+      .order("desc")
+      .collect()
 
+    if (applications.length === 0) return null
+
+    // Priority: pending > approved > rejected (most recent)
+    const pending = applications.find((a) => a.status === "pending")
     if (pending) return pending
 
-    const approved = await ctx.db
-      .query("creatorApplications")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.eq(q.field("status"), "approved"))
-      .first()
-
+    const approved = applications.find((a) => a.status === "approved")
     if (approved) return approved
 
-    // Retourner la candidature rejetée la plus récente
-    return await ctx.db
-      .query("creatorApplications")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.eq(q.field("status"), "rejected"))
-      .order("desc")
-      .first()
+    // Return the most recent rejected (already sorted desc)
+    return applications.find((a) => a.status === "rejected") ?? null
   },
 })
 
@@ -143,17 +136,19 @@ export const getAllApplications = query({
       .order("desc")
       .collect()
 
-    const applicationsWithUsers = await Promise.all(
-      applications.map(async (application) => {
-        const user = await ctx.db.get(application.userId)
-        return {
-          ...application,
-          user,
-        }
-      }),
+    if (applications.length === 0) return []
+
+    // Batch fetch all users
+    const userIds = [...new Set(applications.map((a) => a.userId))]
+    const users = await Promise.all(userIds.map((id) => ctx.db.get(id)))
+    const userMap = new Map(
+      users.filter(Boolean).map((u) => [u!._id, u])
     )
 
-    return applicationsWithUsers
+    return applications.map((application) => ({
+      ...application,
+      user: userMap.get(application.userId) ?? null,
+    }))
   },
 })
 
@@ -179,14 +174,19 @@ export const getPendingApplications = query({
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect()
 
-    const enrichedApplications = await Promise.all(
-      applications.map(async (app) => {
-        const user = await ctx.db.get(app.userId)
-        return { ...app, user }
-      }),
+    if (applications.length === 0) return []
+
+    // Batch fetch all users
+    const userIds = [...new Set(applications.map((a) => a.userId))]
+    const users = await Promise.all(userIds.map((id) => ctx.db.get(id)))
+    const userMap = new Map(
+      users.filter(Boolean).map((u) => [u!._id, u])
     )
 
-    return enrichedApplications
+    return applications.map((app) => ({
+      ...app,
+      user: userMap.get(app.userId) ?? null,
+    }))
   },
 })
 

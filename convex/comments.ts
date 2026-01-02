@@ -1,21 +1,7 @@
 import { ConvexError, v } from "convex/values"
 import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
-import type { MutationCtx, QueryCtx } from "./_generated/server"
-
-// Helper: récupérer l'utilisateur courant
-const getCurrentUser = async (ctx: MutationCtx | QueryCtx) => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) throw new ConvexError("Not authenticated")
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier),
-    )
-    .unique()
-  if (!user) throw new ConvexError("User not found")
-  return user
-}
+import { getAuthenticatedUser } from "./lib/auth"
 
 export const addComment = mutation({
   args: {
@@ -23,7 +9,7 @@ export const addComment = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
 
     if (!args.content.trim()) throw new ConvexError("Empty content")
 
@@ -75,7 +61,7 @@ export const updateComment = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
     const comment = await ctx.db.get(args.commentId)
     if (!comment) throw new ConvexError("Comment not found")
 
@@ -96,7 +82,7 @@ export const updateComment = mutation({
 export const deleteComment = mutation({
   args: { commentId: v.id("comments") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user = await getAuthenticatedUser(ctx)
     const comment = await ctx.db.get(args.commentId)
     if (!comment) throw new ConvexError("Comment not found")
 

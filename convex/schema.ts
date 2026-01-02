@@ -58,6 +58,7 @@ export default defineSchema({
     .index("by_username", ["username"])
     .index("byExternalId", ["externalId"])
     .index("by_accountType", ["accountType"])
+    .index("by_isOnline", ["isOnline"])
     .searchIndex("search_users", {
       searchField: "name",
       filterFields: ["accountType", "username"],
@@ -177,7 +178,9 @@ export default defineSchema({
     .index("by_creator_subscriber", ["creator", "subscriber"])
     .index("by_status", ["status"])
     .index("by_creator_type", ["creator", "type"])
-    .index("by_subscriber_type", ["subscriber", "type"]),
+    .index("by_subscriber_type", ["subscriber", "type"])
+    .index("by_subscriber_status", ["subscriber", "status"])
+    .index("by_status_endDate", ["status", "endDate"]),
 
   transactions: defineTable({
     subscriptionId: v.id("subscriptions"),

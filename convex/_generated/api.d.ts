@@ -19,6 +19,7 @@ import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as internalActions from "../internalActions.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_batch from "../lib/batch.js";
 import type * as lib_blocks from "../lib/blocks.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_index from "../lib/index.js";
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   internalActions: typeof internalActions;
   "lib/auth": typeof lib_auth;
+  "lib/batch": typeof lib_batch;
   "lib/blocks": typeof lib_blocks;
   "lib/errors": typeof lib_errors;
   "lib/index": typeof lib_index;

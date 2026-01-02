@@ -169,7 +169,7 @@ const IncomePage = () => {
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="border-primary/20 rounded-lg border p-4">
                     <h3 className="font-semibold">Votre part</h3>
-                    <p className="text-primary text-2xl font-bold">60%</p>
+                    <p className="text-primary text-2xl font-bold">70%</p>
                     <p className="text-muted-foreground text-sm">
                       De chaque abonnement
                     </p>
@@ -177,7 +177,7 @@ const IncomePage = () => {
                   <div className="border-muted rounded-lg border p-4">
                     <h3 className="font-semibold">Commission plateforme</h3>
                     <p className="text-muted-foreground text-2xl font-bold">
-                      40%
+                      30%
                     </p>
                     <p className="text-muted-foreground text-sm">
                       Pour l&apos;hébergement et les services
@@ -193,7 +193,7 @@ const IncomePage = () => {
                       <strong>dernier jeudi de chaque mois</strong>
                     </li>
                     <li>
-                      • Vous recevez 60% du montant total de vos abonnements du
+                      • Vous recevez 70% du montant total de vos abonnements du
                       mois
                     </li>
                     <li>• Les paiements sont automatiques et sécurisés</li>
