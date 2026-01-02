@@ -1,11 +1,14 @@
 "use client"
 
-import { useQuery } from "convex/react"
+import { usePaginatedQuery } from "convex/react"
 import { Loader2 } from "lucide-react"
-import { useEffect, useEffectEvent, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
+
+const INITIAL_ITEMS = 20
+const LOAD_MORE_ITEMS = 10
 
 type PostWithAuthor = Doc<"posts"> & {
   author: Doc<"users"> | null | undefined
@@ -19,60 +22,24 @@ export const UserPosts = ({
   authorId: Id<"users">
   currentUser: Doc<"users"> | null | undefined
 }) => {
-  const [allPosts, setAllPosts] = useState<PostWithAuthor[]>([])
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false)
-  const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
-  const result = useQuery(api.posts.getUserPostsWithPinned, {
-    authorId,
-    paginationOpts: {
-      numItems: 20,
-      cursor,
-    },
-  })
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.posts.getUserPostsWithPinned,
+    { authorId },
+    { initialNumItems: INITIAL_ITEMS },
+  )
 
-  // Déstructurer pour avoir des dépendances stables
-  const posts = result?.page
-  const isDone = result?.isDone
-  const continueCursor = result?.continueCursor
-
-  // Utiliser useEffectEvent pour mettre à jour les posts
-  const updatePosts = useEffectEvent((newPosts: PostWithAuthor[]) => {
-    setAllPosts((prev) => {
-      // Éviter les doublons en vérifiant les IDs
-      const existingIds = new Set(prev.map((p) => p._id))
-      const filteredPosts = newPosts.filter((p) => !existingIds.has(p._id))
-      return [...prev, ...filteredPosts] as PostWithAuthor[]
-    })
-    setIsLoadingMore(false)
-    setHasInitiallyLoaded(true)
-  })
-
-  // Ajouter les nouveaux posts à la liste
+  // Intersection Observer pour le scroll infini
   useEffect(() => {
-    if (posts) {
-      updatePosts(posts as PostWithAuthor[])
-    }
-  }, [posts])
-
-  // Intersection Observer pour détecter le scroll
-  useEffect(() => {
-    if (!loadMoreRef.current || posts === undefined) return
+    if (!loadMoreRef.current || status !== "CanLoadMore") return
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
         const firstEntry = entries[0]
-        if (
-          firstEntry.isIntersecting &&
-          !isDone &&
-          !isLoadingMore &&
-          continueCursor
-        ) {
-          setIsLoadingMore(true)
-          setCursor(continueCursor)
+        if (firstEntry.isIntersecting && status === "CanLoadMore") {
+          loadMore(LOAD_MORE_ITEMS)
         }
       },
       {
@@ -88,10 +55,10 @@ export const UserPosts = ({
         observerRef.current.disconnect()
       }
     }
-  }, [isDone, continueCursor, isLoadingMore, posts])
+  }, [status, loadMore])
 
-  // Afficher un loader UNIQUEMENT au premier chargement
-  if (result === undefined && !hasInitiallyLoaded) {
+  // Premier chargement
+  if (status === "LoadingFirstPage") {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
@@ -102,8 +69,8 @@ export const UserPosts = ({
     )
   }
 
-  // Afficher un message si aucun post n'est disponible
-  if (allPosts.length === 0 && result?.isDone) {
+  // Aucun post disponible
+  if (results.length === 0 && status === "Exhausted") {
     return (
       <div className="text-muted-foreground mt-16 h-full px-4 text-center text-xl">
         Pas de posts pour le moment
@@ -113,12 +80,12 @@ export const UserPosts = ({
 
   return (
     <div className="flex flex-col">
-      {allPosts.map((post) => (
+      {(results as PostWithAuthor[]).map((post) => (
         <PostCard post={post} currentUser={currentUser!} key={post._id} />
       ))}
 
       {/* Élément déclencheur pour le chargement infini */}
-      {result && !result.isDone && (
+      {status === "CanLoadMore" && (
         <div
           ref={loadMoreRef}
           className="flex flex-col items-center justify-center py-8"
@@ -130,8 +97,18 @@ export const UserPosts = ({
         </div>
       )}
 
+      {/* Chargement en cours */}
+      {status === "LoadingMore" && (
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          <p className="text-muted-foreground mt-2 text-sm">
+            Chargement de plus de posts...
+          </p>
+        </div>
+      )}
+
       {/* Message de fin */}
-      {result && result.isDone && allPosts.length > 0 && (
+      {status === "Exhausted" && results.length > 0 && (
         <div className="flex flex-col items-center justify-center py-8">
           <p className="text-muted-foreground text-sm">
             Vous avez tout vu ! 🎉
