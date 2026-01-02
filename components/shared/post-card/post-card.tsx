@@ -108,6 +108,7 @@ export const PostCard = ({
               canViewMedia={canViewMedia}
               onRequireSubscribe={() => setIsSubscriptionModalOpen(true)}
               isPinned={post.isPinned}
+              isAdult={post.isAdult}
             />
 
             {/* Content: Post text */}

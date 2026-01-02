@@ -4,9 +4,8 @@ import { useMutation } from "convex/react"
 import {
   CheckCircle,
   Ellipsis,
-  Globe,
   LoaderCircle,
-  Lock,
+  Pencil,
   Pin,
   Share2,
   Sparkles,
@@ -25,7 +24,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,9 +31,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -48,6 +43,7 @@ type PostEllipsisProps = {
   currentUser: Doc<"users">
   postAuthorId?: Id<"users">
   visibility?: "public" | "subscribers_only"
+  isAdult?: boolean
   postAuthorUsername?: string
   isPinned?: boolean
 }
@@ -57,20 +53,23 @@ export const PostEllipsis = ({
   currentUser,
   postAuthorId,
   visibility = "public",
+  isAdult,
   postAuthorUsername,
   isPinned,
 }: PostEllipsisProps) => {
   const [isPending, startTransition] = useTransition()
-  const [isUpdatePending, setIsUpdatePending] = useState(false)
   const [showMaxPinnedDialog, setShowMaxPinnedDialog] = useState(false)
   const [isPinPending, setIsPinPending] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Déterminer si l'utilisateur courant est l'auteur du post
   const isAuthor = postAuthorId === currentUser._id
-  const canDelete = isAuthor || currentUser.accountType === "SUPERUSER"
+  const isAdmin = currentUser.accountType === "SUPERUSER"
+  const canDelete = isAuthor || isAdmin
+  const canEdit = isAuthor || isAdmin
 
   const deletePost = useMutation(api.posts.deletePost)
-  const updatePostVisibility = useMutation(api.posts.updatePostVisibility)
   const togglePinnedPost = useMutation(api.users.togglePinnedPost)
 
   // Construction de l'URL complète du post pour le partage
@@ -123,36 +122,6 @@ export const PostEllipsis = ({
     })
   }
 
-  const handleVisibilityChange = (
-    newVisibility: "public" | "subscribers_only",
-  ) => {
-    if (newVisibility === visibility) return
-
-    setIsUpdatePending(true)
-    updatePostVisibility({
-      postId,
-      visibility: newVisibility,
-    })
-      .then(() => {
-        toast.success("Visibilité modifiée", {
-          description:
-            newVisibility === "public"
-              ? "Votre publication est maintenant visible par tous"
-              : "Votre publication est maintenant réservée aux abonnés",
-        })
-      })
-      .catch((error) => {
-        logger.error("Erreur modification visibilité", error, {
-          postId,
-          newVisibility,
-        })
-        toast.error("Erreur lors de la modification")
-      })
-      .finally(() => {
-        setIsUpdatePending(false)
-      })
-  }
-
   const handlePinToggle = async (replaceOldest = false) => {
     setIsPinPending(true)
     try {
@@ -186,41 +155,18 @@ export const PostEllipsis = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64">
-        {/* Option de visibilité - uniquement pour l'auteur */}
-        {isAuthor && (
-          <>
-            <DropdownMenuLabel>Visibilité du post</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={visibility}
-              onValueChange={(value) =>
-                handleVisibilityChange(value as "public" | "subscribers_only")
-              }
-            >
-              <DropdownMenuRadioItem value="public" disabled={isUpdatePending}>
-                <Globe className="mr-2 size-4" />
-                Public
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem
-                value="subscribers_only"
-                disabled={isUpdatePending}
-              >
-                <Lock className="mr-2 size-4" />
-                Abonnés uniquement
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-            <DropdownMenuSeparator />
-          </>
-        )}
-
         {/* Option d'épinglage - uniquement pour l'auteur */}
         {isAuthor && (
-          <DropdownMenuItem
-            onClick={() => handlePinToggle()}
-            disabled={isPinPending}
-          >
-            <Pin className="mr-2 size-4" />
-            {isPinned ? "Désépingler du profil" : "Épingler au profil"}
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem
+              onClick={() => handlePinToggle()}
+              disabled={isPinPending}
+            >
+              <Pin className="mr-2 size-4" />
+              {isPinned ? "Désépingler du profil" : "Épingler au profil"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
         )}
 
         {/* Option de partage (disponible pour tous) */}
@@ -231,60 +177,85 @@ export const PostEllipsis = ({
 
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          {!isAuthor && (
-            <>
-              <ReportDialog
-                reportedPostId={postId}
-                reportedUserId={postAuthorId}
-                type="post"
-                triggerText="Signaler la publication"
-              />
-            </>
+          {/* Signaler - uniquement pour les non-auteurs */}
+          {!isAuthor && !isAdmin && (
+            <ReportDialog
+              reportedPostId={postId}
+              reportedUserId={postAuthorId}
+              type="post"
+              triggerText="Signaler la publication"
+            />
           )}
-          {isAuthor && <EditPostDialog postId={postId} />}
+
+          {/* Modifier - pour auteur ou admin */}
+          {canEdit && postAuthorId && (
+            <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>
+              <Pencil className="mr-2 size-4" />
+              Modifier la publication
+            </DropdownMenuItem>
+          )}
+
+          {/* Supprimer - pour auteur ou admin */}
           {canDelete && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={(e) => e.preventDefault()}
-                >
-                  {isAuthor ? (
-                    <Trash2 className="mr-2 size-4" />
-                  ) : (
-                    <Sparkles className="mr-2 size-4" />
-                  )}
-                  Supprimer la publication
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Êtes-vous absolument sûr ?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Cette action ne peut pas être annulée. Cela supprimera
-                    définitivement {isAuthor ? "votre" : "cette"} publication.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={deleteHandler}
-                    disabled={isPending}
-                  >
-                    {isPending ? (
-                      <LoaderCircle className="animate-spin" />
-                    ) : (
-                      "Supprimer"
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => setShowDeleteDialog(true)}
+            >
+              {isAuthor ? (
+                <Trash2 className="mr-2 size-4" />
+              ) : (
+                <Sparkles className="mr-2 size-4" />
+              )}
+              Supprimer la publication
+            </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
       </DropdownMenuContent>
+
+      {/* Dialogue de modification - rendu en dehors du dropdown */}
+      {canEdit && postAuthorId && (
+        <EditPostDialog
+          postId={postId}
+          visibility={visibility}
+          isAdult={isAdult}
+          currentUser={currentUser}
+          postAuthorId={postAuthorId}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+        />
+      )}
+
+      {/* Dialogue de suppression - rendu en dehors du dropdown */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isAuthor ? (
+                "Cette action ne peut pas être annulée. Cela supprimera définitivement votre publication."
+              ) : (
+                <>
+                  <span className="font-medium text-amber-600 dark:text-amber-400">
+                    Action administrateur :
+                  </span>{" "}
+                  Vous êtes sur le point de supprimer la publication d&apos;un
+                  autre utilisateur. Cette action ne peut pas être annulée.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteHandler} disabled={isPending}>
+              {isPending ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                "Supprimer"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Dialogue de confirmation pour le remplacement du post épinglé */}
       <AlertDialog open={showMaxPinnedDialog} onOpenChange={setShowMaxPinnedDialog}>

@@ -52,6 +52,7 @@ export default defineSchema({
       v.literal("CREATOR"),
       v.literal("SUPERUSER"),
     ),
+    allowAdultContent: v.optional(v.boolean()),
   })
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_username", ["username"])
@@ -106,6 +107,7 @@ export default defineSchema({
     content: v.string(),
     medias: v.array(v.string()),
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
+    isAdult: v.optional(v.boolean()),
   })
     .index("by_author", ["author"])
     .index("by_visibility", ["visibility"]),

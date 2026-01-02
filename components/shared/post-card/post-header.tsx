@@ -2,7 +2,7 @@
 
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { BadgeCheck, Lock, Pin } from "lucide-react"
+import { BadgeCheck, Flame, Lock, Pin } from "lucide-react"
 import Link from "next/link"
 import { PostEllipsis } from "@/components/domains/posts"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -25,6 +25,7 @@ type PostHeaderProps = {
   canViewMedia: boolean
   onRequireSubscribe: () => void
   isPinned?: boolean
+  isAdult?: boolean
 }
 
 export const PostHeader = ({
@@ -36,6 +37,7 @@ export const PostHeader = ({
   canViewMedia,
   onRequireSubscribe,
   isPinned,
+  isAdult,
 }: PostHeaderProps) => {
   const isOwnPost = currentUser._id === author?._id
   const isVerified =
@@ -163,8 +165,20 @@ export const PostHeader = ({
         </div>
       </div>
 
-      {/* Actions (ellipsis + visibility + pinned) */}
+      {/* Actions (ellipsis + visibility + pinned + adult) */}
       <div className="flex items-center gap-0.5">
+        {isAdult && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex size-8 items-center justify-center rounded-full hover:bg-orange-500/10 transition-colors">
+                <Flame className="size-3.5 text-orange-500" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" sideOffset={4}>
+              <p className="text-xs">Contenu adulte (+18)</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
         {isPinned && (
           <Tooltip>
             <TooltipTrigger asChild>

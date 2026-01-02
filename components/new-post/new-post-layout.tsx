@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
 import { BunnyApiResponse } from "@/types"
 import {
+  AdultContentToggle,
   MediaPreviewGrid,
   MediaUploadButton,
   UploadProgress,
@@ -54,6 +55,7 @@ export const NewPostLayout = () => {
     {}
   )
   const [visibility, setVisibility] = useState<PostVisibility>("public")
+  const [isAdult, setIsAdult] = useState(false)
 
   const isPostCreatedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -209,6 +211,7 @@ export const NewPostLayout = () => {
           content: data.content,
           medias: data.media,
           visibility: visibility,
+          isAdult: isAdult,
         })
 
         isPostCreatedRef.current = true
@@ -347,6 +350,13 @@ export const NewPostLayout = () => {
                                 <VisibilitySelector
                                   value={visibility}
                                   onChange={setVisibility}
+                                />
+
+                                {/* Adult Content Toggle */}
+                                <AdultContentToggle
+                                  value={isAdult}
+                                  onChange={setIsAdult}
+                                  disabled={isPending || isUploading}
                                 />
                               </div>
 

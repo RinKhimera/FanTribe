@@ -25,6 +25,7 @@ export const createPost = mutation({
     content: v.string(),
     medias: v.array(v.string()),
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
+    isAdult: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
@@ -34,6 +35,7 @@ export const createPost = mutation({
       content: args.content,
       medias: args.medias,
       visibility: args.visibility,
+      isAdult: args.isAdult ?? false,
     })
 
     // Récupération des abonnés (actifs + expirés pour les notifier)
@@ -143,33 +145,54 @@ export const deletePost = mutation({
 export const updatePost = mutation({
   args: {
     postId: v.id("posts"),
-    content: v.string(),
+    content: v.optional(v.string()),
+    visibility: v.optional(
+      v.union(v.literal("public"), v.literal("subscribers_only"))
+    ),
+    isAdult: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
     const post = await ctx.db.get(args.postId)
     if (!post) throw createAppError("POST_NOT_FOUND")
-    if (post.author !== user._id) throw createAppError("UNAUTHORIZED")
 
-    await ctx.db.patch(args.postId, { content: args.content })
-    return { success: true }
-  },
-})
+    const isOwner = post.author === user._id
+    const isSuperuser = user.accountType === "SUPERUSER"
 
-export const updatePostVisibility = mutation({
-  args: {
-    postId: v.id("posts"),
-    visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
-  },
-  handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx)
+    // Neither owner nor superuser
+    if (!isOwner && !isSuperuser) {
+      throw createAppError("UNAUTHORIZED")
+    }
 
-    const post = await ctx.db.get(args.postId)
-    if (!post) throw createAppError("POST_NOT_FOUND")
-    if (post.author !== user._id) throw createAppError("UNAUTHORIZED")
+    // Superuser can only modify isAdult
+    if (isSuperuser && !isOwner) {
+      if (args.content !== undefined || args.visibility !== undefined) {
+        throw createAppError("UNAUTHORIZED", {
+          context: { message: "Admins can only modify adult content status" },
+        })
+      }
+      if (args.isAdult !== undefined) {
+        await ctx.db.patch(args.postId, { isAdult: args.isAdult })
+      }
+      return { success: true }
+    }
 
-    await ctx.db.patch(args.postId, { visibility: args.visibility })
+    // Owner can modify everything
+    const updates: Partial<{
+      content: string
+      visibility: "public" | "subscribers_only"
+      isAdult: boolean
+    }> = {}
+
+    if (args.content !== undefined) updates.content = args.content
+    if (args.visibility !== undefined) updates.visibility = args.visibility
+    if (args.isAdult !== undefined) updates.isAdult = args.isAdult
+
+    if (Object.keys(updates).length > 0) {
+      await ctx.db.patch(args.postId, updates)
+    }
+
     return { success: true }
   },
 })
@@ -332,6 +355,7 @@ export const getHomePosts = query({
 
     // Récupérer les IDs bloqués
     const blockedUserIds = await getBlockedUserIds(ctx, currentUser._id)
+    const allowAdultContent = currentUser.allowAdultContent ?? false
 
     // Pagination native Convex
     const paginationResult = await ctx.db
@@ -339,7 +363,7 @@ export const getHomePosts = query({
       .order("desc")
       .paginate(args.paginationOpts)
 
-    // Filtrage visibilité et blocage
+    // Filtrage visibilité, blocage et contenu adulte
     const filtered = paginationResult.page.filter((post) => {
       // SUPERUSER voit tout
       if (currentUser.accountType === "SUPERUSER") return true
@@ -347,10 +371,28 @@ export const getHomePosts = query({
       // Filtrer les auteurs bloqués
       if (blockedUserIds.has(post.author)) return false
 
-      // Visibilité publique
-      if (!post.visibility || post.visibility === "public") return true
+      const isPostAdult = post.isAdult ?? false
 
-      // Visibilité abonnés uniquement
+      // Filtrage du contenu adulte
+      if (isPostAdult) {
+        // Créateur voit toujours son propre contenu +18
+        if (post.author === currentUser._id) return true
+
+        // Post +18 subscribers_only : abonnement suffit
+        if (post.visibility === "subscribers_only") {
+          return activeCreatorIds.has(post.author)
+        }
+
+        // Post +18 public : nécessite allowAdultContent activé
+        if (post.visibility === "public") {
+          return allowAdultContent
+        }
+
+        return false
+      }
+
+      // Contenu non-adulte : logique existante
+      if (!post.visibility || post.visibility === "public") return true
       if (post.visibility === "subscribers_only") {
         if (post.author === currentUser._id) return true
         if (activeCreatorIds.has(post.author)) return true
@@ -389,6 +431,7 @@ export const getHomePostsPaginated = query({
     )
 
     const blockedUserIds = await getBlockedUserIds(ctx, currentUser._id)
+    const allowAdultContent = currentUser.allowAdultContent ?? false
 
     const paginationResult = await ctx.db
       .query("posts")
@@ -396,8 +439,33 @@ export const getHomePostsPaginated = query({
       .paginate(args.paginationOpts)
 
     const filtered = paginationResult.page.filter((post) => {
+      // SUPERUSER voit tout
       if (currentUser.accountType === "SUPERUSER") return true
+
+      // Filtrer les auteurs bloqués
       if (blockedUserIds.has(post.author)) return false
+
+      const isPostAdult = post.isAdult ?? false
+
+      // Filtrage du contenu adulte
+      if (isPostAdult) {
+        // Créateur voit toujours son propre contenu +18
+        if (post.author === currentUser._id) return true
+
+        // Post +18 subscribers_only : abonnement suffit
+        if (post.visibility === "subscribers_only") {
+          return activeCreatorIds.has(post.author)
+        }
+
+        // Post +18 public : nécessite allowAdultContent activé
+        if (post.visibility === "public") {
+          return allowAdultContent
+        }
+
+        return false
+      }
+
+      // Contenu non-adulte : logique existante
       if (!post.visibility || post.visibility === "public") return true
       if (post.visibility === "subscribers_only") {
         if (post.author === currentUser._id) return true
