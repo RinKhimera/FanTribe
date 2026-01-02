@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useRef } from "react"
+import { BunnyVideoPlayer } from "@/components/shared/bunny-video-player"
 import { fullscreenVariants } from "@/lib/animations"
 import { cn } from "@/lib/utils"
 
@@ -70,20 +71,15 @@ export const ViewerMedia = ({
               className="flex items-center justify-center"
             >
               {isVideo(m) ? (
-                <div
+                <BunnyVideoPlayer
+                  src={m}
+                  aspectRatio="16 / 9"
                   className={cn(
-                    "relative w-full max-w-5xl overflow-hidden rounded-2xl",
+                    "w-full max-w-5xl rounded-2xl",
                     "ring-1 ring-white/10 shadow-[0_25px_80px_-12px_rgba(0,0,0,0.6)]"
                   )}
-                  style={{ aspectRatio: "16 / 9" }}
-                >
-                  <iframe
-                    src={`${m}${m.includes("?") ? "&" : "?"}preload=false`}
-                    allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
-                    className="absolute inset-0 h-full w-full"
-                    allowFullScreen
-                  />
-                </div>
+                  threshold={0.1}
+                />
               ) : (
                 <Image
                   src={m}

@@ -14,6 +14,7 @@ import {
 import { useVideoMetadata } from "@/hooks"
 import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators"
 import { cn } from "@/lib/utils"
+import { BunnyVideoPlayer } from "./bunny-video-player"
 import { LockedContentOverlay } from "./post-media/locked-content-overlay"
 
 interface PostMediaProps {
@@ -120,18 +121,12 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         <div
           key={media}
           onClick={(e) => e.stopPropagation()}
-          className={cn(
-            "relative w-full overflow-hidden",
-            !isInCarousel && "mt-3 rounded-xl",
-          )}
-          style={{ aspectRatio: optimalRatio }}
+          className={cn(!isInCarousel && "mt-3")}
         >
-          <iframe
-            src={`${media}${media.includes("?") ? "&" : "?"}preload=false`}
-            loading="lazy"
-            allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
-            className="absolute inset-0 h-full w-full"
-            allowFullScreen
+          <BunnyVideoPlayer
+            src={media}
+            aspectRatio={optimalRatio}
+            className={cn(!isInCarousel && "rounded-xl")}
           />
         </div>
       )
