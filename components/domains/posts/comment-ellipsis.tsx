@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
-import { Ellipsis, LoaderCircle, Pencil, Trash2 } from "lucide-react"
+import { Ellipsis, Flag, LoaderCircle, Pencil, Trash2 } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { ReportDialog } from "@/components/shared/report-dialog"
@@ -51,6 +51,7 @@ export const CommentEllipsis = ({
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editContent, setEditContent] = useState(initialContent)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [showReportDialog, setShowReportDialog] = useState(false)
 
   const deleteComment = useMutation(api.comments.deleteComment)
   const updateComment = useMutation(api.comments.updateComment)
@@ -189,16 +190,28 @@ export const CommentEllipsis = ({
         {!isOwner && author && (
           <>
             <DropdownMenuSeparator />
-            <ReportDialog
-              reportedUserId={author._id}
-              reportedCommentId={commentId}
-              type="comment"
-              triggerText="Signaler le commentaire"
-              username={author.username || undefined}
-            />
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => setShowReportDialog(true)}
+            >
+              <Flag className="mr-2 h-4 w-4" />
+              Signaler le commentaire
+            </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
+
+      {/* Dialogue de signalement - rendu en dehors du dropdown */}
+      {!isOwner && author && (
+        <ReportDialog
+          reportedUserId={author._id}
+          reportedCommentId={commentId}
+          type="comment"
+          username={author.username || undefined}
+          isOpen={showReportDialog}
+          onClose={() => setShowReportDialog(false)}
+        />
+      )}
     </DropdownMenu>
   )
 }

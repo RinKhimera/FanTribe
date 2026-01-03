@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AppLayout } from "@/components/layout"
+import { BannedUserScreen } from "@/components/shared/banned-user-screen"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { usePresence } from "@/hooks/usePresence"
 
@@ -50,6 +51,20 @@ export default function DashboardLayout({
           </div>
         </div>
       </section>
+    )
+  }
+
+  // Vérifier si l'utilisateur est banni
+  if (currentUser.isBanned && "activeBan" in currentUser && currentUser.activeBan) {
+    return (
+      <BannedUserScreen
+        banInfo={{
+          type: currentUser.activeBan.type as "temporary" | "permanent",
+          reason: currentUser.activeBan.reason,
+          bannedAt: currentUser.activeBan.bannedAt,
+          expiresAt: currentUser.activeBan.expiresAt,
+        }}
+      />
     )
   }
 

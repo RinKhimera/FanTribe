@@ -12,7 +12,10 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useMemo } from "react"
-import { SuperuserFiltersBar, type FilterDefinition } from "@/components/superuser"
+import {
+  type FilterDefinition,
+  SuperuserFiltersBar,
+} from "@/components/superuser"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -39,9 +42,7 @@ const filterDefinitions: FilterDefinition[] = [
     type: "multi-select",
     options: [
       { value: "pending", label: "En attente" },
-      { value: "reviewing", label: "En révision" },
-      { value: "resolved", label: "Résolu" },
-      { value: "rejected", label: "Rejeté" },
+      { value: "resolved", label: "Traité" },
     ],
   },
   {
@@ -77,16 +78,16 @@ const statusConfig = {
     className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   },
   reviewing: {
-    label: "En révision",
-    className: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+    label: "Traité",
+    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   },
   resolved: {
-    label: "Résolu",
+    label: "Traité",
     className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   },
   rejected: {
-    label: "Rejeté",
-    className: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+    label: "Traité",
+    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   },
 }
 
@@ -134,7 +135,8 @@ export default function ReportsPage() {
   )
 
   // Create stable dependency key from reports data
-  const reportsKey = allReports?.map((r) => `${r._id}-${r.status}`).join(",") ?? ""
+  const reportsKey =
+    allReports?.map((r) => `${r._id}-${r.status}`).join(",") ?? ""
 
   const { filteredReports, urgentCount } = useMemo(() => {
     if (!allReports) {
@@ -148,7 +150,17 @@ export default function ReportsPage() {
     let filtered = [...allReports]
 
     if (statusFilters.length > 0) {
-      filtered = filtered.filter((r) => statusFilters.includes(r.status))
+      filtered = filtered.filter((r) => {
+        // "resolved" filter matches all non-pending statuses
+        if (statusFilters.includes("resolved")) {
+          return (
+            statusFilters.includes(r.status) ||
+            (r.status !== "pending" &&
+              ["reviewing", "resolved", "rejected"].includes(r.status))
+          )
+        }
+        return statusFilters.includes(r.status)
+      })
     }
 
     if (typeFilters.length > 0) {
@@ -159,17 +171,18 @@ export default function ReportsPage() {
       filtered = filtered.filter((r) => reasonFilters.includes(r.reason))
     }
 
-    // Sort: pending first, then reviewing, then by date desc
+    // Sort: pending first, then resolved (all treated), then by date desc
     filtered.sort((a, b) => {
-      const statusOrder = { pending: 0, reviewing: 1, resolved: 2, rejected: 3 }
-      const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 4
-      const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 4
-      if (aOrder !== bOrder) return aOrder - bOrder
+      const aIsPending = a.status === "pending" ? 0 : 1
+      const bIsPending = b.status === "pending" ? 0 : 1
+      if (aIsPending !== bIsPending) return aIsPending - bIsPending
       return b.createdAt - a.createdAt
     })
 
     const urgentCount = allReports.filter(
-      (r) => r.status === "pending" && ["harassment", "violence", "hate_speech"].includes(r.reason)
+      (r) =>
+        r.status === "pending" &&
+        ["harassment", "violence", "hate_speech"].includes(r.reason),
     ).length
 
     return { filteredReports: filtered, urgentCount }
@@ -184,15 +197,25 @@ export default function ReportsPage() {
     })
   }
 
-  const getContentPreview = (report: NonNullable<typeof allReports>[number]) => {
+  const getContentPreview = (
+    report: NonNullable<typeof allReports>[number],
+  ) => {
     if (report.type === "user" && report.reportedUser) {
       return `@${report.reportedUser.username || report.reportedUser.name}`
     }
     if (report.type === "post" && report.reportedPost) {
-      return report.reportedPost.content?.slice(0, 60) + (report.reportedPost.content?.length > 60 ? "..." : "") || "Post sans texte"
+      return (
+        report.reportedPost.content?.slice(0, 60) +
+          (report.reportedPost.content?.length > 60 ? "..." : "") ||
+        "Post sans texte"
+      )
     }
     if (report.type === "comment" && report.reportedComment) {
-      return report.reportedComment.content?.slice(0, 60) + (report.reportedComment.content?.length > 60 ? "..." : "") || "Commentaire"
+      return (
+        report.reportedComment.content?.slice(0, 60) +
+          (report.reportedComment.content?.length > 60 ? "..." : "") ||
+        "Commentaire"
+      )
     }
     return "Contenu supprimé"
   }
@@ -202,8 +225,8 @@ export default function ReportsPage() {
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       <div className="flex-1 space-y-4 p-4">
-        {/* Stats Summary */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {/* Stats Summary - Simplified to 2 stats */}
+        <div className="grid grid-cols-2 gap-3">
           <StatCard
             label="En attente"
             value={reportsStats?.pending ?? 0}
@@ -212,24 +235,14 @@ export default function ReportsPage() {
             isLoading={isLoading}
           />
           <StatCard
-            label="En révision"
-            value={reportsStats?.reviewing ?? 0}
+            label="Traités"
+            value={
+              (reportsStats?.reviewing ?? 0) +
+              (reportsStats?.resolved ?? 0) +
+              (reportsStats?.rejected ?? 0)
+            }
             icon={ShieldAlert}
-            color="sky"
-            isLoading={isLoading}
-          />
-          <StatCard
-            label="Résolus"
-            value={reportsStats?.resolved ?? 0}
-            icon={Flag}
             color="emerald"
-            isLoading={isLoading}
-          />
-          <StatCard
-            label="Rejetés"
-            value={reportsStats?.rejected ?? 0}
-            icon={Flag}
-            color="rose"
             isLoading={isLoading}
           />
         </div>
@@ -240,7 +253,8 @@ export default function ReportsPage() {
             <AlertTriangle className="h-4 w-4 text-red-500" />
             <AlertDescription className="text-red-700 dark:text-red-400">
               <span className="font-semibold">{urgentCount}</span>{" "}
-              signalement(s) urgent(s) en attente (harcèlement, violence, discours de haine)
+              signalement(s) urgent(s) en attente (harcèlement, violence,
+              discours de haine)
             </AlertDescription>
           </Alert>
         )}
@@ -259,22 +273,34 @@ export default function ReportsPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[100px]">Type</TableHead>
-                    <TableHead className="w-[140px]">Motif</TableHead>
-                    <TableHead className="hidden lg:table-cell">Signalé par</TableHead>
+                    <TableHead className="w-25">Type</TableHead>
+                    <TableHead className="w-35">Motif</TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Signalé par
+                    </TableHead>
                     <TableHead>Contenu</TableHead>
-                    <TableHead className="w-[110px]">Statut</TableHead>
-                    <TableHead className="hidden md:table-cell w-[100px]">Date</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="w-27.5">Statut</TableHead>
+                    <TableHead className="hidden w-25 md:table-cell">
+                      Date
+                    </TableHead>
+                    <TableHead className="w-12.5"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredReports.map((report, idx) => {
-                    const status = statusConfig[report.status as keyof typeof statusConfig] ?? statusConfig.pending
-                    const type = typeConfig[report.type as keyof typeof typeConfig] ?? typeConfig.user
+                    const status =
+                      statusConfig[
+                        report.status as keyof typeof statusConfig
+                      ] ?? statusConfig.pending
+                    const type =
+                      typeConfig[report.type as keyof typeof typeConfig] ??
+                      typeConfig.user
                     const TypeIcon = type.icon
-                    const isUrgent = report.status === "pending" &&
-                      ["harassment", "violence", "hate_speech"].includes(report.reason)
+                    const isUrgent =
+                      report.status === "pending" &&
+                      ["harassment", "violence", "hate_speech"].includes(
+                        report.reason,
+                      )
 
                     return (
                       <TableRow
@@ -292,10 +318,15 @@ export default function ReportsPage() {
                           >
                             <Badge
                               variant="outline"
-                              className={cn("gap-1 font-medium", type.className)}
+                              className={cn(
+                                "gap-1 font-medium",
+                                type.className,
+                              )}
                             >
                               <TypeIcon className="h-3 w-3" />
-                              <span className="hidden sm:inline">{type.label}</span>
+                              <span className="hidden sm:inline">
+                                {type.label}
+                              </span>
                             </Badge>
                           </Link>
                         </TableCell>
@@ -303,9 +334,9 @@ export default function ReportsPage() {
                           <Link href={`/superuser/reports/${report._id}`}>
                             <div className="flex items-center gap-1.5">
                               {isUrgent && (
-                                <AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" />
                               )}
-                              <span className="text-sm font-medium truncate max-w-[120px]">
+                              <span className="max-w-30 truncate text-sm font-medium">
                                 {reasonLabels[report.reason] || report.reason}
                               </span>
                             </div>
@@ -326,14 +357,14 @@ export default function ReportsPage() {
                                   .slice(0, 2) || "?"}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm text-muted-foreground truncate max-w-[100px]">
+                            <span className="text-muted-foreground max-w-25 truncate text-sm">
                               @{report.reporter?.username || "inconnu"}
                             </span>
                           </Link>
                         </TableCell>
                         <TableCell>
                           <Link href={`/superuser/reports/${report._id}`}>
-                            <p className="text-sm text-muted-foreground line-clamp-1 max-w-[200px]">
+                            <p className="text-muted-foreground line-clamp-1 max-w-50 text-sm">
                               {getContentPreview(report)}
                             </p>
                           </Link>
@@ -347,7 +378,7 @@ export default function ReportsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                          <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
                             <Calendar className="h-3.5 w-3.5" />
                             {formatDate(report.createdAt)}
                           </div>
@@ -424,12 +455,12 @@ function StatCard({
 
 function TableSkeleton() {
   return (
-    <div className="p-4 space-y-3">
+    <div className="space-y-3 p-4">
       {[...Array(6)].map((_, i) => (
         <div key={i} className="flex items-center gap-4">
           <Skeleton className="h-6 w-20 rounded-full" />
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-7 w-7 rounded-full hidden lg:block" />
+          <Skeleton className="hidden h-7 w-7 rounded-full lg:block" />
           <div className="flex-1">
             <Skeleton className="h-4 w-48" />
           </div>

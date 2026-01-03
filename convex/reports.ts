@@ -63,6 +63,62 @@ export const createReport = mutation({
       }
     }
 
+    // Vérifier les doublons - empêcher de signaler plusieurs fois le même contenu
+    if (args.reportedPostId) {
+      const existingReport = await ctx.db
+        .query("reports")
+        .withIndex("by_reporter_post", (q) =>
+          q
+            .eq("reporterId", currentUser._id)
+            .eq("reportedPostId", args.reportedPostId),
+        )
+        .first()
+      if (existingReport) {
+        return {
+          success: false,
+          duplicate: true,
+          message: "Vous avez déjà signalé cette publication",
+        }
+      }
+    }
+
+    if (args.reportedUserId && args.type === "user") {
+      const existingReport = await ctx.db
+        .query("reports")
+        .withIndex("by_reporter_user", (q) =>
+          q
+            .eq("reporterId", currentUser._id)
+            .eq("reportedUserId", args.reportedUserId),
+        )
+        .filter((q) => q.eq(q.field("type"), "user"))
+        .first()
+      if (existingReport) {
+        return {
+          success: false,
+          duplicate: true,
+          message: "Vous avez déjà signalé cet utilisateur",
+        }
+      }
+    }
+
+    if (args.reportedCommentId) {
+      const existingReport = await ctx.db
+        .query("reports")
+        .withIndex("by_reporter_comment", (q) =>
+          q
+            .eq("reporterId", currentUser._id)
+            .eq("reportedCommentId", args.reportedCommentId),
+        )
+        .first()
+      if (existingReport) {
+        return {
+          success: false,
+          duplicate: true,
+          message: "Vous avez déjà signalé ce commentaire",
+        }
+      }
+    }
+
     await ctx.db.insert("reports", {
       reporterId: currentUser._id,
       reportedUserId: args.reportedUserId,
@@ -159,11 +215,13 @@ export const getAllReports = query({
 export const updateReportStatus = mutation({
   args: {
     reportId: v.id("reports"),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("reviewing"),
-      v.literal("resolved"),
-      v.literal("rejected"),
+    status: v.union(v.literal("pending"), v.literal("resolved")),
+    resolutionAction: v.optional(
+      v.union(
+        v.literal("banned"),
+        v.literal("content_deleted"),
+        v.literal("dismissed"),
+      ),
     ),
     adminNotes: v.optional(v.string()),
   },
@@ -184,6 +242,7 @@ export const updateReportStatus = mutation({
 
     await ctx.db.patch(args.reportId, {
       status: args.status,
+      resolutionAction: args.resolutionAction,
       adminNotes: args.adminNotes,
       reviewedBy: currentUser._id,
       reviewedAt: Date.now(),
@@ -385,14 +444,107 @@ export const deleteReportedContentAndResolve = mutation({
       }
     }
 
-    // Marquer le signalement comme résolu
+    // Marquer le signalement comme résolu avec action "content_deleted"
     await ctx.db.patch(args.reportId, {
       status: "resolved",
+      resolutionAction: "content_deleted",
       adminNotes: args.adminNotes,
       reviewedBy: currentUser._id,
       reviewedAt: Date.now(),
     })
 
     return { success: true }
+  },
+})
+
+// Récupérer l'historique des signalements pour un utilisateur (SUPERUSER only)
+export const getReportHistoryForUser = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
+      return null
+    }
+
+    // Get reports where this user is directly reported
+    const userReports = await ctx.db
+      .query("reports")
+      .withIndex("by_reported_user", (q) => q.eq("reportedUserId", args.userId))
+      .filter((q) => q.eq(q.field("type"), "user"))
+      .collect()
+
+    // Get user's posts to find reports on their posts
+    const userPosts = await ctx.db
+      .query("posts")
+      .withIndex("by_author", (q) => q.eq("author", args.userId))
+      .collect()
+    const postIds = new Set(userPosts.map((p) => p._id))
+
+    // Get user's comments to find reports on their comments
+    const userComments = await ctx.db
+      .query("comments")
+      .withIndex("by_author", (q) => q.eq("author", args.userId))
+      .collect()
+    const commentIds = new Set(userComments.map((c) => c._id))
+
+    // Get all post and comment reports and filter
+    const allPostReports = await ctx.db
+      .query("reports")
+      .withIndex("by_type", (q) => q.eq("type", "post"))
+      .collect()
+    const postReports = allPostReports.filter(
+      (r) => r.reportedPostId && postIds.has(r.reportedPostId),
+    )
+
+    const allCommentReports = await ctx.db
+      .query("reports")
+      .withIndex("by_type", (q) => q.eq("type", "comment"))
+      .collect()
+    const commentReports = allCommentReports.filter(
+      (r) => r.reportedCommentId && commentIds.has(r.reportedCommentId),
+    )
+
+    // Combine all reports
+    const allReports = [...userReports, ...postReports, ...commentReports].sort(
+      (a, b) => b.createdAt - a.createdAt,
+    )
+
+    // Get recent reports with details
+    const recentReports = await Promise.all(
+      allReports.slice(0, 10).map(async (report) => {
+        const reporter = await ctx.db.get(report.reporterId)
+        return {
+          _id: report._id,
+          type: report.type,
+          reason: report.reason,
+          status: report.status,
+          createdAt: report.createdAt,
+          reporterName: reporter?.name || "Utilisateur inconnu",
+        }
+      }),
+    )
+
+    const totalReports = allReports.length
+    const RECIDIVIST_THRESHOLD = 3
+
+    return {
+      totalReports,
+      userReports: userReports.length,
+      postReports: postReports.length,
+      commentReports: commentReports.length,
+      recentReports,
+      isRecidivist: totalReports >= RECIDIVIST_THRESHOLD,
+    }
   },
 })

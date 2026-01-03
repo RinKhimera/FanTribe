@@ -87,6 +87,37 @@ export const getCurrentUser = query({
       )
       .unique()
 
+    if (!user) return null
+
+    // Check if user is banned
+    if (user.isBanned) {
+      // Check if temporary ban has expired
+      if (
+        user.banType === "temporary" &&
+        user.banExpiresAt &&
+        Date.now() > user.banExpiresAt
+      ) {
+        // Ban has expired - return user with expiredBan flag
+        // The actual unban will be handled by a scheduled function or on next write
+        return {
+          ...user,
+          isBanned: false,
+          banExpired: true,
+        }
+      }
+
+      // Active ban - return user with ban info for frontend handling
+      return {
+        ...user,
+        activeBan: {
+          type: user.banType,
+          reason: user.banReason,
+          bannedAt: user.bannedAt,
+          expiresAt: user.banExpiresAt,
+        },
+      }
+    }
+
     return user
   },
 })

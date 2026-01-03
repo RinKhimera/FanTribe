@@ -470,7 +470,7 @@ describe("reports", () => {
   })
 
   describe("updateReportStatus", () => {
-    it("should update status to reviewing", async () => {
+    it("should update status to resolved with dismissed action", async () => {
       const t = convexTest(schema, modules)
 
       const adminId = await t.run(async (ctx) => {
@@ -520,7 +520,8 @@ describe("reports", () => {
       const admin = t.withIdentity({ tokenIdentifier: "admin_id" })
       const result = await admin.mutation(api.reports.updateReportStatus, {
         reportId,
-        status: "reviewing",
+        status: "resolved",
+        resolutionAction: "dismissed",
       })
 
       expect(result.success).toBe(true)
@@ -529,7 +530,8 @@ describe("reports", () => {
         return await ctx.db.get(reportId)
       })
 
-      expect(report?.status).toBe("reviewing")
+      expect(report?.status).toBe("resolved")
+      expect(report?.resolutionAction).toBe("dismissed")
       expect(report?.reviewedBy).toBe(adminId)
       expect(report?.reviewedAt).toBeDefined()
     })

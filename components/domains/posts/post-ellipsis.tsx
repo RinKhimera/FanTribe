@@ -4,6 +4,7 @@ import { useMutation } from "convex/react"
 import {
   CheckCircle,
   Ellipsis,
+  Flag,
   LoaderCircle,
   Pencil,
   Pin,
@@ -62,6 +63,7 @@ export const PostEllipsis = ({
   const [isPinPending, setIsPinPending] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showReportDialog, setShowReportDialog] = useState(false)
 
   // Déterminer si l'utilisateur courant est l'auteur du post
   const isAuthor = postAuthorId === currentUser._id
@@ -179,12 +181,13 @@ export const PostEllipsis = ({
         <DropdownMenuGroup>
           {/* Signaler - uniquement pour les non-auteurs */}
           {!isAuthor && !isAdmin && (
-            <ReportDialog
-              reportedPostId={postId}
-              reportedUserId={postAuthorId}
-              type="post"
-              triggerText="Signaler la publication"
-            />
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => setShowReportDialog(true)}
+            >
+              <Flag className="mr-2 size-4" />
+              Signaler la publication
+            </DropdownMenuItem>
           )}
 
           {/* Modifier - pour auteur ou admin */}
@@ -283,6 +286,17 @@ export const PostEllipsis = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialogue de signalement - rendu en dehors du dropdown */}
+      {!isAuthor && !isAdmin && (
+        <ReportDialog
+          reportedPostId={postId}
+          reportedUserId={postAuthorId}
+          type="post"
+          isOpen={showReportDialog}
+          onClose={() => setShowReportDialog(false)}
+        />
+      )}
     </DropdownMenu>
   )
 }

@@ -9,6 +9,7 @@
  */
 
 import type * as assetsDraft from "../assetsDraft.js";
+import type * as bans from "../bans.js";
 import type * as blocks from "../blocks.js";
 import type * as bookmarks from "../bookmarks.js";
 import type * as comments from "../comments.js";
@@ -47,6 +48,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   assetsDraft: typeof assetsDraft;
+  bans: typeof bans;
   blocks: typeof blocks;
   bookmarks: typeof bookmarks;
   comments: typeof comments;

@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react"
 import {
   AlertTriangle,
+  Ban,
   LayoutDashboard,
   Loader2,
   Receipt,
@@ -56,6 +57,11 @@ export default function SuperuserLayout({
       label: "Signalements",
       icon: AlertTriangle,
       badge: pendingReports,
+    },
+    {
+      href: "/superuser/bans",
+      label: "Bans",
+      icon: Ban,
     },
     {
       href: "/superuser/transactions",

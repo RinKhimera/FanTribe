@@ -53,12 +53,33 @@ export default defineSchema({
       v.literal("SUPERUSER"),
     ),
     allowAdultContent: v.optional(v.boolean()),
+    // Ban system
+    isBanned: v.optional(v.boolean()),
+    banType: v.optional(v.union(v.literal("temporary"), v.literal("permanent"))),
+    banReason: v.optional(v.string()),
+    bannedAt: v.optional(v.number()),
+    bannedBy: v.optional(v.id("users")),
+    banExpiresAt: v.optional(v.number()),
+    banHistory: v.optional(
+      v.array(
+        v.object({
+          type: v.union(v.literal("temporary"), v.literal("permanent")),
+          reason: v.string(),
+          bannedAt: v.number(),
+          bannedBy: v.id("users"),
+          expiresAt: v.optional(v.number()),
+          liftedAt: v.optional(v.number()),
+          liftedBy: v.optional(v.id("users")),
+        })
+      )
+    ),
   })
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_username", ["username"])
     .index("byExternalId", ["externalId"])
     .index("by_accountType", ["accountType"])
     .index("by_isOnline", ["isOnline"])
+    .index("by_isBanned", ["isBanned"])
     .searchIndex("search_users", {
       searchField: "name",
       filterFields: ["accountType", "username"],
@@ -256,6 +277,13 @@ export default defineSchema({
       v.literal("resolved"),
       v.literal("rejected"),
     ),
+    resolutionAction: v.optional(
+      v.union(
+        v.literal("banned"),
+        v.literal("content_deleted"),
+        v.literal("dismissed"),
+      ),
+    ),
     adminNotes: v.optional(v.string()),
     reviewedBy: v.optional(v.id("users")),
     reviewedAt: v.optional(v.number()),
@@ -264,9 +292,14 @@ export default defineSchema({
     .index("by_reporter", ["reporterId"])
     .index("by_reported_user", ["reportedUserId"])
     .index("by_reported_post", ["reportedPostId"])
+    .index("by_reported_comment", ["reportedCommentId"])
     .index("by_status", ["status"])
     .index("by_type", ["type"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    // Indexes for duplicate prevention
+    .index("by_reporter_post", ["reporterId", "reportedPostId"])
+    .index("by_reporter_user", ["reporterId", "reportedUserId"])
+    .index("by_reporter_comment", ["reporterId", "reportedCommentId"]),
 
   validationDocumentsDraft: defineTable({
     userId: v.id("users"),
