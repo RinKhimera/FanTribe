@@ -1,14 +1,18 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { AnimatePresence, motion } from "motion/react"
 import { ImageIcon, Lock, Play } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useCallback, useMemo, useState } from "react"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
-import { containerVariants, masonryItemVariants, skeletonVariants } from "@/lib/animations"
+import {
+  containerVariants,
+  masonryItemVariants,
+  skeletonVariants,
+} from "@/lib/animations"
 import { cn } from "@/lib/utils"
 
 // Masonry item heights for visual variety
@@ -38,7 +42,7 @@ const GalleryItem = ({
       variants={masonryItemVariants}
       className={cn(
         "group relative mb-3 overflow-hidden rounded-xl",
-        heightClass
+        heightClass,
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -47,7 +51,7 @@ const GalleryItem = ({
       <div
         className={cn(
           "relative h-full w-full cursor-pointer transition-all duration-300",
-          canViewMedia ? "group-hover:brightness-90" : "brightness-50"
+          canViewMedia ? "group-hover:brightness-90" : "brightness-50",
         )}
         onClick={canViewMedia ? onOpen : undefined}
       >
@@ -84,8 +88,8 @@ const GalleryItem = ({
                 fill
                 className={cn(
                   "object-cover transition-all duration-500",
-                  isLoaded ? "opacity-100 blur-0" : "opacity-0 blur-sm",
-                  isHovered && "scale-105"
+                  isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
+                  isHovered && "scale-105",
                 )}
                 sizes="(max-width: 640px) 50vw, 33vw"
                 onLoad={() => setIsLoaded(true)}
@@ -140,39 +144,26 @@ const GalleryItem = ({
 
 export const UserGallery = ({
   authorId,
-  currentUser,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  currentUser: _currentUser,
 }: {
   authorId: Id<"users">
   currentUser: Doc<"users">
 }) => {
+  // Le backend filtre déjà les médias - seuls les médias accessibles sont retournés
   const userGallery = useQuery(api.posts.getUserGallery, { authorId })
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
-  const subscriptionStatus = useQuery(api.subscriptions.getFollowSubscription, {
-    creatorId: authorId,
-    subscriberId: currentUser._id,
-  })
+  // Extraire les données pour une référence stable dans useMemo
+  const galleryLength = userGallery?.length ?? 0
 
-  const isSubscriber = subscriptionStatus?.status === "active"
-  const isOwnProfile = authorId === currentUser._id
-
-  const galleryData = userGallery
-
+  // Le backend retourne uniquement les médias accessibles
   const mediaList = useMemo(() => {
-    if (!galleryData) return [] as string[]
-    return galleryData
-      .filter((item) => {
-        const isMediaProtected = item.visibility === "subscribers_only"
-        const canViewMedia =
-          isOwnProfile ||
-          !isMediaProtected ||
-          isSubscriber ||
-          currentUser.accountType === "SUPERUSER"
-        return canViewMedia
-      })
-      .map((i) => i.mediaUrl)
-  }, [galleryData, isOwnProfile, isSubscriber, currentUser.accountType])
+    if (!userGallery) return [] as string[]
+    return userGallery.map((item) => item.mediaUrl)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [galleryLength])
 
   const openViewerAt = useCallback(
     (mediaUrl: string) => {
@@ -181,13 +172,13 @@ export const UserGallery = ({
       setViewerIndex(idx)
       setViewerOpen(true)
     },
-    [mediaList]
+    [mediaList],
   )
 
   // Split items into columns for masonry layout
   const columns = (() => {
     if (!userGallery) return [[], [], []]
-    const cols: typeof userGallery[] = [[], [], []]
+    const cols: (typeof userGallery)[] = [[], [], []]
     userGallery.forEach((item, index) => {
       cols[index % 3].push(item)
     })
@@ -206,7 +197,7 @@ export const UserGallery = ({
               animate="animate"
               className={cn(
                 "bg-muted rounded-xl",
-                MASONRY_HEIGHTS[i % MASONRY_HEIGHTS.length]
+                MASONRY_HEIGHTS[i % MASONRY_HEIGHTS.length],
               )}
             />
           ))}
@@ -235,7 +226,7 @@ export const UserGallery = ({
 
   return (
     <>
-      {/* Masonry Grid */}
+      {/* Masonry Grid - SECURITE: Tous les items retournés par le backend sont accessibles */}
       <motion.div
         variants={containerVariants}
         initial="initial"
@@ -244,71 +235,44 @@ export const UserGallery = ({
       >
         {/* Column 1 */}
         <div className="flex flex-col">
-          {columns[0].map((item, i) => {
-            const isMediaProtected = item.visibility === "subscribers_only"
-            const canViewMedia =
-              isOwnProfile ||
-              !isMediaProtected ||
-              isSubscriber ||
-              currentUser.accountType === "SUPERUSER"
-
-            return (
-              <GalleryItem
-                key={item._id}
-                item={item}
-                index={i * 3}
-                canViewMedia={canViewMedia}
-                isMediaProtected={isMediaProtected}
-                onOpen={() => openViewerAt(item.mediaUrl)}
-              />
-            )
-          })}
+          {columns[0].map((item, i) => (
+            <GalleryItem
+              key={item._id}
+              item={item}
+              index={i * 3}
+              canViewMedia={true}
+              isMediaProtected={item.visibility === "subscribers_only"}
+              onOpen={() => openViewerAt(item.mediaUrl)}
+            />
+          ))}
         </div>
 
         {/* Column 2 */}
         <div className="flex flex-col">
-          {columns[1].map((item, i) => {
-            const isMediaProtected = item.visibility === "subscribers_only"
-            const canViewMedia =
-              isOwnProfile ||
-              !isMediaProtected ||
-              isSubscriber ||
-              currentUser.accountType === "SUPERUSER"
-
-            return (
-              <GalleryItem
-                key={item._id}
-                item={item}
-                index={i * 3 + 1}
-                canViewMedia={canViewMedia}
-                isMediaProtected={isMediaProtected}
-                onOpen={() => openViewerAt(item.mediaUrl)}
-              />
-            )
-          })}
+          {columns[1].map((item, i) => (
+            <GalleryItem
+              key={item._id}
+              item={item}
+              index={i * 3 + 1}
+              canViewMedia={true}
+              isMediaProtected={item.visibility === "subscribers_only"}
+              onOpen={() => openViewerAt(item.mediaUrl)}
+            />
+          ))}
         </div>
 
         {/* Column 3 - Hidden on mobile */}
         <div className="hidden flex-col sm:flex">
-          {columns[2].map((item, i) => {
-            const isMediaProtected = item.visibility === "subscribers_only"
-            const canViewMedia =
-              isOwnProfile ||
-              !isMediaProtected ||
-              isSubscriber ||
-              currentUser.accountType === "SUPERUSER"
-
-            return (
-              <GalleryItem
-                key={item._id}
-                item={item}
-                index={i * 3 + 2}
-                canViewMedia={canViewMedia}
-                isMediaProtected={isMediaProtected}
-                onOpen={() => openViewerAt(item.mediaUrl)}
-              />
-            )
-          })}
+          {columns[2].map((item, i) => (
+            <GalleryItem
+              key={item._id}
+              item={item}
+              index={i * 3 + 2}
+              canViewMedia={true}
+              isMediaProtected={item.visibility === "subscribers_only"}
+              onOpen={() => openViewerAt(item.mediaUrl)}
+            />
+          ))}
         </div>
       </motion.div>
 

@@ -1,48 +1,29 @@
 "use client"
 
-import { Lock, Sparkles } from "lucide-react"
-import Image from "next/image"
+import { Lock, Sparkles, Image as ImageIcon, Film } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface LockedContentOverlayProps {
-  firstMedia?: string
+  mediaCount?: number
   authorUsername?: string
   onRequireSubscribe: () => void
 }
 
 export const LockedContentOverlay = ({
-  firstMedia,
+  mediaCount = 1,
   authorUsername,
   onRequireSubscribe,
 }: LockedContentOverlayProps) => {
-  const isFirstMediaImage =
-    firstMedia &&
-    !firstMedia.startsWith("https://iframe.mediadelivery.net/embed/")
-
   return (
     <div
       className={cn(
         "relative mt-3 w-full overflow-hidden rounded-2xl",
-        "aspect-video"
+        "aspect-video",
       )}
     >
-      {/* Artistic blurred preview of actual image */}
-      {isFirstMediaImage && (
-        <Image
-          src={firstMedia}
-          alt=""
-          fill
-          sizes="(max-width: 640px) 100vw, 600px"
-          className="blur-artistic object-cover"
-          draggable={false}
-        />
-      )}
-
-      {/* Fallback gradient if no image */}
-      {!isFirstMediaImage && (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/30 to-primary/40 opacity-40" />
-      )}
+      {/* SECURITE: Gradient placeholder uniquement - pas d'image réelle */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/30 to-primary/40" />
 
       {/* Premium overlay gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
@@ -64,7 +45,7 @@ export const LockedContentOverlay = ({
           <div
             className={cn(
               "mx-auto mb-5 flex size-16 items-center justify-center rounded-full",
-              "bg-primary"
+              "bg-primary",
             )}
           >
             <Lock className="size-7 text-primary-foreground" />
@@ -75,18 +56,33 @@ export const LockedContentOverlay = ({
             Contenu Exclusif
           </h3>
 
-          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+          <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
             Ce contenu est réservé aux abonnés de{" "}
             <span className="font-semibold text-primary">
               @{authorUsername}
             </span>
           </p>
 
+          {/* Media count indicator */}
+          {mediaCount > 0 && (
+            <div className="mb-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              {mediaCount === 1 ? (
+                <ImageIcon className="size-3.5" />
+              ) : (
+                <Film className="size-3.5" />
+              )}
+              <span>
+                {mediaCount} {mediaCount === 1 ? "média" : "médias"} exclusif
+                {mediaCount > 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
+
           <Button
             size="lg"
             className={cn(
               "rounded-full px-8 h-11",
-              "font-semibold tracking-wide"
+              "font-semibold tracking-wide",
             )}
             onClick={(e) => {
               e.stopPropagation()

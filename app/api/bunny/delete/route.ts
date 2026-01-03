@@ -1,8 +1,18 @@
+import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
 import { BunnyApiErrorResponse } from "@/types"
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Vérifier l'authentification
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json<BunnyApiErrorResponse>(
+        { error: "Unauthorized" },
+        { status: 401 },
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const mediaId = searchParams.get("mediaId")
     const type = searchParams.get("type") as "image" | "video"

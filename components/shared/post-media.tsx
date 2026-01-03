@@ -19,14 +19,16 @@ import { LockedContentOverlay } from "./post-media/locked-content-overlay"
 
 interface PostMediaProps {
   medias: string[]
-  canView: boolean
+  isMediaLocked?: boolean
+  mediaCount?: number
   authorUsername?: string
   onRequireSubscribe: () => void
 }
 
 export const PostMedia: React.FC<PostMediaProps> = ({
   medias,
-  canView,
+  isMediaLocked = false,
+  mediaCount = 0,
   authorUsername,
   onRequireSubscribe,
 }) => {
@@ -35,10 +37,10 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
-  // Use the centralized video metadata hook
+  // Use the centralized video metadata hook - only when content is not locked
   const { metadata: videoMetadata } = useVideoMetadata({
     mediaUrls: medias,
-    enabled: canView,
+    enabled: !isMediaLocked && medias.length > 0,
   })
 
   // Liste des seules images (exclut les vidéos)
@@ -74,18 +76,19 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     }
   }, [carouselApi])
 
-  if (!medias || medias.length === 0) return null
-
-  // Locked content view - Premium artistic blur design
-  if (!canView) {
+  // Si le contenu est verrouillé, afficher l'overlay sans URL
+  // Le backend retourne medias=[] quand isMediaLocked=true
+  if (isMediaLocked) {
     return (
       <LockedContentOverlay
-        firstMedia={medias[0]}
+        mediaCount={mediaCount}
         authorUsername={authorUsername}
         onRequireSubscribe={onRequireSubscribe}
       />
     )
   }
+
+  if (!medias || medias.length === 0) return null
 
   const openImage = (media: string) => {
     const idx = imageMedias.indexOf(media)
@@ -167,7 +170,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           height={0}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
           className={cn(
-            "relative z-10 h-auto max-h-[750px] w-full cursor-pointer object-cover select-none",
+            "relative z-10 h-auto max-h-187.5 w-full cursor-pointer object-cover select-none",
           )}
           draggable={false}
           onDragStart={(e) => e.preventDefault()}

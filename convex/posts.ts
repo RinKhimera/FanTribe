@@ -9,10 +9,12 @@ import { mutation, query } from "./_generated/server"
 import {
   createAppError,
   filterBlockedUsers,
+  filterPostMediasForViewer,
   getActiveSubscribedCreatorIds,
   getAuthenticatedUser,
   getBlockedUserIds,
   getCreatorSubscribers,
+  hasActiveSubscription,
 } from "./lib"
 import { sendPostNotifications } from "./notificationQueue"
 
@@ -147,7 +149,7 @@ export const updatePost = mutation({
     postId: v.id("posts"),
     content: v.optional(v.string()),
     visibility: v.optional(
-      v.union(v.literal("public"), v.literal("subscribers_only"))
+      v.union(v.literal("public"), v.literal("subscribers_only")),
     ),
     isAdult: v.optional(v.boolean()),
   },
@@ -210,7 +212,17 @@ export const getPost = query({
     const author = await ctx.db.get(post.author)
     if (!author) throw createAppError("USER_NOT_FOUND")
 
-    return { ...post, author }
+    // Filtrer les médias selon les droits d'accès
+    const currentUser = await getAuthenticatedUser(ctx, { optional: true })
+    const { medias, isMediaLocked, mediaCount } =
+      await filterPostMediasForViewer(
+        ctx,
+        post,
+        currentUser?._id ?? null,
+        currentUser?.accountType,
+      )
+
+    return { ...post, medias, isMediaLocked, mediaCount, author }
   },
 })
 
@@ -223,15 +235,45 @@ export const getUserPosts = query({
     const author = await ctx.db.get(args.authorId)
     if (!author) throw createAppError("USER_NOT_FOUND")
 
+    // Déterminer les droits d'accès une fois
+    const currentUser = await getAuthenticatedUser(ctx, { optional: true })
+    let canViewSubscribersOnly = false
+    if (currentUser) {
+      canViewSubscribersOnly =
+        currentUser._id === args.authorId ||
+        currentUser.accountType === "SUPERUSER" ||
+        (await hasActiveSubscription(
+          ctx,
+          currentUser._id,
+          args.authorId,
+          "content_access",
+        ))
+    }
+
     const paginationResult = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", author._id))
       .order("desc")
       .paginate(args.paginationOpts)
 
+    // Filtrer les médias de chaque post
+    const postsWithFilteredMedia = paginationResult.page.map((post) => {
+      const originalMediaCount = post.medias?.length || 0
+      const isLocked =
+        post.visibility === "subscribers_only" && !canViewSubscribersOnly
+
+      return {
+        ...post,
+        medias: isLocked ? [] : post.medias,
+        isMediaLocked: isLocked && originalMediaCount > 0,
+        mediaCount: originalMediaCount,
+        author,
+      }
+    })
+
     return {
       ...paginationResult,
-      page: paginationResult.page.map((post) => ({ ...post, author })),
+      page: postsWithFilteredMedia,
     }
   },
 })
@@ -246,6 +288,42 @@ export const getUserPostsWithPinned = query({
     const author = await ctx.db.get(args.authorId)
     if (!author) throw createAppError("USER_NOT_FOUND")
 
+    // Déterminer les droits d'accès une fois
+    const currentUser = await getAuthenticatedUser(ctx, { optional: true })
+    let canViewSubscribersOnly = false
+    if (currentUser) {
+      canViewSubscribersOnly =
+        currentUser._id === args.authorId ||
+        currentUser.accountType === "SUPERUSER" ||
+        (await hasActiveSubscription(
+          ctx,
+          currentUser._id,
+          args.authorId,
+          "content_access",
+        ))
+    }
+
+    // Helper pour filtrer les médias d'un post
+    const filterPostMedia = <
+      T extends { medias?: string[]; visibility?: string },
+    >(
+      post: T,
+      isPinned: boolean,
+    ) => {
+      const originalMediaCount = post.medias?.length || 0
+      const isLocked =
+        post.visibility === "subscribers_only" && !canViewSubscribersOnly
+
+      return {
+        ...post,
+        medias: isLocked ? [] : post.medias,
+        isMediaLocked: isLocked && originalMediaCount > 0,
+        mediaCount: originalMediaCount,
+        author,
+        isPinned: isPinned as typeof isPinned,
+      }
+    }
+
     const pinnedPostIds = author.pinnedPostIds || []
     const isFirstPage = !args.paginationOpts.cursor
 
@@ -259,16 +337,16 @@ export const getUserPostsWithPinned = query({
     if (isFirstPage && pinnedPostIds.length > 0) {
       // Fetch pinned posts in order (maintains pinnedPostIds order)
       const pinnedPosts = await Promise.all(
-        pinnedPostIds.map((id) => ctx.db.get(id))
+        pinnedPostIds.map((id) => ctx.db.get(id)),
       )
       const validPinnedPosts = pinnedPosts
         .filter((p): p is NonNullable<typeof p> => p !== null)
-        .map((post) => ({ ...post, author, isPinned: true as const }))
+        .map((post) => filterPostMedia(post, true))
 
       // Filter out pinned posts from regular posts to avoid duplicates
       const regularPosts = paginationResult.page
         .filter((post) => !pinnedPostIds.includes(post._id))
-        .map((post) => ({ ...post, author, isPinned: false as const }))
+        .map((post) => filterPostMedia(post, false))
 
       return {
         ...paginationResult,
@@ -281,7 +359,7 @@ export const getUserPostsWithPinned = query({
       ...paginationResult,
       page: paginationResult.page
         .filter((post) => !pinnedPostIds.includes(post._id))
-        .map((post) => ({ ...post, author, isPinned: false as const })),
+        .map((post) => filterPostMedia(post, false)),
     }
   },
 })
@@ -289,6 +367,21 @@ export const getUserPostsWithPinned = query({
 export const getUserGallery = query({
   args: { authorId: v.id("users") },
   handler: async (ctx, args) => {
+    // Déterminer les droits d'accès une fois
+    const currentUser = await getAuthenticatedUser(ctx, { optional: true })
+    let canViewSubscribersOnly = false
+    if (currentUser) {
+      canViewSubscribersOnly =
+        currentUser._id === args.authorId ||
+        currentUser.accountType === "SUPERUSER" ||
+        (await hasActiveSubscription(
+          ctx,
+          currentUser._id,
+          args.authorId,
+          "content_access",
+        ))
+    }
+
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", args.authorId))
@@ -305,14 +398,21 @@ export const getUserGallery = query({
       visibility: string
     }> = []
 
+    // Ne retourner que les médias accessibles
     postsWithMedia.forEach((post) => {
-      post.medias?.forEach((mediaUrl, index) => {
-        galleryItems.push({
-          _id: `${post._id}_${index}`,
-          mediaUrl,
-          visibility: post.visibility || "public",
+      const isLocked =
+        post.visibility === "subscribers_only" && !canViewSubscribersOnly
+
+      // Ne pas inclure les médias verrouillés dans la galerie
+      if (!isLocked) {
+        post.medias?.forEach((mediaUrl, index) => {
+          galleryItems.push({
+            _id: `${post._id}_${index}`,
+            mediaUrl,
+            visibility: post.visibility || "public",
+          })
         })
-      })
+      }
     })
 
     return galleryItems

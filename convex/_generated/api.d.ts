@@ -24,6 +24,7 @@ import type * as lib_blocks from "../lib/blocks.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_index from "../lib/index.js";
 import type * as lib_notifications from "../lib/notifications.js";
+import type * as lib_signedUrls from "../lib/signedUrls.js";
 import type * as lib_subscriptions from "../lib/subscriptions.js";
 import type * as likes from "../likes.js";
 import type * as messages from "../messages.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/index": typeof lib_index;
   "lib/notifications": typeof lib_notifications;
+  "lib/signedUrls": typeof lib_signedUrls;
   "lib/subscriptions": typeof lib_subscriptions;
   likes: typeof likes;
   messages: typeof messages;

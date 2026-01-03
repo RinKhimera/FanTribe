@@ -19,6 +19,9 @@ import { cn } from "@/lib/utils"
 type ExtendedPost = Omit<Doc<"posts">, "author"> & {
   author: Doc<"users"> | null | undefined
   isPinned?: boolean
+  // Champs ajoutés par le backend pour le filtrage des médias
+  isMediaLocked?: boolean
+  mediaCount?: number
 }
 
 type PostCardProps = {
@@ -82,8 +85,8 @@ export const PostCard = ({
             "glass-post-card",
             // Variants
             variant === "featured" && [
-              "rounded-2xl border border-primary/20",
-              "bg-gradient-to-b from-primary/5 to-transparent",
+              "border-primary/20 rounded-2xl border",
+              "from-primary/5 bg-linear-to-b to-transparent",
               "shadow-[0_4px_24px_hsl(var(--primary)/15%)]",
             ],
             variant === "compact" && "py-1",
@@ -114,13 +117,14 @@ export const PostCard = ({
             {/* Content: Post text */}
             {post.content && <PostContent content={post.content} />}
 
-            {/* Media: Images/Videos */}
-            {hasMedia && (
+            {/* Media: Images/Videos - SECURITE: Utiliser isMediaLocked du backend */}
+            {(hasMedia || post.isMediaLocked) && (
               <div className="px-4">
                 <div className="overflow-hidden rounded-xl">
                   <PostMedia
-                    medias={post.medias}
-                    canView={canViewMedia}
+                    medias={post.medias ?? []}
+                    isMediaLocked={post.isMediaLocked}
+                    mediaCount={post.mediaCount}
                     authorUsername={post.author?.username}
                     onRequireSubscribe={() => setIsSubscriptionModalOpen(true)}
                   />

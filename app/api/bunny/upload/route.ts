@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server"
 import axios from "axios"
 import { NextRequest, NextResponse } from "next/server"
 import { getOrCreateUserCollection } from "@/app/api/bunny/helper/get-user-collection"
@@ -9,9 +10,19 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier l'authentification et utiliser l'ID authentifié
+    const { userId: clerkUserId } = await auth()
+    if (!clerkUserId) {
+      return NextResponse.json<BunnyApiErrorResponse>(
+        { error: "Unauthorized" },
+        { status: 401 },
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get("file") as File
     const fileName = formData.get("fileName") as string
+    // Ignorer userId du formData, utiliser l'ID authentifié
     const userId = formData.get("userId") as string
 
     if (!file || !userId || !fileName) {

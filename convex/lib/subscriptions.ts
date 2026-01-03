@@ -108,3 +108,55 @@ export const canViewSubscribersOnlyContent = async (
   // Vérifier l'abonnement actif
   return hasActiveSubscription(ctx, viewerId, creatorId, "content_access")
 }
+
+/**
+ * Filtre les médias d'un post selon les droits d'accès du viewer.
+ * SECURITE: Ne retourne JAMAIS les URLs aux utilisateurs non autorisés.
+ *
+ * @returns medias filtrés, flag isMediaLocked, et mediaCount original
+ */
+export const filterPostMediasForViewer = async (
+  ctx: DbCtx,
+  post: {
+    medias?: string[]
+    visibility?: string
+    author: Id<"users">
+  },
+  viewerId: Id<"users"> | null,
+  viewerAccountType?: "USER" | "CREATOR" | "SUPERUSER",
+): Promise<{ medias: string[]; isMediaLocked: boolean; mediaCount: number }> => {
+  const originalMedias = post.medias || []
+  const mediaCount = originalMedias.length
+
+  // Contenu public = accès libre
+  if (!post.visibility || post.visibility === "public") {
+    return { medias: originalMedias, isMediaLocked: false, mediaCount }
+  }
+
+  // Pas de viewer authentifié = contenu verrouillé
+  if (!viewerId) {
+    return { medias: [], isMediaLocked: true, mediaCount }
+  }
+
+  // Propriétaire voit toujours son contenu
+  if (post.author === viewerId) {
+    return { medias: originalMedias, isMediaLocked: false, mediaCount }
+  }
+
+  // Superuser voit tout
+  if (viewerAccountType === "SUPERUSER") {
+    return { medias: originalMedias, isMediaLocked: false, mediaCount }
+  }
+
+  // Vérifier l'abonnement pour subscribers_only
+  const hasAccess = await hasActiveSubscription(
+    ctx,
+    viewerId,
+    post.author,
+    "content_access",
+  )
+
+  return hasAccess
+    ? { medias: originalMedias, isMediaLocked: false, mediaCount }
+    : { medias: [], isMediaLocked: true, mediaCount }
+}

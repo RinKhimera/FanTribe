@@ -1,9 +1,19 @@
+import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
 import { getMultipleVideos } from "@/app/api/bunny/helper/get-video"
 import type { BunnyApiErrorResponse } from "@/types"
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier l'authentification
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json<BunnyApiErrorResponse>(
+        { error: "Unauthorized" },
+        { status: 401 },
+      )
+    }
+
     const { videoGuids } = await request.json()
 
     if (!videoGuids || !Array.isArray(videoGuids) || videoGuids.length === 0) {

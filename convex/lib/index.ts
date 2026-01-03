@@ -25,6 +25,7 @@ export {
   hasActiveSubscription,
   getCreatorSubscribers,
   canViewSubscribersOnlyContent,
+  filterPostMediasForViewer,
   type SubscriptionType,
   type SubscriptionStatus,
 } from "./subscriptions"
@@ -39,3 +40,6 @@ export {
 
 // Batch fetching utilities
 export { batchGetUsers, batchGetPosts, batchGetComments } from "./batch"
+
+// Signed URLs pour Bunny CDN (optionnel)
+export { generateSignedBunnyUrl, signBunnyUrls } from "./signedUrls"
