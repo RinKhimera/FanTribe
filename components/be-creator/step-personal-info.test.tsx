@@ -54,7 +54,9 @@ const TestWrapper = ({
       fullName: "",
       dateOfBirth: "",
       address: "",
-      phoneNumber: "",
+      whatsappNumber: "",
+      mobileMoneyNumber: "",
+      mobileMoneyNumber2: "",
       applicationReason: undefined,
       customReason: "",
       ...defaultValues,
@@ -80,16 +82,21 @@ describe("StepPersonalInfo", () => {
   it("should render all form fields", () => {
     render(<TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} />)
 
-    expect(screen.getByText("Nom complet")).toBeInTheDocument()
+    expect(
+      screen.getByText("Nom complet (le nom sur votre pièce d'identité)")
+    ).toBeInTheDocument()
     expect(screen.getByText("Date de naissance")).toBeInTheDocument()
     expect(screen.getByText("Adresse complète")).toBeInTheDocument()
-    expect(screen.getByText("Numéro de téléphone")).toBeInTheDocument()
+    expect(screen.getByText(/Numéro WhatsApp/)).toBeInTheDocument()
+    expect(screen.getByText(/Numéro Mobile Money \(pour paiements\)/)).toBeInTheDocument()
   })
 
-  it("should render the +237 phone prefix", () => {
+  it("should render the +237 phone prefix for all phone fields", () => {
     render(<TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} />)
 
-    expect(screen.getByText("+237")).toBeInTheDocument()
+    // There should be 3 phone fields with +237 prefix
+    const prefixes = screen.getAllByText("+237")
+    expect(prefixes).toHaveLength(3)
   })
 
   it("should call onPrevious when clicking back button", async () => {
@@ -138,7 +145,9 @@ describe("StepPersonalInfo", () => {
 
     render(<TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} />)
 
-    const phoneInput = screen.getByPlaceholderText("6XXXXXXXX")
+    // Get the first phone input (WhatsApp)
+    const phoneInputs = screen.getAllByPlaceholderText("6XXXXXXXX")
+    const phoneInput = phoneInputs[0]
     await user.type(phoneInput, "123abc456")
 
     expect(phoneInput).toHaveValue("123456")

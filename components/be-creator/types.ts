@@ -4,12 +4,19 @@ export const applicationSchema = z.object({
   fullName: z.string().min(2, "Le nom complet est requis"),
   dateOfBirth: z.string().min(1, "La date de naissance est requise"),
   address: z.string().min(10, "L'adresse complète est requise"),
-  phoneNumber: z
+  whatsappNumber: z
     .string()
     .regex(/^\d{9}$/, "Le numéro doit contenir exactement 9 chiffres"),
+  mobileMoneyNumber: z
+    .string()
+    .regex(/^\d{9}$/, "Le numéro doit contenir exactement 9 chiffres"),
+  mobileMoneyNumber2: z
+    .string()
+    .regex(/^\d{9}$/, "Le numéro doit contenir exactement 9 chiffres")
+    .optional()
+    .or(z.literal("")),
   applicationReason: z.enum(
     [
-      "monetisation",
       "passion_partage",
       "expertise_professionnelle",
       "influence_communaute",
@@ -40,11 +47,6 @@ export interface UploadedDocuments {
 }
 
 export const motivationOptions = [
-  {
-    value: "monetisation" as const,
-    label: "Monétiser mon contenu",
-    description: "Générer des revenus grâce à mes créations et mon audience",
-  },
   {
     value: "passion_partage" as const,
     label: "Partager ma passion",

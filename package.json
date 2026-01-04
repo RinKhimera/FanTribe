@@ -61,6 +61,7 @@
     "react-hook-form": "^7.69.0",
     "react-player": "^3.4.0",
     "react-textarea-autosize": "^8.5.9",
+    "react-webcam": "^7.2.0",
     "resend": "^6.6.0",
     "sharp": "^0.34.5",
     "sonner": "^2.0.7",

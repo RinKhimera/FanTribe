@@ -38,7 +38,8 @@ describe("creator-applications", () => {
         fullName: "John Doe",
         dateOfBirth: "1990-01-01",
         address: "123 Main St",
-        phoneNumber: "123456789",
+        whatsappNumber: "+237123456789",
+        mobileMoneyNumber: "+237123456789",
       },
       applicationReason: "I want to be a creator",
       identityDocuments: [
@@ -113,7 +114,8 @@ describe("creator-applications", () => {
         fullName: "John Doe",
         dateOfBirth: "1990-01-01",
         address: "123 Main St",
-        phoneNumber: "123456789",
+        whatsappNumber: "+237123456789",
+        mobileMoneyNumber: "+237123456789",
       },
       applicationReason: "I want to be a creator",
       identityDocuments: [],
@@ -170,7 +172,8 @@ describe("creator-applications", () => {
             fullName: "John Doe",
             dateOfBirth: "1990-01-01",
             address: "123 Main St",
-            phoneNumber: "123456789",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
           },
           applicationReason: "I want to be a creator",
           identityDocuments: [],
@@ -216,7 +219,8 @@ describe("creator-applications", () => {
             fullName: "John Doe",
             dateOfBirth: "1990-01-01",
             address: "123 Main St",
-            phoneNumber: "123456789",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
           },
           applicationReason: "I want to be a creator",
           identityDocuments: [],
@@ -261,7 +265,8 @@ describe("creator-applications", () => {
               fullName: "John Doe",
               dateOfBirth: "1990-01-01",
               address: "123 Main St",
-              phoneNumber: "123456789",
+              whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
             },
             applicationReason: "I want to be a creator",
             identityDocuments: [],
@@ -307,7 +312,8 @@ describe("creator-applications", () => {
             fullName: "John Doe",
             dateOfBirth: "1990-01-01",
             address: "123 Main St",
-            phoneNumber: "123456789",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
           },
           applicationReason: "First attempt",
           identityDocuments: [],
@@ -321,7 +327,8 @@ describe("creator-applications", () => {
             fullName: "John Doe",
             dateOfBirth: "1990-01-01",
             address: "123 Main St",
-            phoneNumber: "123456789",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
           },
           applicationReason: "Second attempt",
           identityDocuments: [],
@@ -396,7 +403,8 @@ describe("creator-applications", () => {
             fullName: "John Doe",
             dateOfBirth: "1990-01-01",
             address: "123 Main St",
-            phoneNumber: "123456789",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
           },
           applicationReason: "I want to be a creator",
           identityDocuments: [],
@@ -429,6 +437,260 @@ describe("creator-applications", () => {
       await expect(
         user.query(api.creatorApplications.getAllApplications)
       ).rejects.toThrow("Unauthorized")
+    })
+  })
+
+  describe("revokeCreatorStatus", () => {
+    it("should revoke creator status and reject the application", async () => {
+      const t = convexTest(schema)
+
+      const creatorId = await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Creator",
+          tokenIdentifier: "creator_id",
+          accountType: "CREATOR",
+          email: "creator@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Admin",
+          tokenIdentifier: "admin_id",
+          accountType: "SUPERUSER",
+          email: "admin@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      // Create an approved application for the creator
+      const appId = await t.run(async (ctx) => {
+        return await ctx.db.insert("creatorApplications", {
+          userId: creatorId,
+          status: "approved",
+          personalInfo: {
+            fullName: "Creator Name",
+            dateOfBirth: "1990-01-01",
+            address: "123 Main St",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
+          },
+          applicationReason: "I want to be a creator",
+          identityDocuments: [],
+          submittedAt: Date.now() - 86400000,
+          reviewedAt: Date.now() - 43200000,
+        })
+      })
+
+      const admin = t.withIdentity({ tokenIdentifier: "admin_id" })
+
+      await admin.mutation(api.creatorApplications.revokeCreatorStatus, {
+        userId: creatorId,
+        reason: "Violation of terms",
+      })
+
+      // User should be demoted to USER
+      const updatedUser = await t.run(async (ctx) => {
+        return await ctx.db.get(creatorId)
+      })
+      expect(updatedUser?.accountType).toBe("USER")
+
+      // Application should be rejected
+      const updatedApp = await t.run(async (ctx) => {
+        return await ctx.db.get(appId)
+      })
+      expect(updatedApp?.status).toBe("rejected")
+      expect(updatedApp?.adminNotes).toBe("Violation of terms")
+    })
+
+    it("should reject revocation of non-creator user", async () => {
+      const t = convexTest(schema)
+
+      const userId = await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Regular User",
+          tokenIdentifier: "user_id",
+          accountType: "USER",
+          email: "user@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Admin",
+          tokenIdentifier: "admin_id",
+          accountType: "SUPERUSER",
+          email: "admin@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      const admin = t.withIdentity({ tokenIdentifier: "admin_id" })
+
+      await expect(
+        admin.mutation(api.creatorApplications.revokeCreatorStatus, {
+          userId,
+        })
+      ).rejects.toThrow("L'utilisateur n'est pas un créateur")
+    })
+
+    it("should reject non-admin users", async () => {
+      const t = convexTest(schema)
+
+      const creatorId = await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Creator",
+          tokenIdentifier: "creator_id",
+          accountType: "CREATOR",
+          email: "creator@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Regular User",
+          tokenIdentifier: "user_id",
+          accountType: "USER",
+          email: "user@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      const user = t.withIdentity({ tokenIdentifier: "user_id" })
+
+      await expect(
+        user.mutation(api.creatorApplications.revokeCreatorStatus, {
+          userId: creatorId,
+        })
+      ).rejects.toThrow("Unauthorized")
+    })
+  })
+
+  describe("reviewApplication validation", () => {
+    it("should prevent rejecting an approved application", async () => {
+      const t = convexTest(schema)
+
+      const creatorId = await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Creator",
+          tokenIdentifier: "creator_id",
+          accountType: "CREATOR",
+          email: "creator@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Admin",
+          tokenIdentifier: "admin_id",
+          accountType: "SUPERUSER",
+          email: "admin@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      const appId = await t.run(async (ctx) => {
+        return await ctx.db.insert("creatorApplications", {
+          userId: creatorId,
+          status: "approved",
+          personalInfo: {
+            fullName: "John Doe",
+            dateOfBirth: "1990-01-01",
+            address: "123 Main St",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
+          },
+          applicationReason: "I want to be a creator",
+          identityDocuments: [],
+          submittedAt: Date.now() - 86400000,
+          reviewedAt: Date.now(),
+        })
+      })
+
+      const admin = t.withIdentity({ tokenIdentifier: "admin_id" })
+
+      await expect(
+        admin.mutation(api.creatorApplications.reviewApplication, {
+          applicationId: appId,
+          decision: "rejected",
+          adminNotes: "Changed my mind",
+        })
+      ).rejects.toThrow("Impossible de rejeter une candidature déjà approuvée")
+    })
+
+    it("should allow approving a rejected application", async () => {
+      const t = convexTest(schema)
+
+      const userId = await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "User",
+          tokenIdentifier: "user_id",
+          accountType: "USER",
+          email: "user@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      await t.run(async (ctx) => {
+        return await ctx.db.insert("users", {
+          name: "Admin",
+          tokenIdentifier: "admin_id",
+          accountType: "SUPERUSER",
+          email: "admin@test.com",
+          image: "https://test.com/image.png",
+          isOnline: true,
+        })
+      })
+
+      const appId = await t.run(async (ctx) => {
+        return await ctx.db.insert("creatorApplications", {
+          userId,
+          status: "rejected",
+          personalInfo: {
+            fullName: "John Doe",
+            dateOfBirth: "1990-01-01",
+            address: "123 Main St",
+            whatsappNumber: "+237123456789",
+            mobileMoneyNumber: "+237123456789",
+          },
+          applicationReason: "I want to be a creator",
+          identityDocuments: [],
+          submittedAt: Date.now() - 86400000,
+          reviewedAt: Date.now() - 43200000,
+          rejectionCount: 1,
+        })
+      })
+
+      const admin = t.withIdentity({ tokenIdentifier: "admin_id" })
+
+      await admin.mutation(api.creatorApplications.reviewApplication, {
+        applicationId: appId,
+        decision: "approved",
+        adminNotes: "Correcting the error",
+      })
+
+      const updatedApp = await t.run(async (ctx) => {
+        return await ctx.db.get(appId)
+      })
+      expect(updatedApp?.status).toBe("approved")
+
+      const updatedUser = await t.run(async (ctx) => {
+        return await ctx.db.get(userId)
+      })
+      expect(updatedUser?.accountType).toBe("CREATOR")
     })
   })
 })

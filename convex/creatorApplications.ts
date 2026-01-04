@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { internalMutation, mutation, query } from "./_generated/server"
 
 // Constantes pour les soft locks
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -11,7 +11,10 @@ export const submitApplication = mutation({
       fullName: v.string(),
       dateOfBirth: v.string(),
       address: v.string(),
-      phoneNumber: v.string(),
+      whatsappNumber: v.string(),
+      mobileMoneyNumber: v.string(),
+      mobileMoneyNumber2: v.optional(v.string()),
+      phoneNumber: v.optional(v.string()), // Backward compat
     }),
     applicationReason: v.string(),
     identityDocuments: v.array(
@@ -242,6 +245,13 @@ export const reviewApplication = mutation({
     const application = await ctx.db.get(args.applicationId)
     if (!application) throw new Error("Application not found")
 
+    // Empêcher de rejeter une candidature déjà approuvée
+    if (args.decision === "rejected" && application.status === "approved") {
+      throw new Error(
+        "Impossible de rejeter une candidature déjà approuvée. Utilisez la révocation du statut créateur."
+      )
+    }
+
     const now = Date.now()
 
     if (args.decision === "rejected") {
@@ -357,5 +367,95 @@ export const requestReapplication = mutation({
       mustContactSupport: false,
       waitUntil: null,
     }
+  },
+})
+
+// Migration interne: convertir les anciennes candidatures avec phoneNumber vers les nouveaux champs
+// Exécuter via: npx convex run creatorApplications:migratePhoneNumbersInternal
+export const migratePhoneNumbersInternal = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Récupérer toutes les candidatures
+    const applications = await ctx.db.query("creatorApplications").collect()
+
+    let migratedCount = 0
+
+    for (const app of applications) {
+      // Vérifier si la candidature a l'ancien format (phoneNumber existe)
+      const personalInfo = app.personalInfo as Record<string, unknown>
+      if (personalInfo.phoneNumber && !personalInfo.whatsappNumber) {
+        // Migrer: copier phoneNumber vers whatsappNumber et mobileMoneyNumber
+        await ctx.db.patch(app._id, {
+          personalInfo: {
+            fullName: personalInfo.fullName as string,
+            dateOfBirth: personalInfo.dateOfBirth as string,
+            address: personalInfo.address as string,
+            whatsappNumber: personalInfo.phoneNumber as string,
+            mobileMoneyNumber: personalInfo.phoneNumber as string,
+            mobileMoneyNumber2: undefined,
+          },
+        })
+        migratedCount++
+      }
+    }
+
+    return {
+      success: true,
+      migratedCount,
+      totalApplications: applications.length,
+    }
+  },
+})
+
+// Révoquer le statut créateur d'un utilisateur (le repasser en USER)
+export const revokeCreatorStatus = mutation({
+  args: {
+    userId: v.id("users"),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("Unauthorized")
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
+      throw new Error("Unauthorized")
+    }
+
+    const targetUser = await ctx.db.get(args.userId)
+    if (!targetUser) throw new Error("Utilisateur non trouvé")
+
+    // Vérifier que l'utilisateur est bien un créateur
+    if (targetUser.accountType !== "CREATOR") {
+      throw new Error("L'utilisateur n'est pas un créateur")
+    }
+
+    // Rétrograder en USER
+    await ctx.db.patch(args.userId, {
+      accountType: "USER",
+    })
+
+    // Trouver et rejeter la candidature approuvée
+    const approvedApplication = await ctx.db
+      .query("creatorApplications")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("status"), "approved"))
+      .first()
+
+    if (approvedApplication) {
+      await ctx.db.patch(approvedApplication._id, {
+        status: "rejected",
+        adminNotes: args.reason || "Statut créateur révoqué par un administrateur",
+        reviewedAt: Date.now(),
+      })
+    }
+
+    return { success: true }
   },
 })

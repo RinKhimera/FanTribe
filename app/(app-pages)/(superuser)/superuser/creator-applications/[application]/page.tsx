@@ -14,10 +14,12 @@ import {
   History,
   Mail,
   MapPin,
-  Phone,
+  MessageCircle,
   RefreshCw,
   ShieldAlert,
+  ShieldOff,
   User,
+  Wallet,
   X,
 } from "lucide-react"
 import Image from "next/image"
@@ -25,6 +27,7 @@ import Link from "next/link"
 import { use, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { RevokeCreatorDialog } from "@/components/superuser/revoke-creator-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -72,7 +75,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
   const [isPending, startTransition] = useTransition()
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
-  const [isEditingStatus, setIsEditingStatus] = useState(false)
+  const [showRevokeDialog, setShowRevokeDialog] = useState(false)
 
   const application = useQuery(
     api.creatorApplications.getApplicationById,
@@ -111,7 +114,6 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
             ? "Candidature approuvée"
             : "Candidature rejetée",
         )
-        setIsEditingStatus(false)
       } catch (error) {
         console.error(error)
         toast.error("Erreur lors de la révision")
@@ -344,10 +346,22 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
               value={application.personalInfo.dateOfBirth}
             />
             <InfoField
-              icon={Phone}
-              label="Téléphone"
-              value={application.personalInfo.phoneNumber}
+              icon={MessageCircle}
+              label="WhatsApp"
+              value={application.personalInfo.whatsappNumber ?? "—"}
             />
+            <InfoField
+              icon={Wallet}
+              label="Mobile Money"
+              value={application.personalInfo.mobileMoneyNumber ?? "—"}
+            />
+            {application.personalInfo.mobileMoneyNumber2 && (
+              <InfoField
+                icon={Wallet}
+                label="Mobile Money 2"
+                value={application.personalInfo.mobileMoneyNumber2}
+              />
+            )}
             <InfoField
               icon={Mail}
               label="Email"
@@ -432,7 +446,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
             <CardTitle className="text-base">Notes administratives</CardTitle>
           </CardHeader>
           <CardContent>
-            {application.status === "pending" || isEditingStatus ? (
+            {application.status === "pending" ? (
               <Textarea
                 placeholder="Ajoutez des notes sur cette candidature..."
                 value={adminNotes}
@@ -449,10 +463,11 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
           </CardContent>
         </Card>
 
-        {/* Actions */}
+        {/* Actions - Décision sur la candidature */}
         <Card className="border-2">
           <CardContent className="p-4">
-            {application.status === "pending" ? (
+            {/* PENDING: Boutons Approuver et Rejeter */}
+            {application.status === "pending" && (
               <div className="space-y-3">
                 <p className="text-muted-foreground text-sm">
                   Décision pour cette candidature
@@ -477,58 +492,102 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                   </Button>
                 </div>
               </div>
-            ) : isEditingStatus ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium">Modifier le statut</p>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    onClick={() => handleReview("approved")}
-                    disabled={isPending}
-                    className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <Check className="h-4 w-4" />
-                    Approuver
-                  </Button>
-                  <Button
-                    onClick={() => handleReview("rejected")}
-                    disabled={isPending}
-                    variant="destructive"
-                    className="flex-1 gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Rejeter
-                  </Button>
-                </div>
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsEditingStatus(false)}
-                  className="w-full"
-                >
-                  Annuler
-                </Button>
-              </div>
-            ) : (
+            )}
+
+            {/* APPROVED: Juste le statut, pas d'actions */}
+            {application.status === "approved" && (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-muted-foreground text-sm">Traitée le</p>
+                  <p className="text-muted-foreground text-sm">Approuvée le</p>
                   <p className="font-medium">
                     {application.reviewedAt
                       ? formatDate(application.reviewedAt)
                       : "—"}
                   </p>
                 </div>
-                <Button
+                <Badge
                   variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditingStatus(true)}
+                  className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
                 >
-                  Modifier le statut
+                  <Check className="mr-1 h-3 w-3" />
+                  Candidature approuvée
+                </Badge>
+              </div>
+            )}
+
+            {/* REJECTED: Statut + bouton pour corriger l'erreur */}
+            {application.status === "rejected" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-muted-foreground text-sm">Rejetée le</p>
+                    <p className="font-medium">
+                      {application.reviewedAt
+                        ? formatDate(application.reviewedAt)
+                        : "—"}
+                    </p>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="border-rose-500/30 bg-rose-500/10 text-rose-600"
+                  >
+                    <X className="mr-1 h-3 w-3" />
+                    Candidature rejetée
+                  </Badge>
+                </div>
+                <Button
+                  onClick={() => handleReview("approved")}
+                  disabled={isPending}
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <Check className="h-4 w-4" />
+                  Approuver (corriger l&apos;erreur)
                 </Button>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Révocation du statut créateur - Section séparée */}
+        {application.user?.accountType === "CREATOR" && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/15">
+                    <ShieldOff className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-amber-700 dark:text-amber-400">
+                      Statut créateur actif
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      Cet utilisateur est actuellement créateur sur la plateforme
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowRevokeDialog(true)}
+                  className="shrink-0 gap-2 border-amber-500/30 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
+                >
+                  <ShieldOff className="h-4 w-4" />
+                  Révoquer le statut
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Revoke Creator Dialog */}
+      <RevokeCreatorDialog
+        userId={application.userId}
+        username={application.user?.username}
+        isOpen={showRevokeDialog}
+        onClose={() => setShowRevokeDialog(false)}
+      />
 
       {/* Fullscreen Image Viewer */}
       <FullscreenImageViewer

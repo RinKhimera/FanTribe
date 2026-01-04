@@ -1,7 +1,14 @@
 "use client"
 
 import { motion } from "motion/react"
-import { ArrowLeft, ArrowRight, FileText, User } from "lucide-react"
+import {
+  ArrowLeft,
+  ArrowRight,
+  FileText,
+  MessageCircle,
+  User,
+  Wallet,
+} from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -66,7 +73,9 @@ export const StepPersonalInfo = ({
               name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom complet</FormLabel>
+                  <FormLabel>
+                    Nom complet (le nom sur votre pièce d&apos;identité)
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Entrez votre nom complet"
@@ -119,13 +128,16 @@ export const StepPersonalInfo = ({
               )}
             />
 
-            {/* Phone Number */}
+            {/* WhatsApp Number */}
             <FormField
               control={form.control}
-              name="phoneNumber"
+              name="whatsappNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Numéro de téléphone</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <MessageCircle className="size-4 text-green-500" />
+                    Numéro WhatsApp (pour contact)
+                  </FormLabel>
                   <FormControl>
                     <div className="flex">
                       <div className="flex items-center rounded-l-md border border-r-0 border-input bg-muted/50 px-3 text-sm text-muted-foreground">
@@ -133,7 +145,71 @@ export const StepPersonalInfo = ({
                       </div>
                       <Input
                         placeholder="6XXXXXXXX"
-                        className="input-premium rounded-l-none"
+                        className="input-premium !rounded-l-none"
+                        maxLength={9}
+                        {...field}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "")
+                          field.onChange(value)
+                        }}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Mobile Money Number */}
+            <FormField
+              control={form.control}
+              name="mobileMoneyNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Wallet className="size-4 text-orange-500" />
+                    Numéro Mobile Money (pour paiements)
+                  </FormLabel>
+                  <FormControl>
+                    <div className="flex">
+                      <div className="flex items-center rounded-l-md border border-r-0 border-input bg-muted/50 px-3 text-sm text-muted-foreground">
+                        +237
+                      </div>
+                      <Input
+                        placeholder="6XXXXXXXX"
+                        className="input-premium !rounded-l-none"
+                        maxLength={9}
+                        {...field}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "")
+                          field.onChange(value)
+                        }}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Mobile Money Number 2 (Optional) */}
+            <FormField
+              control={form.control}
+              name="mobileMoneyNumber2"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Wallet className="size-4 text-orange-500/70" />
+                    Numéro Mobile Money secondaire (optionnel)
+                  </FormLabel>
+                  <FormControl>
+                    <div className="flex">
+                      <div className="flex items-center rounded-l-md border border-r-0 border-input bg-muted/50 px-3 text-sm text-muted-foreground">
+                        +237
+                      </div>
+                      <Input
+                        placeholder="6XXXXXXXX"
+                        className="input-premium !rounded-l-none"
                         maxLength={9}
                         {...field}
                         onChange={(e) => {

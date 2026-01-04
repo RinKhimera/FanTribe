@@ -98,7 +98,9 @@ const BeCreatorPage = () => {
       fullName: currentUser?.name || "",
       dateOfBirth: "",
       address: "",
-      phoneNumber: "",
+      whatsappNumber: "",
+      mobileMoneyNumber: "",
+      mobileMoneyNumber2: "",
       applicationReason: undefined,
       customReason: "",
     },
@@ -129,7 +131,9 @@ const BeCreatorPage = () => {
           "fullName",
           "dateOfBirth",
           "address",
-          "phoneNumber",
+          "whatsappNumber",
+          "mobileMoneyNumber",
+          "mobileMoneyNumber2",
         ])
       }
 
@@ -243,7 +247,11 @@ const BeCreatorPage = () => {
             fullName: data.fullName,
             dateOfBirth: data.dateOfBirth,
             address: data.address,
-            phoneNumber: `+237${data.phoneNumber}`,
+            whatsappNumber: `+237${data.whatsappNumber}`,
+            mobileMoneyNumber: `+237${data.mobileMoneyNumber}`,
+            mobileMoneyNumber2: data.mobileMoneyNumber2
+              ? `+237${data.mobileMoneyNumber2}`
+              : undefined,
           },
           applicationReason: finalReason || "",
           identityDocuments: documents,

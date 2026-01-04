@@ -11,6 +11,33 @@ import {
   UploadedDocuments,
 } from "./types"
 
+// Mock environment-dependent modules
+vi.mock("@/lib/config", () => ({
+  logger: {
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
+}))
+
+vi.mock("@/lib/services/bunny", () => ({
+  uploadBunnyAsset: vi.fn().mockResolvedValue({
+    success: true,
+    url: "https://test.com/image.jpg",
+    mediaId: "test-media-id",
+    type: "image",
+  }),
+}))
+
+// Mock CameraCapture component
+vi.mock("@/components/shared/camera-capture", () => ({
+  CameraCapture: ({
+    children,
+  }: {
+    children: (props: { open: () => void }) => React.ReactNode
+  }) => <div data-testid="camera-capture">{children({ open: vi.fn() })}</div>,
+}))
+
 // Mock framer-motion
 vi.mock("motion/react", () => ({
   motion: {
@@ -65,7 +92,9 @@ const TestWrapper = ({
       fullName: "John Doe",
       dateOfBirth: "1990-01-01",
       address: "123 Main Street",
-      phoneNumber: "123456789",
+      whatsappNumber: "123456789",
+      mobileMoneyNumber: "123456789",
+      mobileMoneyNumber2: "",
       applicationReason: undefined,
       customReason: "",
       ...defaultValues,
@@ -104,12 +133,19 @@ describe("StepDocuments", () => {
       ).toBeInTheDocument()
     })
 
-    it("should show upload button when no document is uploaded", () => {
+    it("should show upload and camera buttons when no document is uploaded", () => {
       render(<TestWrapper onPrevious={vi.fn()} onSubmit={vi.fn()} />)
 
-      expect(screen.getByText("Cliquez pour uploader")).toBeInTheDocument()
+      // Two "Uploader" buttons (one for ID card, one for selfie)
+      const uploadButtons = screen.getAllByRole("button", { name: /uploader/i })
+      expect(uploadButtons).toHaveLength(2)
+
+      // Camera buttons
       expect(
-        screen.getByText("Cliquez pour prendre un selfie")
+        screen.getByRole("button", { name: /prendre une photo/i })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: /prendre un selfie/i })
       ).toBeInTheDocument()
     })
 
@@ -158,19 +194,19 @@ describe("StepDocuments", () => {
     it("should render all motivation options", () => {
       render(<TestWrapper onPrevious={vi.fn()} onSubmit={vi.fn()} />)
 
-      expect(screen.getByText("Monétiser mon contenu")).toBeInTheDocument()
       expect(screen.getByText("Partager ma passion")).toBeInTheDocument()
+      expect(screen.getByText("Développer mon influence")).toBeInTheDocument()
       expect(screen.getByText("Autre raison")).toBeInTheDocument()
     })
 
     it("should select a motivation option when clicked", async () => {
       render(<TestWrapper onPrevious={vi.fn()} onSubmit={vi.fn()} />)
 
-      const monetisationOption = screen.getByText("Monétiser mon contenu")
+      const passionOption = screen.getByText("Partager ma passion")
       // Use pointerDown to match the component behavior
-      fireEvent.pointerDown(monetisationOption.closest("div[class*='cursor-pointer']")!)
+      fireEvent.pointerDown(passionOption.closest("div[class*='cursor-pointer']")!)
 
-      const radioButton = screen.getByRole("radio", { name: /monétiser mon contenu/i })
+      const radioButton = screen.getByRole("radio", { name: /partager ma passion/i })
       expect(radioButton).toBeChecked()
     })
 
@@ -197,11 +233,11 @@ describe("StepDocuments", () => {
       expect(screen.getByText("Précisez votre motivation")).toBeInTheDocument()
 
       // Now select a different option
-      const monetisationOption = screen.getByText("Monétiser mon contenu")
-      fireEvent.pointerDown(monetisationOption.closest("div[class*='cursor-pointer']")!)
+      const passionOption = screen.getByText("Partager ma passion")
+      fireEvent.pointerDown(passionOption.closest("div[class*='cursor-pointer']")!)
 
       // Verify the new option is selected
-      const radioButton = screen.getByRole("radio", { name: /monétiser mon contenu/i })
+      const radioButton = screen.getByRole("radio", { name: /partager ma passion/i })
       expect(radioButton).toBeChecked()
 
       // Verify textarea is hidden

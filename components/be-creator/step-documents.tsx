@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   ArrowLeft,
   Camera,
@@ -11,7 +12,11 @@ import {
 } from "lucide-react"
 import { motion } from "motion/react"
 import { UseFormReturn } from "react-hook-form"
+import { toast } from "sonner"
 import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
+import { CameraCapture } from "@/components/shared/camera-capture"
+import { logger } from "@/lib/config"
+import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -63,6 +68,48 @@ export const StepDocuments = ({
   const selectedMotivation = form.watch("applicationReason")
   const documentsComplete =
     !!uploadedDocuments.identityCard && !!uploadedDocuments.selfie
+  const [isUploadingCamera, setIsUploadingCamera] = useState<
+    "identityCard" | "selfie" | null
+  >(null)
+
+  const handleCameraCapture = async (
+    type: "identityCard" | "selfie",
+    file: File
+  ) => {
+    setIsUploadingCamera(type)
+    try {
+      const fileExtension = "jpg"
+      const randomSuffix = crypto
+        .randomUUID()
+        .replace(/-/g, "")
+        .substring(0, 13)
+      const documentType = type === "identityCard" ? "identity-card" : "selfie"
+      const finalFileName = `creatorApplications/${userId}/${documentType}_${randomSuffix}.${fileExtension}`
+
+      const result = await uploadBunnyAsset({
+        file,
+        fileName: finalFileName,
+        userId,
+      })
+
+      if (!result.success) {
+        throw new Error(result.error || "Upload échoué")
+      }
+
+      onUploadSuccess(type, {
+        url: result.url,
+        mediaId: result.mediaId,
+        type: result.type,
+      })
+
+      toast.success("Photo uploadée avec succès")
+    } catch (error) {
+      logger.error("Erreur upload photo caméra", error, { type, userId })
+      toast.error("Erreur lors de l'upload de la photo")
+    } finally {
+      setIsUploadingCamera(null)
+    }
+  }
 
   return (
     <motion.div
@@ -126,24 +173,58 @@ export const StepDocuments = ({
                       <X className="size-4" />
                     </Button>
                   </motion.div>
+                ) : isUploadingCamera === "identityCard" ? (
+                  <div className="flex items-center justify-center gap-2 py-4">
+                    <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <span className="text-sm text-muted-foreground">
+                      Upload en cours...
+                    </span>
+                  </div>
                 ) : (
-                  <BunnyUploadWidget
-                    userId={userId}
-                    uploadType="image"
-                    fileName={`creatorApplications/${userId}/identity-card`}
-                    onSuccess={(result) =>
-                      onUploadSuccess("identityCard", result)
-                    }
-                  >
-                    {({ open }) => (
-                      <div className="cursor-pointer" onClick={() => open()}>
-                        <Upload className="text-muted-foreground mx-auto mb-2 size-8" />
-                        <span className="text-primary text-sm hover:underline">
-                          Cliquez pour uploader
-                        </span>
-                      </div>
-                    )}
-                  </BunnyUploadWidget>
+                  <div className="flex flex-col items-center gap-4">
+                    <IdCard className="text-muted-foreground size-8" />
+                    <div className="flex gap-3">
+                      <BunnyUploadWidget
+                        userId={userId}
+                        uploadType="image"
+                        fileName={`creatorApplications/${userId}/identity-card`}
+                        onSuccess={(result) =>
+                          onUploadSuccess("identityCard", result)
+                        }
+                      >
+                        {({ open }) => (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => open()}
+                          >
+                            <Upload className="mr-2 size-4" />
+                            Uploader
+                          </Button>
+                        )}
+                      </BunnyUploadWidget>
+
+                      <CameraCapture
+                        facingMode="environment"
+                        onCapture={(file) =>
+                          handleCameraCapture("identityCard", file)
+                        }
+                      >
+                        {({ open }) => (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => open()}
+                          >
+                            <Camera className="mr-2 size-4" />
+                            Prendre une photo
+                          </Button>
+                        )}
+                      </CameraCapture>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -176,22 +257,54 @@ export const StepDocuments = ({
                       <X className="size-4" />
                     </Button>
                   </motion.div>
+                ) : isUploadingCamera === "selfie" ? (
+                  <div className="flex items-center justify-center gap-2 py-4">
+                    <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <span className="text-sm text-muted-foreground">
+                      Upload en cours...
+                    </span>
+                  </div>
                 ) : (
-                  <BunnyUploadWidget
-                    userId={userId}
-                    uploadType="image"
-                    fileName={`creatorApplications/${userId}/selfie`}
-                    onSuccess={(result) => onUploadSuccess("selfie", result)}
-                  >
-                    {({ open }) => (
-                      <div className="cursor-pointer" onClick={() => open()}>
-                        <Camera className="text-muted-foreground mx-auto mb-2 size-8" />
-                        <span className="text-primary text-sm hover:underline">
-                          Cliquez pour prendre un selfie
-                        </span>
-                      </div>
-                    )}
-                  </BunnyUploadWidget>
+                  <div className="flex flex-col items-center gap-4">
+                    <Camera className="text-muted-foreground size-8" />
+                    <div className="flex gap-3">
+                      <BunnyUploadWidget
+                        userId={userId}
+                        uploadType="image"
+                        fileName={`creatorApplications/${userId}/selfie`}
+                        onSuccess={(result) => onUploadSuccess("selfie", result)}
+                      >
+                        {({ open }) => (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => open()}
+                          >
+                            <Upload className="mr-2 size-4" />
+                            Uploader
+                          </Button>
+                        )}
+                      </BunnyUploadWidget>
+
+                      <CameraCapture
+                        facingMode="user"
+                        onCapture={(file) => handleCameraCapture("selfie", file)}
+                      >
+                        {({ open }) => (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => open()}
+                          >
+                            <Camera className="mr-2 size-4" />
+                            Prendre un selfie
+                          </Button>
+                        )}
+                      </CameraCapture>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

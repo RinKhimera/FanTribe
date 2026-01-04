@@ -109,7 +109,12 @@ export default defineSchema({
       fullName: v.string(),
       dateOfBirth: v.string(),
       address: v.string(),
-      phoneNumber: v.string(),
+      // Ancien champ (pour backward compatibility pendant migration)
+      phoneNumber: v.optional(v.string()),
+      // Nouveaux champs (optionnels pendant migration)
+      whatsappNumber: v.optional(v.string()),
+      mobileMoneyNumber: v.optional(v.string()),
+      mobileMoneyNumber2: v.optional(v.string()),
     }),
     applicationReason: v.string(),
     adminNotes: v.optional(v.string()),
