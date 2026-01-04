@@ -5,9 +5,9 @@ export type NotificationType =
   | "newPost"
   | "like"
   | "comment"
-  | "follow"
-  | "subscription"
-  | "message"
+  | "newSubscription"
+  | "renewSubscription"
+  | "subscription_expired"
 
 /**
  * Taille des batches pour l'insertion de notifications

@@ -9,7 +9,6 @@ import {
 } from "./_generated/server"
 
 // Helper pour supprimer un asset Bunny depuis Convex
-// (ne peut pas utiliser clientEnv car pas disponible côté Convex)
 async function deleteBunnyAssetFromConvex(
   mediaId: string,
   type: "image" | "video",
@@ -442,6 +441,22 @@ export const processPaymentAtomic = internalMutation({
       provider,
       providerTransactionId,
     })
+
+    // 4. CREER LA NOTIFICATION POUR LE CREATEUR
+    if (
+      action === "created" ||
+      action === "renewed" ||
+      action === "reactivated"
+    ) {
+      const notificationType =
+        action === "created" ? "newSubscription" : "renewSubscription"
+      await ctx.db.insert("notifications", {
+        type: notificationType,
+        recipientId: creatorId,
+        sender: subscriberId,
+        read: false,
+      })
+    }
 
     return {
       success: true,

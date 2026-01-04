@@ -1,14 +1,15 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { AnimatePresence, motion } from "motion/react"
 import {
+  CalendarX,
   Heart,
   ImagePlus,
   MessageSquareText,
   Trash2,
   UserRoundPlus,
 } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
@@ -16,10 +17,7 @@ import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
-import {
-  deleteSwipeVariants,
-  notificationVariants,
-} from "@/lib/animations"
+import { deleteSwipeVariants, notificationVariants } from "@/lib/animations"
 import { logger } from "@/lib/config"
 import { formatCustomTimeAgo } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
@@ -81,8 +79,14 @@ export const NotificationItem = ({
         )
       case "newPost":
         return (
-          <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
+          <div className="bg-primary/10 flex size-12 items-center justify-center rounded-xl">
             <ImagePlus className={cn(iconClasses, "text-primary")} />
+          </div>
+        )
+      case "subscription_expired":
+        return (
+          <div className="flex size-12 items-center justify-center rounded-xl bg-amber-500/10">
+            <CalendarX className={cn(iconClasses, "text-amber-500")} />
           </div>
         )
       default:
@@ -102,6 +106,8 @@ export const NotificationItem = ({
         return "a renouvelé son abonnement"
       case "newPost":
         return "a partagé une nouvelle publication"
+      case "subscription_expired":
+        return "Votre abonnement a expiré"
       default:
         return ""
     }
@@ -115,9 +121,12 @@ export const NotificationItem = ({
         await markAsRead({ notificationId: notification._id })
 
         if (notification.post) {
-          router.push(
-            `/${notification.recipientId?.username}/post/${notification.post._id}`
-          )
+          const postOwnerUsername =
+            notification.type === "newPost"
+              ? notification.sender?.username
+              : notification.recipientId?.username
+
+          router.push(`/${postOwnerUsername}/post/${notification.post._id}`)
         } else {
           router.push(`/${notification.sender?.username}`)
         }
@@ -168,7 +177,7 @@ export const NotificationItem = ({
               "group relative isolate cursor-pointer overflow-hidden rounded-xl transition-all duration-200",
               notification.read
                 ? "glass-notification"
-                : "glass-notification glass-notification-unread"
+                : "glass-notification glass-notification-unread",
             )}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -181,18 +190,18 @@ export const NotificationItem = ({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute right-3 top-3 size-2.5 rounded-full bg-primary"
+                className="bg-primary absolute top-3 right-3 size-2.5 rounded-full"
               />
             )}
 
             <div
-              className={cn("flex gap-4 p-4", {
+              className={cn("flex gap-3 p-4 sm:gap-4", {
                 "opacity-60": notification.read,
               })}
             >
-              {/* Icon */}
+              {/* Icon - hidden on very small screens, visible on sm+ */}
               <motion.div
-                className="shrink-0"
+                className="hidden shrink-0 sm:block"
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
@@ -201,12 +210,13 @@ export const NotificationItem = ({
 
               {/* Content */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
+                  {/* Avatar + Text */}
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
                     <Link
                       href={`/${notification.sender?.username}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="relative z-10"
+                      className="relative z-10 shrink-0"
                     >
                       <motion.div
                         whileHover={{ scale: 1.1 }}
@@ -225,14 +235,16 @@ export const NotificationItem = ({
                       </motion.div>
                     </Link>
 
-                    <div className="min-w-0">
-                      <p className="text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-snug">
                         <Link
                           href={`/${notification.sender?.username}`}
                           onClick={(e) => e.stopPropagation()}
                           className="relative z-10 font-semibold hover:underline"
                         >
-                          {notification.sender?.name}
+                          <span className="line-clamp-1 inline">
+                            {notification.sender?.name}
+                          </span>
                         </Link>{" "}
                         <span className="text-muted-foreground">
                           {getMessage()}
@@ -244,22 +256,28 @@ export const NotificationItem = ({
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1">
-                    <AnimatePresence>
-                      {isHovered && (
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          onClick={handleDelete}
-                          className="hover:bg-destructive/10 hover:text-destructive relative z-10 rounded-lg p-2 transition-colors"
-                          disabled={isPending}
-                        >
-                          <Trash2 className="size-4" />
-                        </motion.button>
+                  {/* Actions - always visible on mobile */}
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    {/* Delete button - always visible on mobile, hover on desktop */}
+                    <motion.button
+                      initial={false}
+                      animate={{
+                        opacity: isHovered ? 1 : undefined,
+                        scale: isHovered ? 1 : undefined,
+                      }}
+                      onClick={handleDelete}
+                      className={cn(
+                        "relative z-10 rounded-lg p-2 transition-colors",
+                        "hover:bg-destructive/10 hover:text-destructive",
+                        "text-muted-foreground/60 sm:text-muted-foreground",
+                        // Visible sur mobile, caché sur desktop sauf hover
+                        "opacity-100 sm:opacity-0 sm:group-hover:opacity-100",
                       )}
-                    </AnimatePresence>
+                      disabled={isPending}
+                    >
+                      <Trash2 className="size-4" />
+                    </motion.button>
+
                     <div
                       className="relative z-10"
                       onClick={(e) => e.stopPropagation()}
@@ -273,14 +291,15 @@ export const NotificationItem = ({
                 </div>
 
                 {/* Preview content */}
-                {(notification.comment?.content || notification.post?.content) && (
+                {(notification.comment?.content ||
+                  notification.post?.content) && (
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-muted/50 mt-3 rounded-lg p-3"
+                    className="bg-muted/50 mt-3 rounded-lg p-2.5 sm:p-3"
                   >
-                    <p className="text-muted-foreground line-clamp-2 text-sm">
+                    <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
                       {notification.type === "comment"
                         ? notification.comment?.content
                         : notification.post?.content}

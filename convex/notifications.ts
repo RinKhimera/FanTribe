@@ -27,14 +27,10 @@ export const getUserNotifications = query({
     // Batch fetch: collect all unique IDs first
     const senderIds = [...new Set(notifications.map((n) => n.sender))]
     const postIds = [
-      ...new Set(
-        notifications.filter((n) => n.post).map((n) => n.post!)
-      ),
+      ...new Set(notifications.filter((n) => n.post).map((n) => n.post!)),
     ]
     const commentIds = [
-      ...new Set(
-        notifications.filter((n) => n.comment).map((n) => n.comment!)
-      ),
+      ...new Set(notifications.filter((n) => n.comment).map((n) => n.comment!)),
     ]
 
     // Fetch all related data in parallel batches
@@ -45,25 +41,19 @@ export const getUserNotifications = query({
     ])
 
     // Create lookup maps for O(1) access
-    const senderMap = new Map(
-      senders.filter(Boolean).map((s) => [s!._id, s])
-    )
-    const postMap = new Map(
-      posts.filter(Boolean).map((p) => [p!._id, p])
-    )
-    const commentMap = new Map(
-      comments.filter(Boolean).map((c) => [c!._id, c])
-    )
+    const senderMap = new Map(senders.filter(Boolean).map((s) => [s!._id, s]))
+    const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id, p]))
+    const commentMap = new Map(comments.filter(Boolean).map((c) => [c!._id, c]))
 
     // Enrich notifications using maps (no N+1!)
     return notifications.map((notification) => ({
       ...notification,
       sender: senderMap.get(notification.sender) ?? null,
-      post: notification.post ? postMap.get(notification.post) ?? null : null,
+      post: notification.post ? (postMap.get(notification.post) ?? null) : null,
       comment: notification.comment
-        ? commentMap.get(notification.comment) ?? null
+        ? (commentMap.get(notification.comment) ?? null)
         : null,
-      recipientId: user, // Already have the user object
+      recipientId: user,
     }))
   },
 })
@@ -132,7 +122,7 @@ export const getUnreadCounts = query({
         .filter((q) =>
           q.and(
             q.eq(q.field("read"), false),
-            q.neq(q.field("sender"), user._id), // Ne pas compter nos propres messages
+            q.neq(q.field("sender"), user._id),
           ),
         )
         .collect()
@@ -175,7 +165,7 @@ export const markAllAsRead = mutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
@@ -184,12 +174,12 @@ export const markAllAsRead = mutation({
     const unreadNotifications = await ctx.db
       .query("notifications")
       .withIndex("by_recipient_read", (q) =>
-        q.eq("recipientId", user._id).eq("read", false)
+        q.eq("recipientId", user._id).eq("read", false),
       )
       .collect()
 
     await Promise.all(
-      unreadNotifications.map((n) => ctx.db.patch(n._id, { read: true }))
+      unreadNotifications.map((n) => ctx.db.patch(n._id, { read: true })),
     )
 
     return { count: unreadNotifications.length }
@@ -206,7 +196,7 @@ export const deleteNotification = mutation({
     const user = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
@@ -231,11 +221,10 @@ export const getNotificationsByType = query({
       v.union(
         v.literal("like"),
         v.literal("comment"),
-        v.literal("newSubscription"),
-        v.literal("renewSubscription"),
+        v.literal("subscriptions"),
         v.literal("newPost"),
-        v.literal("all")
-      )
+        v.literal("all"),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -245,21 +234,40 @@ export const getNotificationsByType = query({
     const user = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
     if (!user) throw new ConvexError("User not found")
 
+    // Types de notifications liees aux abonnements
+    const subscriptionTypes = [
+      "newSubscription",
+      "renewSubscription",
+      "subscription_expired",
+    ]
+
     let notifications
     if (args.type && args.type !== "all") {
-      notifications = await ctx.db
-        .query("notifications")
-        .withIndex("by_recipient_type", (q) =>
-          q.eq("recipientId", user._id).eq("type", args.type!)
+      if (args.type === "subscriptions") {
+        // Pour le filtre groupe "subscriptions", on recupere toutes les notifs et on filtre en memoire
+        const allNotifications = await ctx.db
+          .query("notifications")
+          .withIndex("by_recipient", (q) => q.eq("recipientId", user._id))
+          .order("desc")
+          .collect()
+        notifications = allNotifications.filter((n) =>
+          subscriptionTypes.includes(n.type),
         )
-        .order("desc")
-        .collect()
+      } else {
+        notifications = await ctx.db
+          .query("notifications")
+          .withIndex("by_recipient_type", (q) =>
+            q.eq("recipientId", user._id).eq("type", args.type!),
+          )
+          .order("desc")
+          .collect()
+      }
     } else {
       notifications = await ctx.db
         .query("notifications")
@@ -287,21 +295,18 @@ export const getNotificationsByType = query({
     ])
 
     // Create lookup maps for O(1) access
-    const senderMap = new Map(
-      senders.filter(Boolean).map((s) => [s!._id, s])
-    )
+    const senderMap = new Map(senders.filter(Boolean).map((s) => [s!._id, s]))
     const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id, p]))
-    const commentMap = new Map(
-      comments.filter(Boolean).map((c) => [c!._id, c])
-    )
+    const commentMap = new Map(comments.filter(Boolean).map((c) => [c!._id, c]))
 
     // Enrich notifications using maps (no N+1!)
     return notifications.map((notification) => ({
       ...notification,
       sender: senderMap.get(notification.sender) ?? null,
-      post: notification.post ? postMap.get(notification.post) ?? null : null,
+      recipientId: user,
+      post: notification.post ? (postMap.get(notification.post) ?? null) : null,
       comment: notification.comment
-        ? commentMap.get(notification.comment) ?? null
+        ? (commentMap.get(notification.comment) ?? null)
         : null,
     }))
   },
