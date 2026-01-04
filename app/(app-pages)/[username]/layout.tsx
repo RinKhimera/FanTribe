@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react"
 import { Loader2 } from "lucide-react"
-import { notFound } from "next/navigation"
+import { notFound, usePathname } from "next/navigation"
 import { use } from "react"
 import {
   UserProfileHeader,
@@ -21,7 +21,11 @@ export default function UserProfileLayout({
   params: Promise<{ username: string }>
 }) {
   const { username } = use(params)
+  const pathname = usePathname()
   const { currentUser } = useCurrentUser()
+
+  // Detect if we're on a post detail page
+  const isPostPage = pathname.includes("/post/")
 
   const userProfile = useQuery(api.users.getUserProfile, {
     username: username,
@@ -49,6 +53,15 @@ export default function UserProfileLayout({
   }
 
   if (userProfile === null) notFound()
+
+  // For post pages, render minimal container without profile components
+  if (isPostPage) {
+    return (
+      <PageContainer hideHeader>
+        {children}
+      </PageContainer>
+    )
+  }
 
   return (
     <PageContainer hideHeader>

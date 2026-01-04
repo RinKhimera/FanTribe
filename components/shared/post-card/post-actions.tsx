@@ -29,6 +29,8 @@ type PostActionsProps = {
   disabled?: boolean
   isCommentsOpen: boolean
   onToggleComments: () => void
+  /** Hide comment button (for post detail page) */
+  hideCommentButton?: boolean
 }
 
 export const PostActions = ({
@@ -37,6 +39,7 @@ export const PostActions = ({
   disabled = false,
   isCommentsOpen,
   onToggleComments,
+  hideCommentButton = false,
 }: PostActionsProps) => {
   const [isLikePending, startLikeTransition] = useTransition()
   const [isBookmarkPending, startBookmarkTransition] = useTransition()
@@ -209,46 +212,48 @@ export const PostActions = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Comment button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (!disabled) onToggleComments()
-                }}
-                disabled={disabled}
-                className={cn(
-                  "group h-10 gap-2 rounded-full px-4 transition-all duration-300",
-                  disabled && "cursor-not-allowed opacity-50",
-                  isCommentsOpen
-                    ? "text-primary hover:bg-primary/10"
-                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
-                )}
-              >
-                <MessageCircle
+          {/* Comment button - hidden in detail view */}
+          {!hideCommentButton && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (!disabled) onToggleComments()
+                  }}
+                  disabled={disabled}
                   className={cn(
-                    "size-5 transition-transform duration-300",
-                    "group-hover:scale-110",
-                    isCommentsOpen && "fill-primary/30",
+                    "group h-10 gap-2 rounded-full px-4 transition-all duration-300",
+                    disabled && "cursor-not-allowed opacity-50",
+                    isCommentsOpen
+                      ? "text-primary hover:bg-primary/10"
+                      : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
                   )}
-                />
-                {commentCount > 0 && (
-                  <span className={cn(
-                    "text-sm font-semibold tabular-nums",
-                    isCommentsOpen && "text-primary",
-                  )}>
-                    {formatCount(commentCount)}
-                  </span>
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={4}>
-              {isCommentsOpen ? "Masquer les commentaires" : "Commenter"}
-            </TooltipContent>
-          </Tooltip>
+                >
+                  <MessageCircle
+                    className={cn(
+                      "size-5 transition-transform duration-300",
+                      "group-hover:scale-110",
+                      isCommentsOpen && "fill-primary/30",
+                    )}
+                  />
+                  {commentCount > 0 && (
+                    <span className={cn(
+                      "text-sm font-semibold tabular-nums",
+                      isCommentsOpen && "text-primary",
+                    )}>
+                      {formatCount(commentCount)}
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={4}>
+                {isCommentsOpen ? "Masquer les commentaires" : "Commenter"}
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Share button */}
           <Tooltip>

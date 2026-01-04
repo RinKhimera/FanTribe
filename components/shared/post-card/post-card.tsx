@@ -29,12 +29,15 @@ type PostCardProps = {
   currentUser: Doc<"users">
   /** Variant de style du card */
   variant?: "default" | "compact" | "featured"
+  /** When true, hides inline comments (for post detail page) */
+  isDetailView?: boolean
 }
 
 export const PostCard = ({
   post,
   currentUser,
   variant = "default",
+  isDetailView = false,
 }: PostCardProps) => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false)
@@ -139,16 +142,19 @@ export const PostCard = ({
               disabled={!canViewMedia}
               isCommentsOpen={isCommentsOpen}
               onToggleComments={toggleComments}
+              hideCommentButton={isDetailView}
             />
 
-            {/* Comments section */}
-            <CommentSection
-              postId={post._id}
-              currentUser={currentUser}
-              isOpen={isCommentsOpen}
-              disabled={!canViewMedia}
-              onClose={toggleComments}
-            />
+            {/* Comments section - hidden in detail view (handled externally) */}
+            {!isDetailView && (
+              <CommentSection
+                postId={post._id}
+                currentUser={currentUser}
+                isOpen={isCommentsOpen}
+                disabled={!canViewMedia}
+                onClose={toggleComments}
+              />
+            )}
           </div>
         </motion.article>
       </TooltipProvider>
