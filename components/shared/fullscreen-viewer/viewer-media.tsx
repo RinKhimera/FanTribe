@@ -35,7 +35,7 @@ export const ViewerMedia = ({
       animate="animate"
       exit="exit"
       className="relative flex h-full w-full items-center justify-center px-4 sm:px-8 md:px-16"
-      onClick={(e) => e.stopPropagation()}
+      onClick={onClose}
       onTouchStart={(e) => {
         const t = e.touches[0]
         startY.current = t.clientY
@@ -69,14 +69,15 @@ export const ViewerMedia = ({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
               className="flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
             >
               {isVideo(m) ? (
                 <BunnyVideoPlayer
                   src={m}
                   aspectRatio="16 / 9"
                   className={cn(
-                    "w-full max-w-5xl rounded-2xl",
-                    "ring-1 ring-white/10 shadow-[0_25px_80px_-12px_rgba(0,0,0,0.6)]"
+                    "w-full max-w-5xl",
+                    "shadow-[0_25px_80px_-12px_rgba(0,0,0,0.6)]"
                   )}
                   threshold={0.1}
                 />
@@ -88,8 +89,7 @@ export const ViewerMedia = ({
                   height={1200}
                   priority
                   className={cn(
-                    "max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)] w-auto max-w-full rounded-xl object-contain select-none",
-                    "ring-1 ring-white/10",
+                    "max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)] w-auto max-w-full object-contain select-none",
                     "shadow-[0_25px_80px_-12px_rgba(0,0,0,0.6)]"
                   )}
                   draggable={false}

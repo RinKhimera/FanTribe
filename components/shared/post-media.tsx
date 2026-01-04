@@ -124,7 +124,6 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         <div
           key={media}
           onClick={(e) => e.stopPropagation()}
-          className={cn(!isInCarousel && "mt-3")}
         >
           <BunnyVideoPlayer
             src={media}
@@ -146,7 +145,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         }}
         className={cn(
           "group relative flex w-full cursor-pointer overflow-hidden focus:outline-none",
-          !isInCarousel && "mt-3 rounded-xl",
+          !isInCarousel && "rounded-xl",
         )}
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -191,7 +190,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   if (medias.length > 1) {
     return (
       <div
-        className="relative mt-3 overflow-hidden rounded-xl"
+        className="relative overflow-hidden rounded-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <Carousel setApi={setCarouselApi}>

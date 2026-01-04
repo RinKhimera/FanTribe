@@ -98,10 +98,10 @@ export const PostCard = ({
           {/* Main content wrapper */}
           <div
             className={cn(
-              "flex flex-col gap-4",
-              variant === "default" && "py-5",
+              "flex flex-col gap-2.5",
+              variant === "default" && "py-4",
               variant === "compact" && "py-2",
-              variant === "featured" && "py-6",
+              variant === "featured" && "py-5",
             )}
           >
             {/* Header: Avatar, Author info, Date, Actions */}
