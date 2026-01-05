@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Open_Sans as FontSans } from "next/font/google"
 import "@/app/globals.css"
 import { Toaster } from "@/components/ui/sonner"
@@ -15,6 +15,15 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: "FanTribe",
   description: "Le réseau social des créateurs de contenus",
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 }
 
 export default function RootLayout({

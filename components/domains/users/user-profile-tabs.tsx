@@ -17,7 +17,7 @@ export const UserProfileTabs = ({ username }: UserProfileTabsProps) => {
   )
 
   return (
-    <SecondaryBar topOffset="53px" className="z-20">
+    <SecondaryBar topOffset="53px">
       <NavigationTabs items={navItems} variant="grid" />
     </SecondaryBar>
   )

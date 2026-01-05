@@ -46,8 +46,8 @@ export const SplitPanelLayout = ({
   return (
     <div
       className={cn(
-        // Prend toute la largeur disponible
-        "flex h-screen w-full flex-col",
+        "flex w-full flex-col",
+        "min-h-screen min-[501px]:h-screen",
         "border-muted border-r border-l",
         "max-[500px]:pb-(--mobile-nav-height)",
         className,
@@ -57,13 +57,13 @@ export const SplitPanelLayout = ({
       <PageHeader title={title} actions={headerActions} />
 
       {/* Panneaux */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={cn("flex flex-1", "min-[501px]:overflow-hidden")}>
         {/* Panneau de navigation (gauche) - caché sur mobile, les pages ont leurs propres Tabs */}
         <div
           className={cn(
             "w-(--content-split-nav-width)",
             "border-muted border-r",
-            "overflow-y-auto",
+            "min-[501px]:overflow-y-auto",
             "max-lg:hidden lg:block lg:w-(--content-split-nav-width)",
           )}
         >
@@ -74,7 +74,7 @@ export const SplitPanelLayout = ({
         <div
           className={cn(
             "w-(--content-split-main-width)",
-            "overflow-y-auto",
+            "min-[501px]:overflow-y-auto",
             "max-lg:w-full lg:w-(--content-split-main-width)",
           )}
         >

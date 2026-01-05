@@ -39,9 +39,9 @@ export const SecondaryBar = ({
   return (
     <div
       className={cn(
-        "sticky z-10",
+        "sticky isolate z-30",
         "border-muted border-b",
-        "bg-background/80 backdrop-blur-sm",
+        "bg-background/95 backdrop-blur-md",
         className,
       )}
       style={{ top: topOffset }}

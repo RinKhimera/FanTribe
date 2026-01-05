@@ -110,8 +110,7 @@ export const PageContainer = ({
         "flex min-h-screen w-full flex-col",
         // Bordures latérales (sauf variant full)
         variant !== "full" && "border-muted border-r border-l",
-        // Mobile padding pour la navigation bottom
-        "max-[500px]:pb-[var(--mobile-nav-height)]",
+        // Note: padding mobile géré par AppLayout (single source of truth)
         className,
       )}
     >
