@@ -130,6 +130,7 @@ export const TermsContent = () => {
             <LegalList
               items={[
                 "Contenu impliquant des mineurs de quelque manière que ce soit",
+                "Nudité complète ou exposition des parties génitales",
                 "Contenu promouvant la violence, la haine ou la discrimination",
                 "Contenu frauduleux ou trompeur",
                 "Spam ou contenu commercial non autorisé",

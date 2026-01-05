@@ -54,7 +54,7 @@ export const submitApplication = mutation({
 
     // Check for active application (pending or approved)
     const existingActiveApplication = allApplications.find(
-      (a) => a.status !== "rejected"
+      (a) => a.status !== "rejected",
     )
 
     if (existingActiveApplication) {
@@ -68,7 +68,7 @@ export const submitApplication = mutation({
 
     // Trouver la candidature rejetée la plus récente (pour le lien et la raison)
     const previousRejected = rejectedApps.sort(
-      (a, b) => (b.submittedAt ?? 0) - (a.submittedAt ?? 0)
+      (a, b) => (b.submittedAt ?? 0) - (a.submittedAt ?? 0),
     )[0]
 
     // Créer la nouvelle candidature
@@ -84,6 +84,16 @@ export const submitApplication = mutation({
       previousRejectionReason: previousRejected?.adminNotes,
       previousApplicationId: previousRejected?._id,
     })
+
+    // Supprimer les drafts de documents de l'utilisateur SANS supprimer les fichiers Bunny
+    const draftDocuments = await ctx.db
+      .query("validationDocumentsDraft")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .collect()
+
+    for (const doc of draftDocuments) {
+      await ctx.db.delete(doc._id)
+    }
 
     return { success: true }
   },
@@ -144,9 +154,7 @@ export const getAllApplications = query({
     // Batch fetch all users
     const userIds = [...new Set(applications.map((a) => a.userId))]
     const users = await Promise.all(userIds.map((id) => ctx.db.get(id)))
-    const userMap = new Map(
-      users.filter(Boolean).map((u) => [u!._id, u])
-    )
+    const userMap = new Map(users.filter(Boolean).map((u) => [u!._id, u]))
 
     return applications.map((application) => ({
       ...application,
@@ -182,9 +190,7 @@ export const getPendingApplications = query({
     // Batch fetch all users
     const userIds = [...new Set(applications.map((a) => a.userId))]
     const users = await Promise.all(userIds.map((id) => ctx.db.get(id)))
-    const userMap = new Map(
-      users.filter(Boolean).map((u) => [u!._id, u])
-    )
+    const userMap = new Map(users.filter(Boolean).map((u) => [u!._id, u]))
 
     return applications.map((app) => ({
       ...app,
@@ -248,7 +254,7 @@ export const reviewApplication = mutation({
     // Empêcher de rejeter une candidature déjà approuvée
     if (args.decision === "rejected" && application.status === "approved") {
       throw new Error(
-        "Impossible de rejeter une candidature déjà approuvée. Utilisez la révocation du statut créateur."
+        "Impossible de rejeter une candidature déjà approuvée. Utilisez la révocation du statut créateur.",
       )
     }
 
@@ -337,7 +343,7 @@ export const requestReapplication = mutation({
 
     // Trouver la candidature rejetée la plus récente pour le soft lock
     const latestRejection = allRejections.sort(
-      (a, b) => (b.reviewedAt ?? 0) - (a.reviewedAt ?? 0)
+      (a, b) => (b.reviewedAt ?? 0) - (a.reviewedAt ?? 0),
     )[0]
     const reapplicationAllowedAt = latestRejection.reapplicationAllowedAt
     const now = Date.now()
@@ -451,7 +457,8 @@ export const revokeCreatorStatus = mutation({
     if (approvedApplication) {
       await ctx.db.patch(approvedApplication._id, {
         status: "rejected",
-        adminNotes: args.reason || "Statut créateur révoqué par un administrateur",
+        adminNotes:
+          args.reason || "Statut créateur révoqué par un administrateur",
         reviewedAt: Date.now(),
       })
     }

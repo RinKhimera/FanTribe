@@ -160,11 +160,16 @@ export const AdultContentSettings = ({
             )}
           >
             <ShieldAlert className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Ce paramètre affecte uniquement le contenu public marqué comme
-              adulte dans votre fil d&apos;actualité. Le contenu des créateurs
-              auxquels vous êtes abonné reste toujours visible.
-            </p>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Ce paramètre affecte uniquement le contenu public marqué comme
+                adulte dans votre fil d&apos;actualité. Le contenu des créateurs
+                auxquels vous êtes abonné reste toujours visible.
+              </p>
+              <p className="text-xs text-orange-500/90 font-medium">
+                En activant cette option, vous confirmez avoir 18 ans ou plus.
+              </p>
+            </div>
           </div>
         </div>
       </DialogContent>
