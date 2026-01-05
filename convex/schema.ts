@@ -27,20 +27,6 @@ export default defineSchema({
         }),
       ),
     ),
-    badges: v.optional(
-      v.array(
-        v.object({
-          type: v.union(
-            v.literal("verified"),
-            v.literal("top_creator"),
-            v.literal("founding_member"),
-            v.literal("popular"),
-            v.literal("rising_star"),
-          ),
-          awardedAt: v.number(),
-        }),
-      ),
-    ),
     pinnedPostIds: v.optional(v.array(v.id("posts"))),
     isOnline: v.boolean(),
     activeSessions: v.optional(v.number()),
@@ -53,8 +39,6 @@ export default defineSchema({
       v.literal("SUPERUSER"),
     ),
     allowAdultContent: v.optional(v.boolean()),
-
-    // Informations personnelles (initialement dans creatorApplications)
     personalInfo: v.optional(
       v.object({
         fullName: v.optional(v.string()),
@@ -65,16 +49,7 @@ export default defineSchema({
         mobileMoneyNumber2: v.optional(v.string()),
       }),
     ),
-
-    // Ban system (restructuré)
-    isBanned: v.optional(v.boolean()), // Gardé à la racine pour l'index
-    // Anciens champs (à supprimer après migration)
-    banType: v.optional(v.union(v.literal("temporary"), v.literal("permanent"))),
-    banReason: v.optional(v.string()),
-    bannedAt: v.optional(v.number()),
-    bannedBy: v.optional(v.id("users")),
-    banExpiresAt: v.optional(v.number()),
-    // Nouveau: détails regroupés
+    isBanned: v.optional(v.boolean()),
     banDetails: v.optional(
       v.object({
         type: v.union(v.literal("temporary"), v.literal("permanent")),
@@ -84,7 +59,6 @@ export default defineSchema({
         expiresAt: v.optional(v.number()),
       }),
     ),
-    // Historique (inchangé)
     banHistory: v.optional(
       v.array(
         v.object({
@@ -95,6 +69,20 @@ export default defineSchema({
           expiresAt: v.optional(v.number()),
           liftedAt: v.optional(v.number()),
           liftedBy: v.optional(v.id("users")),
+        }),
+      ),
+    ),
+    badges: v.optional(
+      v.array(
+        v.object({
+          type: v.union(
+            v.literal("verified"),
+            v.literal("top_creator"),
+            v.literal("founding_member"),
+            v.literal("popular"),
+            v.literal("rising_star"),
+          ),
+          awardedAt: v.number(),
         }),
       ),
     ),

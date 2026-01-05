@@ -29,7 +29,6 @@ import type * as lib_signedUrls from "../lib/signedUrls.js";
 import type * as lib_subscriptions from "../lib/subscriptions.js";
 import type * as likes from "../likes.js";
 import type * as messages from "../messages.js";
-import type * as migrations from "../migrations.js";
 import type * as notificationQueue from "../notificationQueue.js";
 import type * as notifications from "../notifications.js";
 import type * as posts from "../posts.js";
@@ -69,7 +68,6 @@ declare const fullApi: ApiFromModules<{
   "lib/subscriptions": typeof lib_subscriptions;
   likes: typeof likes;
   messages: typeof messages;
-  migrations: typeof migrations;
   notificationQueue: typeof notificationQueue;
   notifications: typeof notifications;
   posts: typeof posts;
