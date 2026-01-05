@@ -1,5 +1,55 @@
 import { ConvexError, v } from "convex/values"
-import { internalMutation, query } from "./_generated/server"
+import { Id } from "./_generated/dataModel"
+import { internalMutation, MutationCtx, query } from "./_generated/server"
+
+/**
+ * Helper pour les mises à jour incrémentales des stats utilisateur.
+ * À appeler depuis les mutations de likes, posts, subscriptions.
+ *
+ * @param ctx - Le contexte de mutation
+ * @param userId - L'ID de l'utilisateur dont les stats doivent être mises à jour
+ * @param updates - Les deltas à appliquer (+1 ou -1)
+ *
+ * Règles métier:
+ * - postsCount: +1 à la création, -1 à la suppression
+ * - totalLikes: +1 au like, -1 au unlike
+ * - subscribersCount: +1 au nouvel abonnement actif (PAS de décrement à l'expiration)
+ */
+export async function incrementUserStat(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  updates: {
+    postsCount?: number
+    subscribersCount?: number
+    totalLikes?: number
+  },
+): Promise<void> {
+  const existing = await ctx.db
+    .query("userStats")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .unique()
+
+  if (existing) {
+    await ctx.db.patch(existing._id, {
+      postsCount: Math.max(0, existing.postsCount + (updates.postsCount ?? 0)),
+      subscribersCount: Math.max(
+        0,
+        existing.subscribersCount + (updates.subscribersCount ?? 0),
+      ),
+      totalLikes: Math.max(0, existing.totalLikes + (updates.totalLikes ?? 0)),
+      lastUpdated: Date.now(),
+    })
+  } else {
+    // Créer une nouvelle entrée si elle n'existe pas
+    await ctx.db.insert("userStats", {
+      userId,
+      postsCount: Math.max(0, updates.postsCount ?? 0),
+      subscribersCount: Math.max(0, updates.subscribersCount ?? 0),
+      totalLikes: Math.max(0, updates.totalLikes ?? 0),
+      lastUpdated: Date.now(),
+    })
+  }
+}
 
 // Get user stats (public)
 export const getUserStats = query({

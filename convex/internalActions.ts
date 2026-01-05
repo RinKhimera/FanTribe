@@ -7,6 +7,7 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server"
+import { incrementUserStat } from "./userStats"
 
 // Helper pour supprimer un asset Bunny depuis Convex
 async function deleteBunnyAssetFromConvex(
@@ -210,7 +211,7 @@ export const applySubscriptionPayment = internalMutation({
         startDate: startMs,
         endDate: startMs + durationMs,
         amountPaid: amountPaid,
-        currency,
+        currency: currency.toUpperCase() as "XAF" | "USD",
         renewalCount: 0,
         lastUpdateTime: now,
         type: "content_access",
@@ -221,6 +222,9 @@ export const applySubscriptionPayment = internalMutation({
       previousEndDate = sub.endDate
       newEndDate = sub.endDate
       renewalCount = 0
+
+      // Mise à jour incrémentale des stats du créateur (nouvel abonné)
+      await incrementUserStat(ctx, creatorId, { subscribersCount: 1 })
     } else {
       previousEndDate = sub.endDate
       if (sub.status === "active" && sub.endDate > now) {
@@ -233,6 +237,7 @@ export const applySubscriptionPayment = internalMutation({
         })
         action = "renewed"
         renewalCount = sub.renewalCount + 1
+        // Pas de mise à jour des stats: l'abonné était déjà actif
       } else {
         // Réactivation
         newEndDate = startMs + durationMs
@@ -245,6 +250,9 @@ export const applySubscriptionPayment = internalMutation({
         })
         action = "reactivated"
         renewalCount = sub.renewalCount + 1
+
+        // Mise à jour incrémentale des stats du créateur (réactivation)
+        await incrementUserStat(ctx, creatorId, { subscribersCount: 1 })
       }
     }
 
@@ -285,7 +293,7 @@ export const recordTransactionIfAbsent = internalMutation({
       subscriberId: args.subscriberId,
       creatorId: args.creatorId,
       amount: args.amount,
-      currency: args.currency,
+      currency: args.currency.toUpperCase() as "XAF" | "USD",
       status: "succeeded", // si on arrive ici c'est que le provider a confirmé
       provider: args.provider,
       providerTransactionId: args.providerTransactionId,
@@ -392,7 +400,7 @@ export const processPaymentAtomic = internalMutation({
         startDate: startMs,
         endDate: startMs + durationMs,
         amountPaid: amount,
-        currency: currency.toUpperCase(),
+        currency: currency.toUpperCase() as "XAF" | "USD",
         renewalCount: 0,
         lastUpdateTime: now,
         type: "content_access",
@@ -403,6 +411,9 @@ export const processPaymentAtomic = internalMutation({
       previousEndDate = sub.endDate
       newEndDate = sub.endDate
       renewalCount = 0
+
+      // Mise à jour incrémentale des stats du créateur (nouvel abonné)
+      await incrementUserStat(ctx, creatorId, { subscribersCount: 1 })
     } else {
       previousEndDate = sub.endDate
       if (sub.status === "active" && sub.endDate > now) {
@@ -415,6 +426,7 @@ export const processPaymentAtomic = internalMutation({
         })
         action = "renewed"
         renewalCount = sub.renewalCount + 1
+        // Pas de mise à jour des stats: l'abonné était déjà actif
       } else {
         // Reactivation: reset les dates
         newEndDate = startMs + durationMs
@@ -427,6 +439,9 @@ export const processPaymentAtomic = internalMutation({
         })
         action = "reactivated"
         renewalCount = sub.renewalCount + 1
+
+        // Mise à jour incrémentale des stats du créateur (réactivation)
+        await incrementUserStat(ctx, creatorId, { subscribersCount: 1 })
       }
     }
 
@@ -436,7 +451,7 @@ export const processPaymentAtomic = internalMutation({
       subscriberId,
       creatorId,
       amount,
-      currency: currency.toUpperCase(),
+      currency: currency.toUpperCase() as "XAF" | "USD",
       status: "succeeded",
       provider,
       providerTransactionId,

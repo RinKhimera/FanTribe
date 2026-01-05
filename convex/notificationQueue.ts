@@ -46,7 +46,14 @@ const chunkArray = <T>(array: T[], size: number): T[][] => {
  */
 export const enqueueNotifications = internalMutation({
   args: {
-    type: v.string(),
+    type: v.union(
+      v.literal("newPost"),
+      v.literal("like"),
+      v.literal("comment"),
+      v.literal("newSubscription"),
+      v.literal("renewSubscription"),
+      v.literal("subscription_expired"),
+    ),
     sender: v.id("users"),
     recipientIds: v.array(v.id("users")),
     post: v.optional(v.id("posts")),

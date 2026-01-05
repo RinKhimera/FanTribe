@@ -260,10 +260,18 @@ export const getNotificationsByType = query({
           subscriptionTypes.includes(n.type),
         )
       } else {
+        // Type is now narrowed to "like" | "comment" | "newPost" (actual notification types)
+        const filterType = args.type as
+          | "newPost"
+          | "like"
+          | "comment"
+          | "newSubscription"
+          | "renewSubscription"
+          | "subscription_expired"
         notifications = await ctx.db
           .query("notifications")
           .withIndex("by_recipient_type", (q) =>
-            q.eq("recipientId", user._id).eq("type", args.type!),
+            q.eq("recipientId", user._id).eq("type", filterType),
           )
           .order("desc")
           .collect()

@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { internalMutation, mutation, query } from "./_generated/server"
+import { mutation, query } from "./_generated/server"
 
 // Constantes pour les soft locks
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -14,7 +14,6 @@ export const submitApplication = mutation({
       whatsappNumber: v.string(),
       mobileMoneyNumber: v.string(),
       mobileMoneyNumber2: v.optional(v.string()),
-      phoneNumber: v.optional(v.string()), // Backward compat
     }),
     applicationReason: v.string(),
     identityDocuments: v.array(
@@ -372,43 +371,6 @@ export const requestReapplication = mutation({
       canReapply: true,
       mustContactSupport: false,
       waitUntil: null,
-    }
-  },
-})
-
-// Migration interne: convertir les anciennes candidatures avec phoneNumber vers les nouveaux champs
-// Exécuter via: npx convex run creatorApplications:migratePhoneNumbersInternal
-export const migratePhoneNumbersInternal = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    // Récupérer toutes les candidatures
-    const applications = await ctx.db.query("creatorApplications").collect()
-
-    let migratedCount = 0
-
-    for (const app of applications) {
-      // Vérifier si la candidature a l'ancien format (phoneNumber existe)
-      const personalInfo = app.personalInfo as Record<string, unknown>
-      if (personalInfo.phoneNumber && !personalInfo.whatsappNumber) {
-        // Migrer: copier phoneNumber vers whatsappNumber et mobileMoneyNumber
-        await ctx.db.patch(app._id, {
-          personalInfo: {
-            fullName: personalInfo.fullName as string,
-            dateOfBirth: personalInfo.dateOfBirth as string,
-            address: personalInfo.address as string,
-            whatsappNumber: personalInfo.phoneNumber as string,
-            mobileMoneyNumber: personalInfo.phoneNumber as string,
-            mobileMoneyNumber2: undefined,
-          },
-        })
-        migratedCount++
-      }
-    }
-
-    return {
-      success: true,
-      migratedCount,
-      totalApplications: applications.length,
     }
   },
 })

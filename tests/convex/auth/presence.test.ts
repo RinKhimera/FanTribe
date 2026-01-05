@@ -34,7 +34,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) => q.eq("externalId", "user_123"))
+          .withIndex("by_externalId", (q) => q.eq("externalId", "user_123"))
           .unique()
       })
 
@@ -69,7 +69,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) => q.eq("externalId", "user_123"))
+          .withIndex("by_externalId", (q) => q.eq("externalId", "user_123"))
           .unique()
       })
 
@@ -115,7 +115,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) => q.eq("externalId", "user_123"))
+          .withIndex("by_externalId", (q) => q.eq("externalId", "user_123"))
           .unique()
       })
 
@@ -149,7 +149,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) => q.eq("externalId", "user_123"))
+          .withIndex("by_externalId", (q) => q.eq("externalId", "user_123"))
           .unique()
       })
 
@@ -182,7 +182,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) => q.eq("externalId", "user_123"))
+          .withIndex("by_externalId", (q) => q.eq("externalId", "user_123"))
           .unique()
       })
 
@@ -344,7 +344,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) => q.eq("externalId", "stale_user"))
+          .withIndex("by_externalId", (q) => q.eq("externalId", "stale_user"))
           .unique()
       })
 
@@ -378,7 +378,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) => q.eq("externalId", "active_user"))
+          .withIndex("by_externalId", (q) => q.eq("externalId", "active_user"))
           .unique()
       })
 
@@ -410,7 +410,7 @@ describe("user presence", () => {
       const user = await t.run(async (ctx) => {
         return await ctx.db
           .query("users")
-          .withIndex("byExternalId", (q) =>
+          .withIndex("by_externalId", (q) =>
             q.eq("externalId", "nolastseen_user"),
           )
           .unique()

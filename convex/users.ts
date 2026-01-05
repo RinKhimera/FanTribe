@@ -10,7 +10,7 @@ import {
 async function userByExternalId(ctx: QueryCtx, externalId: string) {
   return await ctx.db
     .query("users")
-    .withIndex("byExternalId", (q) => q.eq("externalId", externalId))
+    .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
     .unique()
 }
 

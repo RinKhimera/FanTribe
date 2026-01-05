@@ -66,14 +66,23 @@ export const banUser = mutation({
       expiresAt: banExpiresAt,
     }
 
-    // Update user with ban info
+    // Update user with ban info (écriture dans les deux formats pour compatibilité)
     await ctx.db.patch(args.userId, {
       isBanned: true,
+      // Anciens champs (legacy, à supprimer après migration)
       banType: args.banType,
       banReason: args.reason,
       bannedAt: now,
       bannedBy: currentUser._id,
       banExpiresAt,
+      // Nouveau format groupé
+      banDetails: {
+        type: args.banType,
+        reason: args.reason,
+        bannedAt: now,
+        bannedBy: currentUser._id,
+        expiresAt: banExpiresAt,
+      },
       banHistory: [...(userToBan.banHistory || []), banHistoryEntry],
     })
 
@@ -138,14 +147,17 @@ export const unbanUser = mutation({
       return entry
     })
 
-    // Clear ban fields
+    // Clear ban fields (anciens + nouveau format)
     await ctx.db.patch(args.userId, {
       isBanned: false,
+      // Anciens champs (legacy)
       banType: undefined,
       banReason: undefined,
       bannedAt: undefined,
       bannedBy: undefined,
       banExpiresAt: undefined,
+      // Nouveau format
+      banDetails: undefined,
       banHistory: updatedBanHistory,
     })
 

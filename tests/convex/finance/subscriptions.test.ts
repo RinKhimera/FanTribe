@@ -163,7 +163,7 @@ describe("subscriptions", () => {
         startDate: Date.now(),
         endDate: Date.now() + 100000,
         amountPaid: 1000,
-        currency: "EUR",
+        currency: "XAF",
         renewalCount: 0,
         lastUpdateTime: Date.now(),
       })

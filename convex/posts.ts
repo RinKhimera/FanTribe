@@ -17,6 +17,7 @@ import {
   hasActiveSubscription,
 } from "./lib"
 import { sendPostNotifications } from "./notificationQueue"
+import { incrementUserStat } from "./userStats"
 
 // ============================================================================
 // MUTATIONS
@@ -39,6 +40,9 @@ export const createPost = mutation({
       visibility: args.visibility,
       isAdult: args.isAdult ?? false,
     })
+
+    // Mise à jour incrémentale des stats du créateur
+    await incrementUserStat(ctx, user._id, { postsCount: 1 })
 
     // Récupération des abonnés (actifs + expirés pour les notifier)
     const followerIds = await getCreatorSubscribers(ctx, user._id, [
@@ -130,6 +134,13 @@ export const deletePost = mutation({
     ])
 
     await ctx.db.delete(args.postId)
+
+    // Mise à jour incrémentale des stats du créateur
+    // Décrémenter postsCount de 1 et totalLikes du nombre de likes supprimés
+    await incrementUserStat(ctx, post.author, {
+      postsCount: -1,
+      totalLikes: -likes.length,
+    })
 
     return {
       success: true,

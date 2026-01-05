@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
+import { incrementUserStat } from "./userStats"
 
 export const likePost = mutation({
   args: { postId: v.id("posts") },
@@ -22,6 +23,9 @@ export const likePost = mutation({
       userId: user._id,
       postId: args.postId,
     })
+
+    // Mise à jour incrémentale des stats du créateur
+    await incrementUserStat(ctx, post.author, { totalLikes: 1 })
 
     // Notification (si pas soi-même)
     if (post.author !== user._id) {
@@ -51,6 +55,9 @@ export const unlikePost = mutation({
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
+    const post = await ctx.db.get(args.postId)
+    if (!post) throw new ConvexError("Post not found")
+
     const existing = await ctx.db
       .query("likes")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -60,6 +67,9 @@ export const unlikePost = mutation({
     if (!existing) return { removed: false, reason: "Not liked" }
 
     await ctx.db.delete(existing._id)
+
+    // Mise à jour incrémentale des stats du créateur
+    await incrementUserStat(ctx, post.author, { totalLikes: -1 })
 
     // Supprimer notification associée si existe
     const notif = await ctx.db

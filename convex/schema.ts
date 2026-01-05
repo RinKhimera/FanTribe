@@ -53,13 +53,38 @@ export default defineSchema({
       v.literal("SUPERUSER"),
     ),
     allowAdultContent: v.optional(v.boolean()),
-    // Ban system
-    isBanned: v.optional(v.boolean()),
+
+    // Informations personnelles (initialement dans creatorApplications)
+    personalInfo: v.optional(
+      v.object({
+        fullName: v.optional(v.string()),
+        dateOfBirth: v.optional(v.string()),
+        address: v.optional(v.string()),
+        whatsappNumber: v.optional(v.string()),
+        mobileMoneyNumber: v.optional(v.string()),
+        mobileMoneyNumber2: v.optional(v.string()),
+      }),
+    ),
+
+    // Ban system (restructuré)
+    isBanned: v.optional(v.boolean()), // Gardé à la racine pour l'index
+    // Anciens champs (à supprimer après migration)
     banType: v.optional(v.union(v.literal("temporary"), v.literal("permanent"))),
     banReason: v.optional(v.string()),
     bannedAt: v.optional(v.number()),
     bannedBy: v.optional(v.id("users")),
     banExpiresAt: v.optional(v.number()),
+    // Nouveau: détails regroupés
+    banDetails: v.optional(
+      v.object({
+        type: v.union(v.literal("temporary"), v.literal("permanent")),
+        reason: v.string(),
+        bannedAt: v.number(),
+        bannedBy: v.id("users"),
+        expiresAt: v.optional(v.number()),
+      }),
+    ),
+    // Historique (inchangé)
     banHistory: v.optional(
       v.array(
         v.object({
@@ -70,13 +95,13 @@ export default defineSchema({
           expiresAt: v.optional(v.number()),
           liftedAt: v.optional(v.number()),
           liftedBy: v.optional(v.id("users")),
-        })
-      )
+        }),
+      ),
     ),
   })
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_username", ["username"])
-    .index("byExternalId", ["externalId"])
+    .index("by_externalId", ["externalId"])
     .index("by_accountType", ["accountType"])
     .index("by_isOnline", ["isOnline"])
     .index("by_isBanned", ["isBanned"])
@@ -109,9 +134,6 @@ export default defineSchema({
       fullName: v.string(),
       dateOfBirth: v.string(),
       address: v.string(),
-      // Ancien champ (pour backward compatibility pendant migration)
-      phoneNumber: v.optional(v.string()),
-      // Nouveaux champs (optionnels pendant migration)
       whatsappNumber: v.optional(v.string()),
       mobileMoneyNumber: v.optional(v.string()),
       mobileMoneyNumber2: v.optional(v.string()),
@@ -152,7 +174,8 @@ export default defineSchema({
     postId: v.id("posts"),
   })
     .index("by_post", ["postId"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_user_post", ["userId", "postId"]),
 
   comments: defineTable({
     author: v.id("users"),
@@ -188,7 +211,7 @@ export default defineSchema({
     startDate: v.number(),
     endDate: v.number(),
     amountPaid: v.number(),
-    currency: v.string(),
+    currency: v.union(v.literal("XAF"), v.literal("USD")),
     renewalCount: v.number(),
     lastUpdateTime: v.number(),
     type: v.union(v.literal("content_access"), v.literal("messaging_access")),
@@ -213,7 +236,7 @@ export default defineSchema({
     subscriberId: v.id("users"),
     creatorId: v.id("users"),
     amount: v.number(),
-    currency: v.string(),
+    currency: v.union(v.literal("XAF"), v.literal("USD")),
     status: v.union(
       v.literal("pending"),
       v.literal("succeeded"),
@@ -229,7 +252,14 @@ export default defineSchema({
     .index("by_providerTransactionId", ["providerTransactionId"]),
 
   notifications: defineTable({
-    type: v.string(),
+    type: v.union(
+      v.literal("newPost"),
+      v.literal("like"),
+      v.literal("comment"),
+      v.literal("newSubscription"),
+      v.literal("renewSubscription"),
+      v.literal("subscription_expired"),
+    ),
     recipientId: v.id("users"),
     sender: v.id("users"),
     read: v.boolean(),
@@ -325,7 +355,14 @@ export default defineSchema({
     .index("by_mediaId", ["mediaId"]),
 
   pendingNotifications: defineTable({
-    type: v.string(),
+    type: v.union(
+      v.literal("newPost"),
+      v.literal("like"),
+      v.literal("comment"),
+      v.literal("newSubscription"),
+      v.literal("renewSubscription"),
+      v.literal("subscription_expired"),
+    ),
     sender: v.id("users"),
     recipientIds: v.array(v.id("users")),
     post: v.optional(v.id("posts")),
