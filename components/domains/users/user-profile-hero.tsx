@@ -183,10 +183,7 @@ export const UserProfileHero = ({
           transition={{ delay: 0.2 }}
           className="mb-4"
         >
-          <UserSocialLinks
-            socialLinks={userProfile.socialLinks}
-            legacySocials={userProfile.socials}
-          />
+          <UserSocialLinks socialLinks={userProfile.socialLinks} />
         </motion.div>
 
         {/* Subscription section */}

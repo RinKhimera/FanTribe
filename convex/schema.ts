@@ -10,7 +10,6 @@ export default defineSchema({
     imageBanner: v.optional(v.string()),
     bio: v.optional(v.string()),
     location: v.optional(v.string()),
-    socials: v.optional(v.array(v.string())),
     socialLinks: v.optional(
       v.array(
         v.object({
@@ -19,6 +18,9 @@ export default defineSchema({
             v.literal("instagram"),
             v.literal("tiktok"),
             v.literal("youtube"),
+            v.literal("linkedin"),
+            v.literal("snapchat"),
+            v.literal("facebook"),
             v.literal("website"),
             v.literal("other"),
           ),

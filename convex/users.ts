@@ -322,7 +322,6 @@ export const updateUserProfile = mutation({
     username: v.string(),
     bio: v.string(),
     location: v.string(),
-    socials: v.array(v.string()),
     tokenIdentifier: v.string(),
   },
   handler: async (ctx, args) => {
@@ -347,7 +346,6 @@ export const updateUserProfile = mutation({
       username: args.username,
       bio: args.bio,
       location: args.location,
-      socials: args.socials,
     })
   },
 })
@@ -572,6 +570,9 @@ export const updateSocialLinks = mutation({
           v.literal("instagram"),
           v.literal("tiktok"),
           v.literal("youtube"),
+          v.literal("linkedin"),
+          v.literal("snapchat"),
+          v.literal("facebook"),
           v.literal("website"),
           v.literal("other")
         ),
@@ -583,6 +584,11 @@ export const updateSocialLinks = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
+
+    // Validate max 5 links
+    if (args.socialLinks.length > 5) {
+      throw new ConvexError("Maximum 5 liens sociaux autorisés")
+    }
 
     const user = await ctx.db
       .query("users")

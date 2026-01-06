@@ -1,5 +1,27 @@
 import { z } from "zod"
 
+export const socialPlatformSchema = z.enum([
+  "twitter",
+  "instagram",
+  "tiktok",
+  "youtube",
+  "linkedin",
+  "snapchat",
+  "facebook",
+  "website",
+  "other",
+])
+
+export type SocialPlatform = z.infer<typeof socialPlatformSchema>
+
+export const socialLinkSchema = z.object({
+  url: z.string(),
+  platform: socialPlatformSchema.optional(),
+  username: z.string().optional(),
+})
+
+export type SocialLinkFormData = z.infer<typeof socialLinkSchema>
+
 export const profileFormSchema = z.object({
   displayName: z
     .string({ required_error: "Cette entrée est requise." })
@@ -48,11 +70,16 @@ export const profileFormSchema = z.object({
     .max(40, {
       message: "La location ne doit pas dépasser 40 caractères.",
     }),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: "Veuillez saisir une URL valide." }),
-      }),
-    )
-    .optional(),
+  socialLinks: z
+    .array(socialLinkSchema)
+    .max(5, { message: "Vous ne pouvez pas ajouter plus de 5 liens." })
+    .optional()
+    .refine(
+      (links) => {
+        if (!links) return true
+        const urls = links.map((l) => l.url).filter((url) => url.trim() !== "")
+        return new Set(urls).size === urls.length
+      },
+      { message: "Les URLs doivent être uniques." },
+    ),
 })

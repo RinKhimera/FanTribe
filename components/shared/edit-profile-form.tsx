@@ -2,20 +2,26 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery } from "convex/react"
-import { motion } from "motion/react"
 import { CheckCircle2, Loader2, Sparkles } from "lucide-react"
+import { motion } from "motion/react"
 import { usePathname, useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { AboutSection, IdentitySection, LinksSection } from "./profile-form"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { logger } from "@/lib/config/logger"
+import {
+  detectPlatform,
+  extractUsername,
+  isValidUrl,
+  normalizeUrl,
+} from "@/lib/social-links"
 import { profileFormSchema } from "@/schemas/profile"
+import { AboutSection, IdentitySection, LinksSection } from "./profile-form"
 
 export const EditProfileForm = ({
   currentUser,
@@ -27,6 +33,7 @@ export const EditProfileForm = ({
   const [isPending, startTransition] = useTransition()
 
   const updateProfile = useMutation(api.users.updateUserProfile)
+  const updateSocialLinks = useMutation(api.users.updateSocialLinks)
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
@@ -35,17 +42,17 @@ export const EditProfileForm = ({
       displayName: currentUser?.name,
       bio: currentUser?.bio,
       location: currentUser?.location,
-      urls: (currentUser?.socials || []).map((url) => ({ value: url })),
+      socialLinks: currentUser?.socialLinks || [],
     },
   })
 
   const fieldArray = useFieldArray({
-    name: "urls",
+    name: "socialLinks",
     control: form.control,
   })
 
   const { watch } = form
-  // eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form's watch is intentionally used here
+  // eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form's watch is intentional
   const watchUsername = watch("username")
 
   const checkUsername = useQuery(api.users.getAvailableUsername, {
@@ -57,14 +64,33 @@ export const EditProfileForm = ({
     startTransition(async () => {
       try {
         if (checkUsername === true) {
+          // Update profile info
           await updateProfile({
             name: data.displayName,
             username: data.username,
             bio: data.bio,
             location: data.location,
-            socials: (data.urls || []).map((url) => url.value),
             tokenIdentifier: currentUser?.tokenIdentifier || "",
           })
+
+          const socialLinks = fieldArray.fields
+            .map((_, index) => {
+              const url = (
+                form.getValues(`socialLinks.${index}.url`) || ""
+              ).trim()
+              if (!url) return null
+              const normalizedUrl = normalizeUrl(url)
+              const platform = isValidUrl(normalizedUrl)
+                ? detectPlatform(normalizedUrl)
+                : "other"
+              const username = isValidUrl(normalizedUrl)
+                ? extractUsername(normalizedUrl, platform)
+                : undefined
+              return { url: normalizedUrl, platform, username }
+            })
+            .filter((link): link is NonNullable<typeof link> => link !== null)
+
+          await updateSocialLinks({ socialLinks })
 
           toast.success("Profil mis à jour avec succès")
 
