@@ -135,6 +135,55 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     }
 
     // Image rendering with modern design
+    // In carousel: use blur background + object-contain (container has fixed 4:5 ratio)
+    // Single media: use natural aspect ratio (no blur needed)
+    if (isInCarousel) {
+      return (
+        <button
+          type="button"
+          key={media}
+          onClick={(e) => {
+            e.stopPropagation()
+            openImage(media)
+          }}
+          className="group absolute inset-0 cursor-pointer overflow-hidden focus:outline-none"
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {/* Blurred background - fills entire container */}
+          <Image
+            src={media}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
+            className="scale-110 object-cover blur-lg"
+            style={{ filter: "blur(20px)" }}
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+          {/* Main image - centered with object-contain to show complete image */}
+          <Image
+            src={media}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
+            className="z-10 cursor-pointer object-contain select-none"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+          {/* Hover overlay */}
+          <div
+            className={cn(
+              "absolute inset-0 z-20 bg-black/0 transition-colors duration-300",
+              "group-hover:bg-black/10",
+            )}
+          />
+        </button>
+      )
+    }
+
+    // Single media: natural aspect ratio, no blur background needed
     return (
       <button
         type="button"
@@ -143,34 +192,16 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           e.stopPropagation()
           openImage(media)
         }}
-        className={cn(
-          "group relative flex w-full cursor-pointer overflow-hidden focus:outline-none",
-          !isInCarousel && "rounded-xl",
-        )}
+        className="group relative flex w-full cursor-pointer overflow-hidden rounded-xl focus:outline-none"
         onContextMenu={(e) => e.preventDefault()}
       >
-        {/* Blurred background */}
-        <Image
-          src={media}
-          alt=""
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="scale-110 object-cover blur-lg"
-          style={{ filter: "blur(20px)" }}
-          draggable={false}
-          onDragStart={(e) => e.preventDefault()}
-          onContextMenu={(e) => e.preventDefault()}
-        />
-        {/* Main image */}
         <Image
           src={media}
           alt=""
           width={0}
           height={0}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className={cn(
-            "relative z-10 h-auto max-h-187.5 w-full cursor-pointer object-cover select-none",
-          )}
+          className="h-auto max-h-187.5 w-full cursor-pointer object-cover select-none"
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
           onContextMenu={(e) => e.preventDefault()}
@@ -195,41 +226,16 @@ export const PostMedia: React.FC<PostMediaProps> = ({
       >
         <Carousel setApi={setCarouselApi}>
           <CarouselContent>
-            {medias.map((m) => {
-              const isVideo = m.startsWith(
-                "https://iframe.mediadelivery.net/embed/",
-              )
-
-              // Pour les vidéos dans le carousel, calculer l'aspect ratio optimal
-              let carouselRatio = "16 / 9"
-              if (isVideo) {
-                const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
-                const videoGuid = guidMatch ? guidMatch[1] : null
-
-                if (videoGuid && videoMetadata[videoGuid]) {
-                  const videoData = videoMetadata[videoGuid]
-                  const videoInfo = getVideoDisplayInfo(videoData)
-                  carouselRatio = getOptimalDisplayRatio(videoInfo)
-                }
-              }
-
-              return (
-                <CarouselItem key={m}>
-                  {isVideo ? (
-                    <div
-                      className="relative w-full overflow-hidden"
-                      style={{ aspectRatio: carouselRatio }}
-                    >
-                      {renderMedia(m, carouselRatio, true)}
-                    </div>
-                  ) : (
-                    <div className="relative w-full overflow-hidden">
-                      {renderMedia(m, undefined, true)}
-                    </div>
-                  )}
-                </CarouselItem>
-              )
-            })}
+            {medias.map((m) => (
+              <CarouselItem key={m}>
+                <div
+                  className="relative w-full overflow-hidden bg-black"
+                  style={{ aspectRatio: "4 / 5" }}
+                >
+                  {renderMedia(m, "4 / 5", true)}
+                </div>
+              </CarouselItem>
+            ))}
           </CarouselContent>
 
           {/* Navigation buttons - subtle rounded style */}
