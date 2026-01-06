@@ -10,15 +10,20 @@ import {
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
+export interface BadgeCounts {
+  unreadMessages: number
+  unreadNotifications: number
+  // Admin counts (uniquement pour SUPERUSER)
+  pendingApplications?: number
+  pendingReports?: number
+}
+
 export interface NavLink {
   id: string
   title: string
   href: string | ((username?: string) => string)
   icon: LucideIcon
-  badge?: (counts: {
-    unreadMessages: number
-    unreadNotifications: number
-  }) => number | null
+  badge?: (counts: BadgeCounts) => number | null
   mobileQuickAccess?: boolean
 }
 
@@ -77,5 +82,10 @@ export const navigationLinks: NavLink[] = [
     title: "Administration",
     href: "/superuser",
     icon: Sparkles,
+    badge: (counts) => {
+      const total =
+        (counts.pendingApplications ?? 0) + (counts.pendingReports ?? 0)
+      return total > 0 ? total : null
+    },
   },
 ]

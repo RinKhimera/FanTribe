@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { NavLink, navigationLinks } from "@/constants"
+import { BadgeCounts, NavLink, navigationLinks } from "@/constants"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
@@ -44,9 +44,17 @@ export const LeftSidebar = ({ currentUser }: LeftSidebarProps) => {
     isAuthenticated ? undefined : "skip",
   )
 
-  const unreadCounts = {
+  // Compteurs admin (uniquement pour SUPERUSER)
+  const superuserCountsData = useQuery(
+    api.superuser.getSuperuserCounts,
+    currentUser?.accountType === "SUPERUSER" ? {} : "skip",
+  )
+
+  const unreadCounts: BadgeCounts = {
     unreadMessages: unreadCountsData?.unreadMessagesCount || 0,
     unreadNotifications: unreadCountsData?.unreadNotificationsCount || 0,
+    pendingApplications: superuserCountsData?.pendingApplications,
+    pendingReports: superuserCountsData?.pendingReports,
   }
 
   // Filtrer les liens selon le type de compte

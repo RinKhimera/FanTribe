@@ -318,56 +318,69 @@ export const getDashboardStats = query({
 
 /**
  * Rafraîchir les stats de la plateforme (appelé par cron ou manuellement)
+ * Optimisé : queries parallèles + conditional update
  */
 export const refreshPlatformStats = internalMutation({
   args: {},
   handler: async (ctx) => {
-    // Compter users par type
-    const allUsers = await ctx.db.query("users").collect()
-    const creators = allUsers.filter((u) => u.accountType === "CREATOR")
+    // Exécuter toutes les queries en parallèle (4 au lieu de 8)
+    const [allUsers, allPosts, allApplications, allReports] = await Promise.all(
+      [
+        ctx.db.query("users").collect(),
+        ctx.db.query("posts").collect(),
+        ctx.db.query("creatorApplications").collect(),
+        ctx.db.query("reports").collect(),
+      ],
+    )
 
-    // Compter posts
-    const allPosts = await ctx.db.query("posts").collect()
+    // Compter en mémoire (plus rapide que queries multiples)
+    const totalCreators = allUsers.filter(
+      (u) => u.accountType === "CREATOR",
+    ).length
+    const pendingApplications = allApplications.filter(
+      (a) => a.status === "pending",
+    ).length
+    const approvedApplications = allApplications.filter(
+      (a) => a.status === "approved",
+    ).length
+    const pendingReports = allReports.filter(
+      (r) => r.status === "pending",
+    ).length
 
-    // Compter applications
-    const pendingApps = await ctx.db
-      .query("creatorApplications")
-      .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect()
-    const approvedApps = await ctx.db
-      .query("creatorApplications")
-      .withIndex("by_status", (q) => q.eq("status", "approved"))
-      .collect()
-    const allApps = await ctx.db.query("creatorApplications").collect()
-
-    // Compter reports
-    const pendingReports = await ctx.db
-      .query("reports")
-      .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect()
-    const allReports = await ctx.db.query("reports").collect()
-
-    // Vérifier si platformStats existe déjà
-    const existingStats = await ctx.db.query("platformStats").first()
-
-    const stats = {
+    const newStats = {
       totalUsers: allUsers.length,
-      totalCreators: creators.length,
+      totalCreators,
       totalPosts: allPosts.length,
-      pendingApplications: pendingApps.length,
-      approvedApplications: approvedApps.length,
-      totalApplications: allApps.length,
-      pendingReports: pendingReports.length,
+      pendingApplications,
+      approvedApplications,
+      totalApplications: allApplications.length,
+      pendingReports,
       totalReports: allReports.length,
       lastUpdated: Date.now(),
     }
 
+    const existingStats = await ctx.db.query("platformStats").first()
+
     if (existingStats) {
-      await ctx.db.patch(existingStats._id, stats)
+      // Conditional update: écrire seulement si changement
+      const hasChanges =
+        existingStats.totalUsers !== newStats.totalUsers ||
+        existingStats.totalCreators !== newStats.totalCreators ||
+        existingStats.totalPosts !== newStats.totalPosts ||
+        existingStats.pendingApplications !== newStats.pendingApplications ||
+        existingStats.approvedApplications !== newStats.approvedApplications ||
+        existingStats.totalApplications !== newStats.totalApplications ||
+        existingStats.pendingReports !== newStats.pendingReports ||
+        existingStats.totalReports !== newStats.totalReports
+
+      if (hasChanges) {
+        await ctx.db.patch(existingStats._id, newStats)
+      }
+      // Si pas de changement, on n'écrit pas (économie de bandwidth)
     } else {
-      await ctx.db.insert("platformStats", stats)
+      await ctx.db.insert("platformStats", newStats)
     }
 
-    return stats
+    return newStats
   },
 })
