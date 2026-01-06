@@ -93,9 +93,9 @@ export const getCurrentUser = query({
     if (user.isBanned) {
       // Check if temporary ban has expired
       if (
-        user.banType === "temporary" &&
-        user.banExpiresAt &&
-        Date.now() > user.banExpiresAt
+        user.banDetails?.type === "temporary" &&
+        user.banDetails?.expiresAt &&
+        Date.now() > user.banDetails.expiresAt
       ) {
         // Ban has expired - return user with expiredBan flag
         // The actual unban will be handled by a scheduled function or on next write
@@ -110,10 +110,10 @@ export const getCurrentUser = query({
       return {
         ...user,
         activeBan: {
-          type: user.banType,
-          reason: user.banReason,
-          bannedAt: user.bannedAt,
-          expiresAt: user.banExpiresAt,
+          type: user.banDetails?.type,
+          reason: user.banDetails?.reason,
+          bannedAt: user.banDetails?.bannedAt,
+          expiresAt: user.banDetails?.expiresAt,
         },
       }
     }
@@ -274,24 +274,21 @@ export const markStaleUsersOffline = internalMutation({
   handler: async (ctx) => {
     const TWO_MINUTES_AGO = Date.now() - 2 * 60 * 1000
 
-    // Get all users who are online but haven't been seen in 2+ minutes
-    const onlineUsers = await ctx.db
+    // Utilise index composé pour filtrer directement au niveau DB
+    const staleUsers = await ctx.db
       .query("users")
-      .withIndex("by_isOnline", (q) => q.eq("isOnline", true))
+      .withIndex("by_isOnline_lastSeenAt", (q) =>
+        q.eq("isOnline", true).lt("lastSeenAt", TWO_MINUTES_AGO),
+      )
       .collect()
-
-    // Filter stale users and batch update
-    const staleUsers = onlineUsers.filter(
-      (user) => (user.lastSeenAt ?? 0) < TWO_MINUTES_AGO
-    )
 
     await Promise.all(
       staleUsers.map((user) =>
         ctx.db.patch(user._id, {
           isOnline: false,
           activeSessions: 0,
-        })
-      )
+        }),
+      ),
     )
 
     const markedOfflineCount = staleUsers.length
@@ -425,6 +422,7 @@ export const getAvailableUsername = query({
 export const searchUsers = query({
   args: {
     searchTerm: v.string(),
+    limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -442,6 +440,8 @@ export const searchUsers = query({
     const searchTermLower = args.searchTerm.toLowerCase().trim()
     if (!searchTermLower) return []
 
+    const limit = args.limit ?? 10
+
     // Utiliser le search index pour la recherche par nom (full-text search)
     const nameResults = await ctx.db
       .query("users")
@@ -452,9 +452,15 @@ export const searchUsers = query({
           q.neq(q.field("username"), undefined),
         ),
       )
-      .take(10)
+      .take(limit)
 
-    // Recherche par username (substring match - nécessite un filtre en mémoire)
+    // Si on a assez de résultats via search index, retourner directement
+    if (nameResults.length >= limit) {
+      return nameResults.slice(0, limit)
+    }
+
+    // Recherche par username (substring match - limiter pour éviter full scan)
+    // On prend max 200 users récents avec username pour la recherche substring
     const usersWithUsername = await ctx.db
       .query("users")
       .filter((q) =>
@@ -463,11 +469,12 @@ export const searchUsers = query({
           q.neq(q.field("username"), undefined),
         ),
       )
-      .collect()
+      .take(200)
 
     // Filtrer par username avec early termination
-    const usernameResults: typeof usersWithUsername = []
     const seenIds = new Set(nameResults.map((u) => u._id))
+    const usernameResults: typeof usersWithUsername = []
+    const remaining = limit - nameResults.length
 
     for (const user of usersWithUsername) {
       if (
@@ -475,14 +482,12 @@ export const searchUsers = query({
         user.username?.toLowerCase().includes(searchTermLower)
       ) {
         usernameResults.push(user)
-        seenIds.add(user._id)
-        if (usernameResults.length >= 10) break
+        if (usernameResults.length >= remaining) break
       }
     }
 
     // Combiner les résultats (name results prioritaires)
-    const combined = [...nameResults, ...usernameResults]
-    return combined.slice(0, 10)
+    return [...nameResults, ...usernameResults].slice(0, limit)
   },
 })
 

@@ -66,16 +66,9 @@ export const banUser = mutation({
       expiresAt: banExpiresAt,
     }
 
-    // Update user with ban info (écriture dans les deux formats pour compatibilité)
+    // Update user with ban info
     await ctx.db.patch(args.userId, {
       isBanned: true,
-      // Anciens champs (legacy, à supprimer après migration)
-      banType: args.banType,
-      banReason: args.reason,
-      bannedAt: now,
-      bannedBy: currentUser._id,
-      banExpiresAt,
-      // Nouveau format groupé
       banDetails: {
         type: args.banType,
         reason: args.reason,
@@ -147,16 +140,9 @@ export const unbanUser = mutation({
       return entry
     })
 
-    // Clear ban fields (anciens + nouveau format)
+    // Clear ban fields
     await ctx.db.patch(args.userId, {
       isBanned: false,
-      // Anciens champs (legacy)
-      banType: undefined,
-      banReason: undefined,
-      bannedAt: undefined,
-      bannedBy: undefined,
-      banExpiresAt: undefined,
-      // Nouveau format
       banDetails: undefined,
       banHistory: updatedBanHistory,
     })
@@ -190,8 +176,8 @@ export const getAllBannedUsers = query({
     // Enrich with admin info
     const enrichedBannedUsers = await Promise.all(
       bannedUsers.map(async (user) => {
-        const bannedByUser = user.bannedBy
-          ? await ctx.db.get(user.bannedBy)
+        const bannedByUser = user.banDetails?.bannedBy
+          ? await ctx.db.get(user.banDetails.bannedBy)
           : null
 
         return {
@@ -200,10 +186,10 @@ export const getAllBannedUsers = query({
           username: user.username,
           email: user.email,
           image: user.image,
-          banType: user.banType,
-          banReason: user.banReason,
-          bannedAt: user.bannedAt,
-          banExpiresAt: user.banExpiresAt,
+          banType: user.banDetails?.type,
+          banReason: user.banDetails?.reason,
+          bannedAt: user.banDetails?.bannedAt,
+          banExpiresAt: user.banDetails?.expiresAt,
           bannedByName: bannedByUser?.name || "Admin inconnu",
         }
       })
@@ -323,10 +309,10 @@ export const getUserBanInfo = query({
 
     return {
       isBanned: user.isBanned || false,
-      banType: user.banType,
-      banReason: user.banReason,
-      bannedAt: user.bannedAt,
-      banExpiresAt: user.banExpiresAt,
+      banType: user.banDetails?.type,
+      banReason: user.banDetails?.reason,
+      bannedAt: user.banDetails?.bannedAt,
+      banExpiresAt: user.banDetails?.expiresAt,
       banHistory: banHistoryWithAdmins,
     }
   },

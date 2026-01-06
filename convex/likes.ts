@@ -11,11 +11,12 @@ export const likePost = mutation({
     const post = await ctx.db.get(args.postId)
     if (!post) throw new ConvexError("Post not found")
 
-    // Vérifier doublon
+    // Vérifier doublon - utilise index composé pour O(1) lookup
     const existing = await ctx.db
       .query("likes")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("postId"), args.postId))
+      .withIndex("by_user_post", (q) =>
+        q.eq("userId", user._id).eq("postId", args.postId),
+      )
       .first()
     if (existing) return { already: true, likeId: existing._id }
 
@@ -58,10 +59,12 @@ export const unlikePost = mutation({
     const post = await ctx.db.get(args.postId)
     if (!post) throw new ConvexError("Post not found")
 
+    // Utilise index composé pour O(1) lookup
     const existing = await ctx.db
       .query("likes")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("postId"), args.postId))
+      .withIndex("by_user_post", (q) =>
+        q.eq("userId", user._id).eq("postId", args.postId),
+      )
       .first()
 
     if (!existing) return { removed: false, reason: "Not liked" }
@@ -99,10 +102,12 @@ export const isLiked = query({
   args: { postId: v.id("posts") },
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
+    // Utilise index composé pour O(1) lookup au lieu de O(n)
     const existing = await ctx.db
       .query("likes")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("postId"), args.postId))
+      .withIndex("by_user_post", (q) =>
+        q.eq("userId", user._id).eq("postId", args.postId),
+      )
       .first()
     return { liked: !!existing }
   },

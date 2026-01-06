@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values"
 import { api } from "./_generated/api"
+import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 
 // Créer un signalement
@@ -153,61 +154,124 @@ export const getAllReports = query({
       throw new Error("Unauthorized")
     }
 
+    // Limiter le nombre de rapports pour éviter les overloads
     const reports = await ctx.db
       .query("reports")
       .withIndex("by_created_at")
       .order("desc")
-      .collect()
+      .take(100)
 
-    const enrichedReports = await Promise.all(
-      reports.map(async (report) => {
-        const reporter = await ctx.db.get(report.reporterId)
+    if (reports.length === 0) return []
 
-        let reportedUser = null
-        if (report.reportedUserId) {
-          reportedUser = await ctx.db.get(report.reportedUserId)
-        }
+    // Batch fetch: collecter tous les IDs uniques
+    const reporterIds = new Set<string>()
+    const userIds = new Set<string>()
+    const postIds = new Set<string>()
+    const commentIds = new Set<string>()
+    const reviewerIds = new Set<string>()
 
-        let reportedPost = null
-        if (report.reportedPostId) {
-          reportedPost = await ctx.db.get(report.reportedPostId)
-          if (reportedPost) {
-            const postAuthor = await ctx.db.get(reportedPost.author)
-            reportedPost = { ...reportedPost, author: postAuthor }
-          }
-        }
+    reports.forEach((r) => {
+      reporterIds.add(r.reporterId as string)
+      if (r.reportedUserId) userIds.add(r.reportedUserId as string)
+      if (r.reportedPostId) postIds.add(r.reportedPostId as string)
+      if (r.reportedCommentId) commentIds.add(r.reportedCommentId as string)
+      if (r.reviewedBy) reviewerIds.add(r.reviewedBy as string)
+    })
 
-        let reportedComment = null
-        if (report.reportedCommentId) {
-          reportedComment = await ctx.db.get(report.reportedCommentId)
-          if (reportedComment) {
-            const commentAuthor = await ctx.db.get(reportedComment.author)
-            const commentPost = await ctx.db.get(reportedComment.post)
-            reportedComment = {
-              ...reportedComment,
-              author: commentAuthor,
-              post: commentPost,
-            }
-          }
-        }
+    // Batch fetch en parallèle
+    const [reporters, users, posts, comments, reviewers] = await Promise.all([
+      Promise.all(
+        [...reporterIds].map((id) => ctx.db.get(id as Id<"users">)),
+      ),
+      Promise.all([...userIds].map((id) => ctx.db.get(id as Id<"users">))),
+      Promise.all([...postIds].map((id) => ctx.db.get(id as Id<"posts">))),
+      Promise.all(
+        [...commentIds].map((id) => ctx.db.get(id as Id<"comments">)),
+      ),
+      Promise.all(
+        [...reviewerIds].map((id) => ctx.db.get(id as Id<"users">)),
+      ),
+    ])
 
-        let reviewedBy = null
-        if (report.reviewedBy) {
-          reviewedBy = await ctx.db.get(report.reviewedBy)
-        }
-
-        return {
-          ...report,
-          reporter,
-          reportedUser,
-          reportedPost,
-          reportedComment,
-          reviewedByUser: reviewedBy,
-        }
-      }),
+    // Créer les maps pour O(1) lookup
+    const reporterMap = new Map(
+      [...reporterIds].map((id, i) => [id, reporters[i]]),
+    )
+    const userMap = new Map([...userIds].map((id, i) => [id, users[i]]))
+    const postMap = new Map([...postIds].map((id, i) => [id, posts[i]]))
+    const commentMap = new Map([...commentIds].map((id, i) => [id, comments[i]]))
+    const reviewerMap = new Map(
+      [...reviewerIds].map((id, i) => [id, reviewers[i]]),
     )
 
-    return enrichedReports
+    // Collecter IDs d'auteurs de posts et comments pour un second batch
+    const authorIds = new Set<string>()
+    const commentPostIds = new Set<string>()
+    posts.filter(Boolean).forEach((p) => {
+      if (p) authorIds.add(p.author as string)
+    })
+    comments.filter(Boolean).forEach((c) => {
+      if (c) {
+        authorIds.add(c.author as string)
+        commentPostIds.add(c.post as string)
+      }
+    })
+
+    // Second batch fetch pour auteurs et posts des commentaires
+    const [authors, commentPosts] = await Promise.all([
+      Promise.all([...authorIds].map((id) => ctx.db.get(id as Id<"users">))),
+      Promise.all(
+        [...commentPostIds].map((id) => ctx.db.get(id as Id<"posts">)),
+      ),
+    ])
+    const authorMap = new Map([...authorIds].map((id, i) => [id, authors[i]]))
+    const commentPostMap = new Map(
+      [...commentPostIds].map((id, i) => [id, commentPosts[i]]),
+    )
+
+    // Enrichir les rapports (sans N+1!)
+    return reports.map((report) => {
+      const reporter = reporterMap.get(report.reporterId as string)
+      const reportedUser = report.reportedUserId
+        ? userMap.get(report.reportedUserId as string)
+        : null
+
+      let reportedPost = null
+      if (report.reportedPostId) {
+        const post = postMap.get(report.reportedPostId as string)
+        if (post) {
+          reportedPost = {
+            ...post,
+            author: authorMap.get(post.author as string) ?? null,
+          }
+        }
+      }
+
+      let reportedComment = null
+      if (report.reportedCommentId) {
+        const comment = commentMap.get(report.reportedCommentId as string)
+        if (comment) {
+          reportedComment = {
+            ...comment,
+            author: authorMap.get(comment.author as string) ?? null,
+            post: commentPostMap.get(comment.post as string) ?? null,
+          }
+        }
+      }
+
+      const reviewedBy = report.reviewedBy
+        ? reviewerMap.get(report.reviewedBy as string)
+        : null
+
+      return {
+        ...report,
+        reporter,
+        reportedUser,
+        reportedPost,
+        reportedComment,
+        reviewedByUser: reviewedBy,
+      }
+    })
   },
 })
 

@@ -483,6 +483,14 @@ describe("subscriptions", () => {
           visibility: "public",
           medias: [],
         })
+        // Create userStats for the creator (denormalized postsCount)
+        await ctx.db.insert("userStats", {
+          userId: creatorId,
+          postsCount: 1,
+          subscribersCount: 1,
+          totalLikes: 0,
+          lastUpdated: Date.now(),
+        })
       })
 
       const subscriber = t.withIdentity({ tokenIdentifier: "subscriber_id" })

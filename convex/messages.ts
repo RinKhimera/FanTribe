@@ -128,6 +128,18 @@ export const sendTextMessage = mutation({
       messageType: "text",
       read: false, // Par défaut, le message n'est pas lu
     })
+
+    // Incrémenter les compteurs de messages non lus pour les autres participants
+    const currentUnreadCounts = conversation.unreadCounts ?? {}
+    const newUnreadCounts = { ...currentUnreadCounts }
+    for (const participantId of conversation.participants) {
+      if (participantId !== user._id) {
+        const participantKey = participantId as string
+        newUnreadCounts[participantKey] =
+          (newUnreadCounts[participantKey] ?? 0) + 1
+      }
+    }
+    await ctx.db.patch(conversation._id, { unreadCounts: newUnreadCounts })
   },
 })
 
@@ -143,6 +155,11 @@ export const sendImage = mutation({
       throw new ConvexError("Not authenticated")
     }
 
+    const conversation = await ctx.db.get(args.conversation)
+    if (!conversation) {
+      throw new ConvexError("Conversation not found")
+    }
+
     await ctx.db.insert("messages", {
       content: args.imgUrl,
       sender: args.sender,
@@ -150,6 +167,18 @@ export const sendImage = mutation({
       conversation: args.conversation,
       read: false,
     })
+
+    // Incrémenter les compteurs de messages non lus pour les autres participants
+    const currentUnreadCounts = conversation.unreadCounts ?? {}
+    const newUnreadCounts = { ...currentUnreadCounts }
+    for (const participantId of conversation.participants) {
+      if (participantId !== args.sender) {
+        const participantKey = participantId as string
+        newUnreadCounts[participantKey] =
+          (newUnreadCounts[participantKey] ?? 0) + 1
+      }
+    }
+    await ctx.db.patch(conversation._id, { unreadCounts: newUnreadCounts })
   },
 })
 
@@ -165,6 +194,11 @@ export const sendVideo = mutation({
       throw new ConvexError("Not authenticated")
     }
 
+    const conversation = await ctx.db.get(args.conversation)
+    if (!conversation) {
+      throw new ConvexError("Conversation not found")
+    }
+
     const content = (await ctx.storage.getUrl(args.videoId)) as string
 
     await ctx.db.insert("messages", {
@@ -174,6 +208,18 @@ export const sendVideo = mutation({
       conversation: args.conversation,
       read: false,
     })
+
+    // Incrémenter les compteurs de messages non lus pour les autres participants
+    const currentUnreadCounts = conversation.unreadCounts ?? {}
+    const newUnreadCounts = { ...currentUnreadCounts }
+    for (const participantId of conversation.participants) {
+      if (participantId !== args.sender) {
+        const participantKey = participantId as string
+        newUnreadCounts[participantKey] =
+          (newUnreadCounts[participantKey] ?? 0) + 1
+      }
+    }
+    await ctx.db.patch(conversation._id, { unreadCounts: newUnreadCounts })
   },
 })
 
@@ -196,33 +242,17 @@ export const getUnreadMessagesCount = query({
       throw new ConvexError("User not found")
     }
 
-    // Récupérer toutes les conversations de l'utilisateur
+    // Utilise les compteurs dénormalisés (élimine N+1 queries sur messages)
     const conversations = await ctx.db.query("conversations").collect()
+    const myConversations = conversations.filter((conversation) =>
+      conversation.participants.includes(user._id),
+    )
 
-    // Filtrer les conversations auxquelles l'utilisateur participe
-    const myConversations = conversations.filter((conversation) => {
-      return conversation.participants.includes(user._id)
-    })
-
-    // Compter tous les messages non lus dans toutes les conversations de l'utilisateur
-    let totalUnreadCount = 0
-
-    for (const conversation of myConversations) {
-      const unreadMessages = await ctx.db
-        .query("messages")
-        .withIndex("by_conversation", (q) =>
-          q.eq("conversation", conversation._id),
-        )
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("read"), false),
-            q.neq(q.field("sender"), user._id), // Ne pas compter nos propres messages
-          ),
-        )
-        .collect()
-
-      totalUnreadCount += unreadMessages.length
-    }
+    // Somme des compteurs dénormalisés
+    const userIdKey = user._id as string
+    const totalUnreadCount = myConversations.reduce((sum, conversation) => {
+      return sum + (conversation.unreadCounts?.[userIdKey] ?? 0)
+    }, 0)
 
     return totalUnreadCount
   },
@@ -249,11 +279,7 @@ export const markConversationAsRead = mutation({
       throw new ConvexError("User not found")
     }
 
-    const conversation = await ctx.db
-      .query("conversations")
-      .filter((q) => q.eq(q.field("_id"), args.conversationId))
-      .first()
-
+    const conversation = await ctx.db.get(args.conversationId)
     if (!conversation) {
       throw new ConvexError("Conversation not found")
     }
@@ -276,10 +302,15 @@ export const markConversationAsRead = mutation({
       )
       .collect()
 
-    // Marquer tous les messages comme lus
-    for (const message of unreadMessages) {
-      await ctx.db.patch(message._id, { read: true })
-    }
+    // Marquer tous les messages comme lus en parallèle
+    await Promise.all(
+      unreadMessages.map((message) => ctx.db.patch(message._id, { read: true })),
+    )
+
+    // Reset le compteur dénormalisé pour cet utilisateur
+    const userIdKey = user._id as string
+    const newUnreadCounts = { ...conversation.unreadCounts, [userIdKey]: 0 }
+    await ctx.db.patch(conversation._id, { unreadCounts: newUnreadCounts })
 
     return unreadMessages.length
   },

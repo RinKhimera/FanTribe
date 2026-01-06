@@ -94,6 +94,7 @@ export default defineSchema({
     .index("by_externalId", ["externalId"])
     .index("by_accountType", ["accountType"])
     .index("by_isOnline", ["isOnline"])
+    .index("by_isOnline_lastSeenAt", ["isOnline", "lastSeenAt"])
     .index("by_isBanned", ["isBanned"])
     .searchIndex("search_users", {
       searchField: "name",
@@ -181,6 +182,8 @@ export default defineSchema({
     groupName: v.optional(v.string()),
     groupImage: v.optional(v.string()),
     admin: v.optional(v.id("users")),
+    // Compteurs de messages non lus par participant (dénormalisé pour perf)
+    unreadCounts: v.optional(v.record(v.string(), v.number())),
   }),
 
   messages: defineTable({
@@ -371,4 +374,17 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_status_createdAt", ["status", "createdAt"]),
+
+  // Stats dénormalisées pour le dashboard (évite full table scans)
+  platformStats: defineTable({
+    totalUsers: v.number(),
+    totalCreators: v.number(),
+    totalPosts: v.number(),
+    pendingApplications: v.number(),
+    approvedApplications: v.number(),
+    totalApplications: v.number(),
+    pendingReports: v.number(),
+    totalReports: v.number(),
+    lastUpdated: v.number(),
+  }),
 })

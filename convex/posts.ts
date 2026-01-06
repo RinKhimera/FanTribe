@@ -376,7 +376,10 @@ export const getUserPostsWithPinned = query({
 })
 
 export const getUserGallery = query({
-  args: { authorId: v.id("users") },
+  args: {
+    authorId: v.id("users"),
+    limit: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     // Déterminer les droits d'accès une fois
     const currentUser = await getAuthenticatedUser(ctx, { optional: true })
@@ -393,11 +396,13 @@ export const getUserGallery = query({
         ))
     }
 
+    // Limite par défaut de 100 posts pour éviter les full table scans
+    const limit = args.limit ?? 100
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", args.authorId))
       .order("desc")
-      .collect()
+      .take(limit)
 
     const postsWithMedia = posts.filter(
       (post) => post.medias && post.medias.length > 0,

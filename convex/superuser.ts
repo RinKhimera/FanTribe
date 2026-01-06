@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { query } from "./_generated/server"
+import { internalMutation, query } from "./_generated/server"
 
 /**
  * Get counts for superuser navigation badges
@@ -186,6 +186,7 @@ export const globalSearch = query({
 
 /**
  * Get dashboard statistics for superuser
+ * Utilise platformStats dénormalisées si disponibles (beaucoup plus rapide)
  */
 export const getDashboardStats = query({
   args: {},
@@ -204,13 +205,52 @@ export const getDashboardStats = query({
       return null
     }
 
-    // Get all users
+    // Essayer d'utiliser les stats dénormalisées
+    const cachedStats = await ctx.db.query("platformStats").first()
+
+    // Si stats existent et fraîches (< 5 min), les utiliser
+    const FIVE_MINUTES = 5 * 60 * 1000
+    const now = Date.now()
+
+    if (cachedStats && now - cachedStats.lastUpdated < FIVE_MINUTES) {
+      return {
+        users: {
+          total: cachedStats.totalUsers,
+          creators: cachedStats.totalCreators,
+          regular: cachedStats.totalUsers - cachedStats.totalCreators,
+        },
+        posts: {
+          total: cachedStats.totalPosts,
+          thisWeek: 0, // Non disponible dans le cache simple
+          trend: 0,
+        },
+        applications: {
+          total: cachedStats.totalApplications,
+          pending: cachedStats.pendingApplications,
+          approved: cachedStats.approvedApplications,
+          approvalRate:
+            cachedStats.totalApplications > 0
+              ? Math.round(
+                  (cachedStats.approvedApplications /
+                    cachedStats.totalApplications) *
+                    100,
+                )
+              : 0,
+        },
+        reports: {
+          total: cachedStats.totalReports,
+          pending: cachedStats.pendingReports,
+        },
+        fromCache: true,
+        cacheAge: Math.round((now - cachedStats.lastUpdated) / 1000),
+      }
+    }
+
+    // Fallback: calcul complet (si pas de cache ou cache périmé)
     const allUsers = await ctx.db.query("users").collect()
     const creators = allUsers.filter((u) => u.accountType === "CREATOR")
 
-    // Get all posts
     const allPosts = await ctx.db.query("posts").collect()
-    const now = Date.now()
     const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000
     const twoWeeksAgo = now - 14 * 24 * 60 * 60 * 1000
     const postsThisWeek = allPosts.filter((p) => p._creationTime > oneWeekAgo)
@@ -218,22 +258,22 @@ export const getDashboardStats = query({
       (p) => p._creationTime > twoWeeksAgo && p._creationTime <= oneWeekAgo,
     )
 
-    // Get applications
-    const allApplications = await ctx.db
+    const pendingApplications = await ctx.db
       .query("creatorApplications")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect()
-    const pendingApplications = allApplications.filter(
-      (a) => a.status === "pending",
-    )
-    const approvedApplications = allApplications.filter(
-      (a) => a.status === "approved",
-    )
+    const approvedApplications = await ctx.db
+      .query("creatorApplications")
+      .withIndex("by_status", (q) => q.eq("status", "approved"))
+      .collect()
+    const allApplications = await ctx.db.query("creatorApplications").collect()
 
-    // Get reports
+    const pendingReports = await ctx.db
+      .query("reports")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .collect()
     const allReports = await ctx.db.query("reports").collect()
-    const pendingReports = allReports.filter((r) => r.status === "pending")
 
-    // Calculate trends (compared to last week)
     const postsTrend =
       postsLastWeek.length > 0
         ? Math.round(
@@ -271,6 +311,63 @@ export const getDashboardStats = query({
         total: allReports.length,
         pending: pendingReports.length,
       },
+      fromCache: false,
     }
+  },
+})
+
+/**
+ * Rafraîchir les stats de la plateforme (appelé par cron ou manuellement)
+ */
+export const refreshPlatformStats = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Compter users par type
+    const allUsers = await ctx.db.query("users").collect()
+    const creators = allUsers.filter((u) => u.accountType === "CREATOR")
+
+    // Compter posts
+    const allPosts = await ctx.db.query("posts").collect()
+
+    // Compter applications
+    const pendingApps = await ctx.db
+      .query("creatorApplications")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .collect()
+    const approvedApps = await ctx.db
+      .query("creatorApplications")
+      .withIndex("by_status", (q) => q.eq("status", "approved"))
+      .collect()
+    const allApps = await ctx.db.query("creatorApplications").collect()
+
+    // Compter reports
+    const pendingReports = await ctx.db
+      .query("reports")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .collect()
+    const allReports = await ctx.db.query("reports").collect()
+
+    // Vérifier si platformStats existe déjà
+    const existingStats = await ctx.db.query("platformStats").first()
+
+    const stats = {
+      totalUsers: allUsers.length,
+      totalCreators: creators.length,
+      totalPosts: allPosts.length,
+      pendingApplications: pendingApps.length,
+      approvedApplications: approvedApps.length,
+      totalApplications: allApps.length,
+      pendingReports: pendingReports.length,
+      totalReports: allReports.length,
+      lastUpdated: Date.now(),
+    }
+
+    if (existingStats) {
+      await ctx.db.patch(existingStats._id, stats)
+    } else {
+      await ctx.db.insert("platformStats", stats)
+    }
+
+    return stats
   },
 })

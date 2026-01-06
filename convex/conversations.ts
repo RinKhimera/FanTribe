@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values"
 
+import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 
 export const createConversation = mutation({
@@ -62,69 +63,79 @@ export const getMyConversations = query({
     if (!user) throw new ConvexError("User not found")
 
     const conversations = await ctx.db.query("conversations").collect()
+    const myConversations = conversations.filter((conversation) =>
+      conversation.participants.includes(user._id),
+    )
 
-    const myConversations = conversations.filter((conversation) => {
-      return conversation.participants.includes(user._id)
+    if (myConversations.length === 0) return []
+
+    // Batch fetch: collecter tous les IDs utilisateurs nécessaires (autres participants)
+    const otherUserIds = new Set<string>()
+    for (const conv of myConversations) {
+      if (!conv.isGroup) {
+        const otherUserId = conv.participants.find((id) => id !== user._id)
+        if (otherUserId) otherUserIds.add(otherUserId as string)
+      }
+    }
+
+    // Batch fetch des profils utilisateurs
+    const userProfiles = await Promise.all(
+      [...otherUserIds].map((id) => ctx.db.get(id as Id<"users">)),
+    )
+    const userProfileMap = new Map(
+      userProfiles
+        .filter((u) => u !== null)
+        .map((u) => [u!._id as string, u]),
+    )
+
+    // Batch fetch du dernier message par conversation
+    const lastMessagesPromises = myConversations.map((conv) =>
+      ctx.db
+        .query("messages")
+        .withIndex("by_conversation", (q) => q.eq("conversation", conv._id))
+        .order("desc")
+        .first(),
+    )
+    const lastMessages = await Promise.all(lastMessagesPromises)
+    const lastMessageMap = new Map(
+      myConversations.map((conv, i) => [conv._id as string, lastMessages[i]]),
+    )
+
+    // Utilise les compteurs dénormalisés (élimine N+1 sur messages)
+    const userIdKey = user._id as string
+
+    const conversationsWithDetails = myConversations.map((conversation) => {
+      let userDetails = {}
+
+      if (!conversation.isGroup) {
+        const otherUserId = conversation.participants.find(
+          (id) => id !== user._id,
+        )
+        if (otherUserId) {
+          userDetails = userProfileMap.get(otherUserId as string) ?? {}
+        }
+      }
+
+      const lastMessage =
+        lastMessageMap.get(conversation._id as string) ?? undefined
+      const unreadCount = conversation.unreadCounts?.[userIdKey] ?? 0
+
+      return {
+        ...userDetails,
+        ...conversation,
+        lastMessage,
+        lastActivityTime: lastMessage
+          ? lastMessage._creationTime
+          : conversation._creationTime,
+        hasUnreadMessages: unreadCount > 0,
+        unreadCount,
+      }
     })
 
-    const conversationsWithDetails = await Promise.all(
-      myConversations.map(async (conversation) => {
-        let userDetails = {}
-
-        if (!conversation.isGroup) {
-          const otherUserId = conversation.participants.find(
-            (id) => id !== user._id,
-          )
-          const userProfile = await ctx.db
-            .query("users")
-            .filter((q) => q.eq(q.field("_id"), otherUserId))
-            .take(1)
-
-          userDetails = userProfile[0]
-        }
-
-        const lastMessage = await ctx.db
-          .query("messages")
-          .filter((q) => q.eq(q.field("conversation"), conversation._id))
-          .order("desc")
-          .take(1)
-
-        // Vérifier s'il y a des messages non lus pour l'utilisateur actuel
-        const unreadMessages = await ctx.db
-          .query("messages")
-          .withIndex("by_conversation", (q) =>
-            q.eq("conversation", conversation._id),
-          )
-          .filter((q) =>
-            q.and(
-              q.eq(q.field("read"), false),
-              q.neq(q.field("sender"), user._id), // Ne pas compter les messages envoyés par l'utilisateur
-            ),
-          )
-          .collect()
-
-        const hasUnreadMessages = unreadMessages.length > 0
-
-        // return should be in this order, otherwise _id field will be overwritten
-        return {
-          ...userDetails,
-          ...conversation,
-          lastMessage: lastMessage[0] || null,
-          lastActivityTime: lastMessage[0]
-            ? lastMessage[0]._creationTime
-            : conversation._creationTime,
-          hasUnreadMessages,
-          unreadCount: unreadMessages.length,
-        }
-      }),
-    )
-
-    // Trier les conversations par date du dernier message (du plus récent au plus ancien)
-    const sortedConversations = conversationsWithDetails.sort(
+    // Trier par date du dernier message (du plus récent au plus ancien)
+    return conversationsWithDetails.sort(
       (a, b) => b.lastActivityTime - a.lastActivityTime,
     )
-
-    return sortedConversations
   },
 })
 

@@ -141,22 +141,24 @@ export const getMyContentAccessSubscriptionsStats = query({
 
     const creatorIds = [...new Set(subs.map((s) => s.creator))]
 
-    // Parallel fetch: creators + post counts
-    const [creators, postCounts] = await Promise.all([
+    // Batch fetch: creators + userStats (utilise postsCount dénormalisé)
+    const [creators, creatorStats] = await Promise.all([
       Promise.all(creatorIds.map((id) => ctx.db.get(id))),
       Promise.all(
-        creatorIds.map(async (creatorId) => {
-          // TODO: Ideally denormalize postsCount in userStats table
-          const posts = await ctx.db
-            .query("posts")
-            .withIndex("by_author", (q) => q.eq("author", creatorId))
-            .collect()
-          return posts.length
-        })
+        creatorIds.map((creatorId) =>
+          ctx.db
+            .query("userStats")
+            .withIndex("by_userId", (q) => q.eq("userId", creatorId))
+            .unique(),
+        ),
       ),
     ])
 
-    const postsCount = postCounts.reduce((a, b) => a + b, 0)
+    // Somme des postsCount depuis userStats (0 si pas de stats)
+    const postsCount = creatorStats.reduce(
+      (sum, stats) => sum + (stats?.postsCount ?? 0),
+      0,
+    )
     const creatorMap = new Map(creatorIds.map((id, i) => [id, creators[i]]))
 
     const enriched = subs.map((s) => ({
@@ -188,22 +190,24 @@ export const getMySubscribersStats = query({
 
     const subscriberIds = [...new Set(subs.map((s) => s.subscriber))]
 
-    // Parallel fetch: subscribers + post counts
-    const [users, postCounts] = await Promise.all([
+    // Batch fetch: subscribers + userStats (utilise postsCount dénormalisé)
+    const [users, subscriberStats] = await Promise.all([
       Promise.all(subscriberIds.map((id) => ctx.db.get(id))),
       Promise.all(
-        subscriberIds.map(async (subId) => {
-          // TODO: Ideally denormalize postsCount in userStats table
-          const posts = await ctx.db
-            .query("posts")
-            .withIndex("by_author", (q) => q.eq("author", subId))
-            .collect()
-          return posts.length
-        })
+        subscriberIds.map((subId) =>
+          ctx.db
+            .query("userStats")
+            .withIndex("by_userId", (q) => q.eq("userId", subId))
+            .unique(),
+        ),
       ),
     ])
 
-    const postsCount = postCounts.reduce((a, b) => a + b, 0)
+    // Somme des postsCount depuis userStats (0 si pas de stats)
+    const postsCount = subscriberStats.reduce(
+      (sum, stats) => sum + (stats?.postsCount ?? 0),
+      0,
+    )
     const userMap = new Map(subscriberIds.map((id, i) => [id, users[i]]))
 
     const enriched = subs.map((s) => ({

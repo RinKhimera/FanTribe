@@ -93,42 +93,26 @@ export const getUnreadCounts = query({
 
     if (!user) throw new ConvexError("User not found")
 
-    // Compter les notifications non lues
+    // Notifications: utilise index composé by_recipient_read
     const unreadNotifications = await ctx.db
       .query("notifications")
-      .withIndex("by_recipient", (q) => q.eq("recipientId", user._id))
-      .filter((q) => q.eq(q.field("read"), false))
+      .withIndex("by_recipient_read", (q) =>
+        q.eq("recipientId", user._id).eq("read", false),
+      )
       .collect()
 
     const unreadNotificationsCount = unreadNotifications.length
 
-    // Récupérer toutes les conversations de l'utilisateur
+    // Messages: utilise compteurs dénormalisés (élimine N+1 queries)
     const conversations = await ctx.db.query("conversations").collect()
+    const myConversations = conversations.filter((conversation) =>
+      conversation.participants.includes(user._id),
+    )
 
-    // Filtrer les conversations auxquelles l'utilisateur participe
-    const myConversations = conversations.filter((conversation) => {
-      return conversation.participants.includes(user._id)
-    })
-
-    // Compter tous les messages non lus dans toutes les conversations de l'utilisateur
-    let unreadMessagesCount = 0
-
-    for (const conversation of myConversations) {
-      const unreadMessages = await ctx.db
-        .query("messages")
-        .withIndex("by_conversation", (q) =>
-          q.eq("conversation", conversation._id),
-        )
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("read"), false),
-            q.neq(q.field("sender"), user._id),
-          ),
-        )
-        .collect()
-
-      unreadMessagesCount += unreadMessages.length
-    }
+    const userIdKey = user._id as string
+    const unreadMessagesCount = myConversations.reduce((sum, conversation) => {
+      return sum + (conversation.unreadCounts?.[userIdKey] ?? 0)
+    }, 0)
 
     return {
       unreadNotificationsCount,

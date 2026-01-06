@@ -40,4 +40,11 @@ crons.daily(
   internal.notificationQueue.cleanupCompletedBatches,
 )
 
+// Rafraîchir les stats de la plateforme toutes les 5 minutes
+crons.interval(
+  "refresh-platform-stats",
+  { minutes: 5 },
+  internal.superuser.refreshPlatformStats,
+)
+
 export default crons
