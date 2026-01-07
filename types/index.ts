@@ -82,7 +82,7 @@ export type MessageProps = {
   isDeleted?: boolean
   deletedAt?: number
   _creationTime: number
-  // Champs enrichis par les queries
+  sentWhileLocked?: boolean
   sender: MessageSender | null
   replyToMessage?: ReplyToMessage | null
 }

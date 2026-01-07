@@ -18,9 +18,10 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useDebounce } from "@/hooks/useDebounce"
+import { MessagingSubscriptionModal } from "./messaging-subscription-modal"
 
 export const UserListDialog = () => {
   const { isAuthenticated } = useConvexAuth()
@@ -28,6 +29,10 @@ export const UserListDialog = () => {
 
   const [searchQuery, setSearchQuery] = useState("")
   const [isPending, setIsPending] = useState(false)
+  const [selectedCreator, setSelectedCreator] = useState<Doc<"users"> | null>(
+    null,
+  )
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const dialogCloseRef = useRef<HTMLButtonElement>(null)
 
   const router = useRouter()
@@ -35,6 +40,7 @@ export const UserListDialog = () => {
 
   const isCreator = currentUser?.accountType === "CREATOR"
   const isAdmin = currentUser?.accountType === "SUPERUSER"
+  const isRegularUser = currentUser?.accountType === "USER"
 
   // Pour les créateurs: récupérer leurs abonnés
   // Pour les utilisateurs: récupérer les créateurs auxquels ils sont abonnés
@@ -48,6 +54,15 @@ export const UserListDialog = () => {
     api.messaging.startConversationAsCreator,
   )
 
+  // Query pour vérifier le statut d'abonnement (seulement pour les users réguliers)
+  const subscriptionStatus = useQuery(
+    api.subscriptions.getSubscriptionStatusForMessaging,
+    isRegularUser && selectedCreator
+      ? { creatorId: selectedCreator._id }
+      : "skip",
+  )
+
+  // IMPORTANT: Cette fonction doit être définie AVANT les autres handlers qui l'utilisent
   const handleStartConversation = async (userId: Id<"users">) => {
     if (!currentUser?._id) return
 
@@ -85,7 +100,65 @@ export const UserListDialog = () => {
       }
     } finally {
       setIsPending(false)
+      setSelectedCreator(null)
     }
+  }
+
+  // Handler pour sélectionner un contact
+  const handleSelectContact = (contact: {
+    _id: Id<"users">
+    name: string
+    username?: string
+    image: string
+    isOnline: boolean
+    accountType: "USER" | "CREATOR" | "SUPERUSER"
+  }) => {
+    if (!currentUser?._id) return
+
+    // Créateur ou Admin: démarrer directement la conversation
+    if (isCreator || isAdmin) {
+      handleStartConversation(contact._id)
+      return
+    }
+
+    // User régulier: vérifier d'abord le statut d'abonnement
+    // On stocke le contact comme créateur sélectionné pour la query
+    setSelectedCreator(contact as unknown as Doc<"users">)
+  }
+
+  // Effet pour gérer la sélection d'un créateur par un user régulier
+  // Quand subscriptionStatus change et qu'on a un créateur sélectionné
+  const handleUserSelectCreator = () => {
+    if (!selectedCreator || !subscriptionStatus || !isRegularUser) return
+
+    // Si les deux abonnements sont actifs, on peut créer la conversation directement
+    if (subscriptionStatus.scenario === "both_active") {
+      handleStartConversation(selectedCreator._id)
+      setSelectedCreator(null)
+    } else {
+      // Sinon, afficher la modale de paiement
+      setShowSubscriptionModal(true)
+    }
+  }
+
+  // Appeler handleUserSelectCreator quand le subscriptionStatus change
+  // (après que selectedCreator soit défini)
+  if (selectedCreator && subscriptionStatus && isRegularUser && !showSubscriptionModal && !isPending) {
+    handleUserSelectCreator()
+  }
+
+  // Handler pour le succès du paiement dans la modale
+  const handleSubscriptionSuccess = () => {
+    setShowSubscriptionModal(false)
+    if (selectedCreator) {
+      handleStartConversation(selectedCreator._id)
+    }
+  }
+
+  // Handler pour fermer la modale
+  const handleCloseSubscriptionModal = () => {
+    setShowSubscriptionModal(false)
+    setSelectedCreator(null)
   }
 
   const getDialogDescription = () => {
@@ -137,8 +210,8 @@ export const UserListDialog = () => {
               <button
                 key={contact._id}
                 className="flex items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-accent disabled:opacity-50"
-                onClick={() => handleStartConversation(contact._id)}
-                disabled={isPending}
+                onClick={() => handleSelectContact(contact)}
+                disabled={isPending || selectedCreator?._id === contact._id}
               >
                 <div className="relative">
                   <Avatar className="h-10 w-10">
@@ -177,6 +250,17 @@ export const UserListDialog = () => {
           </DialogClose>
         </div>
       </DialogContent>
+
+      {/* Modale de paiement pour les abonnements messagerie (users uniquement) */}
+      {selectedCreator && currentUser && showSubscriptionModal && (
+        <MessagingSubscriptionModal
+          isOpen={showSubscriptionModal}
+          onClose={handleCloseSubscriptionModal}
+          creator={selectedCreator}
+          currentUser={currentUser}
+          onSuccess={handleSubscriptionSuccess}
+        />
+      )}
     </Dialog>
   )
 }

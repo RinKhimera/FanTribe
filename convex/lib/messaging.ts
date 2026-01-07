@@ -260,6 +260,17 @@ export const checkConversationPermissions = async (
     }
   }
 
+  // BYPASS: Conversations initiées par admin ne nécessitent pas d'abonnement
+  // L'utilisateur peut lire et répondre librement
+  if (conversation.requiresSubscription === false) {
+    return {
+      canSend: true,
+      canRead: true,
+      canSendMedia: role === "creator" || user.accountType === "SUPERUSER",
+      isLocked: false,
+    }
+  }
+
   // Si c'est le créateur, il peut toujours envoyer
   if (role === "creator") {
     return {

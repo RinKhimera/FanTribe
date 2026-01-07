@@ -214,6 +214,13 @@ export default defineSchema({
     // Admin
     blockedByAdmin: v.optional(v.boolean()),
     blockedByAdminReason: v.optional(v.string()),
+
+    // Tracking de l'initiateur de la conversation
+    initiatedBy: v.optional(v.id("users")), // Qui a créé la conversation
+    initiatorRole: v.optional(
+      v.union(v.literal("admin"), v.literal("creator"), v.literal("user")),
+    ), // Rôle au moment de la création
+    requiresSubscription: v.optional(v.boolean()), // false si initié par admin (bypass check)
   })
     .index("by_creatorId", ["creatorId"])
     .index("by_userId", ["userId"])
@@ -292,6 +299,9 @@ export default defineSchema({
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id("users")),
+
+    // Message envoyé pendant que la conversation était verrouillée (pour indicateur UI)
+    sentWhileLocked: v.optional(v.boolean()),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_sender", ["senderId"]),
@@ -322,6 +332,10 @@ export default defineSchema({
       v.literal("canceled"),
       v.literal("pending"),
     ),
+
+    // Tracking de l'origine de l'abonnement
+    grantedByCreator: v.optional(v.boolean()), // true si offert gratuitement par le créateur
+    bundlePurchase: v.optional(v.boolean()), // true si acheté dans le bundle "Pack Complet"
   })
     .index("by_subscriber", ["subscriber"])
     .index("by_creator", ["creator"])

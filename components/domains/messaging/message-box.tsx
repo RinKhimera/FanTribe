@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react"
 import {
+  EyeOff,
   FileText,
   Info,
   Lock,
@@ -18,6 +19,12 @@ import Link from "next/link"
 import { useState } from "react"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
 import { MessageProps } from "@/types"
@@ -114,6 +121,7 @@ export const MessageBox = ({
                   time={time}
                   isEdited={message.isEdited}
                   isFromCurrentUser={false}
+                  sentWhileLocked={message.sentWhileLocked}
                 />
               </div>
             </MessageContextMenu>
@@ -169,6 +177,7 @@ export const MessageBox = ({
               time={time}
               isEdited={message.isEdited}
               isFromCurrentUser={true}
+              sentWhileLocked={message.sentWhileLocked}
             />
           </div>
         </MessageContextMenu>
@@ -362,10 +371,12 @@ const MessageFooter = ({
   time,
   isEdited,
   isFromCurrentUser,
+  sentWhileLocked,
 }: {
   time: string
   isEdited?: boolean
   isFromCurrentUser: boolean
+  sentWhileLocked?: boolean
 }) => {
   return (
     <div
@@ -374,6 +385,25 @@ const MessageFooter = ({
         isFromCurrentUser && "justify-end"
       )}
     >
+      {/* Indicateur: message envoyé pendant que la conversation était verrouillée */}
+      {sentWhileLocked && isFromCurrentUser && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex cursor-help items-center gap-0.5 text-amber-500/70">
+                <EyeOff size={10} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="max-w-[200px] text-center text-xs"
+            >
+              Le destinataire ne pourra pas lire ce message tant qu&apos;il
+              n&apos;aura pas renouvelé son abonnement
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       {isEdited && (
         <span className="flex items-center gap-0.5 text-amber-500/70">
           <Pencil size={9} />

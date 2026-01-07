@@ -104,6 +104,10 @@ export const startConversation = mutation({
       unreadCountCreator: 0,
       unreadCountUser: 0,
       isLocked: false,
+      // Tracking de l'initiateur
+      initiatedBy: user._id,
+      initiatorRole: "user",
+      requiresSubscription: true, // User doit avoir un abonnement
     })
 
     // Insérer un message système "conversation démarrée"
@@ -119,7 +123,9 @@ export const startConversation = mutation({
 })
 
 /**
- * Démarre une conversation depuis le profil créateur (pour le créateur)
+ * Démarre une conversation depuis le profil créateur (pour le créateur ou admin)
+ * - Admin : pas besoin d'abonnement (requiresSubscription: false)
+ * - Créateur : offre 3 jours de messaging_access gratuit à l'utilisateur
  */
 export const startConversationAsCreator = mutation({
   args: {
@@ -140,6 +146,9 @@ export const startConversationAsCreator = mutation({
     if (!targetUser) {
       throw new Error("Utilisateur non trouvé")
     }
+
+    const isAdmin = creator.accountType === "SUPERUSER"
+    const initiatorRole = isAdmin ? "admin" : "creator"
 
     // Vérifier si une conversation existe déjà
     const existingConversation = await ctx.db
@@ -166,7 +175,45 @@ export const startConversationAsCreator = mutation({
       unreadCountCreator: 0,
       unreadCountUser: 0,
       isLocked: false,
+      // Tracking de l'initiateur
+      initiatedBy: creator._id,
+      initiatorRole,
+      // Admin : pas besoin d'abonnement, Créateur : abonnement requis (mais on offre 3 jours)
+      requiresSubscription: !isAdmin,
     })
+
+    // Si c'est un créateur (pas admin), offrir 3 jours de messaging_access gratuit
+    if (!isAdmin) {
+      const now = Date.now()
+      const threeDaysMs = 3 * 24 * 60 * 60 * 1000
+
+      // Vérifier si l'utilisateur a déjà un messaging_access actif avec ce créateur
+      const existingMessagingSub = await ctx.db
+        .query("subscriptions")
+        .withIndex("by_creator_subscriber", (q) =>
+          q.eq("creator", creator._id).eq("subscriber", args.userId),
+        )
+        .filter((q) => q.eq(q.field("type"), "messaging_access"))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first()
+
+      // Si pas d'abonnement actif, créer un abonnement gratuit de 3 jours
+      if (!existingMessagingSub) {
+        await ctx.db.insert("subscriptions", {
+          subscriber: args.userId,
+          creator: creator._id,
+          startDate: now,
+          endDate: now + threeDaysMs,
+          amountPaid: 0, // Gratuit
+          currency: "XAF",
+          renewalCount: 0,
+          lastUpdateTime: now,
+          type: "messaging_access",
+          status: "active",
+          grantedByCreator: true, // Offert par le créateur
+        })
+      }
+    }
 
     // Insérer un message système
     await ctx.db.insert("messages", {
@@ -252,7 +299,17 @@ export const sendMessage = mutation({
     // Déterminer le type de message
     const messageType = hasMedia ? "media" : "text"
 
-    // Créer le message
+    // Vérifier si la conversation est verrouillée (pour le créateur qui envoie)
+    const conversation = await ctx.db.get(args.conversationId)
+    const role = conversation
+      ? await getConversationRole(ctx, args.conversationId, user._id)
+      : null
+
+    // Créer le message avec indicateur si envoyé pendant verrouillage
+    // Un créateur peut envoyer même quand c'est verrouillé, mais on track cela
+    const isSendingWhileLocked =
+      role === "creator" && conversation?.isLocked === true
+
     const messageId = await ctx.db.insert("messages", {
       conversationId: args.conversationId,
       senderId: user._id,
@@ -260,12 +317,12 @@ export const sendMessage = mutation({
       medias: args.medias,
       messageType,
       replyToMessageId: args.replyToMessageId,
+      // Marquer si le message est envoyé pendant que la conversation est verrouillée
+      ...(isSendingWhileLocked && { sentWhileLocked: true }),
     })
 
     // Mettre à jour la conversation avec les infos du dernier message
-    const conversation = await ctx.db.get(args.conversationId)
     if (conversation) {
-      const role = await getConversationRole(ctx, args.conversationId, user._id)
       const preview = hasMedia
         ? `[${args.medias![0].type === "image" ? "Photo" : args.medias![0].type === "video" ? "Vidéo" : args.medias![0].type === "audio" ? "Audio" : "Document"}]`
         : truncateMessagePreview(args.content)
@@ -1242,12 +1299,18 @@ export const getMessagingContacts = query({
       }))
     }
 
-    // Créateur: voir ses abonnés
+    // Créateur: voir ses abonnés (actifs ET expirés pour pouvoir les recontacter)
     if (user.accountType === "CREATOR") {
       const subscriptions = await ctx.db
         .query("subscriptions")
         .withIndex("by_creator", (q) => q.eq("creator", user._id))
-        .filter((q) => q.eq(q.field("status"), "active"))
+        // Inclure actifs ET expirés (pour permettre au créateur de recontacter d'anciens abonnés)
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("status"), "active"),
+            q.eq(q.field("status"), "expired"),
+          ),
+        )
         .collect()
 
       const subscriberIds = [...new Set(subscriptions.map((s) => s.subscriber))]

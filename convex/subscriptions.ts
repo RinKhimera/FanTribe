@@ -468,6 +468,94 @@ export const getSubscriptionStatus = query({
 })
 
 /**
+ * Récupère le statut détaillé des abonnements pour la modale de messagerie
+ * Utilisé pour déterminer quel type de paiement proposer
+ */
+export const getSubscriptionStatusForMessaging = query({
+  args: { creatorId: v.id("users") },
+  handler: async (ctx, args) => {
+    let currentUser = null
+
+    try {
+      currentUser = await getAuthenticatedUser(ctx)
+    } catch {
+      return {
+        hasContentAccess: false,
+        hasMessagingAccess: false,
+        contentExpiry: null,
+        messagingExpiry: null,
+        scenario: "not_authenticated" as const,
+        suggestBundle: false,
+      }
+    }
+
+    const now = Date.now()
+
+    // Récupérer les deux types d'abonnements en parallèle
+    const [contentSub, messagingSub] = await Promise.all([
+      ctx.db
+        .query("subscriptions")
+        .withIndex("by_creator_subscriber", (q) =>
+          q.eq("creator", args.creatorId).eq("subscriber", currentUser._id),
+        )
+        .filter((q) => q.eq(q.field("type"), "content_access"))
+        .first(),
+      ctx.db
+        .query("subscriptions")
+        .withIndex("by_creator_subscriber", (q) =>
+          q.eq("creator", args.creatorId).eq("subscriber", currentUser._id),
+        )
+        .filter((q) => q.eq(q.field("type"), "messaging_access"))
+        .first(),
+    ])
+
+    const hasContentAccess =
+      contentSub !== null &&
+      contentSub.status === "active" &&
+      contentSub.endDate > now
+
+    const hasMessagingAccess =
+      messagingSub !== null &&
+      messagingSub.status === "active" &&
+      messagingSub.endDate > now
+
+    // Déterminer le scénario pour la modale
+    let scenario:
+      | "both_active"
+      | "messaging_missing"
+      | "content_missing"
+      | "both_missing"
+      | "not_authenticated"
+
+    if (hasContentAccess && hasMessagingAccess) {
+      scenario = "both_active"
+    } else if (hasContentAccess && !hasMessagingAccess) {
+      scenario = "messaging_missing"
+    } else if (!hasContentAccess && hasMessagingAccess) {
+      scenario = "content_missing"
+    } else {
+      scenario = "both_missing"
+    }
+
+    return {
+      hasContentAccess,
+      hasMessagingAccess,
+      contentExpiry: contentSub?.endDate ?? null,
+      messagingExpiry: messagingSub?.endDate ?? null,
+      scenario,
+      suggestBundle: scenario === "both_missing",
+      // Prix pour la modale
+      prices: {
+        contentAccess: 1000, // XAF / 1 mois
+        messagingAccess: 2000, // XAF / 2 semaines
+        bundle: 3500, // XAF / Pack Complet (1 mois chaque)
+        bundleSavings: 1500, // Économie
+      },
+    }
+  },
+})
+
+/**
  * INTERNAL: Vérifie et verrouille les conversations des abonnements messagerie expirés
  */
 export const checkAndLockExpiredMessagingSubscriptions = internalMutation({
@@ -507,7 +595,13 @@ export const checkAndLockExpiredMessagingSubscriptions = internalMutation({
           )
           .first()
 
-        if (conversation && !conversation.isLocked) {
+        // Ignorer les conversations initiées par admin (requiresSubscription: false)
+        // Ces conversations ne doivent jamais être verrouillées
+        if (
+          conversation &&
+          !conversation.isLocked &&
+          conversation.requiresSubscription !== false
+        ) {
           // Verrouiller la conversation
           await ctx.db.patch(conversation._id, {
             isLocked: true,

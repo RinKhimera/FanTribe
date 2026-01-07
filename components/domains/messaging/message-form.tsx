@@ -41,13 +41,16 @@ export const MessageForm = ({
   const setTypingIndicator = useMutation(api.messaging.setTypingIndicator)
 
   // Extraire les permissions (fallback conservatif)
-  const isLocked = permissions?.isLocked ?? false
+  // Note: isLocked indique l'état de la conversation, mais canSend détermine si l'utilisateur peut envoyer
+  // Un créateur peut avoir isLocked=true mais canSend=true (il peut envoyer même quand c'est verrouillé pour le user)
   const canSend = permissions?.canSend ?? false
   const canSendMedia = permissions?.canSendMedia ?? false
+  // Utiliser !canSend pour déterminer si on doit afficher l'UI verrouillée
+  const showLockedUI = !canSend
 
   // Gestion de l'indicateur de frappe
   const handleTyping = useCallback(() => {
-    if (!currentUser || isLocked) return
+    if (!currentUser || showLockedUI) return
 
     // Envoyer l'indicateur de frappe
     setTypingIndicator({
@@ -70,7 +73,7 @@ export const MessageForm = ({
       }).catch(() => {})
     }, 3000)
     // eslint-disable-next-line @tanstack/query/no-unstable-deps
-  }, [currentUser, conversationId, isLocked, setTypingIndicator])
+  }, [currentUser, conversationId, showLockedUI, setTypingIndicator])
 
   // Cleanup du timeout au démontage
   useEffect(() => {
@@ -129,8 +132,9 @@ export const MessageForm = ({
     }
   }
 
-  // Message verrouillé
-  if (isLocked) {
+  // Message verrouillé - Afficher seulement si l'utilisateur ne peut pas envoyer
+  // (Les créateurs peuvent envoyer même quand la conversation est verrouillée pour le user)
+  if (showLockedUI) {
     return (
       <motion.div
         initial={{ y: 20, opacity: 0 }}
