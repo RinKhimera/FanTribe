@@ -14,10 +14,10 @@ export default function MessagesLayout({
   const { currentUser, isLoading } = useCurrentUser()
   const router = useRouter()
 
-  // Redirection si l'utilisateur n'est pas superuser (restriction temporaire en dev)
+  // Redirection si l'utilisateur n'est pas connecté
   useEffect(() => {
-    if (!isLoading && currentUser && currentUser.accountType !== "SUPERUSER") {
-      router.push("/")
+    if (!isLoading && !currentUser) {
+      router.push("/sign-in")
     }
   }, [currentUser, isLoading, router])
 
@@ -28,24 +28,22 @@ export default function MessagesLayout({
         <div className="flex h-full min-h-screen items-center justify-center">
           <div className="text-center">
             <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
-            <p className="text-muted-foreground text-lg">
-              Vérification des permissions...
-            </p>
+            <p className="text-muted-foreground text-lg">Chargement...</p>
           </div>
         </div>
       </PageContainer>
     )
   }
 
-  // Redirection en cours pour les utilisateurs non autorisés
-  if (!currentUser || currentUser.accountType !== "SUPERUSER") {
+  // Redirection en cours si non connecté
+  if (!currentUser) {
     return (
       <PageContainer variant="wide" hideHeader>
         <div className="flex h-full min-h-screen items-center justify-center">
           <div className="text-center">
             <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
             <p className="text-muted-foreground text-lg">
-              Redirection en cours...
+              Redirection vers la connexion...
             </p>
           </div>
         </div>
@@ -53,6 +51,6 @@ export default function MessagesLayout({
     )
   }
 
-  // Rendu des pages messages si les permissions sont OK
+  // Rendu des pages messages si l'utilisateur est connecté
   return <>{children}</>
 }

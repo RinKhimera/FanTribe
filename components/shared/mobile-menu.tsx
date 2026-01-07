@@ -39,13 +39,22 @@ export const MobileMenu = () => {
     unreadNotifications: unreadCountsData?.unreadNotificationsCount || 0,
   }
 
-  // Liens réservés aux superusers
+  // Liens réservés aux superusers et créateurs
   const filteredNavigationLinks = navigationLinks.filter((link) => {
-    const superuserOnlyLinks = ["superuser", "messages"]
+    const superuserOnlyLinks = ["superuser"]
+    const creatorOnlyLinks = ["income"]
 
     if (superuserOnlyLinks.includes(link.id)) {
       return currentUser?.accountType === "SUPERUSER"
     }
+
+    if (creatorOnlyLinks.includes(link.id)) {
+      return (
+        currentUser?.accountType === "CREATOR" ||
+        currentUser?.accountType === "SUPERUSER"
+      )
+    }
+
     return true
   })
 

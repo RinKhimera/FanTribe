@@ -1,18 +1,11 @@
 "use client"
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react"
-import { ImageIcon, MailPlus } from "lucide-react"
-import Image from "next/image"
+import { Loader2, MailPlus, MessageSquare } from "lucide-react"
 import { useRouter } from "next/navigation"
-import {
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-  useTransition,
-} from "react"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -27,204 +20,161 @@ import { Input } from "@/components/ui/input"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useDebounce } from "@/hooks/useDebounce"
 
 export const UserListDialog = () => {
   const { isAuthenticated } = useConvexAuth()
   const { currentUser } = useCurrentUser()
 
-  const users = useQuery(
-    api.users.getUsers,
-    isAuthenticated ? undefined : "skip",
-  )
-
-  const createConversation = useMutation(api.conversations.createConversation)
-  const generateUploadUrl = useMutation(api.conversations.generateUploadUrl)
-
-  const [selectedUsers, setSelectedUsers] = useState<Id<"users">[]>([])
-  const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [groupName, setGroupName] = useState("")
-  const [renderedImage, setRenderedImage] = useState("")
-  const [isPending, startTransition] = useTransition()
-  const imgRef = useRef<HTMLInputElement>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isPending, setIsPending] = useState(false)
   const dialogCloseRef = useRef<HTMLButtonElement>(null)
 
   const router = useRouter()
+  const debouncedSearch = useDebounce(searchQuery, 300)
 
-  // Utiliser useEffectEvent pour éviter le setState synchrone dans l'effect
-  const updateRenderedImage = useEffectEvent((imageData: string) => {
-    setRenderedImage(imageData)
-  })
+  const isCreator = currentUser?.accountType === "CREATOR"
+  const isAdmin = currentUser?.accountType === "SUPERUSER"
 
-  useEffect(() => {
-    if (!selectedImage) {
-      updateRenderedImage("")
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = (e) => updateRenderedImage(e.target?.result as string)
-    reader.readAsDataURL(selectedImage)
-  }, [selectedImage])
+  // Pour les créateurs: récupérer leurs abonnés
+  // Pour les utilisateurs: récupérer les créateurs auxquels ils sont abonnés
+  const contacts = useQuery(
+    api.messaging.getMessagingContacts,
+    isAuthenticated ? { search: debouncedSearch } : "skip",
+  )
 
-  const handleCreateConversation = () => {
-    if (selectedUsers.length === 0 || !currentUser?._id) return
-    startTransition(async () => {
-      try {
-        const isGroup = selectedUsers.length > 1
+  const startConversation = useMutation(api.messaging.startConversation)
+  const startConversationAsCreator = useMutation(
+    api.messaging.startConversationAsCreator,
+  )
 
-        let conversationId
+  const handleStartConversation = async (userId: Id<"users">) => {
+    if (!currentUser?._id) return
 
-        if (!isGroup) {
-          conversationId = await createConversation({
-            participants: [...selectedUsers, currentUser._id],
-            isGroup: false,
-          })
-        } else {
-          const postUrl = await generateUploadUrl()
+    setIsPending(true)
+    try {
+      let conversationId: Id<"conversations">
 
-          const result = await fetch(postUrl, {
-            method: "POST",
-            headers: { "Content-Type": selectedImage?.type || "image/png" },
-            body: selectedImage,
-          })
+      if (isCreator || isAdmin) {
+        // Créateur/Admin démarre une conversation avec un utilisateur
+        conversationId = await startConversationAsCreator({ userId })
+      } else {
+        // Utilisateur démarre une conversation avec un créateur
+        conversationId = await startConversation({ creatorId: userId })
+      }
 
-          const { storageId } = await result.json()
+      dialogCloseRef.current?.click()
+      router.push(`/messages/${conversationId}`)
+    } catch (error) {
+      console.error(error)
+      const errorMessage =
+        error instanceof Error ? error.message : "Erreur inconnue"
 
-          conversationId = await createConversation({
-            participants: [...selectedUsers, currentUser._id],
-            isGroup: true,
-            admin: currentUser._id,
-            groupName,
-            groupImage: storageId,
-          })
-        }
-
-        dialogCloseRef.current?.click()
-        setSelectedUsers([])
-        setGroupName("")
-        setSelectedImage(null)
-
-        router.push(`/messages/${conversationId}`)
-      } catch (error) {
-        console.error(error)
-        toast.error("Une erreur s'est produite !", {
+      if (
+        errorMessage.includes("abonnement") ||
+        errorMessage.includes("subscription")
+      ) {
+        toast.error("Abonnement requis", {
           description:
-            "La discussion n'a pas été créee. Veuillez vérifier votre connexion internet et réessayer",
+            "Vous devez être abonné pour envoyer des messages à ce créateur.",
+        })
+      } else {
+        toast.error("Erreur", {
+          description: "Impossible de démarrer la conversation. Réessayez.",
         })
       }
-    })
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  const getDialogDescription = () => {
+    if (isCreator) {
+      return "Sélectionnez un abonné pour démarrer une conversation"
+    }
+    if (isAdmin) {
+      return "Sélectionnez un utilisateur pour démarrer une conversation"
+    }
+    return "Sélectionnez un créateur pour démarrer une conversation"
   }
 
   return (
     <Dialog>
-      <DialogTrigger>
-        <MailPlus />
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MailPlus className="h-5 w-5" />
+        </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          {/* TODO: <DialogClose /> will be here */}
           <DialogClose ref={dialogCloseRef} />
           <DialogTitle>Nouvelle conversation</DialogTitle>
+          <DialogDescription>{getDialogDescription()}</DialogDescription>
         </DialogHeader>
 
-        <DialogDescription>
-          Commencez une nouvelle conversation
-        </DialogDescription>
-        {renderedImage && (
-          <div className="relative mx-auto h-16 w-16">
-            <Image
-              src={renderedImage}
-              fill
-              alt="user image"
-              className="rounded-full object-cover"
-            />
-          </div>
-        )}
-        {/* TODO: input file */}
-        <input
-          type="file"
-          accept="image/*"
-          ref={imgRef}
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) {
-              setSelectedImage(file)
-              setRenderedImage(URL.createObjectURL(file))
-            }
-          }}
-          hidden
+        {/* Barre de recherche */}
+        <Input
+          placeholder="Rechercher..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="mb-2"
         />
-        {selectedUsers.length > 1 && (
-          <>
-            <Input
-              placeholder="Group Name"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-            />
-            <Button
-              className="flex gap-2"
-              onClick={() => imgRef.current?.click()}
-            >
-              <ImageIcon size={20} />
-              Photo du groupe
-            </Button>
-          </>
-        )}
-        <div className="flex max-h-60 flex-col gap-3 overflow-auto">
-          {users?.map((user) => (
-            <div
-              key={user._id}
-              className={`flex cursor-pointer items-center gap-3 rounded p-2 transition-all duration-300 ease-in-out active:scale-95 ${selectedUsers.includes(user._id) ? "bg-sky-600" : ""}`}
-              onClick={() => {
-                if (selectedUsers.includes(user._id)) {
-                  setSelectedUsers(
-                    selectedUsers.filter((id) => id !== user._id),
-                  )
-                } else {
-                  setSelectedUsers([...selectedUsers, user._id])
-                }
-              }}
-            >
-              <Avatar className="overflow-visible">
-                {user.isOnline && (
-                  <div className="border-foreground absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
-                )}
-                <Image
-                  src={user.image}
-                  width={100}
-                  height={100}
-                  alt={user.username || "Profile image"}
-                  className="rounded-full object-cover"
-                />
-                <AvatarFallback>
-                  <div className="bg-muted h-full w-full animate-pulse rounded-full"></div>
-                </AvatarFallback>
-              </Avatar>
 
-              <div className="text-left text-sm">
-                <div className="truncate">{user.name}</div>
-                <div className="text-muted-foreground">@{user.username}</div>
-              </div>
+        {/* Liste des contacts */}
+        <div className="flex max-h-80 flex-col gap-2 overflow-auto">
+          {contacts === undefined ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ))}
+          ) : contacts.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              {isCreator
+                ? "Aucun abonné trouvé"
+                : "Aucun créateur trouvé. Abonnez-vous à un créateur pour pouvoir lui envoyer des messages."}
+            </div>
+          ) : (
+            contacts.map((contact) => (
+              <button
+                key={contact._id}
+                className="flex items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-accent disabled:opacity-50"
+                onClick={() => handleStartConversation(contact._id)}
+                disabled={isPending}
+              >
+                <div className="relative">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage
+                      src={contact.image}
+                      alt={contact.name || "Profile"}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-muted">
+                      {contact.name?.charAt(0) ?? "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  {contact.isOnline && (
+                    <span className="absolute -bottom-0.5 -right-0.5 inline-flex h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500" />
+                  )}
+                </div>
+
+                <div className="flex-1 overflow-hidden">
+                  <p className="truncate font-medium">{contact.name}</p>
+                  {contact.username && (
+                    <p className="truncate text-sm text-muted-foreground">
+                      @{contact.username}
+                    </p>
+                  )}
+                </div>
+
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </button>
+            ))
+          )}
         </div>
-        <div className="flex justify-between">
+
+        <div className="flex justify-end pt-2">
           <DialogClose asChild>
-            <Button variant={"outline"}>Fermer</Button>
+            <Button variant="outline">Fermer</Button>
           </DialogClose>
-          <Button
-            onClick={handleCreateConversation}
-            disabled={
-              selectedUsers.length === 0 ||
-              (selectedUsers.length > 1 && !groupName) ||
-              isPending
-            }
-          >
-            {isPending ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-b-2" />
-            ) : (
-              "Suivant"
-            )}
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

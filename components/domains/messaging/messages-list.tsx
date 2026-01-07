@@ -1,6 +1,8 @@
 "use client"
 
 import { useQuery } from "convex/react"
+import { motion, AnimatePresence } from "motion/react"
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react"
 import {
   CSSProperties,
   useCallback,
@@ -12,16 +14,17 @@ import {
 } from "react"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
-import { ConversationProps, MessageProps, UserProps } from "@/types"
+import { Doc, Id } from "@/convex/_generated/dataModel"
+import { MessageProps } from "@/types"
 import { MessageBox } from "./message-box"
 
 type MessagesListProps = {
-  conversation: ConversationProps
-  currentUser: UserProps
+  conversationId: Id<"conversations">
+  currentUser: Doc<"users"> | null
 }
 
 export const MessagesList = ({
-  conversation,
+  conversationId,
   currentUser,
 }: MessagesListProps) => {
   const [cursor, setCursor] = useState<number | undefined>(undefined)
@@ -30,6 +33,7 @@ export const MessagesList = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isReadyToShow, setIsReadyToShow] = useState(false)
   const [reachedOldestMessages, setReachedOldestMessages] = useState(false)
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 
   const nextOlderMessagesStartPointRef = useRef<number | undefined>(undefined)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -37,16 +41,16 @@ export const MessagesList = ({
   const isInitialLoadRef = useRef(true)
   const scrollHeightRef = useRef<number>(0)
 
-  const messagesData = useQuery(api.messages.getMessages, {
-    conversation: conversation!._id,
+  const messagesData = useQuery(api.messaging.getMessages, {
+    conversationId,
     cursor: cursor,
     limit: 30,
   })
 
   // Déstructurer pour avoir des dépendances stables
-  const messages = messagesData?.messages
+  const messages = messagesData?.messages as MessageProps[] | undefined
   const dataHasMore = messagesData?.hasMore
-  const dataCursor = messagesData?.cursor
+  const dataCursor = messagesData?.nextCursor
 
   // Fonctions de scroll (mémorisées)
   const scrollToBottom = useCallback(() => {
@@ -60,6 +64,22 @@ export const MessagesList = ({
       messagesEndRef.current.scrollIntoView({ behavior: "auto" })
     }
   }, [])
+
+  // Gérer le scroll pour afficher/masquer le bouton "scroll to bottom"
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 200
+    setShowScrollToBottom(!isNearBottom && allMessages.length > 5)
+  }, [allMessages.length])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (container) {
+      container.addEventListener("scroll", handleScroll)
+      return () => container.removeEventListener("scroll", handleScroll)
+    }
+  }, [handleScroll])
 
   // Scroll initial après chargement des messages
   useEffect(() => {
@@ -77,8 +97,8 @@ export const MessagesList = ({
     (initialMessages: MessageProps[]) => {
       setAllMessages(initialMessages)
       setHasMore(!!dataHasMore)
-      nextOlderMessagesStartPointRef.current = dataCursor
-    },
+      nextOlderMessagesStartPointRef.current = dataCursor ?? undefined
+    }
   )
 
   const handleOlderMessages = useEffectEvent((olderBatch: MessageProps[]) => {
@@ -89,7 +109,7 @@ export const MessagesList = ({
     }
     setHasMore(!!dataHasMore)
     setIsLoadingMore(false)
-    nextOlderMessagesStartPointRef.current = dataCursor
+    nextOlderMessagesStartPointRef.current = dataCursor ?? undefined
     setCursor(undefined)
   })
 
@@ -103,7 +123,7 @@ export const MessagesList = ({
             : Date.now()
 
         const strictlyOlderMessages = prevAllMessages.filter(
-          (m) => m._creationTime < boundaryTimestamp,
+          (m) => m._creationTime < boundaryTimestamp
         )
 
         const newAllMessages = [
@@ -116,7 +136,10 @@ export const MessagesList = ({
           for (let i = 0; i < newAllMessages.length; i++) {
             if (
               prevAllMessages[i]._id !== newAllMessages[i]._id ||
-              prevAllMessages[i].read !== newAllMessages[i].read
+              prevAllMessages[i].isEdited !== newAllMessages[i].isEdited ||
+              prevAllMessages[i].isDeleted !== newAllMessages[i].isDeleted ||
+              prevAllMessages[i].reactions?.length !==
+                newAllMessages[i].reactions?.length
             ) {
               identical = false
               break
@@ -144,7 +167,7 @@ export const MessagesList = ({
         return newAllMessages
       })
       setHasMore(!!dataHasMore)
-    },
+    }
   )
 
   // Effet principal pour gérer les messages (initial + updates)
@@ -201,47 +224,80 @@ export const MessagesList = ({
       visibility: isReadyToShow ? "visible" : "hidden",
       transition: "visibility 0s",
     }),
-    [isReadyToShow],
+    [isReadyToShow]
   )
 
   // Liste des messages (mémorisée pour éviter les re-renders inutiles)
   const messagesList = useMemo(
     () =>
       allMessages.map((message, index) => (
-        <div key={message._id}>
+        <motion.div
+          key={message._id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
           <MessageBox
             currentUser={currentUser}
-            conversation={conversation}
             message={message}
             previousMessage={index > 0 ? allMessages[index - 1] : undefined}
           />
-        </div>
+        </motion.div>
       )),
-    [allMessages, currentUser, conversation],
+    [allMessages, currentUser]
   )
 
   return (
     <div
       ref={containerRef}
-      className="relative h-full flex-1 overflow-auto pt-3"
+      className="relative h-full flex-1 overflow-auto"
       style={containerStyle}
     >
-      <div className="mx-5 flex flex-col gap-3">
+      <div className="mx-4 flex flex-col gap-2 py-4">
         {/* Bouton pour charger plus de messages */}
-        {hasMore && !isLoadingMore && !reachedOldestMessages && (
-          <div className="my-2 flex justify-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadMoreMessages}
-              disabled={isLoadingMore}
-              className="text-xs"
+        <AnimatePresence>
+          {hasMore && !reachedOldestMessages && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex justify-center py-2"
             >
-              {isLoadingMore
-                ? "Chargement..."
-                : "Charger les messages précédents"}
-            </Button>
-          </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadMoreMessages}
+                disabled={isLoadingMore}
+                className="gap-2 rounded-full border border-white/10 bg-white/5 text-xs hover:bg-white/10"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Chargement...
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp size={14} />
+                    Messages précédents
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Indicateur début de conversation */}
+        {reachedOldestMessages && allMessages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center gap-2 py-6 text-center"
+          >
+            <div className="h-px w-16 bg-linear-to-r from-transparent via-amber-500/30 to-transparent" />
+            <span className="text-xs text-muted-foreground">
+              Début de la conversation
+            </span>
+          </motion.div>
         )}
 
         {/* Liste des messages */}
@@ -250,6 +306,21 @@ export const MessagesList = ({
         {/* Référence pour le scroll */}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Bouton scroll to bottom */}
+      <AnimatePresence>
+        {showScrollToBottom && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            onClick={scrollToBottom}
+            className="absolute bottom-4 right-4 z-10 flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/80 text-foreground shadow-lg backdrop-blur-sm transition-colors hover:bg-black/90"
+          >
+            <ChevronDown size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

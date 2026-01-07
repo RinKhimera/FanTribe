@@ -15,6 +15,8 @@ type SplitPanelLayoutProps = {
   children: React.ReactNode
   /** Classes additionnelles pour le conteneur */
   className?: string
+  /** Afficher le panneau de navigation sur mobile (utile quand pas de contenu principal) */
+  showNavigationOnMobile?: boolean
 }
 
 /**
@@ -42,6 +44,7 @@ export const SplitPanelLayout = ({
   navigationPanel,
   children,
   className,
+  showNavigationOnMobile = false,
 }: SplitPanelLayoutProps) => {
   return (
     <div
@@ -58,24 +61,26 @@ export const SplitPanelLayout = ({
 
       {/* Panneaux */}
       <div className={cn("flex flex-1", "min-[501px]:overflow-hidden")}>
-        {/* Panneau de navigation (gauche) - caché sur mobile, les pages ont leurs propres Tabs */}
+        {/* Panneau de navigation (gauche) */}
         <div
           className={cn(
-            "w-(--content-split-nav-width)",
             "border-muted border-r",
             "min-[501px]:overflow-y-auto",
-            "max-lg:hidden lg:block lg:w-(--content-split-nav-width)",
+            showNavigationOnMobile
+              ? "w-full lg:w-(--content-split-nav-width)"
+              : "max-lg:hidden lg:block lg:w-(--content-split-nav-width) w-(--content-split-nav-width)",
           )}
         >
           {navigationPanel}
         </div>
 
-        {/* Panneau de contenu (droite) - visible sur mobile avec Tabs intégrés */}
+        {/* Panneau de contenu (droite) - caché sur mobile si navigation affichée */}
         <div
           className={cn(
-            "w-(--content-split-main-width)",
             "min-[501px]:overflow-y-auto",
-            "max-lg:w-full lg:w-(--content-split-main-width)",
+            showNavigationOnMobile
+              ? "hidden lg:block lg:w-(--content-split-main-width)"
+              : "max-lg:w-full lg:w-(--content-split-main-width) w-(--content-split-main-width)",
           )}
         >
           {children}

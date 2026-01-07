@@ -59,7 +59,7 @@ export const LeftSidebar = ({ currentUser }: LeftSidebarProps) => {
 
   // Filtrer les liens selon le type de compte
   const filteredNavigationLinks = navigationLinks.filter((link) => {
-    const superuserOnlyLinks = ["superuser", "messages"]
+    const superuserOnlyLinks = ["superuser"]
     const creatorOnlyLinks = ["income"]
 
     if (superuserOnlyLinks.includes(link.id)) {

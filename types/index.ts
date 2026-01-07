@@ -10,23 +10,151 @@ import { Doc, Id } from "@/convex/_generated/dataModel"
  */
 export type UserProps = Doc<"users"> | undefined
 
+// ============================================================================
+// Types pour la messagerie (nouveau système)
+// ============================================================================
+
+/**
+ * Type pour les médias attachés aux messages
+ */
+export type MessageMedia = {
+  type: "image" | "video" | "audio" | "document"
+  url: string
+  mediaId: string
+  mimeType: string
+  fileName?: string
+  fileSize?: number
+  thumbnailUrl?: string
+  duration?: number
+  width?: number
+  height?: number
+}
+
+/**
+ * Type pour les réactions sur les messages
+ */
+export type MessageReaction = {
+  emoji: string
+  userId: Id<"users">
+  createdAt: number
+}
+
+/**
+ * Type pour l'expéditeur d'un message (version simplifiée)
+ */
+export type MessageSender = {
+  _id: Id<"users">
+  name: string
+  username?: string
+  image: string
+  accountType: "USER" | "CREATOR" | "SUPERUSER"
+}
+
+/**
+ * Type pour un message de réponse (preview)
+ */
+export type ReplyToMessage = {
+  _id: Id<"messages">
+  content?: string
+  senderId: Id<"users">
+}
+
 /**
  * Type pour les messages enrichis avec les infos du sender
  */
 export type MessageProps = {
   _id: Id<"messages">
-  content: string
+  conversationId: Id<"conversations">
+  senderId: Id<"users">
+  content?: string
+  medias?: MessageMedia[]
+  messageType: "text" | "media" | "system"
+  systemMessageType?:
+    | "conversation_started"
+    | "subscription_expired"
+    | "subscription_renewed"
+    | "conversation_locked"
+    | "conversation_unlocked"
+  replyToMessageId?: Id<"messages">
+  reactions?: MessageReaction[]
+  isEdited?: boolean
+  editedAt?: number
+  isDeleted?: boolean
+  deletedAt?: number
   _creationTime: number
-  messageType: "text" | "image" | "video"
-  read?: boolean
-  conversation: Id<"conversations">
-  sender: Doc<"users"> | null
+  // Champs enrichis par les queries
+  sender: MessageSender | null
+  replyToMessage?: ReplyToMessage | null
+}
+
+/**
+ * Type pour l'autre participant d'une conversation
+ */
+export type ConversationParticipant = {
+  _id: Id<"users">
+  name: string
+  username?: string
+  image: string
+  isOnline: boolean
+  lastSeenAt?: number
+  accountType: "USER" | "CREATOR" | "SUPERUSER"
 }
 
 /**
  * Type pour les conversations enrichies avec métadonnées temps réel
  */
-export type ConversationProps =
+export type ConversationProps = {
+  _id: Id<"conversations">
+  creatorId: Id<"users">
+  userId: Id<"users">
+  lastMessageAt?: number
+  lastMessagePreview?: string
+  lastMessageSenderId?: Id<"users">
+  isLocked: boolean
+  lockedAt?: number
+  lockedReason?: "subscription_expired" | "admin_blocked"
+  _creationTime: number
+  // Champs enrichis par les queries
+  role: "creator" | "user" | "admin"
+  otherParticipant: ConversationParticipant | null
+  unreadCount: number
+  hasUnread: boolean
+  isPinned: boolean
+  isMuted: boolean
+}
+
+/**
+ * Type pour les indicateurs de frappe
+ */
+export type TypingIndicator = {
+  _id: Id<"typingIndicators">
+  conversationId: Id<"conversations">
+  userId: Id<"users">
+  startedAt: number
+  expiresAt: number
+  user: {
+    _id: Id<"users">
+    name: string
+    image: string
+  } | null
+}
+
+/**
+ * Type pour les permissions de messagerie
+ */
+export type MessagingPermissions = {
+  canSend: boolean
+  canRead: boolean
+  canSendMedia: boolean
+  isLocked: boolean
+  reason?: string
+  requiresSubscription?: boolean
+}
+
+/**
+ * @deprecated Ancien type - utiliser le nouveau ConversationProps
+ */
+export type LegacyConversationProps =
   | {
       _id: Id<"conversations">
       image?: string

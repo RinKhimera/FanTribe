@@ -7,9 +7,10 @@ export const ConversationLayout = () => {
   return (
     <SplitPanelLayout
       title="Messages"
+      showNavigationOnMobile
       navigationPanel={
         <>
-          <div className="border-muted flex items-center justify-between border-b p-4 text-lg font-bold">
+          <div className="border-muted flex items-center justify-between border-b py-3 px-4 text-lg font-bold">
             <div>Mes conversations</div>
             <UserListDialog />
           </div>

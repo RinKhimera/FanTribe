@@ -38,7 +38,7 @@ export const LeftSidebar = ({ currentUser }: { currentUser: Doc<"users"> }) => {
 
   // Liens réservés aux superusers et créateurs
   const filteredNavigationLinks = navigationLinks.filter((link) => {
-    const superuserOnlyLinks = ["superuser", "messages"]
+    const superuserOnlyLinks = ["superuser"]
     const creatorOnlyLinks = ["income"]
 
     if (superuserOnlyLinks.includes(link.id)) {

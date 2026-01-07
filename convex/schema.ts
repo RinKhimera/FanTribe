@@ -176,27 +176,135 @@ export default defineSchema({
     .index("by_post", ["post"])
     .index("by_author", ["author"]),
 
+  // ============================================
+  // MESSAGERIE - Refonte complète
+  // ============================================
+
   conversations: defineTable({
-    participants: v.array(v.id("users")),
-    isGroup: v.boolean(),
-    groupName: v.optional(v.string()),
-    groupImage: v.optional(v.string()),
-    admin: v.optional(v.id("users")),
-    // Compteurs de messages non lus par participant (dénormalisé pour perf)
-    unreadCounts: v.optional(v.record(v.string(), v.number())),
-  }),
+    // Participants (toujours 1:1 - pas de groupes)
+    creatorId: v.id("users"), // Le CRÉATEUR
+    userId: v.id("users"), // Le USER/abonné
+
+    // Champs dénormalisés pour performance
+    lastMessageAt: v.optional(v.number()),
+    lastMessagePreview: v.optional(v.string()), // 100 premiers chars
+    lastMessageSenderId: v.optional(v.id("users")),
+
+    // Compteurs non-lus dénormalisés
+    unreadCountCreator: v.number(),
+    unreadCountUser: v.number(),
+
+    // État de verrouillage (quand abo messagerie expire)
+    isLocked: v.boolean(),
+    lockedAt: v.optional(v.number()),
+    lockedReason: v.optional(
+      v.union(v.literal("subscription_expired"), v.literal("admin_blocked")),
+    ),
+
+    // Préférences par participant
+    mutedByCreator: v.optional(v.boolean()),
+    mutedByUser: v.optional(v.boolean()),
+    pinnedByCreator: v.optional(v.boolean()),
+    pinnedByUser: v.optional(v.boolean()),
+
+    // Soft delete
+    deletedByCreator: v.optional(v.boolean()),
+    deletedByUser: v.optional(v.boolean()),
+
+    // Admin
+    blockedByAdmin: v.optional(v.boolean()),
+    blockedByAdminReason: v.optional(v.string()),
+  })
+    .index("by_creatorId", ["creatorId"])
+    .index("by_userId", ["userId"])
+    .index("by_creatorId_lastMessageAt", ["creatorId", "lastMessageAt"])
+    .index("by_userId_lastMessageAt", ["userId", "lastMessageAt"])
+    .index("by_participants", ["creatorId", "userId"]),
 
   messages: defineTable({
-    conversation: v.id("conversations"),
-    sender: v.id("users"),
-    content: v.string(),
-    read: v.optional(v.boolean()),
+    conversationId: v.id("conversations"),
+    senderId: v.id("users"),
+
+    // Contenu texte (optionnel si media-only)
+    content: v.optional(v.string()),
+
+    // Médias (array pour plusieurs pièces jointes)
+    medias: v.optional(
+      v.array(
+        v.object({
+          type: v.union(
+            v.literal("image"),
+            v.literal("video"),
+            v.literal("audio"),
+            v.literal("document"),
+          ),
+          url: v.string(),
+          mediaId: v.string(), // Bunny CDN ID
+          mimeType: v.string(),
+          fileName: v.optional(v.string()),
+          fileSize: v.optional(v.number()),
+          thumbnailUrl: v.optional(v.string()),
+          duration: v.optional(v.number()), // Pour audio/video
+          width: v.optional(v.number()), // Pour images/video
+          height: v.optional(v.number()),
+        }),
+      ),
+    ),
+
+    // Type de message
     messageType: v.union(
       v.literal("text"),
-      v.literal("image"),
-      v.literal("video"),
+      v.literal("media"),
+      v.literal("system"),
     ),
-  }).index("by_conversation", ["conversation"]),
+
+    // Sous-type pour messages système
+    systemMessageType: v.optional(
+      v.union(
+        v.literal("conversation_started"),
+        v.literal("subscription_expired"),
+        v.literal("subscription_renewed"),
+        v.literal("conversation_locked"),
+        v.literal("conversation_unlocked"),
+      ),
+    ),
+
+    // Réponse/Citation
+    replyToMessageId: v.optional(v.id("messages")),
+
+    // Réactions emoji (embedded pour éviter table séparée)
+    reactions: v.optional(
+      v.array(
+        v.object({
+          emoji: v.string(),
+          userId: v.id("users"),
+          createdAt: v.number(),
+        }),
+      ),
+    ),
+
+    // Édition
+    isEdited: v.optional(v.boolean()),
+    editedAt: v.optional(v.number()),
+    originalContent: v.optional(v.string()),
+
+    // Soft delete
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id("users")),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_sender", ["senderId"]),
+
+  // Indicateurs de frappe (données éphémères avec TTL)
+  typingIndicators: defineTable({
+    conversationId: v.id("conversations"),
+    userId: v.id("users"),
+    startedAt: v.number(),
+    expiresAt: v.number(), // Auto-expire après 5 secondes
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_expiresAt", ["expiresAt"]),
 
   subscriptions: defineTable({
     subscriber: v.id("users"),
@@ -252,12 +360,19 @@ export default defineSchema({
       v.literal("newSubscription"),
       v.literal("renewSubscription"),
       v.literal("subscription_expired"),
+      // Nouveaux types pour messagerie
+      v.literal("new_message"),
+      v.literal("messaging_subscription_expiring"),
+      v.literal("messaging_subscription_expired"),
+      v.literal("conversation_locked"),
     ),
     recipientId: v.id("users"),
     sender: v.id("users"),
     read: v.boolean(),
     post: v.optional(v.id("posts")),
     comment: v.optional(v.id("comments")),
+    // Nouveau champ pour messagerie
+    conversation: v.optional(v.id("conversations")),
   })
     .index("by_post", ["post"])
     .index("by_recipient", ["recipientId"])
@@ -355,11 +470,17 @@ export default defineSchema({
       v.literal("newSubscription"),
       v.literal("renewSubscription"),
       v.literal("subscription_expired"),
+      // Nouveaux types pour messagerie
+      v.literal("new_message"),
+      v.literal("messaging_subscription_expiring"),
+      v.literal("messaging_subscription_expired"),
+      v.literal("conversation_locked"),
     ),
     sender: v.id("users"),
     recipientIds: v.array(v.id("users")),
     post: v.optional(v.id("posts")),
     comment: v.optional(v.id("comments")),
+    conversation: v.optional(v.id("conversations")),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),

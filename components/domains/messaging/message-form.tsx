@@ -1,10 +1,10 @@
 "use client"
 
 import { useMutation } from "convex/react"
+import { motion, AnimatePresence } from "motion/react"
 import EmojiPicker, { Theme } from "emoji-picker-react"
-import { Mic, Send, Smile } from "lucide-react"
-import { useParams } from "next/navigation"
-import { useState } from "react"
+import { Lock, Mic, RefreshCw, Send, Smile } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,109 +14,271 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 import { logger } from "@/lib/config/logger"
-import { ConversationProps, UserProps } from "@/types"
+import { cn } from "@/lib/utils"
+import { MessagingPermissions } from "@/types"
 import { MediaPopover } from "./media-popover"
 
 type MessageFormProps = {
-  conversation: ConversationProps
-  currentUser: UserProps
+  conversationId: Id<"conversations">
+  currentUser: Doc<"users"> | null
+  permissions: MessagingPermissions | null
 }
 
 export const MessageForm = ({
   currentUser,
-  conversation,
+  conversationId,
+  permissions,
 }: MessageFormProps) => {
-  const params = useParams()
-
   const [msgText, setMsgText] = useState("")
+  const [isSending, setIsSending] = useState(false)
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  const sendTextMessage = useMutation(api.messages.sendTextMessage)
+  const sendMessage = useMutation(api.messaging.sendMessage)
+  const setTypingIndicator = useMutation(api.messaging.setTypingIndicator)
+
+  // Extraire les permissions (fallback conservatif)
+  const isLocked = permissions?.isLocked ?? false
+  const canSend = permissions?.canSend ?? false
+  const canSendMedia = permissions?.canSendMedia ?? false
+
+  // Gestion de l'indicateur de frappe
+  const handleTyping = useCallback(() => {
+    if (!currentUser || isLocked) return
+
+    // Envoyer l'indicateur de frappe
+    setTypingIndicator({
+      conversationId,
+      isTyping: true,
+    }).catch(() => {
+      // Ignorer silencieusement les erreurs de typing
+    })
+
+    // Réinitialiser le timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+
+    // Arrêter l'indicateur après 3 secondes d'inactivité
+    typingTimeoutRef.current = setTimeout(() => {
+      setTypingIndicator({
+        conversationId,
+        isTyping: false,
+      }).catch(() => {})
+    }, 3000)
+    // eslint-disable-next-line @tanstack/query/no-unstable-deps
+  }, [currentUser, conversationId, isLocked, setTypingIndicator])
+
+  // Cleanup du timeout au démontage
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleSendTextMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!currentUser?._id) return
+    if (!currentUser?._id || !msgText.trim() || isSending) return
+
+    // Arrêter l'indicateur de frappe
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+    setTypingIndicator({
+      conversationId,
+      isTyping: false,
+    }).catch(() => {})
+
+    setIsSending(true)
 
     try {
-      await sendTextMessage({
-        content: msgText,
-        conversation: params.id as Id<"conversations">,
-        sender: currentUser._id,
+      await sendMessage({
+        conversationId,
+        content: msgText.trim(),
       })
 
       setMsgText("")
+      inputRef.current?.focus()
     } catch (error) {
       logger.error("Failed to send message", error, {
-        conversationId: params.id,
+        conversationId,
       })
-      toast.error("Une erreur s'est produite !", {
-        description:
-          "Votre message n'a pas été envoyé. Veuillez vérifier votre connexion internet et réessayer",
-      })
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Erreur inconnue"
+
+      if (errorMessage.includes("expiré") || errorMessage.includes("expired")) {
+        toast.error("Abonnement expiré", {
+          description:
+            "Votre abonnement messagerie a expiré. Renouvelez pour continuer.",
+        })
+      } else {
+        toast.error("Erreur d'envoi", {
+          description:
+            "Votre message n'a pas été envoyé. Veuillez réessayer.",
+        })
+      }
+    } finally {
+      setIsSending(false)
     }
   }
 
+  // Message verrouillé
+  if (isLocked) {
+    return (
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sticky bottom-0 z-10 w-full border-t border-destructive/20 bg-destructive/5 backdrop-blur-xl"
+      >
+        <div className="flex items-center justify-center gap-3 px-4 py-4">
+          <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10">
+            <Lock size={18} className="text-destructive" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-destructive">
+              {permissions?.reason === "no_messaging_subscription"
+                ? "Abonnement messagerie expiré"
+                : "Conversation verrouillée"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Renouvelez votre abonnement pour continuer
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="gap-2 bg-linear-to-r from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400"
+          >
+            <RefreshCw size={14} />
+            Renouveler
+          </Button>
+        </div>
+      </motion.div>
+    )
+  }
+
   return (
-    <div className="sticky bottom-0 z-10 w-full">
-      <div className="bg-muted/60 flex items-center gap-4 p-2">
-        <div className="relative ml-2 flex gap-2">
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="sticky bottom-0 z-10 w-full border-t border-white/5 bg-background/80 backdrop-blur-xl"
+    >
+      <div className="flex items-center gap-2 p-3">
+        {/* Actions à gauche */}
+        <div className="flex items-center gap-1">
           {/* Emoji Picker */}
-          <Popover>
-            <PopoverTrigger>
-              <Smile className="text-muted-foreground transition hover:text-white" />
+          <Popover open={isEmojiOpen} onOpenChange={setIsEmojiOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-9 rounded-full transition-colors",
+                  isEmojiOpen
+                    ? "bg-amber-500/20 text-amber-500"
+                    : "text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                )}
+              >
+                <Smile size={20} />
+              </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-auto"
-              sideOffset={20}
-              alignOffset={-17}
+              className="w-auto border-0 bg-transparent p-0 shadow-2xl"
+              sideOffset={12}
               align="start"
             >
               <EmojiPicker
-                theme={Theme.AUTO}
+                theme={Theme.DARK}
                 onEmojiClick={(emojiObject) => {
                   setMsgText((prev) => prev + emojiObject.emoji)
+                  inputRef.current?.focus()
                 }}
+                width={320}
+                height={400}
               />
             </PopoverContent>
           </Popover>
 
-          {/* Photos & Videos Picker */}
-          <MediaPopover conversation={conversation} />
-          {/* <Plus className="text-muted-foreground" /> */}
+          {/* Photos & Videos Picker (seulement pour les créateurs) */}
+          {canSendMedia && <MediaPopover conversationId={conversationId} />}
         </div>
-        <form onSubmit={handleSendTextMessage} className="flex w-full gap-3">
-          <div className="flex-1">
+
+        {/* Input */}
+        <form onSubmit={handleSendTextMessage} className="flex flex-1 gap-2">
+          <div className="relative flex-1">
             <Input
+              ref={inputRef}
               type="text"
-              placeholder="Ecrivez un message..."
-              className="bg-gray-tertiary w-full rounded-lg py-2 text-sm shadow-xs focus-visible:ring-transparent"
+              placeholder="Écrivez un message..."
+              className="h-10 rounded-full border-white/10 bg-white/5 pr-4 pl-4 text-sm shadow-sm transition-all placeholder:text-muted-foreground/50 focus-visible:border-amber-500/30 focus-visible:ring-amber-500/20"
               value={msgText}
-              onChange={(e) => setMsgText(e.target.value)}
+              onChange={(e) => {
+                setMsgText(e.target.value)
+                handleTyping()
+              }}
+              disabled={!canSend || isSending}
             />
           </div>
-          <div className="mr-4 flex items-center gap-3">
-            {msgText.length > 0 ? (
-              <Button
-                type="submit"
-                size={"sm"}
-                className="text-foreground bg-transparent hover:bg-transparent"
+
+          {/* Bouton envoyer */}
+          <AnimatePresence mode="wait">
+            {msgText.trim().length > 0 ? (
+              <motion.div
+                key="send"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.15 }}
               >
-                <Send />
-              </Button>
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={!canSend || isSending}
+                  className="size-10 rounded-full bg-linear-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/25 transition-all hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/40 disabled:opacity-50"
+                >
+                  {isSending ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="size-5 rounded-full border-2 border-black/30 border-t-black"
+                    />
+                  ) : (
+                    <Send size={18} />
+                  )}
+                </Button>
+              </motion.div>
             ) : (
-              <Button
-                type="submit"
-                size={"sm"}
-                className="text-foreground bg-transparent hover:bg-transparent"
+              <motion.div
+                key="mic"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.15 }}
               >
-                <Mic className="text-muted-foreground transition hover:text-white" />
-              </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="size-10 rounded-full text-muted-foreground"
+                  disabled
+                >
+                  <Mic size={20} />
+                </Button>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </form>
       </div>
-    </div>
+    </motion.div>
   )
 }

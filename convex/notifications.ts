@@ -104,15 +104,30 @@ export const getUnreadCounts = query({
     const unreadNotificationsCount = unreadNotifications.length
 
     // Messages: utilise compteurs dénormalisés (élimine N+1 queries)
-    const conversations = await ctx.db.query("conversations").collect()
-    const myConversations = conversations.filter((conversation) =>
-      conversation.participants.includes(user._id),
-    )
+    // Récupérer les conversations où l'utilisateur est créateur ou user
+    const [asCreator, asUser] = await Promise.all([
+      ctx.db
+        .query("conversations")
+        .withIndex("by_creatorId", (q) => q.eq("creatorId", user._id))
+        .collect(),
+      ctx.db
+        .query("conversations")
+        .withIndex("by_userId", (q) => q.eq("userId", user._id))
+        .collect(),
+    ])
 
-    const userIdKey = user._id as string
-    const unreadMessagesCount = myConversations.reduce((sum, conversation) => {
-      return sum + (conversation.unreadCounts?.[userIdKey] ?? 0)
-    }, 0)
+    // Calculer le total des non-lus
+    let unreadMessagesCount = 0
+    for (const conv of asCreator) {
+      if (!conv.deletedByCreator && !conv.mutedByCreator) {
+        unreadMessagesCount += conv.unreadCountCreator
+      }
+    }
+    for (const conv of asUser) {
+      if (!conv.deletedByUser && !conv.mutedByUser) {
+        unreadMessagesCount += conv.unreadCountUser
+      }
+    }
 
     return {
       unreadNotificationsCount,

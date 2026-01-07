@@ -47,4 +47,23 @@ crons.interval(
   internal.superuser.refreshPlatformStats,
 )
 
+// ============================================
+// MESSAGERIE
+// ============================================
+
+// Nettoyage des indicateurs de frappe expirés toutes les 30 secondes
+crons.interval(
+  "cleanup-typing-indicators",
+  { seconds: 30 },
+  internal.messaging.cleanupExpiredTypingIndicators,
+)
+
+// Vérification des abonnements messagerie expirés et verrouillage des conversations
+// Exécuté toutes les 5 minutes pour une réactivité correcte
+crons.interval(
+  "check-expired-messaging-subscriptions",
+  { minutes: 5 },
+  internal.subscriptions.checkAndLockExpiredMessagingSubscriptions,
+)
+
 export default crons

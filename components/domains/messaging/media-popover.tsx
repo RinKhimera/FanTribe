@@ -1,35 +1,38 @@
 "use client"
 
 import { useMutation } from "convex/react"
+import { motion } from "motion/react"
 import { ImageIcon, Loader2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { logger } from "@/lib/config"
 import { uploadBunnyAsset } from "@/lib/services/bunny"
-import { ConversationProps } from "@/types"
+import { cn } from "@/lib/utils"
 
-export const MediaPopover = ({
-  conversation,
-}: {
-  conversation: ConversationProps
-}) => {
+type MediaPopoverProps = {
+  conversationId: Id<"conversations">
+}
+
+export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
   const { currentUser } = useCurrentUser()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
 
-  const sendImage = useMutation(api.messages.sendImage)
+  const sendMessage = useMutation(api.messaging.sendMessage)
 
   const handleFileSelect = () => {
     fileInputRef.current?.click()
   }
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0]
-    if (!file || !currentUser || !conversation) return
+    if (!file || !currentUser) return
 
     // Validation du type de fichier (images seulement pour les messages)
     if (!file.type.startsWith("image/")) {
@@ -47,12 +50,12 @@ export const MediaPopover = ({
     setIsUploading(true)
 
     try {
-      const fileExtension = file.name.split(".").pop()
+      const fileExtension = file.name.split(".").pop() || "jpg"
       const randomSuffix = crypto
         .randomUUID()
         .replace(/-/g, "")
         .substring(0, 13)
-      const fileName = `${currentUser._id}/${randomSuffix}.${fileExtension}`
+      const fileName = `messages/${currentUser._id}/${randomSuffix}.${fileExtension}`
 
       const result = await uploadBunnyAsset({
         file,
@@ -64,19 +67,28 @@ export const MediaPopover = ({
         throw new Error(result.error || "Upload échoué")
       }
 
-      await sendImage({
-        conversation: conversation._id,
-        imgUrl: result.url,
-        sender: currentUser._id,
+      // Utiliser la nouvelle API sendMessage avec medias
+      await sendMessage({
+        conversationId,
+        medias: [
+          {
+            type: "image",
+            url: result.url,
+            mediaId: result.mediaId,
+            mimeType: file.type,
+            fileName: file.name,
+            fileSize: file.size,
+          },
+        ],
       })
 
       logger.success("Image envoyée avec succès", {
-        conversationId: conversation._id,
+        conversationId,
         mediaId: result.mediaId,
       })
     } catch (error) {
       logger.error("Erreur lors de l'envoi de l'image", error, {
-        conversationId: conversation._id,
+        conversationId,
         userId: currentUser._id,
       })
       toast.error("Une erreur s'est produite !", {
@@ -101,20 +113,29 @@ export const MediaPopover = ({
         onChange={handleFileChange}
         disabled={isUploading}
       />
-      <button
-        className="flex items-center p-2"
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "size-9 rounded-full transition-colors",
+          isUploading
+            ? "bg-amber-500/20 text-amber-500"
+            : "text-muted-foreground hover:bg-white/10 hover:text-foreground"
+        )}
         onClick={handleFileSelect}
         disabled={isUploading}
       >
         {isUploading ? (
-          <Loader2 size={22} className="text-muted-foreground animate-spin" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader2 size={20} />
+          </motion.div>
         ) : (
-          <ImageIcon
-            size={22}
-            className="text-muted-foreground transition hover:text-white"
-          />
+          <ImageIcon size={20} />
         )}
-      </button>
+      </Button>
     </>
   )
 }

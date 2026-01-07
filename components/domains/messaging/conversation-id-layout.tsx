@@ -11,7 +11,7 @@ export const ConversationIdLayout = () => {
 
       <div className="flex flex-1 min-[501px]:overflow-hidden">
         <div className="border-muted hidden w-2/5 flex-col border-r lg:flex min-[501px]:overflow-y-auto">
-          <div className="border-muted flex items-center justify-between border-b p-4 text-lg font-bold">
+          <div className="border-muted flex items-center justify-between border-b py-3 px-4 text-lg font-bold">
             <div>Mes conversations</div>
             <UserListDialog />
           </div>
