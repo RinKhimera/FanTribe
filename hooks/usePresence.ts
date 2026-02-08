@@ -27,7 +27,7 @@ export const usePresence = () => {
   useEffect(() => {
     updateHeartbeatRef.current = updateHeartbeat
     setOfflineRef.current = setOffline
-  }, [updateHeartbeat, setOffline]) // eslint-disable-line @tanstack/query/no-unstable-deps
+  }, [updateHeartbeat, setOffline])
 
   // Heartbeat function - only depends on isAuthenticated to avoid re-renders from currentUser changes
   const sendHeartbeat = useCallback(async () => {

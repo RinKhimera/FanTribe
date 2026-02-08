@@ -1,9 +1,9 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion, AnimatePresence } from "motion/react"
 import EmojiPicker, { Theme } from "emoji-picker-react"
 import { Lock, Mic, RefreshCw, Send, Smile } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,8 @@ export const MessageForm = ({
 
   const sendMessage = useMutation(api.messaging.sendMessage)
   const setTypingIndicator = useMutation(api.messaging.setTypingIndicator)
+  const setTypingIndicatorRef = useRef(setTypingIndicator)
+  setTypingIndicatorRef.current = setTypingIndicator
 
   // Extraire les permissions (fallback conservatif)
   // Note: isLocked indique l'état de la conversation, mais canSend détermine si l'utilisateur peut envoyer
@@ -53,7 +55,7 @@ export const MessageForm = ({
     if (!currentUser || showLockedUI) return
 
     // Envoyer l'indicateur de frappe
-    setTypingIndicator({
+    setTypingIndicatorRef.current({
       conversationId,
       isTyping: true,
     }).catch(() => {
@@ -67,13 +69,12 @@ export const MessageForm = ({
 
     // Arrêter l'indicateur après 3 secondes d'inactivité
     typingTimeoutRef.current = setTimeout(() => {
-      setTypingIndicator({
+      setTypingIndicatorRef.current({
         conversationId,
         isTyping: false,
       }).catch(() => {})
     }, 3000)
-    // eslint-disable-next-line @tanstack/query/no-unstable-deps
-  }, [currentUser, conversationId, showLockedUI, setTypingIndicator])
+  }, [currentUser, conversationId, showLockedUI])
 
   // Cleanup du timeout au démontage
   useEffect(() => {
@@ -123,8 +124,7 @@ export const MessageForm = ({
         })
       } else {
         toast.error("Erreur d'envoi", {
-          description:
-            "Votre message n'a pas été envoyé. Veuillez réessayer.",
+          description: "Votre message n'a pas été envoyé. Veuillez réessayer.",
         })
       }
     } finally {
@@ -139,19 +139,19 @@ export const MessageForm = ({
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky bottom-0 z-10 w-full border-t border-destructive/20 bg-destructive/5 backdrop-blur-xl"
+        className="border-destructive/20 bg-destructive/5 sticky bottom-0 z-10 w-full border-t backdrop-blur-xl"
       >
         <div className="flex items-center justify-center gap-3 px-4 py-4">
-          <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10">
+          <div className="bg-destructive/10 flex size-10 items-center justify-center rounded-full">
             <Lock size={18} className="text-destructive" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-destructive">
+            <p className="text-destructive text-sm font-medium">
               {permissions?.reason === "no_messaging_subscription"
                 ? "Abonnement messagerie expiré"
                 : "Conversation verrouillée"}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Renouvelez votre abonnement pour continuer
             </p>
           </div>
@@ -171,7 +171,7 @@ export const MessageForm = ({
     <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky bottom-0 z-10 w-full border-t border-white/5 bg-background/80 backdrop-blur-xl"
+      className="bg-background/80 sticky bottom-0 z-10 w-full border-t border-white/5 backdrop-blur-xl"
     >
       <div className="flex items-center gap-2 p-3">
         {/* Actions à gauche */}
@@ -186,7 +186,7 @@ export const MessageForm = ({
                   "size-9 rounded-full transition-colors",
                   isEmojiOpen
                     ? "bg-amber-500/20 text-amber-500"
-                    : "text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/10",
                 )}
               >
                 <Smile size={20} />
@@ -220,7 +220,7 @@ export const MessageForm = ({
               ref={inputRef}
               type="text"
               placeholder="Écrivez un message..."
-              className="h-10 rounded-full border-white/10 bg-white/5 pr-4 pl-4 text-sm shadow-sm transition-all placeholder:text-muted-foreground/50 focus-visible:border-amber-500/30 focus-visible:ring-amber-500/20"
+              className="placeholder:text-muted-foreground/50 h-10 rounded-full border-white/10 bg-white/5 pr-4 pl-4 text-sm shadow-sm transition-all focus-visible:border-amber-500/30 focus-visible:ring-amber-500/20"
               value={msgText}
               onChange={(e) => {
                 setMsgText(e.target.value)
@@ -273,7 +273,7 @@ export const MessageForm = ({
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="size-10 rounded-full text-muted-foreground"
+                  className="text-muted-foreground size-10 rounded-full"
                   disabled
                 >
                   <Mic size={20} />
