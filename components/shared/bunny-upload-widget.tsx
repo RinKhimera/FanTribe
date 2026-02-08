@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { logger } from "@/lib/config"
-import { uploadBunnyAsset } from "@/lib/services/bunny"
+import { useBunnyUpload } from "@/hooks"
 
 interface BunnyUploadWidgetProps {
   onSuccess: (result: {
@@ -28,6 +28,7 @@ export const BunnyUploadWidget = ({
   userId,
   uploadType = "image",
 }: BunnyUploadWidgetProps) => {
+  const { uploadMedia } = useBunnyUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -85,7 +86,7 @@ export const BunnyUploadWidget = ({
         .substring(0, 13)
       const finalFileName = `${fileName}_${randomSuffix}.${fileExtension}`
 
-      const result = await uploadBunnyAsset({
+      const result = await uploadMedia({
         file,
         fileName: finalFileName,
         userId,

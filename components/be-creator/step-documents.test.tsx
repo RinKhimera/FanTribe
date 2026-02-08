@@ -20,13 +20,28 @@ vi.mock("@/lib/config", () => ({
   },
 }))
 
-vi.mock("@/lib/services/bunny", () => ({
-  uploadBunnyAsset: vi.fn().mockResolvedValue({
-    success: true,
-    url: "https://test.com/image.jpg",
-    mediaId: "test-media-id",
-    type: "image",
+vi.mock("@/hooks/useBunnyUpload", () => ({
+  useBunnyUpload: () => ({
+    uploadMedia: vi.fn().mockResolvedValue({
+      success: true,
+      url: "https://test.com/image.jpg",
+      mediaId: "test-media-id",
+      type: "image",
+    }),
+    deleteMedia: vi.fn().mockResolvedValue({ success: true }),
+    isUploading: false,
+    progress: {},
   }),
+}))
+
+vi.mock("@/lib/config/env.client", () => ({
+  clientEnv: {
+    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+  },
+}))
+
+vi.mock("@clerk/nextjs", () => ({
+  useAuth: () => ({ getToken: vi.fn().mockResolvedValue("test-token") }),
 }))
 
 // Mock CameraCapture component

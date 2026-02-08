@@ -22,12 +22,10 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { api } from "@/convex/_generated/api"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useBunnyUpload, useCurrentUser } from "@/hooks"
 import { logger } from "@/lib/config/logger"
-import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
-import { BunnyApiResponse } from "@/types"
 import {
   AdultContentToggle,
   MediaPreviewGrid,
@@ -41,6 +39,7 @@ import {
 export const NewPostLayout = () => {
   const router = useRouter()
   const { currentUser, isLoading } = useCurrentUser()
+  const { uploadMedia } = useBunnyUpload()
 
   const createDraftAsset = useMutation(api.assetsDraft.createDraftAsset)
   const deleteDraftWithAsset = useMutation(api.assetsDraft.deleteDraftWithAsset)
@@ -136,7 +135,7 @@ export const NewPostLayout = () => {
         setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
 
         try {
-          const result: BunnyApiResponse = await uploadBunnyAsset({
+          const result = await uploadMedia({
             file,
             fileName,
             userId: currentUser._id,

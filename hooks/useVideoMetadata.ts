@@ -1,4 +1,6 @@
+import { useAuth } from "@clerk/nextjs"
 import { useState, useEffect, useMemo } from "react"
+import { clientEnv } from "@/lib/config/env.client"
 import { logger } from "@/lib/config"
 import type { BunnyVideoGetResponse } from "@/types"
 
@@ -20,10 +22,14 @@ const extractVideoGuidFromUrl = (url: string): string | null => {
   return match ? match[1] : null
 }
 
+const getConvexSiteUrl = () =>
+  clientEnv.NEXT_PUBLIC_CONVEX_URL.replace(".cloud", ".site")
+
 export function useVideoMetadata(
   options: UseVideoMetadataOptions
 ): UseVideoMetadataResult {
   const { mediaUrls, enabled = true } = options
+  const { getToken } = useAuth()
   const [metadata, setMetadata] = useState<
     Record<string, BunnyVideoGetResponse>
   >({})
@@ -49,9 +55,18 @@ export function useVideoMetadata(
       setError(null)
 
       try {
-        const response = await fetch("/api/bunny/metadata", {
+        const token = await getToken({ template: "convex" })
+        if (!token) {
+          throw new Error("Not authenticated")
+        }
+
+        const siteUrl = getConvexSiteUrl()
+        const response = await fetch(`${siteUrl}/api/bunny/metadata`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ videoGuids }),
         })
 

@@ -16,7 +16,7 @@ import { toast } from "sonner"
 import { BunnyUploadWidget } from "@/components/shared/bunny-upload-widget"
 import { CameraCapture } from "@/components/shared/camera-capture"
 import { logger } from "@/lib/config"
-import { uploadBunnyAsset } from "@/lib/services/bunny"
+import { useBunnyUpload } from "@/hooks"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -65,6 +65,7 @@ export const StepDocuments = ({
   onSubmit,
   isSubmitting,
 }: StepDocumentsProps) => {
+  const { uploadMedia } = useBunnyUpload()
   const selectedMotivation = form.watch("applicationReason")
   const documentsComplete =
     !!uploadedDocuments.identityCard && !!uploadedDocuments.selfie
@@ -86,7 +87,7 @@ export const StepDocuments = ({
       const documentType = type === "identityCard" ? "identity-card" : "selfie"
       const finalFileName = `creatorApplications/${userId}/${documentType}_${randomSuffix}.${fileExtension}`
 
-      const result = await uploadBunnyAsset({
+      const result = await uploadMedia({
         file,
         fileName: finalFileName,
         userId,

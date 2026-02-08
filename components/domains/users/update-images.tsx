@@ -12,12 +12,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { imageLoadVariants } from "@/lib/animations"
 import { logger } from "@/lib/config/logger"
-import { deleteBunnyAsset } from "@/lib/services/bunny"
+import { useBunnyUpload } from "@/hooks"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
 
 export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
   const [isPending, startTransition] = useTransition()
+  const { deleteMedia } = useBunnyUpload()
   const updateProfileImage = useMutation(api.users.updateProfileImage)
   const updateBannerImage = useMutation(api.users.updateBannerImage)
 
@@ -52,7 +53,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           const oldMediaId = extractMediaIdFromUrl(currentUser.image)
           if (oldMediaId) {
             try {
-              await deleteBunnyAsset(oldMediaId, "image")
+              await deleteMedia({ mediaId: oldMediaId, type: "image" })
             } catch (error) {
               logger.warn(
                 "Impossible de supprimer l'ancienne image de profil",
@@ -92,7 +93,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           const oldMediaId = extractMediaIdFromUrl(currentUser.imageBanner)
           if (oldMediaId) {
             try {
-              await deleteBunnyAsset(oldMediaId, "image")
+              await deleteMedia({ mediaId: oldMediaId, type: "image" })
             } catch (error) {
               logger.warn("Impossible de supprimer l'ancienne bannière", {
                 error,

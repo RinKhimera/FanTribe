@@ -345,12 +345,6 @@ export interface BunnyVideoGetResponse {
   jitEncodingEnabled: boolean
 }
 
-export interface BunnyVideoUploadResponse {
-  success: boolean
-  message: string
-  statusCode: number
-}
-
 export enum BunnyVideoStatus {
   CREATED = 0,
   UPLOADED = 1,
@@ -360,29 +354,3 @@ export enum BunnyVideoStatus {
   ERROR = 5,
 }
 
-export interface BunnyApiResponse {
-  success: boolean
-  url: string
-  mediaId: string
-  type: "image" | "video"
-  error?: string
-}
-
-export interface BunnyApiErrorResponse {
-  error: string
-}
-
-export interface BunnyCollectionCreateResponse {
-  videoLibraryId: number
-  guid: string
-  name: string
-  videoCount: number
-  totalSize: number
-  previewVideoIds: string
-}
-
-export type BunnyDeleteResponse = {
-  success: boolean
-  message: string | null
-  statusCode: number
-}

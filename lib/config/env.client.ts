@@ -24,22 +24,8 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().default("/auth/sign-in"),
   NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().default("/auth/sign-up"),
 
-  // Bunny CDN
-  NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID: z
-    .string()
-    .min(1, "NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID is required"),
-  NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY: z
-    .string()
-    .min(1, "NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY is required"),
-  NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME: z
-    .string()
-    .min(1, "NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME is required"),
-  NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY: z
-    .string()
-    .min(1, "NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY is required"),
-  NEXT_PUBLIC_BUNNY_PULL_ZONE_URL: z
-    .string()
-    .url("NEXT_PUBLIC_BUNNY_PULL_ZONE_URL must be a valid URL"),
+  // Bunny CDN — Keys are managed in Convex dashboard only
+  // No NEXT_PUBLIC_BUNNY_* secrets needed here
 
   // CinetPay
   NEXT_PUBLIC_CINETPAY_SITE_ID: z
@@ -62,15 +48,6 @@ export const clientEnv = clientEnvSchema.parse({
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
   NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
-  NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID:
-    process.env.NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID,
-  NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY:
-    process.env.NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY,
-  NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME:
-    process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME,
-  NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY:
-    process.env.NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY,
-  NEXT_PUBLIC_BUNNY_PULL_ZONE_URL: process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE_URL,
   NEXT_PUBLIC_CINETPAY_SITE_ID: process.env.NEXT_PUBLIC_CINETPAY_SITE_ID,
   NEXT_PUBLIC_CINETPAY_API_KEY: process.env.NEXT_PUBLIC_CINETPAY_API_KEY,
 })
