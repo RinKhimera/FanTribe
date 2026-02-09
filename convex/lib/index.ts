@@ -43,3 +43,18 @@ export { batchGetUsers, batchGetPosts, batchGetComments } from "./batch"
 
 // Signed URLs pour Bunny CDN (optionnel)
 export { generateSignedBunnyUrl, signBunnyUrls } from "./signedUrls"
+
+// Validators partagés (schéma des documents)
+export {
+  userDocValidator,
+  postMediaValidator,
+  postDocValidator,
+  subscriptionDocValidator,
+  creatorApplicationDocValidator,
+  socialLinkValidator,
+  banDetailsValidator,
+  banHistoryEntryValidator,
+  badgeValidator,
+  personalInfoValidator,
+  paginationResultValidator,
+} from "./validators"

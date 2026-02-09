@@ -10,6 +10,9 @@ export interface MediaItem {
   url: string
   publicId: string
   type: "image" | "video"
+  mimeType: string
+  fileName: string
+  fileSize: number
 }
 
 interface MediaPreviewGridProps {

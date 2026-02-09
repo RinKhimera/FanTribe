@@ -2,14 +2,18 @@ import { ConvexError, v } from "convex/values"
 import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
+import { rateLimiter } from "./lib/rateLimiter"
+import { postDocValidator, userDocValidator } from "./lib/validators"
 
 export const addComment = mutation({
   args: {
     postId: v.id("posts"),
     content: v.string(),
   },
+  returns: v.object({ commentId: v.id("comments") }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
+    await rateLimiter.limit(ctx, "addComment", { key: user._id, throws: true })
 
     if (!args.content.trim()) throw new ConvexError("Empty content")
 
@@ -60,6 +64,7 @@ export const updateComment = mutation({
     commentId: v.id("comments"),
     content: v.string(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const comment = await ctx.db.get(args.commentId)
@@ -81,6 +86,7 @@ export const updateComment = mutation({
 
 export const deleteComment = mutation({
   args: { commentId: v.id("comments") },
+  returns: v.object({ deleted: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const comment = await ctx.db.get(args.commentId)
@@ -112,6 +118,15 @@ export const deleteComment = mutation({
 
 export const listPostComments = query({
   args: { postId: v.id("posts") },
+  returns: v.array(
+    v.object({
+      _id: v.id("comments"),
+      _creationTime: v.number(),
+      author: v.optional(v.union(userDocValidator, v.null())),
+      post: v.id("posts"),
+      content: v.string(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const comments = await ctx.db
       .query("comments")
@@ -130,6 +145,15 @@ export const listPostComments = query({
 
 export const getRecentComments = query({
   args: { postId: v.id("posts"), limit: v.optional(v.number()) },
+  returns: v.array(
+    v.object({
+      _id: v.id("comments"),
+      _creationTime: v.number(),
+      author: v.optional(v.union(userDocValidator, v.null())),
+      post: v.id("posts"),
+      content: v.string(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 3
     const comments = await ctx.db
@@ -149,6 +173,7 @@ export const getRecentComments = query({
 
 export const countForPost = query({
   args: { postId: v.id("posts") },
+  returns: v.object({ postId: v.id("posts"), count: v.number() }),
   handler: async (ctx, args) => {
     const list = await ctx.db
       .query("comments")
@@ -160,6 +185,15 @@ export const countForPost = query({
 
 export const getUserComments = query({
   args: { userId: v.id("users"), limit: v.optional(v.number()) },
+  returns: v.array(
+    v.object({
+      _id: v.id("comments"),
+      _creationTime: v.number(),
+      author: v.id("users"),
+      post: v.optional(v.union(postDocValidator, v.null())),
+      content: v.string(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 50
     const comments = await ctx.db
@@ -178,6 +212,16 @@ export const getUserComments = query({
 
 export const getComment = query({
   args: { commentId: v.id("comments") },
+  returns: v.union(
+    v.object({
+      _id: v.id("comments"),
+      _creationTime: v.number(),
+      author: v.union(userDocValidator, v.null()),
+      post: v.union(postDocValidator, v.null()),
+      content: v.string(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const comment = await ctx.db.get(args.commentId)
     if (!comment) return null

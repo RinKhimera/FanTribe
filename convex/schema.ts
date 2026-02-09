@@ -145,7 +145,21 @@ export default defineSchema({
   posts: defineTable({
     author: v.id("users"),
     content: v.string(),
-    medias: v.array(v.string()),
+    medias: v.array(v.union(
+      v.string(),
+      v.object({
+        type: v.union(v.literal("image"), v.literal("video")),
+        url: v.string(),
+        mediaId: v.string(),
+        mimeType: v.string(),
+        fileName: v.optional(v.string()),
+        fileSize: v.optional(v.number()),
+        thumbnailUrl: v.optional(v.string()),
+        duration: v.optional(v.number()),
+        width: v.optional(v.number()),
+        height: v.optional(v.number()),
+      }),
+    )),
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
     isAdult: v.optional(v.boolean()),
   })
@@ -364,7 +378,8 @@ export default defineSchema({
     .index("by_subscription", ["subscriptionId"])
     .index("by_subscriber", ["subscriberId"])
     .index("by_creator", ["creatorId"])
-    .index("by_providerTransactionId", ["providerTransactionId"]),
+    .index("by_providerTransactionId", ["providerTransactionId"])
+    .index("by_status", ["status"]),
 
   notifications: defineTable({
     type: v.union(
@@ -393,7 +408,8 @@ export default defineSchema({
     .index("by_recipient_type", ["recipientId", "type"])
     .index("by_recipient_read", ["recipientId", "read"])
     .index("by_type_post_sender", ["type", "post", "sender"])
-    .index("by_type_comment_sender", ["type", "comment", "sender"]),
+    .index("by_type_comment_sender", ["type", "comment", "sender"])
+    .index("by_comment", ["comment"]),
 
   userStats: defineTable({
     userId: v.id("users"),

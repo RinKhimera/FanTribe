@@ -22,12 +22,10 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { api } from "@/convex/_generated/api"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useBunnyUpload, useCurrentUser } from "@/hooks"
 import { logger } from "@/lib/config/logger"
-import { uploadBunnyAsset } from "@/lib/services/bunny"
 import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
-import { BunnyApiResponse } from "@/types"
 import {
   AdultContentToggle,
   MediaPreviewGrid,
@@ -41,6 +39,7 @@ import {
 export const NewPostLayout = () => {
   const router = useRouter()
   const { currentUser, isLoading } = useCurrentUser()
+  const { uploadMedia } = useBunnyUpload()
 
   const createDraftAsset = useMutation(api.assetsDraft.createDraftAsset)
   const deleteDraftWithAsset = useMutation(api.assetsDraft.deleteDraftWithAsset)
@@ -136,7 +135,7 @@ export const NewPostLayout = () => {
         setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
 
         try {
-          const result: BunnyApiResponse = await uploadBunnyAsset({
+          const result = await uploadMedia({
             file,
             fileName,
             userId: currentUser._id,
@@ -152,10 +151,13 @@ export const NewPostLayout = () => {
           })
 
           if (result.success) {
-            const newMedia = {
+            const newMedia: MediaItem = {
               url: result.url,
               publicId: result.mediaId,
               type: result.type,
+              mimeType: result.mimeType,
+              fileName: result.fileName,
+              fileSize: result.fileSize,
             }
             setMedias((prev) => [...prev, newMedia])
             if (currentUser) {
@@ -205,11 +207,18 @@ export const NewPostLayout = () => {
   const onSubmit = async (data: z.infer<typeof postFormSchema>) => {
     startTransition(async () => {
       try {
-        data.media = medias.map((media) => media.url)
+        const mediaObjects = medias.map((media) => ({
+          type: media.type,
+          url: media.url,
+          mediaId: media.publicId,
+          mimeType: media.mimeType,
+          fileName: media.fileName,
+          fileSize: media.fileSize,
+        }))
 
         await createPost({
           content: data.content,
-          medias: data.media,
+          medias: mediaObjects,
           visibility: visibility,
           isAdult: isAdult,
         })

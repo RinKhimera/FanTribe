@@ -8,6 +8,7 @@ import {
   getConversationRole,
   truncateMessagePreview,
 } from "./lib/messaging"
+import { rateLimiter } from "./lib/rateLimiter"
 
 // ============================================
 // HELPERS INTERNES
@@ -47,6 +48,7 @@ export const startConversation = mutation({
   args: {
     creatorId: v.id("users"),
   },
+  returns: v.id("conversations"),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -131,6 +133,7 @@ export const startConversationAsCreator = mutation({
   args: {
     userId: v.id("users"),
   },
+  returns: v.id("conversations"),
   handler: async (ctx, args) => {
     const creator = await getAuthenticatedUser(ctx)
 
@@ -261,8 +264,10 @@ export const sendMessage = mutation({
     ),
     replyToMessageId: v.optional(v.id("messages")),
   },
+  returns: v.id("messages"),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
+    await rateLimiter.limit(ctx, "sendMessage", { key: user._id, throws: true })
 
     // Vérifier les permissions
     const permissions = await checkConversationPermissions(
@@ -367,6 +372,7 @@ export const editMessage = mutation({
     messageId: v.id("messages"),
     newContent: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const message = await ctx.db.get(args.messageId)
@@ -419,6 +425,8 @@ export const editMessage = mutation({
         lastMessagePreview: truncateMessagePreview(args.newContent),
       })
     }
+
+    return null
   },
 })
 
@@ -429,6 +437,7 @@ export const deleteMessage = mutation({
   args: {
     messageId: v.id("messages"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const message = await ctx.db.get(args.messageId)
@@ -464,6 +473,8 @@ export const deleteMessage = mutation({
         lastMessagePreview: "[Message supprimé]",
       })
     }
+
+    return null
   },
 })
 
@@ -475,8 +486,10 @@ export const toggleReaction = mutation({
     messageId: v.id("messages"),
     emoji: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
+    await rateLimiter.limit(ctx, "toggleReaction", { key: user._id, throws: true })
     const message = await ctx.db.get(args.messageId)
 
     if (!message) {
@@ -519,6 +532,8 @@ export const toggleReaction = mutation({
     }
 
     await ctx.db.patch(args.messageId, { reactions })
+
+    return null
   },
 })
 
@@ -533,6 +548,7 @@ export const markAsRead = mutation({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const role = await getConversationRole(ctx, args.conversationId, user._id)
@@ -547,6 +563,8 @@ export const markAsRead = mutation({
         ? { unreadCountCreator: 0 }
         : { unreadCountUser: 0 }),
     })
+
+    return null
   },
 })
 
@@ -557,6 +575,7 @@ export const toggleMute = mutation({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const conversation = await ctx.db.get(args.conversationId)
@@ -580,6 +599,8 @@ export const toggleMute = mutation({
         ? { mutedByCreator: !currentMuted }
         : { mutedByUser: !currentMuted }),
     })
+
+    return null
   },
 })
 
@@ -590,6 +611,7 @@ export const togglePin = mutation({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const conversation = await ctx.db.get(args.conversationId)
@@ -613,6 +635,8 @@ export const togglePin = mutation({
         ? { pinnedByCreator: !currentPinned }
         : { pinnedByUser: !currentPinned }),
     })
+
+    return null
   },
 })
 
@@ -623,6 +647,7 @@ export const deleteConversation = mutation({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const role = await getConversationRole(ctx, args.conversationId, user._id)
@@ -636,6 +661,8 @@ export const deleteConversation = mutation({
         ? { deletedByCreator: true }
         : { deletedByUser: true }),
     })
+
+    return null
   },
 })
 
@@ -651,13 +678,14 @@ export const setTypingIndicator = mutation({
     conversationId: v.id("conversations"),
     isTyping: v.boolean(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
     // Vérifier que l'utilisateur est participant
     const role = await getConversationRole(ctx, args.conversationId, user._id)
     if (!role && user.accountType !== "SUPERUSER") {
-      return // Ignorer silencieusement
+      return null // Ignorer silencieusement
     }
 
     // Chercher un indicateur existant
@@ -694,6 +722,8 @@ export const setTypingIndicator = mutation({
         await ctx.db.delete(existing._id)
       }
     }
+
+    return null
   },
 })
 
@@ -714,6 +744,65 @@ export const getMyConversations = query({
       ),
     ),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id("conversations"),
+      _creationTime: v.number(),
+      creatorId: v.id("users"),
+      userId: v.id("users"),
+      lastMessageAt: v.optional(v.number()),
+      lastMessagePreview: v.optional(v.string()),
+      lastMessageSenderId: v.optional(v.id("users")),
+      unreadCountCreator: v.number(),
+      unreadCountUser: v.number(),
+      isLocked: v.boolean(),
+      lockedAt: v.optional(v.number()),
+      lockedReason: v.optional(
+        v.union(
+          v.literal("subscription_expired"),
+          v.literal("admin_blocked"),
+        ),
+      ),
+      mutedByCreator: v.optional(v.boolean()),
+      mutedByUser: v.optional(v.boolean()),
+      pinnedByCreator: v.optional(v.boolean()),
+      pinnedByUser: v.optional(v.boolean()),
+      deletedByCreator: v.optional(v.boolean()),
+      deletedByUser: v.optional(v.boolean()),
+      blockedByAdmin: v.optional(v.boolean()),
+      blockedByAdminReason: v.optional(v.string()),
+      initiatedBy: v.optional(v.id("users")),
+      initiatorRole: v.optional(
+        v.union(
+          v.literal("admin"),
+          v.literal("creator"),
+          v.literal("user"),
+        ),
+      ),
+      requiresSubscription: v.optional(v.boolean()),
+      role: v.union(v.literal("creator"), v.literal("user")),
+      otherParticipant: v.union(
+        v.object({
+          _id: v.id("users"),
+          name: v.string(),
+          username: v.optional(v.string()),
+          image: v.string(),
+          isOnline: v.boolean(),
+          lastSeenAt: v.optional(v.number()),
+          accountType: v.union(
+            v.literal("USER"),
+            v.literal("CREATOR"),
+            v.literal("SUPERUSER"),
+          ),
+        }),
+        v.null(),
+      ),
+      unreadCount: v.number(),
+      hasUnread: v.boolean(),
+      isPinned: v.boolean(),
+      isMuted: v.boolean(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return []
@@ -732,11 +821,11 @@ export const getMyConversations = query({
       ctx.db
         .query("conversations")
         .withIndex("by_creatorId", (q) => q.eq("creatorId", user._id))
-        .collect(),
+        .take(500),
       ctx.db
         .query("conversations")
         .withIndex("by_userId", (q) => q.eq("userId", user._id))
-        .collect(),
+        .take(500),
     ])
 
     // Combiner et filtrer les conversations supprimées
@@ -824,6 +913,96 @@ export const getMessages = query({
     cursor: v.optional(v.number()),
     limit: v.optional(v.number()),
   },
+  returns: v.object({
+    messages: v.array(
+      v.object({
+        _id: v.id("messages"),
+        _creationTime: v.number(),
+        conversationId: v.id("conversations"),
+        senderId: v.id("users"),
+        content: v.optional(v.string()),
+        medias: v.optional(
+          v.array(
+            v.object({
+              type: v.union(
+                v.literal("image"),
+                v.literal("video"),
+                v.literal("audio"),
+                v.literal("document"),
+              ),
+              url: v.string(),
+              mediaId: v.string(),
+              mimeType: v.string(),
+              fileName: v.optional(v.string()),
+              fileSize: v.optional(v.number()),
+              thumbnailUrl: v.optional(v.string()),
+              duration: v.optional(v.number()),
+              width: v.optional(v.number()),
+              height: v.optional(v.number()),
+            }),
+          ),
+        ),
+        messageType: v.union(
+          v.literal("text"),
+          v.literal("media"),
+          v.literal("system"),
+        ),
+        systemMessageType: v.optional(
+          v.union(
+            v.literal("conversation_started"),
+            v.literal("subscription_expired"),
+            v.literal("subscription_renewed"),
+            v.literal("conversation_locked"),
+            v.literal("conversation_unlocked"),
+          ),
+        ),
+        replyToMessageId: v.optional(v.id("messages")),
+        reactions: v.optional(
+          v.array(
+            v.object({
+              emoji: v.string(),
+              userId: v.id("users"),
+              createdAt: v.number(),
+            }),
+          ),
+        ),
+        isEdited: v.optional(v.boolean()),
+        editedAt: v.optional(v.number()),
+        originalContent: v.optional(v.string()),
+        isDeleted: v.optional(v.boolean()),
+        deletedAt: v.optional(v.number()),
+        deletedBy: v.optional(v.id("users")),
+        sentWhileLocked: v.optional(v.boolean()),
+        sender: v.union(
+          v.object({
+            _id: v.id("users"),
+            name: v.string(),
+            username: v.optional(v.string()),
+            image: v.string(),
+            accountType: v.union(
+              v.literal("USER"),
+              v.literal("CREATOR"),
+              v.literal("SUPERUSER"),
+            ),
+          }),
+          v.null(),
+        ),
+        replyToMessage: v.union(
+          v.object({
+            _id: v.id("messages"),
+            content: v.optional(v.string()),
+            senderId: v.id("users"),
+          }),
+          v.null(),
+        ),
+      }),
+    ),
+    hasMore: v.boolean(),
+    nextCursor: v.union(v.number(), v.null()),
+    isLocked: v.optional(v.boolean()),
+    canSendMedia: v.optional(v.boolean()),
+    reason: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -942,6 +1121,24 @@ export const getTypingIndicators = query({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id("typingIndicators"),
+      _creationTime: v.number(),
+      conversationId: v.id("conversations"),
+      userId: v.id("users"),
+      startedAt: v.number(),
+      expiresAt: v.number(),
+      user: v.union(
+        v.object({
+          _id: v.id("users"),
+          name: v.string(),
+          image: v.string(),
+        }),
+        v.null(),
+      ),
+    }),
+  ),
   handler: async (ctx, args) => {
     // Récupérer l'utilisateur actuel pour le filtrer des résultats
     const currentUser = await getAuthenticatedUser(ctx)
@@ -981,6 +1178,8 @@ export const getTypingIndicators = query({
  * Compte total des messages non lus
  */
 export const getTotalUnreadCount = query({
+  args: {},
+  returns: v.number(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return 0
@@ -999,11 +1198,11 @@ export const getTotalUnreadCount = query({
       ctx.db
         .query("conversations")
         .withIndex("by_creatorId", (q) => q.eq("creatorId", user._id))
-        .collect(),
+        .take(500),
       ctx.db
         .query("conversations")
         .withIndex("by_userId", (q) => q.eq("userId", user._id))
-        .collect(),
+        .take(500),
     ])
 
     // Calculer le total
@@ -1032,6 +1231,15 @@ export const getConversationPermissionsQuery = query({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.object({
+    canSend: v.boolean(),
+    canRead: v.boolean(),
+    canSendMedia: v.boolean(),
+    isLocked: v.boolean(),
+    reason: v.optional(v.string()),
+    requiresSubscription: v.optional(v.boolean()),
+    requiresContentSubscription: v.optional(v.boolean()),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -1072,6 +1280,70 @@ export const getConversation = query({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.union(
+    v.object({
+      _id: v.id("conversations"),
+      _creationTime: v.number(),
+      creatorId: v.id("users"),
+      userId: v.id("users"),
+      lastMessageAt: v.optional(v.number()),
+      lastMessagePreview: v.optional(v.string()),
+      lastMessageSenderId: v.optional(v.id("users")),
+      unreadCountCreator: v.number(),
+      unreadCountUser: v.number(),
+      isLocked: v.boolean(),
+      lockedAt: v.optional(v.number()),
+      lockedReason: v.optional(
+        v.union(
+          v.literal("subscription_expired"),
+          v.literal("admin_blocked"),
+        ),
+      ),
+      mutedByCreator: v.optional(v.boolean()),
+      mutedByUser: v.optional(v.boolean()),
+      pinnedByCreator: v.optional(v.boolean()),
+      pinnedByUser: v.optional(v.boolean()),
+      deletedByCreator: v.optional(v.boolean()),
+      deletedByUser: v.optional(v.boolean()),
+      blockedByAdmin: v.optional(v.boolean()),
+      blockedByAdminReason: v.optional(v.string()),
+      initiatedBy: v.optional(v.id("users")),
+      initiatorRole: v.optional(
+        v.union(
+          v.literal("admin"),
+          v.literal("creator"),
+          v.literal("user"),
+        ),
+      ),
+      requiresSubscription: v.optional(v.boolean()),
+      role: v.union(
+        v.literal("creator"),
+        v.literal("user"),
+        v.literal("admin"),
+      ),
+      otherParticipant: v.union(
+        v.object({
+          _id: v.id("users"),
+          name: v.string(),
+          username: v.optional(v.string()),
+          image: v.string(),
+          isOnline: v.boolean(),
+          lastSeenAt: v.optional(v.number()),
+          accountType: v.union(
+            v.literal("USER"),
+            v.literal("CREATOR"),
+            v.literal("SUPERUSER"),
+          ),
+        }),
+        v.null(),
+      ),
+      isPinned: v.boolean(),
+      isMuted: v.boolean(),
+      unreadCount: v.number(),
+      hasUnread: v.boolean(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -1153,6 +1425,8 @@ export const getConversation = query({
  * Nettoie les indicateurs de frappe expirés
  */
 export const cleanupExpiredTypingIndicators = internalMutation({
+  args: {},
+  returns: v.object({ deleted: v.number() }),
   handler: async (ctx) => {
     const now = Date.now()
 
@@ -1176,9 +1450,10 @@ export const lockConversationOnExpiry = internalMutation({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId)
-    if (!conversation || conversation.isLocked) return
+    if (!conversation || conversation.isLocked) return null
 
     await ctx.db.patch(args.conversationId, {
       isLocked: true,
@@ -1193,6 +1468,8 @@ export const lockConversationOnExpiry = internalMutation({
       messageType: "system",
       systemMessageType: "conversation_locked",
     })
+
+    return null
   },
 })
 
@@ -1203,9 +1480,10 @@ export const unlockConversationOnRenewal = internalMutation({
   args: {
     conversationId: v.id("conversations"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId)
-    if (!conversation || !conversation.isLocked) return
+    if (!conversation || !conversation.isLocked) return null
 
     await ctx.db.patch(args.conversationId, {
       isLocked: false,
@@ -1220,6 +1498,8 @@ export const unlockConversationOnRenewal = internalMutation({
       messageType: "system",
       systemMessageType: "conversation_unlocked",
     })
+
+    return null
   },
 })
 
@@ -1238,6 +1518,7 @@ export const insertSystemMessage = internalMutation({
     ),
     senderId: v.id("users"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("messages", {
       conversationId: args.conversationId,
@@ -1245,6 +1526,8 @@ export const insertSystemMessage = internalMutation({
       messageType: "system",
       systemMessageType: args.systemMessageType,
     })
+
+    return null
   },
 })
 
@@ -1258,6 +1541,20 @@ export const getMessagingContacts = query({
   args: {
     search: v.optional(v.string()),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+      isOnline: v.boolean(),
+      accountType: v.union(
+        v.literal("USER"),
+        v.literal("CREATOR"),
+        v.literal("SUPERUSER"),
+      ),
+    }),
+  ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return []
@@ -1275,7 +1572,7 @@ export const getMessagingContacts = query({
 
     // Admin: peut voir tous les utilisateurs
     if (user.accountType === "SUPERUSER") {
-      let allUsers = await ctx.db.query("users").collect()
+      let allUsers = await ctx.db.query("users").take(1000)
 
       // Exclure l'utilisateur actuel
       allUsers = allUsers.filter((u) => u._id !== user._id)
@@ -1311,7 +1608,7 @@ export const getMessagingContacts = query({
             q.eq(q.field("status"), "expired"),
           ),
         )
-        .collect()
+        .take(500)
 
       const subscriberIds = [...new Set(subscriptions.map((s) => s.subscriber))]
       const subscribers = await Promise.all(
@@ -1345,7 +1642,7 @@ export const getMessagingContacts = query({
       .withIndex("by_subscriber_status", (q) =>
         q.eq("subscriber", user._id).eq("status", "active"),
       )
-      .collect()
+      .take(500)
 
     // Filtrer les abonnements qui ont accès messagerie (type messaging_access ou les deux)
     const messagingSubscriptions = subscriptions.filter(

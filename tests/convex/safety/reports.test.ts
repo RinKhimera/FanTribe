@@ -1,4 +1,5 @@
 import { convexTest } from "convex-test"
+import { register as registerRateLimiter } from "@convex-dev/rate-limiter/test"
 import { describe, expect, it } from "vitest"
 import { api } from "../../../convex/_generated/api"
 import schema from "../../../convex/schema"
@@ -9,6 +10,7 @@ describe("reports", () => {
   describe("createReport", () => {
     it("should create a user report", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       const reporterId = await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -56,6 +58,7 @@ describe("reports", () => {
 
     it("should create a post report", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       // Reporter user must exist in DB for authentication
       await t.run(async (ctx) => {
@@ -109,6 +112,7 @@ describe("reports", () => {
 
     it("should create a comment report", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       // Reporter user must exist in DB for authentication
       await t.run(async (ctx) => {
@@ -170,6 +174,7 @@ describe("reports", () => {
 
     it("should reject unauthenticated users", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       const targetId = await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -193,6 +198,7 @@ describe("reports", () => {
 
     it("should reject self-reporting", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       const userId = await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -218,6 +224,7 @@ describe("reports", () => {
 
     it("should reject reporting own post", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       const userId = await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -252,6 +259,7 @@ describe("reports", () => {
 
     it("should reject reporting own comment", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       const userId = await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -294,6 +302,7 @@ describe("reports", () => {
 
     it("should require at least one target", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -320,6 +329,7 @@ describe("reports", () => {
   describe("getAllReports", () => {
     it("should return all reports for SUPERUSER", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       // Admin user must exist in DB for authentication
       await t.run(async (ctx) => {
@@ -384,6 +394,7 @@ describe("reports", () => {
 
     it("should reject non-SUPERUSER users", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -405,6 +416,7 @@ describe("reports", () => {
 
     it("should include enriched data for post reports", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -472,6 +484,7 @@ describe("reports", () => {
   describe("updateReportStatus", () => {
     it("should update status to resolved with dismissed action", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       const adminId = await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -538,6 +551,7 @@ describe("reports", () => {
 
     it("should update status to resolved with admin notes", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       // Admin user must exist in DB for authentication
       await t.run(async (ctx) => {
@@ -601,6 +615,7 @@ describe("reports", () => {
 
     it("should reject non-SUPERUSER users", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -660,6 +675,7 @@ describe("reports", () => {
   describe("getReportsStats", () => {
     it("should return correct counts by status and type", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -755,6 +771,7 @@ describe("reports", () => {
 
     it("should reject non-SUPERUSER users", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -778,6 +795,7 @@ describe("reports", () => {
   describe("deleteReportedContentAndResolve", () => {
     it("should delete reported post and resolve report", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -858,6 +876,7 @@ describe("reports", () => {
 
     it("should delete post comments, likes, bookmarks, and notifications", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -963,6 +982,7 @@ describe("reports", () => {
 
     it("should delete reported comment and resolve report", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -1050,6 +1070,7 @@ describe("reports", () => {
 
     it("should reject non-SUPERUSER users", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {

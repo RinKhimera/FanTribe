@@ -24,10 +24,11 @@ import { Form } from "@/components/ui/form"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { stepSlideVariants } from "@/lib/animations"
-import { deleteBunnyAsset } from "@/lib/services/bunny"
+import { useBunnyUpload } from "@/hooks"
 
 const BeCreatorPage = () => {
   const { currentUser } = useCurrentUser()
+  const { deleteMedia } = useBunnyUpload()
   const [currentStep, setCurrentStep] = useState(1)
   const [[, direction], setPage] = useState([1, 0])
   const [isPending, startTransition] = useTransition()
@@ -70,7 +71,7 @@ const BeCreatorPage = () => {
         const currentDocs = uploadedDocumentsRef.current
         Object.values(currentDocs).forEach((doc) => {
           if (doc?.mediaId) {
-            deleteBunnyAsset(doc.mediaId, "image").catch((error: unknown) => {
+            deleteMedia({ mediaId: doc.mediaId, type: "image" }).catch((error: unknown) => {
               console.error(
                 "Erreur lors de la suppression du document:",
                 error
@@ -178,7 +179,7 @@ const BeCreatorPage = () => {
     if (!document) return
 
     try {
-      await deleteBunnyAsset(document.mediaId, "image")
+      await deleteMedia({ mediaId: document.mediaId, type: "image" })
       await deleteDraftDocument({ mediaUrl: document.mediaId })
       setUploadedDocuments((prev) => ({
         ...prev,

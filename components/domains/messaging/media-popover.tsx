@@ -10,7 +10,7 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { logger } from "@/lib/config"
-import { uploadBunnyAsset } from "@/lib/services/bunny"
+import { useBunnyUpload } from "@/hooks"
 import { cn } from "@/lib/utils"
 
 type MediaPopoverProps = {
@@ -19,6 +19,7 @@ type MediaPopoverProps = {
 
 export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
   const { currentUser } = useCurrentUser()
+  const { uploadMedia } = useBunnyUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -57,7 +58,7 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
         .substring(0, 13)
       const fileName = `messages/${currentUser._id}/${randomSuffix}.${fileExtension}`
 
-      const result = await uploadBunnyAsset({
+      const result = await uploadMedia({
         file,
         fileName,
         userId: currentUser._id,

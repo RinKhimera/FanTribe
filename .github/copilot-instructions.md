@@ -34,12 +34,9 @@ CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/auth/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/auth/sign-up
 
-# Bunny CDN (replaces Cloudinary)
-NEXT_PUBLIC_BUNNY_VIDEO_LIBRARY_ID=
-NEXT_PUBLIC_BUNNY_VIDEO_ACCESS_KEY=
-NEXT_PUBLIC_BUNNY_STORAGE_ZONE_NAME=
-NEXT_PUBLIC_BUNNY_STORAGE_ACCESS_KEY=
-NEXT_PUBLIC_BUNNY_CDN_HOSTNAME=
+# Bunny CDN — All secrets managed in Convex dashboard only
+# See Convex env vars: BUNNY_STORAGE_ZONE, BUNNY_STORAGE_PASSWORD,
+# BUNNY_CDN_HOSTNAME, BUNNY_STREAM_LIBRARY_ID, BUNNY_STREAM_API_KEY, BUNNY_URL_TOKEN_KEY
 
 # CinetPay (African payment processor)
 NEXT_PUBLIC_CINETPAY_SITE_ID=
@@ -138,17 +135,21 @@ try {
 }
 ```
 
-### Media Handling (Bunny CDN)
+### Media Handling (Bunny CDN via Convex)
 
-- **Architecture**: Videos use Bunny Stream (`iframe.mediadelivery.net`), images use Bunny Storage
-- **User Collections**: Videos automatically organized per-user via `getOrCreateUserCollection` (see `lib/bunny.ts`)
+- **Architecture**: All Bunny operations go through Convex HTTP Actions (`convex/http.ts`). No Bunny secrets in client code.
+- **Images**: Upload via `convex.site/api/bunny/upload-image` (Convex proxies to Bunny Storage)
+- **Videos**: Hybrid — get upload token from `convex.site/api/bunny/upload-video`, then browser uploads directly to Bunny Stream
+- **Client Hook**: Use `useBunnyUpload()` from `@/hooks` for all uploads/deletes
+- **Server Module**: `convex/lib/bunny.ts` centralizes all Bunny API calls
+- **User Collections**: Videos organized per-user via `getOrCreateUserCollection` in `convex/lib/bunny.ts`
 - **Upload Flow**:
-  1. Upload to Bunny → get `mediaId` and `mediaUrl`
+  1. Upload via `useBunnyUpload().uploadMedia()` → get `mediaId` and `url`
   2. Create draft in `assetsDraft` table via `convex/assetsDraft.ts`
   3. Publish by adding URL to post's `medias` array
-- **Video Metadata**: Fetch via `/api/bunny/metadata` using video GUIDs from iframe URLs
+- **Video Metadata**: Fetch via `convex.site/api/bunny/metadata` (authenticated) using video GUIDs
 - **File Naming**: `userId/{randomSuffix}.{extension}` for all uploads
-- **Deletion**: Use `deleteBunnyAsset` from `lib/bunny.ts`, cleanup drafts in Convex
+- **Deletion**: Use `useBunnyUpload().deleteMedia()`, cleanup drafts in Convex
 
 ### Database Schema (Convex)
 
@@ -221,7 +222,7 @@ Defined in `convex/crons.ts`:
 ### External Services
 
 - **Clerk**: Authentication with French localization (`frFR` in `app/layout.tsx`)
-- **Bunny CDN**: Video delivery (bunny-sdk) and storage with per-user collections
+- **Bunny CDN**: Video delivery and storage via Convex HTTP Actions (`convex/lib/bunny.ts`)
 - **Resend**: Email notifications for reports (`templates/report-email-template.tsx`)
 - **CinetPay**: Primary payment processor for African markets
 - **Stripe**: Secondary payment processor for card transactions
@@ -248,7 +249,7 @@ Defined in `convex/crons.ts`:
 - **French**: All user-facing text MUST be French (check existing components for tone)
 - **Permissions**: Check `accountType` for CREATOR-only features (subscriptions, verification)
 - **Blocking**: Remember to filter blocked users in queries (see `convex/posts.ts` for pattern)
-- **Bunny CDN**: Videos require collection IDs, images need storage zone name
+- **Bunny CDN**: All operations via `useBunnyUpload()` hook; secrets only in Convex dashboard
 - **ResponsiveLayout**: Don't set fixed widths in page content - breaks responsive design
 - **Logging**: Use `logger` from `@/lib/config/logger`, NOT `console.log/error` in client components
 - **Types**: Prefer `Doc<"tableName">` over manual type definitions (see `types/index.ts`)
@@ -268,7 +269,7 @@ All utility functions are organized under `lib/`:
 
 ```
 lib/
-├── bunny.ts           # Bunny CDN client functions (legacy, prefer lib/services/bunny.ts)
+├── bunny.ts           # ⚠️ DEPRECATED - Bunny CDN ops now in convex/lib/bunny.ts
 ├── dates.ts           # ⚠️ DEPRECATED - use lib/formatters/
 ├── svgs.tsx           # SVG components
 ├── utils.ts           # General utilities (cn, debounce, etc.)
@@ -288,8 +289,8 @@ lib/
 │   ├── create-initials.ts
 │   └── generate-random-string.ts
 ├── services/          # External service integrations
-│   ├── bunny.ts       # Bunny CDN upload/delete
-│   └── currency.ts    # Currency formatting
+│   ├── stripe.ts      # Stripe payment helpers
+│   └── cinetpay.ts    # CinetPay payment helpers
 ├── ui/                # UI helper functions
 │   ├── index.ts
 │   └── get-status-badge.tsx

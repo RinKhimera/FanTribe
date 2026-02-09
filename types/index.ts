@@ -11,6 +11,26 @@ import { Doc, Id } from "@/convex/_generated/dataModel"
 export type UserProps = Doc<"users"> | undefined
 
 // ============================================================================
+// Types pour les médias de posts
+// ============================================================================
+
+/**
+ * Type pour les médias attachés aux posts (images et vidéos)
+ */
+export type PostMedia = {
+  type: "image" | "video"
+  url: string
+  mediaId: string
+  mimeType: string
+  fileName?: string
+  fileSize?: number
+  thumbnailUrl?: string
+  duration?: number
+  width?: number
+  height?: number
+}
+
+// ============================================================================
 // Types pour la messagerie (nouveau système)
 // ============================================================================
 
@@ -203,7 +223,7 @@ export interface ReportedPost {
   _id: Id<"posts">
   _creationTime: number
   content: string
-  medias: string[]
+  medias: (string | PostMedia)[]
   visibility: "public" | "subscribers_only"
   author: Doc<"users"> | null
 }
@@ -345,12 +365,6 @@ export interface BunnyVideoGetResponse {
   jitEncodingEnabled: boolean
 }
 
-export interface BunnyVideoUploadResponse {
-  success: boolean
-  message: string
-  statusCode: number
-}
-
 export enum BunnyVideoStatus {
   CREATED = 0,
   UPLOADED = 1,
@@ -360,29 +374,3 @@ export enum BunnyVideoStatus {
   ERROR = 5,
 }
 
-export interface BunnyApiResponse {
-  success: boolean
-  url: string
-  mediaId: string
-  type: "image" | "video"
-  error?: string
-}
-
-export interface BunnyApiErrorResponse {
-  error: string
-}
-
-export interface BunnyCollectionCreateResponse {
-  videoLibraryId: number
-  guid: string
-  name: string
-  videoCount: number
-  totalSize: number
-  previewVideoIds: string
-}
-
-export type BunnyDeleteResponse = {
-  success: boolean
-  message: string | null
-  statusCode: number
-}

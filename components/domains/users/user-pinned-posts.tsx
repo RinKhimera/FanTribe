@@ -10,6 +10,7 @@ import { Doc, Id } from "@/convex/_generated/dataModel"
 import { itemVariants, pinnedBadgeVariants } from "@/lib/animations"
 import { formatCustomTimeAgo } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import type { PostMedia } from "@/types"
 
 interface UserPinnedPostsProps {
   userId: Id<"users">
@@ -17,8 +18,9 @@ interface UserPinnedPostsProps {
   currentUserId?: Id<"users">
 }
 
-type PinnedPost = Doc<"posts"> & {
+type PinnedPost = Omit<Doc<"posts">, "medias"> & {
   author: Doc<"users">
+  medias: PostMedia[]
 }
 
 export const UserPinnedPosts = ({
@@ -81,10 +83,7 @@ interface PinnedPostCardProps {
 const PinnedPostCard = ({ post, username }: PinnedPostCardProps) => {
   const hasMedia = post.medias && post.medias.length > 0
   const firstMedia = hasMedia ? post.medias[0] : null
-  const isVideo =
-    firstMedia?.includes("mediadelivery.net") ||
-    firstMedia?.includes(".mp4") ||
-    firstMedia?.includes(".webm")
+  const isVideo = firstMedia?.type === "video"
 
   return (
     <Link href={`/${username}/post/${post._id}`}>
@@ -117,7 +116,7 @@ const PinnedPostCard = ({ post, username }: PinnedPostCardProps) => {
               </div>
             ) : (
               <Image
-                src={firstMedia}
+                src={firstMedia.url}
                 alt="Post preview"
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"

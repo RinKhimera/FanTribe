@@ -1,4 +1,5 @@
 import { convexTest } from "convex-test"
+import { register as registerRateLimiter } from "@convex-dev/rate-limiter/test"
 import { describe, expect, it } from "vitest"
 import { api } from "../../../convex/_generated/api"
 import schema from "../../../convex/schema"
@@ -13,6 +14,7 @@ describe("auth helpers", () => {
   describe("getAuthenticatedUser", () => {
     it("should reject unauthenticated users", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       // Tenter d'accéder à une fonction protégée sans authentification
       await expect(
@@ -24,6 +26,7 @@ describe("auth helpers", () => {
 
     it("should allow authenticated users", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -47,6 +50,7 @@ describe("auth helpers", () => {
 
     it("should return null for optional auth when not authenticated", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       // getCurrentUser retourne null si non authentifié (via optional)
       const result = await t.query(api.users.getCurrentUser, {})
@@ -57,6 +61,7 @@ describe("auth helpers", () => {
   describe("requireSuperuser", () => {
     it("should reject non-SUPERUSER users for admin functions", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -79,6 +84,7 @@ describe("auth helpers", () => {
 
     it("should reject CREATOR for admin functions", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -100,6 +106,7 @@ describe("auth helpers", () => {
 
     it("should allow SUPERUSER for admin functions", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -123,6 +130,7 @@ describe("auth helpers", () => {
   describe("requireCreator", () => {
     it("should reject CREATOR-only functions for regular USER", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -140,11 +148,12 @@ describe("auth helpers", () => {
       // getCreatorEarnings vérifie accountType CREATOR/SUPERUSER
       await expect(
         user.query(api.transactions.getCreatorEarnings, {}),
-      ).rejects.toThrow("Accès refusé")
+      ).rejects.toThrow("Access forbidden")
     })
 
     it("should allow CREATOR for creator functions", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {
@@ -167,6 +176,7 @@ describe("auth helpers", () => {
 
     it("should allow SUPERUSER for creator functions", async () => {
       const t = convexTest(schema, modules)
+      registerRateLimiter(t)
 
       await t.run(async (ctx) => {
         return await ctx.db.insert("users", {

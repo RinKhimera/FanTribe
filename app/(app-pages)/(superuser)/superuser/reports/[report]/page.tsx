@@ -459,13 +459,13 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       {report.reportedPost.medias
                         .slice(0, 4)
-                        .map((media, index) => (
+                        .map((media: string | { url: string }, index: number) => (
                           <div
                             key={index}
                             className="bg-muted relative aspect-video overflow-hidden rounded-lg"
                           >
                             <Image
-                              src={media}
+                              src={typeof media === "string" ? media : media.url}
                               alt={`Média ${index + 1}`}
                               fill
                               className="object-cover"

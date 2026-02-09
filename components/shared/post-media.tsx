@@ -14,15 +14,38 @@ import {
 import { useVideoMetadata } from "@/hooks"
 import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators"
 import { cn } from "@/lib/utils"
+import type { PostMedia as PostMediaType } from "@/types"
 import { BunnyVideoPlayer } from "./bunny-video-player"
 import { LockedContentOverlay } from "./post-media/locked-content-overlay"
 
 interface PostMediaProps {
-  medias: string[]
+  medias: Array<string | PostMediaType>
   isMediaLocked?: boolean
   mediaCount?: number
   authorUsername?: string
   onRequireSubscribe: () => void
+}
+
+/** Normalize a media entry: convert old string format to PostMedia object */
+function normalizeMediaEntry(m: string | PostMediaType): PostMediaType {
+  if (typeof m !== "string") return m
+  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
+  if (isVideo) {
+    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
+    return {
+      type: "video",
+      url: m,
+      mediaId: guidMatch ? guidMatch[1] : m,
+      mimeType: "video/mp4",
+    }
+  }
+  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
+  return {
+    type: "image",
+    url: m,
+    mediaId: pathMatch ? pathMatch[1] : m,
+    mimeType: "image/jpeg",
+  }
 }
 
 export const PostMedia: React.FC<PostMediaProps> = ({
@@ -37,19 +60,31 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
+  // Normalize medias to PostMediaType[] (handles transition from string[])
+  const normalizedMedias = useMemo(
+    () => medias.map(normalizeMediaEntry),
+    [medias],
+  )
+
+  // Extract URLs for hooks that need them
+  const mediaUrls = useMemo(() => normalizedMedias.map((m) => m.url), [normalizedMedias])
+
   // Use the centralized video metadata hook - only when content is not locked
   const { metadata: videoMetadata } = useVideoMetadata({
-    mediaUrls: medias,
-    enabled: !isMediaLocked && medias.length > 0,
+    mediaUrls: mediaUrls,
+    enabled: !isMediaLocked && normalizedMedias.length > 0,
   })
 
   // Liste des seules images (exclut les vidéos)
   const imageMedias = useMemo(
-    () =>
-      medias.filter(
-        (m) => !m.startsWith("https://iframe.mediadelivery.net/embed/"),
-      ),
-    [medias],
+    () => normalizedMedias.filter((m) => m.type === "image"),
+    [normalizedMedias],
+  )
+
+  // Image URLs for the fullscreen viewer
+  const imageUrls = useMemo(
+    () => imageMedias.map((m) => m.url),
+    [imageMedias],
   )
 
   // Compute slideCount from API instead of storing in state
@@ -88,9 +123,9 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     )
   }
 
-  if (!medias || medias.length === 0) return null
+  if (!normalizedMedias || normalizedMedias.length === 0) return null
 
-  const openImage = (media: string) => {
+  const openImage = (media: PostMediaType) => {
     const idx = imageMedias.indexOf(media)
     if (idx >= 0) {
       setViewerIndex(idx)
@@ -99,22 +134,16 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   }
 
   const renderMedia = (
-    media: string,
+    media: PostMediaType,
     forceRatio?: string,
     isInCarousel?: boolean,
   ) => {
-    const isVideo = media.startsWith("https://iframe.mediadelivery.net/embed/")
-
-    if (isVideo) {
-      // Extraire le GUID de l'URL de la vidéo
-      const guidMatch = media.match(/\/embed\/\d+\/([^?/]+)/)
-      const videoGuid = guidMatch ? guidMatch[1] : null
-
+    if (media.type === "video") {
       // Obtenir les métadonnées de la vidéo et calculer l'aspect ratio optimal
       let optimalRatio = forceRatio || "16 / 9"
 
-      if (videoGuid && videoMetadata[videoGuid]) {
-        const videoData = videoMetadata[videoGuid]
+      if (media.mediaId && videoMetadata[media.mediaId]) {
+        const videoData = videoMetadata[media.mediaId]
         const videoInfo = getVideoDisplayInfo(videoData)
         const calculatedRatio = getOptimalDisplayRatio(videoInfo)
         optimalRatio = forceRatio || calculatedRatio
@@ -122,11 +151,11 @@ export const PostMedia: React.FC<PostMediaProps> = ({
 
       return (
         <div
-          key={media}
+          key={media.url}
           onClick={(e) => e.stopPropagation()}
         >
           <BunnyVideoPlayer
-            src={media}
+            src={media.url}
             aspectRatio={optimalRatio}
             className={cn(!isInCarousel && "rounded-xl")}
           />
@@ -141,7 +170,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
       return (
         <button
           type="button"
-          key={media}
+          key={media.url}
           onClick={(e) => {
             e.stopPropagation()
             openImage(media)
@@ -151,7 +180,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         >
           {/* Blurred background - fills entire container */}
           <Image
-            src={media}
+            src={media.url}
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
@@ -163,7 +192,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           />
           {/* Main image - centered with object-contain to show complete image */}
           <Image
-            src={media}
+            src={media.url}
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
@@ -187,7 +216,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     return (
       <button
         type="button"
-        key={media}
+        key={media.url}
         onClick={(e) => {
           e.stopPropagation()
           openImage(media)
@@ -196,7 +225,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         onContextMenu={(e) => e.preventDefault()}
       >
         <Image
-          src={media}
+          src={media.url}
           alt=""
           width={0}
           height={0}
@@ -218,7 +247,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   }
 
   // Multiple media: carousel with modern design
-  if (medias.length > 1) {
+  if (normalizedMedias.length > 1) {
     return (
       <div
         className="relative overflow-hidden rounded-xl"
@@ -226,8 +255,8 @@ export const PostMedia: React.FC<PostMediaProps> = ({
       >
         <Carousel setApi={setCarouselApi}>
           <CarouselContent>
-            {medias.map((m) => (
-              <CarouselItem key={m}>
+            {normalizedMedias.map((m) => (
+              <CarouselItem key={m.url}>
                 <div
                   className="relative w-full overflow-hidden bg-black"
                   style={{ aspectRatio: "4 / 5" }}
@@ -279,7 +308,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         )}
 
         <FullscreenImageViewer
-          medias={imageMedias}
+          medias={imageUrls}
           index={viewerIndex}
           open={viewerOpen}
           onClose={() => setViewerOpen(false)}
@@ -292,9 +321,9 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   // Single media
   return (
     <>
-      {medias.map((m) => renderMedia(m))}
+      {normalizedMedias.map((m) => renderMedia(m))}
       <FullscreenImageViewer
-        medias={imageMedias}
+        medias={imageUrls}
         index={viewerIndex}
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}

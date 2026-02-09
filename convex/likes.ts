@@ -1,12 +1,19 @@
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
+import { rateLimiter } from "./lib/rateLimiter"
 import { incrementUserStat } from "./userStats"
 
 export const likePost = mutation({
   args: { postId: v.id("posts") },
+  returns: v.object({
+    already: v.optional(v.boolean()),
+    liked: v.optional(v.boolean()),
+    likeId: v.id("likes"),
+  }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
+    await rateLimiter.limit(ctx, "likePost", { key: user._id, throws: true })
 
     const post = await ctx.db.get(args.postId)
     if (!post) throw new ConvexError("Post not found")
@@ -53,6 +60,10 @@ export const likePost = mutation({
 
 export const unlikePost = mutation({
   args: { postId: v.id("posts") },
+  returns: v.object({
+    removed: v.boolean(),
+    reason: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -89,6 +100,7 @@ export const unlikePost = mutation({
 
 export const countLikes = query({
   args: { postId: v.id("posts") },
+  returns: v.object({ postId: v.id("posts"), count: v.number() }),
   handler: async (ctx, args) => {
     const list = await ctx.db
       .query("likes")
@@ -100,6 +112,7 @@ export const countLikes = query({
 
 export const isLiked = query({
   args: { postId: v.id("posts") },
+  returns: v.object({ liked: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     // Utilise index composé pour O(1) lookup au lieu de O(n)
@@ -115,6 +128,7 @@ export const isLiked = query({
 
 export const getPostLikes = query({
   args: { postId: v.id("posts") },
+  returns: v.array(v.object({ _id: v.id("likes"), user: v.any() })),
   handler: async (ctx, args) => {
     const likes = await ctx.db
       .query("likes")
@@ -129,6 +143,7 @@ export const getPostLikes = query({
 
 export const getUserLikedPosts = query({
   args: { limit: v.optional(v.number()) },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const limit = args.limit ?? 50
