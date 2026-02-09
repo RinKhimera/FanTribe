@@ -106,7 +106,7 @@ export const postDocValidator = v.object({
   _creationTime: v.number(),
   author: v.id("users"),
   content: v.string(),
-  medias: v.array(v.union(v.string(), postMediaValidator)),
+  medias: v.array(postMediaValidator),
   visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
   isAdult: v.optional(v.boolean()),
 })

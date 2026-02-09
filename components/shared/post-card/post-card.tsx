@@ -14,15 +14,10 @@ import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { premiumCardVariants } from "@/lib/animations"
 import { cn } from "@/lib/utils"
-import type { PostMedia as PostMediaType } from "@/types"
 
-// ExtendedPost is a type that represents a post with an extended author field.
-// medias accepts both formats: PostMedia[] (normalized by backend) or the union type during transition
-type ExtendedPost = Omit<Doc<"posts">, "author" | "medias"> & {
+type ExtendedPost = Omit<Doc<"posts">, "author"> & {
   author: Doc<"users"> | null | undefined
-  medias: Array<string | PostMediaType>
   isPinned?: boolean
-  // Champs ajoutés par le backend pour le filtrage des médias
   isMediaLocked?: boolean
   mediaCount?: number
 }

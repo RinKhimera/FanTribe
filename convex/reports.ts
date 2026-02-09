@@ -547,9 +547,7 @@ export const deleteReportedContentAndResolve = mutation({
 
       // Suppression des médias Bunny.net en parallèle
       if (reportedPost.medias && reportedPost.medias.length > 0) {
-        const mediaUrls = reportedPost.medias.map((m: string | { url: string }) =>
-          typeof m === "string" ? m : m.url,
-        )
+        const mediaUrls = reportedPost.medias.map((m) => m.url)
         const uniqueMedias = [...new Set(mediaUrls)]
         await ctx.scheduler
           .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {

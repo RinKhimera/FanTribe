@@ -223,7 +223,7 @@ export interface ReportedPost {
   _id: Id<"posts">
   _creationTime: number
   content: string
-  medias: (string | PostMedia)[]
+  medias: PostMedia[]
   visibility: "public" | "subscribers_only"
   author: Doc<"users"> | null
 }

@@ -16,41 +16,6 @@ import {
   userDocValidator,
 } from "./lib/validators"
 
-type PostMedia = {
-  type: "image" | "video"
-  url: string
-  mediaId: string
-  mimeType: string
-  fileName?: string
-  fileSize?: number
-  thumbnailUrl?: string
-  duration?: number
-  width?: number
-  height?: number
-}
-
-/** Normalize a media entry: convert old string format to PostMedia object */
-function normalizePostMedia(m: string | PostMedia): PostMedia {
-  if (typeof m !== "string") return m
-  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
-  if (isVideo) {
-    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
-    return {
-      type: "video",
-      url: m,
-      mediaId: guidMatch ? guidMatch[1] : m,
-      mimeType: "video/mp4",
-    }
-  }
-  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
-  return {
-    type: "image",
-    url: m,
-    mediaId: pathMatch ? pathMatch[1] : m,
-    mimeType: "image/jpeg",
-  }
-}
-
 async function userByExternalId(ctx: QueryCtx, externalId: string) {
   return await ctx.db
     .query("users")
@@ -687,7 +652,7 @@ export const getPinnedPosts = query({
       .filter((post): post is NonNullable<typeof post> => post !== null)
       .map((post) => ({
         ...post,
-        medias: (post.medias || []).map(normalizePostMedia),
+        medias: post.medias || [],
         author: user,
       }))
   },

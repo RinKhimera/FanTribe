@@ -112,14 +112,12 @@ export const canViewSubscribersOnlyContent = async (
 /**
  * Filtre les médias d'un post selon les droits d'accès du viewer.
  * SECURITE: Ne retourne JAMAIS les URLs aux utilisateurs non autorisés.
- * Supporte les deux formats : ancien (string[]) et nouveau (PostMedia[])
- *
  * @returns medias filtrés, flag isMediaLocked, et mediaCount original
  */
 export const filterPostMediasForViewer = async (
   ctx: DbCtx,
   post: {
-    medias?: Array<string | { type: string; url: string; mediaId: string; mimeType: string; [key: string]: unknown }>
+    medias?: Array<{ type: string; url: string; mediaId: string; mimeType: string }>
     visibility?: string
     author: Id<"users">
   },
@@ -136,7 +134,7 @@ export const filterPostMediasForViewer = async (
 
   // Pas de viewer authentifié = contenu verrouillé
   if (!viewerId) {
-    return { medias: [] as unknown as typeof post.medias & [], isMediaLocked: true, mediaCount }
+    return { medias: [] as typeof post.medias & [], isMediaLocked: true, mediaCount }
   }
 
   // Propriétaire voit toujours son contenu
@@ -159,5 +157,5 @@ export const filterPostMediasForViewer = async (
 
   return hasAccess
     ? { medias: originalMedias as typeof post.medias & [], isMediaLocked: false, mediaCount }
-    : { medias: [] as unknown as typeof post.medias & [], isMediaLocked: true, mediaCount }
+    : { medias: [] as typeof post.medias & [], isMediaLocked: true, mediaCount }
 }

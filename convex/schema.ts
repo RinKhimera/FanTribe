@@ -145,21 +145,18 @@ export default defineSchema({
   posts: defineTable({
     author: v.id("users"),
     content: v.string(),
-    medias: v.array(v.union(
-      v.string(),
-      v.object({
-        type: v.union(v.literal("image"), v.literal("video")),
-        url: v.string(),
-        mediaId: v.string(),
-        mimeType: v.string(),
-        fileName: v.optional(v.string()),
-        fileSize: v.optional(v.number()),
-        thumbnailUrl: v.optional(v.string()),
-        duration: v.optional(v.number()),
-        width: v.optional(v.number()),
-        height: v.optional(v.number()),
-      }),
-    )),
+    medias: v.array(v.object({
+      type: v.union(v.literal("image"), v.literal("video")),
+      url: v.string(),
+      mediaId: v.string(),
+      mimeType: v.string(),
+      fileName: v.optional(v.string()),
+      fileSize: v.optional(v.number()),
+      thumbnailUrl: v.optional(v.string()),
+      duration: v.optional(v.number()),
+      width: v.optional(v.number()),
+      height: v.optional(v.number()),
+    })),
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
     isAdult: v.optional(v.boolean()),
   })

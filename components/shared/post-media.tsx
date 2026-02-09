@@ -19,33 +19,11 @@ import { BunnyVideoPlayer } from "./bunny-video-player"
 import { LockedContentOverlay } from "./post-media/locked-content-overlay"
 
 interface PostMediaProps {
-  medias: Array<string | PostMediaType>
+  medias: PostMediaType[]
   isMediaLocked?: boolean
   mediaCount?: number
   authorUsername?: string
   onRequireSubscribe: () => void
-}
-
-/** Normalize a media entry: convert old string format to PostMedia object */
-function normalizeMediaEntry(m: string | PostMediaType): PostMediaType {
-  if (typeof m !== "string") return m
-  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
-  if (isVideo) {
-    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
-    return {
-      type: "video",
-      url: m,
-      mediaId: guidMatch ? guidMatch[1] : m,
-      mimeType: "video/mp4",
-    }
-  }
-  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
-  return {
-    type: "image",
-    url: m,
-    mediaId: pathMatch ? pathMatch[1] : m,
-    mimeType: "image/jpeg",
-  }
 }
 
 export const PostMedia: React.FC<PostMediaProps> = ({
@@ -60,25 +38,19 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
-  // Normalize medias to PostMediaType[] (handles transition from string[])
-  const normalizedMedias = useMemo(
-    () => medias.map(normalizeMediaEntry),
-    [medias],
-  )
-
   // Extract URLs for hooks that need them
-  const mediaUrls = useMemo(() => normalizedMedias.map((m) => m.url), [normalizedMedias])
+  const mediaUrls = useMemo(() => medias.map((m) => m.url), [medias])
 
   // Use the centralized video metadata hook - only when content is not locked
   const { metadata: videoMetadata } = useVideoMetadata({
     mediaUrls: mediaUrls,
-    enabled: !isMediaLocked && normalizedMedias.length > 0,
+    enabled: !isMediaLocked && medias.length > 0,
   })
 
   // Liste des seules images (exclut les vidéos)
   const imageMedias = useMemo(
-    () => normalizedMedias.filter((m) => m.type === "image"),
-    [normalizedMedias],
+    () => medias.filter((m) => m.type === "image"),
+    [medias],
   )
 
   // Image URLs for the fullscreen viewer
@@ -123,7 +95,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     )
   }
 
-  if (!normalizedMedias || normalizedMedias.length === 0) return null
+  if (!medias || medias.length === 0) return null
 
   const openImage = (media: PostMediaType) => {
     const idx = imageMedias.indexOf(media)
@@ -247,7 +219,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   }
 
   // Multiple media: carousel with modern design
-  if (normalizedMedias.length > 1) {
+  if (medias.length > 1) {
     return (
       <div
         className="relative overflow-hidden rounded-xl"
@@ -255,7 +227,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
       >
         <Carousel setApi={setCarouselApi}>
           <CarouselContent>
-            {normalizedMedias.map((m) => (
+            {medias.map((m) => (
               <CarouselItem key={m.url}>
                 <div
                   className="relative w-full overflow-hidden bg-black"
@@ -321,7 +293,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   // Single media
   return (
     <>
-      {normalizedMedias.map((m) => renderMedia(m))}
+      {medias.map((m) => renderMedia(m))}
       <FullscreenImageViewer
         medias={imageUrls}
         index={viewerIndex}
