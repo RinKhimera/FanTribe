@@ -22,6 +22,7 @@
     "@clerk/localizations": "^3.35.3",
     "@clerk/nextjs": "^6.37.3",
     "@clerk/themes": "^2.4.51",
+    "@convex-dev/rate-limiter": "^0.3.2",
     "@hookform/resolvers": "^5.2.2",
     "@plaiceholder/next": "^3.0.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",

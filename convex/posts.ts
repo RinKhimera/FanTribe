@@ -15,9 +15,55 @@ import {
   getBlockedUserIds,
   getCreatorSubscribers,
   hasActiveSubscription,
+  postMediaValidator,
 } from "./lib"
+import { rateLimiter } from "./lib/rateLimiter"
 import { sendPostNotifications } from "./notificationQueue"
 import { incrementUserStat } from "./userStats"
+
+// ============================================================================
+// HELPERS - Media normalization (transition: string → PostMedia)
+// ============================================================================
+
+type PostMedia = {
+  type: "image" | "video"
+  url: string
+  mediaId: string
+  mimeType: string
+  fileName?: string
+  fileSize?: number
+  thumbnailUrl?: string
+  duration?: number
+  width?: number
+  height?: number
+}
+
+/** Normalize a media entry: convert old string format to PostMedia object */
+function normalizeMedia(m: string | PostMedia): PostMedia {
+  if (typeof m !== "string") return m
+  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
+  if (isVideo) {
+    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
+    return {
+      type: "video",
+      url: m,
+      mediaId: guidMatch ? guidMatch[1] : m,
+      mimeType: "video/mp4",
+    }
+  }
+  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
+  return {
+    type: "image",
+    url: m,
+    mediaId: pathMatch ? pathMatch[1] : m,
+    mimeType: "image/jpeg",
+  }
+}
+
+/** Extract plain URL from a media entry (string or PostMedia) */
+function extractMediaUrl(m: string | PostMedia): string {
+  return typeof m === "string" ? m : m.url
+}
 
 // ============================================================================
 // MUTATIONS
@@ -26,12 +72,18 @@ import { incrementUserStat } from "./userStats"
 export const createPost = mutation({
   args: {
     content: v.string(),
-    medias: v.array(v.string()),
+    medias: v.array(postMediaValidator),
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
     isAdult: v.optional(v.boolean()),
   },
+  returns: v.object({
+    postId: v.id("posts"),
+    notificationsSent: v.optional(v.number()),
+    deferred: v.optional(v.boolean()),
+  }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
+    await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
 
     const postId = await ctx.db.insert("posts", {
       author: user._id,
@@ -78,6 +130,16 @@ export const createPost = mutation({
 
 export const deletePost = mutation({
   args: { postId: v.id("posts") },
+  returns: v.object({
+    success: v.boolean(),
+    deleted: v.object({
+      comments: v.number(),
+      likes: v.number(),
+      bookmarks: v.number(),
+      notifications: v.number(),
+      medias: v.number(),
+    }),
+  }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -92,7 +154,8 @@ export const deletePost = mutation({
 
     // Suppression des médias Bunny.net en parallèle
     if (post.medias && post.medias.length > 0) {
-      const uniqueMedias = [...new Set(post.medias)]
+      const mediaUrls = post.medias.map(extractMediaUrl)
+      const uniqueMedias = [...new Set(mediaUrls)]
       await ctx.scheduler
         .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
           mediaUrls: uniqueMedias,
@@ -164,6 +227,7 @@ export const updatePost = mutation({
     ),
     isAdult: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -216,6 +280,44 @@ export const updatePost = mutation({
 
 export const getPost = query({
   args: { postId: v.id("posts") },
+  returns: v.union(
+    v.object({
+      _id: v.id("posts"),
+      _creationTime: v.number(),
+      author: v.object({
+        _id: v.id("users"),
+        _creationTime: v.number(),
+        name: v.string(),
+        username: v.optional(v.string()),
+        email: v.string(),
+        image: v.string(),
+        imageBanner: v.optional(v.string()),
+        bio: v.optional(v.string()),
+        location: v.optional(v.string()),
+        socialLinks: v.optional(v.any()),
+        pinnedPostIds: v.optional(v.array(v.id("posts"))),
+        isOnline: v.boolean(),
+        activeSessions: v.optional(v.number()),
+        lastSeenAt: v.optional(v.number()),
+        tokenIdentifier: v.string(),
+        externalId: v.optional(v.string()),
+        accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
+        allowAdultContent: v.optional(v.boolean()),
+        personalInfo: v.optional(v.any()),
+        isBanned: v.optional(v.boolean()),
+        banDetails: v.optional(v.any()),
+        banHistory: v.optional(v.any()),
+        badges: v.optional(v.any()),
+      }),
+      content: v.string(),
+      medias: v.array(postMediaValidator),
+      visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
+      isAdult: v.optional(v.boolean()),
+      isMediaLocked: v.boolean(),
+      mediaCount: v.number(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const post = await ctx.db.get(args.postId)
     if (!post) return null
@@ -233,7 +335,10 @@ export const getPost = query({
         currentUser?.accountType,
       )
 
-    return { ...post, medias, isMediaLocked, mediaCount, author }
+    // Normalize medias to PostMedia[] (convert old strings)
+    const normalizedMedias = (medias || []).map(normalizeMedia)
+
+    return { ...post, medias: normalizedMedias, isMediaLocked, mediaCount, author }
   },
 })
 
@@ -242,6 +347,13 @@ export const getUserPosts = query({
     authorId: v.id("users"),
     paginationOpts: paginationOptsValidator,
   },
+  returns: v.object({
+    page: v.array(v.any()),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+  }),
   handler: async (ctx, args) => {
     const author = await ctx.db.get(args.authorId)
     if (!author) throw createAppError("USER_NOT_FOUND")
@@ -267,7 +379,7 @@ export const getUserPosts = query({
       .order("desc")
       .paginate(args.paginationOpts)
 
-    // Filtrer les médias de chaque post
+    // Filtrer les médias de chaque post et normaliser
     const postsWithFilteredMedia = paginationResult.page.map((post) => {
       const originalMediaCount = post.medias?.length || 0
       const isLocked =
@@ -275,7 +387,7 @@ export const getUserPosts = query({
 
       return {
         ...post,
-        medias: isLocked ? [] : post.medias,
+        medias: isLocked ? [] : (post.medias || []).map(normalizeMedia),
         isMediaLocked: isLocked && originalMediaCount > 0,
         mediaCount: originalMediaCount,
         author,
@@ -295,6 +407,13 @@ export const getUserPostsWithPinned = query({
     authorId: v.id("users"),
     paginationOpts: paginationOptsValidator,
   },
+  returns: v.object({
+    page: v.array(v.any()),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+  }),
   handler: async (ctx, args) => {
     const author = await ctx.db.get(args.authorId)
     if (!author) throw createAppError("USER_NOT_FOUND")
@@ -314,9 +433,9 @@ export const getUserPostsWithPinned = query({
         ))
     }
 
-    // Helper pour filtrer les médias d'un post
+    // Helper pour filtrer les médias d'un post et normaliser
     const filterPostMedia = <
-      T extends { medias?: string[]; visibility?: string },
+      T extends { medias?: Array<string | PostMedia>; visibility?: string },
     >(
       post: T,
       isPinned: boolean,
@@ -327,7 +446,7 @@ export const getUserPostsWithPinned = query({
 
       return {
         ...post,
-        medias: isLocked ? [] : post.medias,
+        medias: isLocked ? [] : (post.medias || []).map(normalizeMedia),
         isMediaLocked: isLocked && originalMediaCount > 0,
         mediaCount: originalMediaCount,
         author,
@@ -380,6 +499,11 @@ export const getUserGallery = query({
     authorId: v.id("users"),
     limit: v.optional(v.number()),
   },
+  returns: v.array(v.object({
+    _id: v.string(),
+    media: postMediaValidator,
+    visibility: v.string(),
+  })),
   handler: async (ctx, args) => {
     // Déterminer les droits d'accès une fois
     const currentUser = await getAuthenticatedUser(ctx, { optional: true })
@@ -410,7 +534,7 @@ export const getUserGallery = query({
 
     const galleryItems: Array<{
       _id: string
-      mediaUrl: string
+      media: PostMedia
       visibility: string
     }> = []
 
@@ -421,10 +545,10 @@ export const getUserGallery = query({
 
       // Ne pas inclure les médias verrouillés dans la galerie
       if (!isLocked) {
-        post.medias?.forEach((mediaUrl, index) => {
+        post.medias?.forEach((m, index) => {
           galleryItems.push({
             _id: `${post._id}_${index}`,
-            mediaUrl,
+            media: normalizeMedia(m),
             visibility: post.visibility || "public",
           })
         })
@@ -437,13 +561,50 @@ export const getUserGallery = query({
 
 export const getAllPosts = query({
   args: {},
+  returns: v.array(v.object({
+    _id: v.id("posts"),
+    _creationTime: v.number(),
+    author: v.union(v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      name: v.string(),
+      username: v.optional(v.string()),
+      email: v.string(),
+      image: v.string(),
+      imageBanner: v.optional(v.string()),
+      bio: v.optional(v.string()),
+      location: v.optional(v.string()),
+      socialLinks: v.optional(v.any()),
+      pinnedPostIds: v.optional(v.array(v.id("posts"))),
+      isOnline: v.boolean(),
+      activeSessions: v.optional(v.number()),
+      lastSeenAt: v.optional(v.number()),
+      tokenIdentifier: v.string(),
+      externalId: v.optional(v.string()),
+      accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
+      allowAdultContent: v.optional(v.boolean()),
+      personalInfo: v.optional(v.any()),
+      isBanned: v.optional(v.boolean()),
+      banDetails: v.optional(v.any()),
+      banHistory: v.optional(v.any()),
+      badges: v.optional(v.any()),
+    }), v.null()),
+    content: v.string(),
+    medias: v.array(postMediaValidator),
+    visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
+    isAdult: v.optional(v.boolean()),
+  })),
   handler: async (ctx) => {
     const posts = await ctx.db.query("posts").order("desc").take(100)
 
     const postsWithAuthor = await Promise.all(
       posts.map(async (post) => {
         const author = await ctx.db.get(post.author)
-        return { ...post, author }
+        return {
+          ...post,
+          medias: (post.medias || []).map(normalizeMedia),
+          author,
+        }
       }),
     )
 
@@ -459,6 +620,13 @@ export const getHomePosts = query({
   args: {
     paginationOpts: paginationOptsValidator,
   },
+  returns: v.object({
+    page: v.array(v.any()),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+  }),
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx)
 
@@ -524,7 +692,11 @@ export const getHomePosts = query({
 
     return {
       ...paginationResult,
-      page: filtered.map((p) => ({ ...p, author: authorsMap.get(p.author) })),
+      page: filtered.map((p) => ({
+        ...p,
+        medias: (p.medias || []).map(normalizeMedia),
+        author: authorsMap.get(p.author),
+      })),
     }
   },
 })
@@ -537,6 +709,13 @@ export const getHomePostsPaginated = query({
   args: {
     paginationOpts: paginationOptsValidator,
   },
+  returns: v.object({
+    page: v.array(v.any()),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+  }),
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx)
 
@@ -596,7 +775,11 @@ export const getHomePostsPaginated = query({
 
     return {
       ...paginationResult,
-      page: filtered.map((p) => ({ ...p, author: authorsMap.get(p.author) })),
+      page: filtered.map((p) => ({
+        ...p,
+        medias: (p.medias || []).map(normalizeMedia),
+        author: authorsMap.get(p.author),
+      })),
     }
   },
 })

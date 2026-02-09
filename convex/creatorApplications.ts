@@ -1,5 +1,14 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import {
+  creatorApplicationDocValidator,
+  userDocValidator,
+} from "./lib/validators"
+
+const applicationWithUserValidator = v.object({
+  ...creatorApplicationDocValidator.fields,
+  user: v.union(userDocValidator, v.null()),
+})
 
 // Constantes pour les soft locks
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -30,6 +39,7 @@ export const submitApplication = mutation({
       }),
     ),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -100,9 +110,27 @@ export const submitApplication = mutation({
 
 export const getUserApplication = query({
   args: { userId: v.id("users") },
+  returns: v.union(creatorApplicationDocValidator, v.null()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!currentUser) return null
+
+    // Vérifier ownership (sauf SUPERUSER)
+    if (
+      currentUser._id !== args.userId &&
+      currentUser.accountType !== "SUPERUSER"
+    ) {
+      throw new Error("Unauthorized")
+    }
 
     // Single query: fetch all and prioritize in memory
     const applications = await ctx.db
@@ -128,6 +156,7 @@ export const getUserApplication = query({
 // Admins
 export const getAllApplications = query({
   args: {},
+  returns: v.array(applicationWithUserValidator),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -164,6 +193,7 @@ export const getAllApplications = query({
 
 export const getPendingApplications = query({
   args: {},
+  returns: v.array(applicationWithUserValidator),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -200,6 +230,7 @@ export const getPendingApplications = query({
 
 export const getApplicationById = query({
   args: { applicationId: v.id("creatorApplications") },
+  returns: v.union(applicationWithUserValidator, v.null()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -232,6 +263,7 @@ export const reviewApplication = mutation({
     decision: v.union(v.literal("approved"), v.literal("rejected")),
     adminNotes: v.optional(v.string()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -312,6 +344,11 @@ export const requestReapplication = mutation({
   args: {
     userId: v.id("users"),
   },
+  returns: v.object({
+    canReapply: v.boolean(),
+    mustContactSupport: v.boolean(),
+    waitUntil: v.union(v.number(), v.null()),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -381,6 +418,7 @@ export const revokeCreatorStatus = mutation({
     userId: v.id("users"),
     reason: v.optional(v.string()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")

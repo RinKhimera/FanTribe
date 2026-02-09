@@ -4,6 +4,11 @@ import { getAuthenticatedUser } from "./lib/auth"
 
 export const addBookmark = mutation({
   args: { postId: v.id("posts") },
+  returns: v.object({
+    already: v.optional(v.boolean()),
+    added: v.optional(v.boolean()),
+    bookmarkId: v.id("bookmarks"),
+  }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -33,6 +38,10 @@ export const addBookmark = mutation({
 
 export const removeBookmark = mutation({
   args: { postId: v.id("posts") },
+  returns: v.object({
+    removed: v.boolean(),
+    reason: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -53,6 +62,10 @@ export const removeBookmark = mutation({
 
 export const getUserBookmarks = query({
   args: {},
+  returns: v.object({
+    count: v.number(),
+    posts: v.array(v.any()),
+  }),
   handler: async (ctx) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -83,6 +96,7 @@ export const getUserBookmarks = query({
 
 export const isBookmarked = query({
   args: { postId: v.id("posts") },
+  returns: v.object({ bookmarked: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
 
@@ -98,6 +112,7 @@ export const isBookmarked = query({
 
 export const countBookmarks = query({
   args: { postId: v.id("posts") },
+  returns: v.object({ postId: v.id("posts"), count: v.number() }),
   handler: async (ctx, args) => {
     const list = await ctx.db
       .query("bookmarks")

@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
+import { requireSuperuser, requireCreator } from "./lib/auth"
 
 // Type pour les données de test (mock IDs)
 type TestUser = {
@@ -20,29 +21,34 @@ export const getTransactionsForDashboard = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
+  returns: v.array(v.object({
+    _id: v.id("transactions"),
+    _creationTime: v.number(),
+    amount: v.number(),
+    currency: v.union(v.literal("XAF"), v.literal("USD")),
+    provider: v.string(),
+    providerTransactionId: v.string(),
+    creator: v.union(v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+    }), v.null()),
+    subscriber: v.union(v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+    }), v.null()),
+  })),
   handler: async (ctx, args) => {
-    // Vérifier que l'utilisateur est un superuser
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Non authentifié")
-    }
+    await requireSuperuser(ctx)
 
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new Error("Accès refusé : uniquement pour les administrateurs")
-    }
-
-    // Récupérer toutes les transactions réussies
+    // Récupérer toutes les transactions réussies (using index)
     let transactions = await ctx.db
       .query("transactions")
-      .filter((q) => q.eq(q.field("status"), "succeeded"))
-      .collect()
+      .withIndex("by_status", (q) => q.eq("status", "succeeded"))
+      .take(5000)
 
     // Appliquer les filtres
     if (args.creatorId) {
@@ -116,29 +122,43 @@ export const getTransactionsSummary = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
+  returns: v.object({
+    totalAmount: v.number(),
+    totalTransactions: v.number(),
+    currency: v.string(),
+    creatorSummaries: v.array(v.object({
+      creatorId: v.string(),
+      creatorName: v.string(),
+      creatorUsername: v.optional(v.string()),
+      totalAmount: v.number(),
+      transactionCount: v.number(),
+      currency: v.string(),
+    })),
+    topEarners: v.array(v.object({
+      creatorId: v.string(),
+      creatorName: v.string(),
+      creatorUsername: v.optional(v.string()),
+      totalAmount: v.number(),
+      transactionCount: v.number(),
+      currency: v.string(),
+    })),
+    lowEarners: v.array(v.object({
+      creatorId: v.string(),
+      creatorName: v.string(),
+      creatorUsername: v.optional(v.string()),
+      totalAmount: v.number(),
+      transactionCount: v.number(),
+      currency: v.string(),
+    })),
+  }),
   handler: async (ctx, args) => {
-    // Vérifier que l'utilisateur est un superuser
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Non authentifié")
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new Error("Accès refusé : uniquement pour les administrateurs")
-    }
+    await requireSuperuser(ctx)
 
     // Récupérer les transactions filtrées (même logique que getTransactionsForDashboard)
     let transactions = await ctx.db
       .query("transactions")
-      .filter((q) => q.eq(q.field("status"), "succeeded"))
-      .collect()
+      .withIndex("by_status", (q) => q.eq("status", "succeeded"))
+      .take(5000)
 
     if (args.creatorId) {
       transactions = transactions.filter(
@@ -239,28 +259,20 @@ export const getTransactionsSummary = query({
  * @returns Liste des créateurs avec leur ID et nom
  */
 export const getAllCreators = query({
+  args: {},
+  returns: v.array(v.object({
+    _id: v.id("users"),
+    name: v.string(),
+    username: v.optional(v.string()),
+    image: v.string(),
+  })),
   handler: async (ctx) => {
-    // Vérifier que l'utilisateur est un superuser
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Non authentifié")
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new Error("Accès refusé : uniquement pour les administrateurs")
-    }
+    await requireSuperuser(ctx)
 
     const creators = await ctx.db
       .query("users")
-      .filter((q) => q.eq(q.field("accountType"), "CREATOR"))
-      .collect()
+      .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
+      .take(1000)
 
     return creators.map((creator) => ({
       _id: creator._id,
@@ -282,23 +294,28 @@ export const getTestTransactionsForDashboard = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
+  returns: v.array(v.object({
+    _id: v.string(),
+    _creationTime: v.number(),
+    amount: v.number(),
+    currency: v.string(),
+    provider: v.string(),
+    providerTransactionId: v.string(),
+    creator: v.object({
+      _id: v.string(),
+      name: v.string(),
+      username: v.string(),
+      image: v.string(),
+    }),
+    subscriber: v.object({
+      _id: v.string(),
+      name: v.string(),
+      username: v.string(),
+      image: v.string(),
+    }),
+  })),
   handler: async (ctx, args) => {
-    // Vérifier que l'utilisateur est un superuser
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Non authentifié")
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new Error("Accès refusé : uniquement pour les administrateurs")
-    }
+    await requireSuperuser(ctx)
 
     // Données de test pour les créatrices
     const testCreators: TestUser[] = [
@@ -445,23 +462,37 @@ export const getTestTransactionsSummary = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
+  returns: v.object({
+    totalAmount: v.number(),
+    totalTransactions: v.number(),
+    currency: v.string(),
+    creatorSummaries: v.array(v.object({
+      creatorId: v.string(),
+      creatorName: v.string(),
+      creatorUsername: v.string(),
+      totalAmount: v.number(),
+      transactionCount: v.number(),
+      currency: v.string(),
+    })),
+    topEarners: v.array(v.object({
+      creatorId: v.string(),
+      creatorName: v.string(),
+      creatorUsername: v.string(),
+      totalAmount: v.number(),
+      transactionCount: v.number(),
+      currency: v.string(),
+    })),
+    lowEarners: v.array(v.object({
+      creatorId: v.string(),
+      creatorName: v.string(),
+      creatorUsername: v.string(),
+      totalAmount: v.number(),
+      transactionCount: v.number(),
+      currency: v.string(),
+    })),
+  }),
   handler: async (ctx) => {
-    // Vérifier que l'utilisateur est un superuser
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Non authentifié")
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new Error("Accès refusé : uniquement pour les administrateurs")
-    }
+    await requireSuperuser(ctx)
 
     // Simuler les données pour le résumé
     const creatorSummaries = [
@@ -527,23 +558,15 @@ export const getTestTransactionsSummary = query({
  * @returns Liste des créatrices de test
  */
 export const getTestCreators = query({
+  args: {},
+  returns: v.array(v.object({
+    _id: v.string(),
+    name: v.string(),
+    username: v.string(),
+    image: v.string(),
+  })),
   handler: async (ctx) => {
-    // Vérifier que l'utilisateur est un superuser
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Non authentifié")
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new Error("Accès refusé : uniquement pour les administrateurs")
-    }
+    await requireSuperuser(ctx)
 
     const testCreatorsData: TestUser[] = [
       {
@@ -587,35 +610,23 @@ export const getTestCreators = query({
  * @returns Total net gagné, prochain paiement et date du prochain jeudi
  */
 export const getCreatorEarnings = query({
+  args: {},
+  returns: v.object({
+    totalNetEarned: v.number(),
+    nextPaymentNet: v.number(),
+    nextPaymentDate: v.string(),
+    currency: v.string(),
+    transactionCount: v.number(),
+    pendingTransactionCount: v.number(),
+  }),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Non authentifié")
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser) {
-      throw new Error("Utilisateur introuvable")
-    }
-
-    if (
-      currentUser.accountType !== "CREATOR" &&
-      currentUser.accountType !== "SUPERUSER"
-    ) {
-      throw new Error("Accès refusé : réservé aux créateurs")
-    }
+    const currentUser = await requireCreator(ctx)
 
     const allTransactions = await ctx.db
       .query("transactions")
       .withIndex("by_creator", (q) => q.eq("creatorId", currentUser._id))
       .filter((q) => q.eq(q.field("status"), "succeeded"))
-      .collect()
+      .take(5000)
 
     // Taux de conversion USD → XAF
     const USD_TO_XAF_RATE = 562.2

@@ -59,6 +59,11 @@ export const enqueueNotifications = internalMutation({
     post: v.optional(v.id("posts")),
     comment: v.optional(v.id("comments")),
   },
+  returns: v.object({
+    totalRecipients: v.number(),
+    batchCount: v.number(),
+    queueIds: v.array(v.id("pendingNotifications")),
+  }),
   handler: async (ctx, args) => {
     const { recipientIds, ...notificationData } = args
     const now = Date.now()
@@ -99,6 +104,14 @@ export const processPendingBatch = internalMutation({
   args: {
     batchId: v.id("pendingNotifications"),
   },
+  returns: v.object({
+    success: v.boolean(),
+    error: v.optional(v.string()),
+    processedCount: v.optional(v.number()),
+    failedCount: v.optional(v.number()),
+    isComplete: v.optional(v.boolean()),
+    remainingAttempts: v.optional(v.number()),
+  }),
   handler: async (ctx, args) => {
     const batch = await ctx.db.get(args.batchId)
     if (!batch) {
@@ -169,6 +182,7 @@ export const processPendingBatch = internalMutation({
  */
 export const cleanupCompletedBatches = internalMutation({
   args: {},
+  returns: v.object({ deleted: v.number() }),
   handler: async (ctx) => {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
 
@@ -192,6 +206,12 @@ export const cleanupCompletedBatches = internalMutation({
  */
 export const processNextBatches = internalMutation({
   args: {},
+  returns: v.object({
+    processed: v.number(),
+    failed: v.optional(v.number()),
+    batchesProcessed: v.optional(v.number()),
+    message: v.optional(v.string()),
+  }),
   handler: async (ctx) => {
     // Récupérer les batches en attente (les plus anciens d'abord)
     const pendingBatches = await ctx.db
@@ -277,6 +297,40 @@ export const getNextPendingBatches = internalQuery({
   args: {
     limit: v.optional(v.number()),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id("pendingNotifications"),
+      _creationTime: v.number(),
+      type: v.union(
+        v.literal("newPost"),
+        v.literal("like"),
+        v.literal("comment"),
+        v.literal("newSubscription"),
+        v.literal("renewSubscription"),
+        v.literal("subscription_expired"),
+        v.literal("new_message"),
+        v.literal("messaging_subscription_expiring"),
+        v.literal("messaging_subscription_expired"),
+        v.literal("conversation_locked"),
+      ),
+      sender: v.id("users"),
+      recipientIds: v.array(v.id("users")),
+      post: v.optional(v.id("posts")),
+      comment: v.optional(v.id("comments")),
+      conversation: v.optional(v.id("conversations")),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("processing"),
+        v.literal("completed"),
+        v.literal("failed"),
+      ),
+      attempts: v.number(),
+      lastAttemptAt: v.optional(v.number()),
+      processedCount: v.number(),
+      errorMessage: v.optional(v.string()),
+      createdAt: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const limit = args.limit ?? PROCESSING_BATCH_SIZE
 
@@ -293,6 +347,13 @@ export const getNextPendingBatches = internalQuery({
  */
 export const getQueueStats = internalQuery({
   args: {},
+  returns: v.object({
+    pending: v.number(),
+    processing: v.number(),
+    completed: v.number(),
+    failed: v.number(),
+    pendingRecipients: v.number(),
+  }),
   handler: async (ctx) => {
     const [pending, processing, completed, failed] = await Promise.all([
       ctx.db

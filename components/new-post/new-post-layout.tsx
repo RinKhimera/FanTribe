@@ -151,10 +151,13 @@ export const NewPostLayout = () => {
           })
 
           if (result.success) {
-            const newMedia = {
+            const newMedia: MediaItem = {
               url: result.url,
               publicId: result.mediaId,
               type: result.type,
+              mimeType: result.mimeType,
+              fileName: result.fileName,
+              fileSize: result.fileSize,
             }
             setMedias((prev) => [...prev, newMedia])
             if (currentUser) {
@@ -204,11 +207,18 @@ export const NewPostLayout = () => {
   const onSubmit = async (data: z.infer<typeof postFormSchema>) => {
     startTransition(async () => {
       try {
-        data.media = medias.map((media) => media.url)
+        const mediaObjects = medias.map((media) => ({
+          type: media.type,
+          url: media.url,
+          mediaId: media.publicId,
+          mimeType: media.mimeType,
+          fileName: media.fileName,
+          fileSize: media.fileSize,
+        }))
 
         await createPost({
           content: data.content,
-          medias: data.media,
+          medias: mediaObjects,
           visibility: visibility,
           isAdult: isAdult,
         })

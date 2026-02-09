@@ -10,6 +10,7 @@ export const banUser = mutation({
     durationDays: v.optional(v.number()), // Required for temporary bans
     reportId: v.optional(v.id("reports")), // Link to originating report
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Non autorisé")
@@ -103,6 +104,7 @@ export const unbanUser = mutation({
     userId: v.id("users"),
     reason: v.optional(v.string()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Non autorisé")
@@ -154,6 +156,25 @@ export const unbanUser = mutation({
 // Récupérer tous les utilisateurs bannis (SUPERUSER only)
 export const getAllBannedUsers = query({
   args: {},
+  returns: v.union(
+    v.array(
+      v.object({
+        _id: v.id("users"),
+        name: v.string(),
+        username: v.optional(v.string()),
+        email: v.string(),
+        image: v.string(),
+        banType: v.optional(
+          v.union(v.literal("temporary"), v.literal("permanent")),
+        ),
+        banReason: v.optional(v.string()),
+        bannedAt: v.optional(v.number()),
+        banExpiresAt: v.optional(v.number()),
+        bannedByName: v.string(),
+      }),
+    ),
+    v.null(),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -169,9 +190,11 @@ export const getAllBannedUsers = query({
       return null
     }
 
-    // Get all users with isBanned = true
-    const allUsers = await ctx.db.query("users").collect()
-    const bannedUsers = allUsers.filter((u) => u.isBanned === true)
+    // Get all users with isBanned = true (using index)
+    const bannedUsers = await ctx.db
+      .query("users")
+      .withIndex("by_isBanned", (q) => q.eq("isBanned", true))
+      .take(500)
 
     // Enrich with admin info
     const enrichedBannedUsers = await Promise.all(
@@ -203,6 +226,23 @@ export const getAllBannedUsers = query({
 // Récupérer l'historique des bans levés (SUPERUSER only)
 export const getBanHistory = query({
   args: {},
+  returns: v.union(
+    v.array(
+      v.object({
+        userId: v.id("users"),
+        userName: v.string(),
+        username: v.optional(v.string()),
+        userImage: v.optional(v.string()),
+        banType: v.union(v.literal("temporary"), v.literal("permanent")),
+        reason: v.string(),
+        bannedAt: v.number(),
+        liftedAt: v.number(),
+        bannedByName: v.string(),
+        liftedByName: v.string(),
+      }),
+    ),
+    v.null(),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -218,8 +258,8 @@ export const getBanHistory = query({
       return null
     }
 
-    // Get all users with ban history
-    const allUsers = await ctx.db.query("users").collect()
+    // Get all users with ban history (use .take() to bound the scan)
+    const allUsers = await ctx.db.query("users").take(1000)
     const usersWithHistory = allUsers.filter(
       (u) => u.banHistory && u.banHistory.length > 0
     )
@@ -273,6 +313,31 @@ export const getUserBanInfo = query({
   args: {
     userId: v.id("users"),
   },
+  returns: v.union(
+    v.object({
+      isBanned: v.boolean(),
+      banType: v.optional(
+        v.union(v.literal("temporary"), v.literal("permanent")),
+      ),
+      banReason: v.optional(v.string()),
+      bannedAt: v.optional(v.number()),
+      banExpiresAt: v.optional(v.number()),
+      banHistory: v.array(
+        v.object({
+          type: v.union(v.literal("temporary"), v.literal("permanent")),
+          reason: v.string(),
+          bannedAt: v.number(),
+          bannedBy: v.id("users"),
+          expiresAt: v.optional(v.number()),
+          liftedAt: v.optional(v.number()),
+          liftedBy: v.optional(v.id("users")),
+          bannedByName: v.string(),
+          liftedByName: v.union(v.string(), v.null()),
+        }),
+      ),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null

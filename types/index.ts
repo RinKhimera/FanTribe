@@ -11,6 +11,26 @@ import { Doc, Id } from "@/convex/_generated/dataModel"
 export type UserProps = Doc<"users"> | undefined
 
 // ============================================================================
+// Types pour les médias de posts
+// ============================================================================
+
+/**
+ * Type pour les médias attachés aux posts (images et vidéos)
+ */
+export type PostMedia = {
+  type: "image" | "video"
+  url: string
+  mediaId: string
+  mimeType: string
+  fileName?: string
+  fileSize?: number
+  thumbnailUrl?: string
+  duration?: number
+  width?: number
+  height?: number
+}
+
+// ============================================================================
 // Types pour la messagerie (nouveau système)
 // ============================================================================
 
@@ -203,7 +223,7 @@ export interface ReportedPost {
   _id: Id<"posts">
   _creationTime: number
   content: string
-  medias: string[]
+  medias: (string | PostMedia)[]
   visibility: "public" | "subscribers_only"
   author: Doc<"users"> | null
 }

@@ -3,6 +3,7 @@ import { internalMutation, mutation, query } from "./_generated/server"
 
 export const getUserNotifications = query({
   args: {},
+  returns: v.array(v.any()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -20,7 +21,7 @@ export const getUserNotifications = query({
       .query("notifications")
       .withIndex("by_recipient", (q) => q.eq("recipientId", user._id))
       .order("desc")
-      .collect()
+      .take(200)
 
     if (notifications.length === 0) return []
 
@@ -60,26 +61,66 @@ export const getUserNotifications = query({
 
 export const markNotificationAsRead = mutation({
   args: { notificationId: v.id("notifications") },
+  returns: v.null(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!user) throw new ConvexError("User not found")
+
     const notification = await ctx.db.get(args.notificationId)
     if (!notification) throw new ConvexError("Notification not found")
 
+    if (notification.recipientId !== user._id) {
+      throw new ConvexError("Unauthorized")
+    }
+
     await ctx.db.patch(args.notificationId, { read: true })
+    return null
   },
 })
 
 export const markNotificationAsUnread = mutation({
   args: { notificationId: v.id("notifications") },
+  returns: v.null(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!user) throw new ConvexError("User not found")
+
     const notification = await ctx.db.get(args.notificationId)
     if (!notification) throw new ConvexError("Notification not found")
 
+    if (notification.recipientId !== user._id) {
+      throw new ConvexError("Unauthorized")
+    }
+
     await ctx.db.patch(args.notificationId, { read: false })
+    return null
   },
 })
 
 export const getUnreadCounts = query({
   args: {},
+  returns: v.object({
+    unreadNotificationsCount: v.number(),
+    unreadMessagesCount: v.number(),
+  }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -99,7 +140,7 @@ export const getUnreadCounts = query({
       .withIndex("by_recipient_read", (q) =>
         q.eq("recipientId", user._id).eq("read", false),
       )
-      .collect()
+      .take(500)
 
     const unreadNotificationsCount = unreadNotifications.length
 
@@ -109,11 +150,11 @@ export const getUnreadCounts = query({
       ctx.db
         .query("conversations")
         .withIndex("by_creatorId", (q) => q.eq("creatorId", user._id))
-        .collect(),
+        .take(500),
       ctx.db
         .query("conversations")
         .withIndex("by_userId", (q) => q.eq("userId", user._id))
-        .collect(),
+        .take(500),
     ])
 
     // Calculer le total des non-lus
@@ -142,8 +183,9 @@ export const insertNewPostNotification = internalMutation({
     sender: v.id("users"),
     postId: v.id("posts"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    if (args.recipientId === args.sender) return
+    if (args.recipientId === args.sender) return null
     await ctx.db.insert("notifications", {
       type: "newPost",
       recipientId: args.recipientId,
@@ -151,12 +193,14 @@ export const insertNewPostNotification = internalMutation({
       post: args.postId,
       read: false,
     })
+    return null
   },
 })
 
 // Mark all notifications as read
 export const markAllAsRead = mutation({
   args: {},
+  returns: v.object({ count: v.number() }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -175,7 +219,7 @@ export const markAllAsRead = mutation({
       .withIndex("by_recipient_read", (q) =>
         q.eq("recipientId", user._id).eq("read", false),
       )
-      .collect()
+      .take(500)
 
     await Promise.all(
       unreadNotifications.map((n) => ctx.db.patch(n._id, { read: true })),
@@ -188,6 +232,7 @@ export const markAllAsRead = mutation({
 // Delete a notification
 export const deleteNotification = mutation({
   args: { notificationId: v.id("notifications") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -210,6 +255,7 @@ export const deleteNotification = mutation({
     }
 
     await ctx.db.delete(args.notificationId)
+    return null
   },
 })
 
@@ -226,6 +272,7 @@ export const getNotificationsByType = query({
       ),
     ),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -254,7 +301,7 @@ export const getNotificationsByType = query({
           .query("notifications")
           .withIndex("by_recipient", (q) => q.eq("recipientId", user._id))
           .order("desc")
-          .collect()
+          .take(200)
         notifications = allNotifications.filter((n) =>
           subscriptionTypes.includes(n.type),
         )
@@ -273,14 +320,14 @@ export const getNotificationsByType = query({
             q.eq("recipientId", user._id).eq("type", filterType),
           )
           .order("desc")
-          .collect()
+          .take(200)
       }
     } else {
       notifications = await ctx.db
         .query("notifications")
         .withIndex("by_recipient", (q) => q.eq("recipientId", user._id))
         .order("desc")
-        .collect()
+        .take(200)
     }
 
     if (notifications.length === 0) return []

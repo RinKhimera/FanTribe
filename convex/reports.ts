@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values"
 import { api } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
+import { rateLimiter } from "./lib/rateLimiter"
 
 // Créer un signalement
 export const createReport = mutation({
@@ -22,6 +23,11 @@ export const createReport = mutation({
     ),
     description: v.optional(v.string()),
   },
+  returns: v.object({
+    success: v.boolean(),
+    duplicate: v.optional(v.boolean()),
+    message: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -34,6 +40,7 @@ export const createReport = mutation({
       .unique()
 
     if (!currentUser) throw new Error("User not found")
+    await rateLimiter.limit(ctx, "createReport", { key: currentUser._id, throws: true })
 
     // Vérifier qu'il y a soit un utilisateur, soit un post, soit un commentaire signalé
     if (
@@ -139,6 +146,44 @@ export const createReport = mutation({
 // Récupérer tous les signalements (Admin seulement)
 export const getAllReports = query({
   args: {},
+  returns: v.array(v.object({
+    _id: v.id("reports"),
+    _creationTime: v.number(),
+    reporterId: v.id("users"),
+    reportedUserId: v.optional(v.id("users")),
+    reportedPostId: v.optional(v.id("posts")),
+    reportedCommentId: v.optional(v.id("comments")),
+    type: v.union(v.literal("user"), v.literal("post"), v.literal("comment")),
+    reason: v.union(
+      v.literal("spam"),
+      v.literal("harassment"),
+      v.literal("inappropriate_content"),
+      v.literal("fake_account"),
+      v.literal("copyright"),
+      v.literal("violence"),
+      v.literal("hate_speech"),
+      v.literal("other"),
+    ),
+    description: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("reviewing"),
+      v.literal("resolved"),
+      v.literal("rejected"),
+    ),
+    resolutionAction: v.optional(
+      v.union(v.literal("banned"), v.literal("content_deleted"), v.literal("dismissed")),
+    ),
+    adminNotes: v.optional(v.string()),
+    reviewedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    reporter: v.any(),
+    reportedUser: v.any(),
+    reportedPost: v.any(),
+    reportedComment: v.any(),
+    reviewedByUser: v.any(),
+  })),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -289,6 +334,7 @@ export const updateReportStatus = mutation({
     ),
     adminNotes: v.optional(v.string()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -319,6 +365,16 @@ export const updateReportStatus = mutation({
 // Récupérer les statistiques des signalements
 export const getReportsStats = query({
   args: {},
+  returns: v.object({
+    total: v.number(),
+    pending: v.number(),
+    reviewing: v.number(),
+    resolved: v.number(),
+    rejected: v.number(),
+    userReports: v.number(),
+    postReports: v.number(),
+    commentReports: v.number(),
+  }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -334,7 +390,7 @@ export const getReportsStats = query({
       throw new Error("Unauthorized")
     }
 
-    const allReports = await ctx.db.query("reports").collect()
+    const allReports = await ctx.db.query("reports").take(5000)
 
     const stats = {
       total: allReports.length,
@@ -354,6 +410,47 @@ export const getReportsStats = query({
 // Récupérer un signalement par ID
 export const getReportById = query({
   args: { reportId: v.id("reports") },
+  returns: v.union(
+    v.object({
+      _id: v.id("reports"),
+      _creationTime: v.number(),
+      reporterId: v.id("users"),
+      reportedUserId: v.optional(v.id("users")),
+      reportedPostId: v.optional(v.id("posts")),
+      reportedCommentId: v.optional(v.id("comments")),
+      type: v.union(v.literal("user"), v.literal("post"), v.literal("comment")),
+      reason: v.union(
+        v.literal("spam"),
+        v.literal("harassment"),
+        v.literal("inappropriate_content"),
+        v.literal("fake_account"),
+        v.literal("copyright"),
+        v.literal("violence"),
+        v.literal("hate_speech"),
+        v.literal("other"),
+      ),
+      description: v.optional(v.string()),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("reviewing"),
+        v.literal("resolved"),
+        v.literal("rejected"),
+      ),
+      resolutionAction: v.optional(
+        v.union(v.literal("banned"), v.literal("content_deleted"), v.literal("dismissed")),
+      ),
+      adminNotes: v.optional(v.string()),
+      reviewedBy: v.optional(v.id("users")),
+      reviewedAt: v.optional(v.number()),
+      createdAt: v.number(),
+      reporter: v.any(),
+      reportedUser: v.any(),
+      reportedPost: v.any(),
+      reportedComment: v.any(),
+      reviewedByUser: v.any(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -424,6 +521,7 @@ export const deleteReportedContentAndResolve = mutation({
     reportId: v.id("reports"),
     adminNotes: v.optional(v.string()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -449,7 +547,10 @@ export const deleteReportedContentAndResolve = mutation({
 
       // Suppression des médias Bunny.net en parallèle
       if (reportedPost.medias && reportedPost.medias.length > 0) {
-        const uniqueMedias = [...new Set(reportedPost.medias)]
+        const mediaUrls = reportedPost.medias.map((m: string | { url: string }) =>
+          typeof m === "string" ? m : m.url,
+        )
+        const uniqueMedias = [...new Set(mediaUrls)]
         await ctx.scheduler
           .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
             mediaUrls: uniqueMedias,
@@ -526,6 +627,38 @@ export const getReportHistoryForUser = query({
   args: {
     userId: v.id("users"),
   },
+  returns: v.union(
+    v.object({
+      totalReports: v.number(),
+      userReports: v.number(),
+      postReports: v.number(),
+      commentReports: v.number(),
+      recentReports: v.array(v.object({
+        _id: v.id("reports"),
+        type: v.union(v.literal("user"), v.literal("post"), v.literal("comment")),
+        reason: v.union(
+          v.literal("spam"),
+          v.literal("harassment"),
+          v.literal("inappropriate_content"),
+          v.literal("fake_account"),
+          v.literal("copyright"),
+          v.literal("violence"),
+          v.literal("hate_speech"),
+          v.literal("other"),
+        ),
+        status: v.union(
+          v.literal("pending"),
+          v.literal("reviewing"),
+          v.literal("resolved"),
+          v.literal("rejected"),
+        ),
+        createdAt: v.number(),
+        reporterName: v.string(),
+      })),
+      isRecidivist: v.boolean(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -566,7 +699,7 @@ export const getReportHistoryForUser = query({
     const allPostReports = await ctx.db
       .query("reports")
       .withIndex("by_type", (q) => q.eq("type", "post"))
-      .collect()
+      .take(500)
     const postReports = allPostReports.filter(
       (r) => r.reportedPostId && postIds.has(r.reportedPostId),
     )
@@ -574,7 +707,7 @@ export const getReportHistoryForUser = query({
     const allCommentReports = await ctx.db
       .query("reports")
       .withIndex("by_type", (q) => q.eq("type", "comment"))
-      .collect()
+      .take(500)
     const commentReports = allCommentReports.filter(
       (r) => r.reportedCommentId && commentIds.has(r.reportedCommentId),
     )

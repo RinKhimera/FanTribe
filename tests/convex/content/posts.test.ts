@@ -1,4 +1,5 @@
 import { convexTest } from "convex-test"
+import { register as registerRateLimiter } from "@convex-dev/rate-limiter/test"
 import { describe, expect, it } from "vitest"
 import { api } from "../../../convex/_generated/api"
 import schema from "../../../convex/schema"
@@ -6,6 +7,7 @@ import schema from "../../../convex/schema"
 describe("posts", () => {
   it("should create a post and notify active subscribers", async () => {
     const t = convexTest(schema)
+    registerRateLimiter(t)
 
     const authorId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", {
@@ -69,6 +71,7 @@ describe("posts", () => {
 
   it("should not notify blocked users", async () => {
     const t = convexTest(schema)
+    registerRateLimiter(t)
 
     const authorId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", {
@@ -134,6 +137,7 @@ describe("posts", () => {
 
   it("should filter home posts based on visibility and subscriptions", async () => {
     const t = convexTest(schema)
+    registerRateLimiter(t)
 
     const authorId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", {

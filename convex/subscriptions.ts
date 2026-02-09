@@ -10,7 +10,28 @@ import { getAuthenticatedUser } from "./lib/auth"
 // PUBLIC: obtenir la souscription entre deux utilisateurs (content_access par défaut)
 export const getFollowSubscription = query({
   args: { creatorId: v.id("users"), subscriberId: v.id("users") },
+  returns: v.union(
+    v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
+    await getAuthenticatedUser(ctx)
+
     const sub = await ctx.db
       .query("subscriptions")
       .withIndex("by_creator_subscriber", (q) =>
@@ -25,7 +46,28 @@ export const getFollowSubscription = query({
 // PUBLIC: liste des souscriptions d'un abonné (content_access)
 export const listSubscriberSubscriptions = query({
   args: { subscriberId: v.id("users") },
+  returns: v.array(v.object({
+    _id: v.id("subscriptions"),
+    _creationTime: v.number(),
+    subscriber: v.id("users"),
+    creator: v.id("users"),
+    startDate: v.number(),
+    endDate: v.number(),
+    amountPaid: v.number(),
+    currency: v.union(v.literal("XAF"), v.literal("USD")),
+    renewalCount: v.number(),
+    lastUpdateTime: v.number(),
+    type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+    status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+    grantedByCreator: v.optional(v.boolean()),
+    bundlePurchase: v.optional(v.boolean()),
+  })),
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+    if (user._id !== args.subscriberId) {
+      throw new ConvexError("Unauthorized")
+    }
+
     return await ctx.db
       .query("subscriptions")
       .withIndex("by_subscriber", (q) => q.eq("subscriber", args.subscriberId))
@@ -37,7 +79,28 @@ export const listSubscriberSubscriptions = query({
 // PUBLIC: liste des abonnés d'un créateur (content_access)
 export const listCreatorSubscribers = query({
   args: { creatorId: v.id("users") },
+  returns: v.array(v.object({
+    _id: v.id("subscriptions"),
+    _creationTime: v.number(),
+    subscriber: v.id("users"),
+    creator: v.id("users"),
+    startDate: v.number(),
+    endDate: v.number(),
+    amountPaid: v.number(),
+    currency: v.union(v.literal("XAF"), v.literal("USD")),
+    renewalCount: v.number(),
+    lastUpdateTime: v.number(),
+    type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+    status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+    grantedByCreator: v.optional(v.boolean()),
+    bundlePurchase: v.optional(v.boolean()),
+  })),
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+    if (user._id !== args.creatorId) {
+      throw new ConvexError("Unauthorized")
+    }
+
     return await ctx.db
       .query("subscriptions")
       .withIndex("by_creator", (q) => q.eq("creator", args.creatorId))
@@ -49,6 +112,10 @@ export const listCreatorSubscribers = query({
 // PUBLIC: annuler une souscription (passe à canceled)
 export const cancelSubscription = mutation({
   args: { subscriptionId: v.id("subscriptions") },
+  returns: v.object({
+    canceled: v.boolean(),
+    reason: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     const sub = await ctx.db.get(args.subscriptionId)
@@ -69,6 +136,25 @@ export const cancelSubscription = mutation({
 // INTERNAL: retrouver une souscription via transaction provider id
 export const getSubscriptionByTransactionId = internalQuery({
   args: { transactionId: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     // Recherche transaction (scan limité par index subscriber/creator si nécessaire)
     const tx = await ctx.db
@@ -84,6 +170,11 @@ export const getSubscriptionByTransactionId = internalQuery({
 // INTERNAL: cron pour marquer les souscriptions expirées et notifier les utilisateurs
 export const checkAndUpdateExpiredSubscriptions = internalMutation({
   args: {},
+  returns: v.object({
+    scanned: v.number(),
+    expiredUpdated: v.number(),
+    notified: v.number(),
+  }),
   handler: async (ctx) => {
     const now = Date.now()
 
@@ -127,6 +218,27 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
 
 export const getMyContentAccessSubscriptionsStats = query({
   args: {},
+  returns: v.object({
+    subscriptions: v.array(v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+      creatorUser: v.any(),
+    })),
+    creatorsCount: v.number(),
+    postsCount: v.number(),
+  }),
   handler: async (ctx) => {
     const user = await getAuthenticatedUser(ctx)
     // Souscriptions où l'utilisateur est abonné (subscriber)
@@ -176,6 +288,27 @@ export const getMyContentAccessSubscriptionsStats = query({
 
 export const getMySubscribersStats = query({
   args: {},
+  returns: v.object({
+    subscribers: v.array(v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+      subscriberUser: v.any(),
+    })),
+    subscribersCount: v.number(),
+    postsCount: v.number(),
+  }),
   handler: async (ctx) => {
     const user = await getAuthenticatedUser(ctx)
     // Souscriptions où l'utilisateur est le créateur
@@ -225,6 +358,10 @@ export const getMySubscribersStats = query({
 
 export const canUserSubscribe = query({
   args: { creatorId: v.id("users") },
+  returns: v.object({
+    canSubscribe: v.boolean(),
+    reason: v.union(v.string(), v.null()),
+  }),
   handler: async (ctx, args) => {
     let canSubscribe = true
     let reason: string | null = null
@@ -285,6 +422,14 @@ export const canUserSubscribe = query({
  */
 export const canBuyMessagingSubscription = query({
   args: { creatorId: v.id("users") },
+  returns: v.object({
+    canBuy: v.boolean(),
+    reason: v.union(v.string(), v.null()),
+    suggestBundle: v.boolean(),
+    hasContentSubscription: v.boolean(),
+    hasMessagingSubscription: v.boolean(),
+    expiresAt: v.optional(v.number()),
+  }),
   handler: async (ctx, args) => {
     let currentUser = null
 
@@ -401,6 +546,25 @@ export const canBuyMessagingSubscription = query({
  */
 export const getMessagingSubscription = query({
   args: { creatorId: v.id("users"), subscriberId: v.id("users") },
+  returns: v.union(
+    v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const sub = await ctx.db
       .query("subscriptions")
@@ -418,6 +582,48 @@ export const getMessagingSubscription = query({
  */
 export const getSubscriptionStatus = query({
   args: { creatorId: v.id("users") },
+  returns: v.object({
+    hasContentAccess: v.boolean(),
+    hasMessagingAccess: v.boolean(),
+    contentSubscription: v.union(
+      v.object({
+        _id: v.id("subscriptions"),
+        _creationTime: v.number(),
+        subscriber: v.id("users"),
+        creator: v.id("users"),
+        startDate: v.number(),
+        endDate: v.number(),
+        amountPaid: v.number(),
+        currency: v.union(v.literal("XAF"), v.literal("USD")),
+        renewalCount: v.number(),
+        lastUpdateTime: v.number(),
+        type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+        status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+        grantedByCreator: v.optional(v.boolean()),
+        bundlePurchase: v.optional(v.boolean()),
+      }),
+      v.null(),
+    ),
+    messagingSubscription: v.union(
+      v.object({
+        _id: v.id("subscriptions"),
+        _creationTime: v.number(),
+        subscriber: v.id("users"),
+        creator: v.id("users"),
+        startDate: v.number(),
+        endDate: v.number(),
+        amountPaid: v.number(),
+        currency: v.union(v.literal("XAF"), v.literal("USD")),
+        renewalCount: v.number(),
+        lastUpdateTime: v.number(),
+        type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+        status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+        grantedByCreator: v.optional(v.boolean()),
+        bundlePurchase: v.optional(v.boolean()),
+      }),
+      v.null(),
+    ),
+  }),
   handler: async (ctx, args) => {
     let currentUser = null
 
@@ -473,6 +679,26 @@ export const getSubscriptionStatus = query({
  */
 export const getSubscriptionStatusForMessaging = query({
   args: { creatorId: v.id("users") },
+  returns: v.object({
+    hasContentAccess: v.boolean(),
+    hasMessagingAccess: v.boolean(),
+    contentExpiry: v.union(v.number(), v.null()),
+    messagingExpiry: v.union(v.number(), v.null()),
+    scenario: v.union(
+      v.literal("both_active"),
+      v.literal("messaging_missing"),
+      v.literal("content_missing"),
+      v.literal("both_missing"),
+      v.literal("not_authenticated"),
+    ),
+    suggestBundle: v.boolean(),
+    prices: v.optional(v.object({
+      contentAccess: v.number(),
+      messagingAccess: v.number(),
+      bundle: v.number(),
+      bundleSavings: v.number(),
+    })),
+  }),
   handler: async (ctx, args) => {
     let currentUser = null
 
@@ -560,6 +786,10 @@ export const getSubscriptionStatusForMessaging = query({
  */
 export const checkAndLockExpiredMessagingSubscriptions = internalMutation({
   args: {},
+  returns: v.object({
+    processed: v.number(),
+    conversationsLocked: v.optional(v.number()),
+  }),
   handler: async (ctx) => {
     const now = Date.now()
 
@@ -648,6 +878,10 @@ export const unlockConversationAfterRenewal = internalMutation({
     subscriberId: v.id("users"),
     creatorId: v.id("users"),
   },
+  returns: v.object({
+    success: v.boolean(),
+    reason: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     // Trouver la conversation
     const conversation = await ctx.db

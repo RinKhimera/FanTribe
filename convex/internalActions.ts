@@ -46,6 +46,26 @@ type CheckTransactionResult = {
 // Internal query pour retrouver une transaction par providerTransactionId
 export const getTransactionByProviderTransactionId = internalQuery({
   args: { providerTransactionId: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("transactions"),
+      _creationTime: v.number(),
+      subscriptionId: v.id("subscriptions"),
+      subscriberId: v.id("users"),
+      creatorId: v.id("users"),
+      amount: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("succeeded"),
+        v.literal("failed"),
+        v.literal("refunded"),
+      ),
+      provider: v.string(),
+      providerTransactionId: v.string(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const tx = await ctx.db
       .query("transactions")
@@ -60,6 +80,30 @@ export const getTransactionByProviderTransactionId = internalQuery({
 // Internal query simple pour récupérer une souscription par id
 export const getSubscriptionById = internalQuery({
   args: { subscriptionId: v.id("subscriptions") },
+  returns: v.union(
+    v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(
+        v.literal("active"),
+        v.literal("expired"),
+        v.literal("canceled"),
+        v.literal("pending"),
+      ),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const sub = await ctx.db.get(args.subscriptionId)
     return sub || null
@@ -76,6 +120,18 @@ export const applySubscriptionPayment = internalMutation({
     durationMs: v.number(),
     currency: v.string(),
   },
+  returns: v.object({
+    subscriptionId: v.id("subscriptions"),
+    action: v.union(
+      v.literal("created"),
+      v.literal("renewed"),
+      v.literal("reactivated"),
+      v.literal("noop"),
+    ),
+    previousEndDate: v.optional(v.number()),
+    newEndDate: v.optional(v.number()),
+    renewalCount: v.optional(v.number()),
+  }),
   handler: async (ctx, args) => {
     const now = Date.now()
     const {
@@ -181,6 +237,9 @@ export const recordTransactionIfAbsent = internalMutation({
     rawPayload: v.optional(v.string()),
     paymentMethod: v.optional(v.string()),
   },
+  returns: v.object({
+    transactionId: v.id("transactions"),
+  }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("transactions")
@@ -223,6 +282,27 @@ export const processPaymentAtomic = internalMutation({
     paymentMethod: v.optional(v.string()),
     startedAt: v.optional(v.string()),
   },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    subscriptionId: v.union(v.id("subscriptions"), v.null()),
+    status: v.optional(v.string()),
+    alreadyProcessed: v.optional(v.boolean()),
+    action: v.optional(
+      v.union(
+        v.literal("created"),
+        v.literal("renewed"),
+        v.literal("reactivated"),
+        v.literal("noop"),
+      ),
+    ),
+    renewalCount: v.optional(v.number()),
+    previousEndDate: v.optional(v.number()),
+    newEndDate: v.optional(v.number()),
+    transactionId: v.optional(v.id("transactions")),
+    providerTransactionId: v.optional(v.string()),
+    provider: v.optional(v.string()),
+  }),
   handler: async (ctx, args): Promise<ProcessPaymentResult> => {
     const {
       provider,
@@ -411,6 +491,27 @@ export const processPayment = action({
     paymentMethod: v.optional(v.string()),
     startedAt: v.optional(v.string()),
   },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    subscriptionId: v.union(v.id("subscriptions"), v.null()),
+    status: v.optional(v.string()),
+    alreadyProcessed: v.optional(v.boolean()),
+    action: v.optional(
+      v.union(
+        v.literal("created"),
+        v.literal("renewed"),
+        v.literal("reactivated"),
+        v.literal("noop"),
+      ),
+    ),
+    renewalCount: v.optional(v.number()),
+    previousEndDate: v.optional(v.number()),
+    newEndDate: v.optional(v.number()),
+    transactionId: v.optional(v.id("transactions")),
+    providerTransactionId: v.optional(v.string()),
+    provider: v.optional(v.string()),
+  }),
   handler: async (ctx, args): Promise<ProcessPaymentResult> => {
     // Deleguer a la mutation atomique pour eviter les race conditions
     return await ctx.runMutation(
@@ -433,6 +534,21 @@ export const checkTransaction = action({
   args: {
     transactionId: v.string(),
   },
+  returns: v.object({
+    exists: v.boolean(),
+    transactionId: v.string(),
+    subscriptionId: v.optional(v.id("subscriptions")),
+    status: v.optional(v.string()),
+    details: v.optional(
+      v.object({
+        creator: v.optional(v.id("users")),
+        subscriber: v.optional(v.id("users")),
+        startDate: v.optional(v.number()),
+        endDate: v.optional(v.number()),
+        amountPaid: v.optional(v.number()),
+      }),
+    ),
+  }),
   handler: async (ctx, args): Promise<CheckTransactionResult> => {
     // Vérifie si cette transaction existe
     const subscription: Doc<"subscriptions"> | null = await ctx.runQuery(
@@ -474,6 +590,13 @@ export const fanoutNewPostNotifications = action({
     chunkSize: v.optional(v.number()),
     delayMsBetweenChunks: v.optional(v.number()),
   },
+  returns: v.object({
+    total: v.number(),
+    inserted: v.number(),
+    chunks: v.number(),
+    chunkSize: v.number(),
+    delayed: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const chunkSize = args.chunkSize ?? 200
     const delay = args.delayMsBetweenChunks ?? 1000
@@ -525,6 +648,11 @@ export const deleteSingleBunnyAsset = internalAction({
     mediaId: v.string(),
     assetType: v.union(v.literal("image"), v.literal("video")),
   },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    statusCode: v.number(),
+  }),
   handler: async (_ctx, args) => {
     try {
       const success =
@@ -552,6 +680,19 @@ export const deleteMultipleBunnyAssets = action({
   args: {
     mediaUrls: v.array(v.string()),
   },
+  returns: v.object({
+    total: v.number(),
+    success: v.number(),
+    failures: v.number(),
+    results: v.array(
+      v.object({
+        url: v.string(),
+        type: v.optional(v.union(v.literal("image"), v.literal("video"))),
+        success: v.boolean(),
+        error: v.optional(v.string()),
+      }),
+    ),
+  }),
   handler: async (_ctx, args) => {
     const results: Array<{
       url: string

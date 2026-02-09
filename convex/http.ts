@@ -29,7 +29,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const event = await validateRequest(request)
     if (!event) {
-      return new Response("Error occured while calling webhook", {
+      return new Response("Error occurred while calling webhook", {
         status: 400,
       })
     }

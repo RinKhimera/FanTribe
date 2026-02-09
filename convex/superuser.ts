@@ -7,6 +7,13 @@ import { internalMutation, query } from "./_generated/server"
  */
 export const getSuperuserCounts = query({
   args: {},
+  returns: v.union(
+    v.object({
+      pendingApplications: v.number(),
+      pendingReports: v.number(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -26,13 +33,13 @@ export const getSuperuserCounts = query({
     const pendingApplications = await ctx.db
       .query("creatorApplications")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect()
+      .take(500)
 
     // Count pending reports
     const pendingReports = await ctx.db
       .query("reports")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect()
+      .take(500)
 
     return {
       pendingApplications: pendingApplications.length,
@@ -57,6 +64,38 @@ export const globalSearch = query({
     ),
     limit: v.optional(v.number()),
   },
+  returns: v.union(
+    v.object({
+      users: v.array(
+        v.object({
+          _id: v.string(),
+          name: v.string(),
+          username: v.string(),
+          email: v.optional(v.string()),
+          imageUrl: v.optional(v.string()),
+        }),
+      ),
+      applications: v.array(
+        v.object({
+          _id: v.string(),
+          fullName: v.string(),
+          email: v.optional(v.string()),
+          status: v.string(),
+          submittedAt: v.number(),
+        }),
+      ),
+      reports: v.array(
+        v.object({
+          _id: v.string(),
+          type: v.string(),
+          reason: v.string(),
+          status: v.string(),
+          createdAt: v.number(),
+        }),
+      ),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -108,7 +147,7 @@ export const globalSearch = query({
 
     // Search users
     if (category === "all" || category === "users") {
-      const allUsers = await ctx.db.query("users").collect()
+      const allUsers = await ctx.db.query("users").take(1000)
       results.users = allUsers
         .filter(
           (user) =>
@@ -131,7 +170,7 @@ export const globalSearch = query({
       const allApplications = await ctx.db
         .query("creatorApplications")
         .order("desc")
-        .collect()
+        .take(500)
 
       const applicationsWithUsers = await Promise.all(
         allApplications.map(async (app) => {
@@ -162,7 +201,7 @@ export const globalSearch = query({
       const allReports = await ctx.db
         .query("reports")
         .order("desc")
-        .collect()
+        .take(500)
 
       results.reports = allReports
         .filter(
@@ -190,6 +229,33 @@ export const globalSearch = query({
  */
 export const getDashboardStats = query({
   args: {},
+  returns: v.union(
+    v.object({
+      users: v.object({
+        total: v.number(),
+        creators: v.number(),
+        regular: v.number(),
+      }),
+      posts: v.object({
+        total: v.number(),
+        thisWeek: v.number(),
+        trend: v.number(),
+      }),
+      applications: v.object({
+        total: v.number(),
+        pending: v.number(),
+        approved: v.number(),
+        approvalRate: v.number(),
+      }),
+      reports: v.object({
+        total: v.number(),
+        pending: v.number(),
+      }),
+      fromCache: v.boolean(),
+      cacheAge: v.optional(v.number()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -247,10 +313,10 @@ export const getDashboardStats = query({
     }
 
     // Fallback: calcul complet (si pas de cache ou cache périmé)
-    const allUsers = await ctx.db.query("users").collect()
+    const allUsers = await ctx.db.query("users").take(10000)
     const creators = allUsers.filter((u) => u.accountType === "CREATOR")
 
-    const allPosts = await ctx.db.query("posts").collect()
+    const allPosts = await ctx.db.query("posts").take(10000)
     const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000
     const twoWeeksAgo = now - 14 * 24 * 60 * 60 * 1000
     const postsThisWeek = allPosts.filter((p) => p._creationTime > oneWeekAgo)
@@ -261,18 +327,18 @@ export const getDashboardStats = query({
     const pendingApplications = await ctx.db
       .query("creatorApplications")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect()
+      .take(500)
     const approvedApplications = await ctx.db
       .query("creatorApplications")
       .withIndex("by_status", (q) => q.eq("status", "approved"))
-      .collect()
-    const allApplications = await ctx.db.query("creatorApplications").collect()
+      .take(500)
+    const allApplications = await ctx.db.query("creatorApplications").take(1000)
 
     const pendingReports = await ctx.db
       .query("reports")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect()
-    const allReports = await ctx.db.query("reports").collect()
+      .take(500)
+    const allReports = await ctx.db.query("reports").take(1000)
 
     const postsTrend =
       postsLastWeek.length > 0
@@ -322,6 +388,17 @@ export const getDashboardStats = query({
  */
 export const refreshPlatformStats = internalMutation({
   args: {},
+  returns: v.object({
+    totalUsers: v.number(),
+    totalCreators: v.number(),
+    totalPosts: v.number(),
+    pendingApplications: v.number(),
+    approvedApplications: v.number(),
+    totalApplications: v.number(),
+    pendingReports: v.number(),
+    totalReports: v.number(),
+    lastUpdated: v.number(),
+  }),
   handler: async (ctx) => {
     // Exécuter toutes les queries en parallèle (4 au lieu de 8)
     const [allUsers, allPosts, allApplications, allReports] = await Promise.all(

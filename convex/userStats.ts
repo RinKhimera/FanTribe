@@ -54,6 +54,11 @@ export async function incrementUserStat(
 // Get user stats (public)
 export const getUserStats = query({
   args: { userId: v.id("users") },
+  returns: v.object({
+    postsCount: v.number(),
+    subscribersCount: v.number(),
+    totalLikes: v.number(),
+  }),
   handler: async (ctx, args) => {
     // Try to get cached stats first
     const cachedStats = await ctx.db
@@ -113,9 +118,10 @@ export const getUserStats = query({
 // Internal mutation to update/create user stats (called by triggers or cron)
 export const updateUserStats = internalMutation({
   args: { userId: v.id("users") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId)
-    if (!user) return
+    if (!user) return null
 
     // Count posts
     const posts = await ctx.db
@@ -164,12 +170,14 @@ export const updateUserStats = internalMutation({
         lastUpdated: Date.now(),
       })
     }
+    return null
   },
 })
 
 // Batch update stats for all creators (cron job)
 export const updateAllCreatorStats = internalMutation({
   args: {},
+  returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx) => {
     const creators = await ctx.db
       .query("users")

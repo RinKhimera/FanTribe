@@ -4,6 +4,11 @@ import { getAuthenticatedUser } from "./lib/auth"
 
 export const blockUser = mutation({
   args: { targetUserId: v.id("users") },
+  returns: v.object({
+    already: v.optional(v.boolean()),
+    blocked: v.optional(v.boolean()),
+    blockId: v.id("blocks"),
+  }),
   handler: async (ctx, args) => {
     const me = await getAuthenticatedUser(ctx)
     if (me._id === args.targetUserId)
@@ -27,6 +32,7 @@ export const blockUser = mutation({
 
 export const unblockUser = mutation({
   args: { targetUserId: v.id("users") },
+  returns: v.object({ removed: v.boolean() }),
   handler: async (ctx, args) => {
     const me = await getAuthenticatedUser(ctx)
     const existing = await ctx.db
@@ -44,6 +50,10 @@ export const unblockUser = mutation({
 // Liste des utilisateurs que j'ai bloqués (avec leurs infos)
 export const getBlockedUsers = query({
   args: {},
+  returns: v.array(v.object({
+    block: v.any(),
+    blockedUserDetails: v.any(),
+  })),
   handler: async (ctx) => {
     const me = await getAuthenticatedUser(ctx)
     const blocks = await ctx.db
@@ -65,6 +75,11 @@ export const getBlockedUsers = query({
 // Vérifie si moi j'ai bloqué target OU target m'a bloqué
 export const isBlocked = query({
   args: { targetUserId: v.id("users") },
+  returns: v.object({
+    iBlocked: v.boolean(),
+    blockedMe: v.boolean(),
+    any: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const me = await getAuthenticatedUser(ctx)
     if (me._id === args.targetUserId)
@@ -91,6 +106,11 @@ export const isBlocked = query({
 // Statut directionnel sans double requête côté client
 export const blockingStatus = query({
   args: { otherUserId: v.id("users") },
+  returns: v.object({
+    iBlocked: v.boolean(),
+    blockedMe: v.boolean(),
+    any: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const me = await getAuthenticatedUser(ctx)
     if (me._id === args.otherUserId)

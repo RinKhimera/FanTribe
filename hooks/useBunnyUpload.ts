@@ -13,6 +13,9 @@ type UploadMediaResult = {
   url: string
   mediaId: string
   type: "image" | "video"
+  mimeType: string
+  fileName: string
+  fileSize: number
   error?: string
 }
 
@@ -65,6 +68,9 @@ export function useBunnyUpload() {
             url: "",
             mediaId: "",
             type: file.type.startsWith("video/") ? "video" : "image",
+            mimeType: file.type,
+            fileName: file.name,
+            fileSize: file.size,
             error: "Non authentifie",
           }
         }
@@ -91,6 +97,9 @@ export function useBunnyUpload() {
               url: "",
               mediaId: "",
               type: "video",
+              mimeType: file.type,
+              fileName: file.name,
+              fileSize: file.size,
               error: err.error || "Erreur creation video",
             }
           }
@@ -147,6 +156,9 @@ export function useBunnyUpload() {
             url: embedUrl,
             mediaId: videoId,
             type: "video",
+            mimeType: file.type,
+            fileName: file.name,
+            fileSize: file.size,
           }
         } else {
           // ── IMAGE : upload via Convex HTTP Action ──
@@ -188,6 +200,9 @@ export function useBunnyUpload() {
               url: "",
               mediaId: "",
               type: "image",
+              mimeType: file.type,
+              fileName: file.name,
+              fileSize: file.size,
               error: err.error || "Erreur upload image",
             }
           }
@@ -206,6 +221,9 @@ export function useBunnyUpload() {
             url: result.url,
             mediaId: result.mediaId,
             type: "image",
+            mimeType: file.type,
+            fileName: file.name,
+            fileSize: file.size,
           }
         }
       } catch (error) {
@@ -219,6 +237,9 @@ export function useBunnyUpload() {
           url: "",
           mediaId: "",
           type: file.type.startsWith("video/") ? "video" : "image",
+          mimeType: file.type,
+          fileName: file.name,
+          fileSize: file.size,
           error:
             error instanceof Error ? error.message : "Erreur inconnue",
         }

@@ -14,6 +14,7 @@ import {
   skeletonVariants,
 } from "@/lib/animations"
 import { cn } from "@/lib/utils"
+import type { PostMedia } from "@/types"
 
 // Masonry item heights for visual variety
 const MASONRY_HEIGHTS = ["h-48", "h-64", "h-56", "h-72", "h-52", "h-60"]
@@ -25,7 +26,7 @@ const GalleryItem = ({
   isMediaProtected,
   onOpen,
 }: {
-  item: { _id: string; mediaUrl: string; visibility: string }
+  item: { _id: string; media: PostMedia; visibility: string }
   index: number
   canViewMedia: boolean
   isMediaProtected: boolean
@@ -33,8 +34,8 @@ const GalleryItem = ({
 }) => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
-  const mediaUrl = item.mediaUrl
-  const isVideo = mediaUrl.startsWith("https://iframe.mediadelivery.net/embed/")
+  const mediaUrl = item.media.url
+  const isVideo = item.media.type === "video"
   const heightClass = MASONRY_HEIGHTS[index % MASONRY_HEIGHTS.length]
 
   return (
@@ -158,10 +159,10 @@ export const UserGallery = ({
   // Extraire les données pour une référence stable dans useMemo
   const galleryLength = userGallery?.length ?? 0
 
-  // Le backend retourne uniquement les médias accessibles
+  // Le backend retourne uniquement les médias accessibles (URLs for the fullscreen viewer)
   const mediaList = useMemo(() => {
     if (!userGallery) return [] as string[]
-    return userGallery.map((item) => item.mediaUrl)
+    return userGallery.map((item) => item.media.url)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [galleryLength])
 
@@ -242,7 +243,7 @@ export const UserGallery = ({
               index={i * 3}
               canViewMedia={true}
               isMediaProtected={item.visibility === "subscribers_only"}
-              onOpen={() => openViewerAt(item.mediaUrl)}
+              onOpen={() => openViewerAt(item.media.url)}
             />
           ))}
         </div>
@@ -256,7 +257,7 @@ export const UserGallery = ({
               index={i * 3 + 1}
               canViewMedia={true}
               isMediaProtected={item.visibility === "subscribers_only"}
-              onOpen={() => openViewerAt(item.mediaUrl)}
+              onOpen={() => openViewerAt(item.media.url)}
             />
           ))}
         </div>
@@ -270,7 +271,7 @@ export const UserGallery = ({
               index={i * 3 + 2}
               canViewMedia={true}
               isMediaProtected={item.visibility === "subscribers_only"}
-              onOpen={() => openViewerAt(item.mediaUrl)}
+              onOpen={() => openViewerAt(item.media.url)}
             />
           ))}
         </div>

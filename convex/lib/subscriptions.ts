@@ -112,40 +112,41 @@ export const canViewSubscribersOnlyContent = async (
 /**
  * Filtre les médias d'un post selon les droits d'accès du viewer.
  * SECURITE: Ne retourne JAMAIS les URLs aux utilisateurs non autorisés.
+ * Supporte les deux formats : ancien (string[]) et nouveau (PostMedia[])
  *
  * @returns medias filtrés, flag isMediaLocked, et mediaCount original
  */
 export const filterPostMediasForViewer = async (
   ctx: DbCtx,
   post: {
-    medias?: string[]
+    medias?: Array<string | { type: string; url: string; mediaId: string; mimeType: string; [key: string]: unknown }>
     visibility?: string
     author: Id<"users">
   },
   viewerId: Id<"users"> | null,
   viewerAccountType?: "USER" | "CREATOR" | "SUPERUSER",
-): Promise<{ medias: string[]; isMediaLocked: boolean; mediaCount: number }> => {
+): Promise<{ medias: typeof post.medias & []; isMediaLocked: boolean; mediaCount: number }> => {
   const originalMedias = post.medias || []
   const mediaCount = originalMedias.length
 
   // Contenu public = accès libre
   if (!post.visibility || post.visibility === "public") {
-    return { medias: originalMedias, isMediaLocked: false, mediaCount }
+    return { medias: originalMedias as typeof post.medias & [], isMediaLocked: false, mediaCount }
   }
 
   // Pas de viewer authentifié = contenu verrouillé
   if (!viewerId) {
-    return { medias: [], isMediaLocked: true, mediaCount }
+    return { medias: [] as unknown as typeof post.medias & [], isMediaLocked: true, mediaCount }
   }
 
   // Propriétaire voit toujours son contenu
   if (post.author === viewerId) {
-    return { medias: originalMedias, isMediaLocked: false, mediaCount }
+    return { medias: originalMedias as typeof post.medias & [], isMediaLocked: false, mediaCount }
   }
 
   // Superuser voit tout
   if (viewerAccountType === "SUPERUSER") {
-    return { medias: originalMedias, isMediaLocked: false, mediaCount }
+    return { medias: originalMedias as typeof post.medias & [], isMediaLocked: false, mediaCount }
   }
 
   // Vérifier l'abonnement pour subscribers_only
@@ -157,6 +158,6 @@ export const filterPostMediasForViewer = async (
   )
 
   return hasAccess
-    ? { medias: originalMedias, isMediaLocked: false, mediaCount }
-    : { medias: [], isMediaLocked: true, mediaCount }
+    ? { medias: originalMedias as typeof post.medias & [], isMediaLocked: false, mediaCount }
+    : { medias: [] as unknown as typeof post.medias & [], isMediaLocked: true, mediaCount }
 }

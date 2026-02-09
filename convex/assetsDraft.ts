@@ -1,6 +1,8 @@
 import { v } from "convex/values"
 import { api, internal } from "./_generated/api"
 import { internalMutation, mutation } from "./_generated/server"
+import { getAuthenticatedUser } from "./lib/auth"
+import { createAppError } from "./lib/errors"
 
 export const createDraftAsset = mutation({
   args: {
@@ -9,7 +11,13 @@ export const createDraftAsset = mutation({
     mediaUrl: v.string(),
     assetType: v.union(v.literal("image"), v.literal("video")),
   },
+  returns: v.id("assetsDraft"),
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+    if (user._id !== args.author) {
+      throw createAppError("FORBIDDEN")
+    }
+
     const { author, mediaId, mediaUrl, assetType } = args
 
     const draftAsset = await ctx.db.insert("assetsDraft", {
@@ -25,7 +33,14 @@ export const createDraftAsset = mutation({
 
 export const deleteDraftWithAsset = mutation({
   args: { mediaId: v.string() },
+  returns: v.object({
+    success: v.boolean(),
+    error: v.optional(v.string()),
+    message: v.optional(v.string()),
+    statusCode: v.optional(v.number()),
+  }),
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
     const { mediaId } = args
 
     const asset = await ctx.db
@@ -35,6 +50,10 @@ export const deleteDraftWithAsset = mutation({
 
     if (!asset) {
       return { success: false, error: "Asset not found" }
+    }
+
+    if (asset.author !== user._id) {
+      throw createAppError("FORBIDDEN")
     }
 
     try {
@@ -67,7 +86,14 @@ export const deleteDraftWithAsset = mutation({
 
 export const deleteDraftWithoutAsset = mutation({
   args: { mediaId: v.string() },
+  returns: v.object({
+    success: v.boolean(),
+    error: v.optional(v.string()),
+    message: v.optional(v.string()),
+    statusCode: v.optional(v.number()),
+  }),
   handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
     const { mediaId } = args
 
     const asset = await ctx.db
@@ -77,6 +103,10 @@ export const deleteDraftWithoutAsset = mutation({
 
     if (!asset) {
       return { success: false, error: "Asset not found" }
+    }
+
+    if (asset.author !== user._id) {
+      throw createAppError("FORBIDDEN")
     }
 
     try {
@@ -98,11 +128,18 @@ export const deleteDraftWithoutAsset = mutation({
 })
 
 export const cleanUpDraftAssets = internalMutation({
+  args: {},
+  returns: v.object({
+    total: v.number(),
+    scheduledBunnyDeletes: v.number(),
+    dbDeleted: v.number(),
+    errors: v.number(),
+  }),
   handler: async (ctx) => {
-    const draftAssets = await ctx.db.query("assetsDraft").collect()
+    const draftAssets = await ctx.db.query("assetsDraft").take(1000)
     const draftDocuments = await ctx.db
       .query("validationDocumentsDraft")
-      .collect()
+      .take(1000)
 
     const totalAssets = draftAssets.length + draftDocuments.length
     console.log(

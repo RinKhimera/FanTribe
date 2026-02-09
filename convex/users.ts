@@ -6,6 +6,50 @@ import {
   mutation,
   query,
 } from "./_generated/server"
+import {
+  badgeValidator,
+  banDetailsValidator,
+  banHistoryEntryValidator,
+  personalInfoValidator,
+  postMediaValidator,
+  socialLinkValidator,
+  userDocValidator,
+} from "./lib/validators"
+
+type PostMedia = {
+  type: "image" | "video"
+  url: string
+  mediaId: string
+  mimeType: string
+  fileName?: string
+  fileSize?: number
+  thumbnailUrl?: string
+  duration?: number
+  width?: number
+  height?: number
+}
+
+/** Normalize a media entry: convert old string format to PostMedia object */
+function normalizePostMedia(m: string | PostMedia): PostMedia {
+  if (typeof m !== "string") return m
+  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
+  if (isVideo) {
+    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
+    return {
+      type: "video",
+      url: m,
+      mediaId: guidMatch ? guidMatch[1] : m,
+      mimeType: "video/mp4",
+    }
+  }
+  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
+  return {
+    type: "image",
+    url: m,
+    mediaId: pathMatch ? pathMatch[1] : m,
+    mimeType: "image/jpeg",
+  }
+}
 
 async function userByExternalId(ctx: QueryCtx, externalId: string) {
   return await ctx.db
@@ -16,6 +60,7 @@ async function userByExternalId(ctx: QueryCtx, externalId: string) {
 
 export const upsertFromClerk = internalMutation({
   args: { data: v.any() as Validator<UserJSON> }, // Vient de Clerk
+  returns: v.null(),
   async handler(ctx, { data }) {
     const userAttributes = {
       externalId: data.id,
@@ -33,11 +78,13 @@ export const upsertFromClerk = internalMutation({
     } else {
       await ctx.db.patch(user._id, userAttributes)
     }
+    return null
   },
 })
 
 export const deleteFromClerk = internalMutation({
   args: { clerkUserId: v.string() },
+  returns: v.null(),
   async handler(ctx, { clerkUserId }) {
     const user = await userByExternalId(ctx, clerkUserId)
 
@@ -48,6 +95,7 @@ export const deleteFromClerk = internalMutation({
         `Can't delete user, there is none for Clerk user ID: ${clerkUserId}`,
       )
     }
+    return null
   },
 })
 
@@ -59,6 +107,7 @@ export const createUser = internalMutation({
     externalId: v.string(),
     tokenIdentifier: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("users", {
       externalId: args.externalId,
@@ -71,11 +120,55 @@ export const createUser = internalMutation({
       imageBanner: "https://cdn.fantribe.io/fantribe/placeholder.jpg",
       accountType: "USER",
     })
+    return null
   },
 })
 
 export const getCurrentUser = query({
   args: {},
+  returns: v.union(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      name: v.string(),
+      username: v.optional(v.string()),
+      email: v.string(),
+      image: v.string(),
+      imageBanner: v.optional(v.string()),
+      bio: v.optional(v.string()),
+      location: v.optional(v.string()),
+      socialLinks: v.optional(v.array(socialLinkValidator)),
+      pinnedPostIds: v.optional(v.array(v.id("posts"))),
+      isOnline: v.boolean(),
+      activeSessions: v.optional(v.number()),
+      lastSeenAt: v.optional(v.number()),
+      tokenIdentifier: v.string(),
+      externalId: v.optional(v.string()),
+      accountType: v.union(
+        v.literal("USER"),
+        v.literal("CREATOR"),
+        v.literal("SUPERUSER"),
+      ),
+      allowAdultContent: v.optional(v.boolean()),
+      personalInfo: v.optional(personalInfoValidator),
+      isBanned: v.optional(v.boolean()),
+      banDetails: v.optional(banDetailsValidator),
+      banHistory: v.optional(v.array(banHistoryEntryValidator)),
+      badges: v.optional(v.array(badgeValidator)),
+      banExpired: v.optional(v.boolean()),
+      activeBan: v.optional(
+        v.object({
+          type: v.optional(
+            v.union(v.literal("temporary"), v.literal("permanent")),
+          ),
+          reason: v.optional(v.string()),
+          bannedAt: v.optional(v.number()),
+          expiresAt: v.optional(v.number()),
+        }),
+      ),
+    }),
+    v.null(),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -125,13 +218,14 @@ export const getCurrentUser = query({
 // A modifier
 export const getUsers = query({
   args: {},
+  returns: v.array(userDocValidator),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
       throw new ConvexError("Not authenticated")
     }
 
-    const users = await ctx.db.query("users").collect()
+    const users = await ctx.db.query("users").take(1000)
 
     // return all users without the current user
     return users.filter(
@@ -153,6 +247,7 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
 export const getSuggestedCreators = query({
   // Le refreshKey permet de forcer une nouvelle randomisation
   args: { refreshKey: v.optional(v.number()) },
+  returns: v.array(userDocValidator),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -173,11 +268,12 @@ export const getSuggestedCreators = query({
 // Session management for presence (called by Clerk webhooks)
 export const incrementUserSession = internalMutation({
   args: { externalId: v.string() },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await userByExternalId(ctx, args.externalId)
     if (!user) {
       console.warn(`User not found for externalId: ${args.externalId}`)
-      return
+      return null
     }
 
     const currentSessions = user.activeSessions ?? 0
@@ -186,16 +282,18 @@ export const incrementUserSession = internalMutation({
       isOnline: true,
       lastSeenAt: Date.now(),
     })
+    return null
   },
 })
 
 export const decrementUserSession = internalMutation({
   args: { externalId: v.string() },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await userByExternalId(ctx, args.externalId)
     if (!user) {
       console.warn(`User not found for externalId: ${args.externalId}`)
-      return
+      return null
     }
 
     const currentSessions = user.activeSessions ?? 1
@@ -206,12 +304,14 @@ export const decrementUserSession = internalMutation({
       isOnline: newSessionCount > 0,
       lastSeenAt: Date.now(),
     })
+    return null
   },
 })
 
 // Heartbeat mutation for client-side presence updates (2 min interval)
 export const updatePresenceHeartbeat = mutation({
   args: {},
+  returns: v.union(v.object({ success: v.boolean() }), v.null()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -237,6 +337,7 @@ export const updatePresenceHeartbeat = mutation({
 // Mark user as offline (called on page unload or visibility hidden)
 export const setUserOffline = mutation({
   args: {},
+  returns: v.union(v.object({ success: v.boolean() }), v.null()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
@@ -271,6 +372,7 @@ export const setUserOffline = mutation({
 // Internal mutation for cron job to mark stale users offline
 export const markStaleUsersOffline = internalMutation({
   args: {},
+  returns: v.object({ markedOfflineCount: v.number() }),
   handler: async (ctx) => {
     const TWO_MINUTES_AGO = Date.now() - 2 * 60 * 1000
 
@@ -303,6 +405,7 @@ export const markStaleUsersOffline = internalMutation({
 
 export const getUserProfile = query({
   args: { username: v.string() },
+  returns: v.union(userDocValidator, v.null()),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
@@ -321,6 +424,7 @@ export const updateUserProfile = mutation({
     location: v.string(),
     tokenIdentifier: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -344,6 +448,7 @@ export const updateUserProfile = mutation({
       bio: args.bio,
       location: args.location,
     })
+    return null
   },
 })
 
@@ -352,6 +457,7 @@ export const updateProfileImage = mutation({
     imgUrl: v.string(),
     tokenIdentifier: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -372,6 +478,7 @@ export const updateProfileImage = mutation({
     await ctx.db.patch(user._id, {
       image: args.imgUrl,
     })
+    return null
   },
 })
 
@@ -380,6 +487,7 @@ export const updateBannerImage = mutation({
     bannerUrl: v.string(),
     tokenIdentifier: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -400,6 +508,7 @@ export const updateBannerImage = mutation({
     await ctx.db.patch(user._id, {
       imageBanner: args.bannerUrl,
     })
+    return null
   },
 })
 
@@ -408,6 +517,7 @@ export const getAvailableUsername = query({
     username: v.string(),
     tokenIdentifier: v.string(),
   },
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const existingUsername = await ctx.db
       .query("users")
@@ -424,6 +534,7 @@ export const searchUsers = query({
     searchTerm: v.string(),
     limit: v.optional(v.number()),
   },
+  returns: v.array(userDocValidator),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return []
@@ -497,6 +608,11 @@ export const togglePinnedPost = mutation({
     postId: v.id("posts"),
     replaceOldest: v.optional(v.boolean()),
   },
+  returns: v.object({
+    pinned: v.boolean(),
+    replaced: v.optional(v.id("posts")),
+    maxReached: v.optional(v.boolean()),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -547,6 +663,17 @@ export const togglePinnedPost = mutation({
 // Get pinned posts for a user
 export const getPinnedPosts = query({
   args: { userId: v.id("users") },
+  returns: v.array(
+    v.object({
+      _id: v.id("posts"),
+      _creationTime: v.number(),
+      author: userDocValidator,
+      content: v.string(),
+      medias: v.array(postMediaValidator),
+      visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
+      isAdult: v.optional(v.boolean()),
+    }),
+  ),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId)
     if (!user || !user.pinnedPostIds?.length) return []
@@ -555,11 +682,12 @@ export const getPinnedPosts = query({
       user.pinnedPostIds.map((id) => ctx.db.get(id))
     )
 
-    // Filter out deleted posts and enrich with author data
+    // Filter out deleted posts, normalize medias, enrich with author data
     return posts
       .filter((post): post is NonNullable<typeof post> => post !== null)
       .map((post) => ({
         ...post,
+        medias: (post.medias || []).map(normalizePostMedia),
         author: user,
       }))
   },
@@ -586,6 +714,7 @@ export const updateSocialLinks = mutation({
       })
     ),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -605,6 +734,7 @@ export const updateSocialLinks = mutation({
     if (!user) throw new ConvexError("User not found")
 
     await ctx.db.patch(user._id, { socialLinks: args.socialLinks })
+    return null
   },
 })
 
@@ -620,6 +750,7 @@ export const addBadge = mutation({
       v.literal("rising_star")
     ),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -666,6 +797,7 @@ export const removeBadge = mutation({
       v.literal("rising_star")
     ),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
@@ -699,6 +831,7 @@ export const updateAdultContentPreference = mutation({
   args: {
     allowAdultContent: v.boolean(),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new ConvexError("Not authenticated")
