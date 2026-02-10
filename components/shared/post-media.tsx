@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import React, { useEffect, useEffectEvent, useMemo, useState } from "react"
+import React, { useEffect, useEffectEvent, useState } from "react"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import {
   Carousel,
@@ -38,26 +38,14 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
-  // Extract URLs for hooks that need them
-  const mediaUrls = useMemo(() => medias.map((m) => m.url), [medias])
-
   // Use the centralized video metadata hook - only when content is not locked
   const { metadata: videoMetadata } = useVideoMetadata({
-    mediaUrls: mediaUrls,
+    mediaUrls: medias.map((m) => m.url),
     enabled: !isMediaLocked && medias.length > 0,
   })
 
-  // Liste des seules images (exclut les vidéos)
-  const imageMedias = useMemo(
-    () => medias.filter((m) => m.type === "image"),
-    [medias],
-  )
-
-  // Image URLs for the fullscreen viewer
-  const imageUrls = useMemo(
-    () => imageMedias.map((m) => m.url),
-    [imageMedias],
-  )
+  const imageMedias = medias.filter((m) => m.type === "image")
+  const imageUrls = imageMedias.map((m) => m.url)
 
   // Compute slideCount from API instead of storing in state
   const slideCount = carouselApi?.scrollSnapList().length ?? 0

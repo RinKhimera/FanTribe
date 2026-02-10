@@ -16,15 +16,12 @@ const PostDetailsPage = async (props: {
 
   if (!currentUser?.username) redirect("/onboarding")
 
-  const userProfile = await fetchQuery(api.users.getUserProfile, {
-    username: params.username,
-  })
+  const [userProfile, post] = await Promise.all([
+    fetchQuery(api.users.getUserProfile, { username: params.username }),
+    fetchQuery(api.posts.getPost, { postId: params.postId }),
+  ])
 
   if (userProfile === null) notFound()
-
-  const post = await fetchQuery(api.posts.getPost, {
-    postId: params.postId,
-  })
   if (post === null) notFound()
 
   return <PostLayout currentUser={currentUser} postId={params.postId} />

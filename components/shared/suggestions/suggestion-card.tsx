@@ -3,6 +3,7 @@
 import { motion } from "motion/react"
 import Image from "next/image"
 import Link from "next/link"
+import { useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
@@ -40,13 +41,18 @@ export const SuggestionCard = ({
   variant = "default",
   index = 0,
 }: SuggestionCardProps) => {
-  // Highlight matching text in search results
-  const highlightText = (text: string, term?: string) => {
-    if (!term) return text
-    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    const parts = text.split(new RegExp(`(${escapedTerm})`, "gi"))
+  // Pre-compile RegExp to avoid re-creation on each call
+  const searchRegex = useMemo(() => {
+    if (!searchTerm) return null
+    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    return new RegExp(`(${escaped})`, "gi")
+  }, [searchTerm])
+
+  const highlightText = (text: string) => {
+    if (!searchRegex) return text
+    const parts = text.split(searchRegex)
     return parts.map((part, i) =>
-      part.toLowerCase() === term.toLowerCase() ? (
+      part.toLowerCase() === searchTerm!.toLowerCase() ? (
         <mark
           key={i}
           className="bg-primary/30 rounded-sm px-0.5 font-semibold text-white"
@@ -127,10 +133,10 @@ export const SuggestionCard = ({
         >
           <div className="flex min-w-0 flex-col justify-end space-y-0.5">
             <h4 className="truncate text-[15px] leading-tight font-semibold text-white drop-shadow-md">
-              {highlightText(user.name || "Utilisateur", searchTerm)}
+              {highlightText(user.name || "Utilisateur")}
             </h4>
             <p className="truncate text-sm font-medium text-white/60">
-              @{highlightText(user.username || "", searchTerm)}
+              @{highlightText(user.username || "")}
             </p>
           </div>
         </div>

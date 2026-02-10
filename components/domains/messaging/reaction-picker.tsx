@@ -3,7 +3,17 @@
 import { useMutation } from "convex/react"
 import { motion } from "motion/react"
 import { Plus } from "lucide-react"
-import EmojiPicker, { Theme } from "emoji-picker-react"
+import { Theme } from "emoji-picker-react"
+import dynamic from "next/dynamic"
+
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[400px] w-[320px] items-center justify-center rounded-xl bg-black/80">
+      <div className="size-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+    </div>
+  ),
+})
 import { useState } from "react"
 import {
   Popover,

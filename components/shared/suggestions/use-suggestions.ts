@@ -1,21 +1,14 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { api } from "@/convex/_generated/api"
+import { useDebounce } from "@/hooks/useDebounce"
 
 export function useSuggestions() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [refreshKey, setRefreshKey] = useState(0)
-
-  // Debounce search term (300ms for responsive feel)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchTerm])
 
   // Fetch suggested creators
   const suggestedCreators = useQuery(api.users.getSuggestedCreators, {
@@ -38,11 +31,11 @@ export function useSuggestions() {
   // Clear search
   const clearSearch = useCallback(() => {
     setSearchTerm("")
-    setDebouncedSearchTerm("")
   }, [])
 
-  // Derived states
-  const isSearching = debouncedSearchTerm.trim().length > 0
+  // Derived states — check both to ensure immediate clear behavior
+  const isSearching =
+    searchTerm.trim().length > 0 && debouncedSearchTerm.trim().length > 0
   const isSearchLoading = isSearching && searchResults === undefined
   const isSuggestionsLoading = suggestedCreators === undefined
 
