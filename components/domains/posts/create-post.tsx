@@ -34,7 +34,7 @@ export const CreatePost = ({
         "glass-premium",
         "border border-primary/10",
         "hover:border-primary/25 transition-all duration-300",
-        "hover:shadow-[0_4px_24px_hsl(var(--primary)/25%)]",
+        "hover:shadow-[0_4px_24px_color-mix(in_oklch,var(--primary)_25%,transparent)]",
       )}
       onClick={handleCreatePostClick}
     >

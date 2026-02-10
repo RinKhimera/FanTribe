@@ -88,7 +88,7 @@ export const PostCard = ({
             variant === "featured" && [
               "border-primary/20 rounded-2xl border",
               "from-primary/5 bg-linear-to-b to-transparent",
-              "shadow-[0_4px_24px_hsl(var(--primary)/15%)]",
+              "shadow-[0_4px_24px_color-mix(in_oklch,var(--primary)_15%,transparent)]",
             ],
             variant === "compact" && "py-1",
           )}
