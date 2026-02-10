@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
-import { DatePicker } from "./date-picker"
+import { DatePicker } from "@/components/ui/date-picker"
 
 describe("DatePicker", () => {
   it("renders with placeholder when no value", () => {

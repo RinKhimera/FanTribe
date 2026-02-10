@@ -4,19 +4,30 @@ import userEvent from "@testing-library/user-event"
 import { useForm } from "react-hook-form"
 import { describe, expect, it, vi } from "vitest"
 import { Form } from "@/components/ui/form"
-import { StepDocuments } from "./step-documents"
+import { StepDocuments } from "@/components/be-creator/step-documents"
 import {
   ApplicationFormData,
   applicationSchema,
   UploadedDocuments,
-} from "./types"
+} from "@/components/be-creator/types"
 
-// Mock environment-dependent modules
 vi.mock("@/lib/config", () => ({
-  logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
+  logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+}))
+vi.mock("@/lib/config/env.client", () => ({
+  clientEnv: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}))
+vi.mock("@clerk/nextjs", () => ({
+  useAuth: () => ({ getToken: vi.fn().mockResolvedValue("test-token") }),
+}))
+vi.mock("motion/react", () => ({
+  motion: {
+    div: ({ children, onPointerDown, ...props }: React.PropsWithChildren<{
+      onPointerDown?: () => void; [key: string]: unknown
+    }>) => <div {...props} onPointerDown={onPointerDown}>{children}</div>,
+    p: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
+      <p {...props}>{children}</p>
+    ),
   },
 }))
 
@@ -34,17 +45,6 @@ vi.mock("@/hooks/useBunnyUpload", () => ({
   }),
 }))
 
-vi.mock("@/lib/config/env.client", () => ({
-  clientEnv: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
-  },
-}))
-
-vi.mock("@clerk/nextjs", () => ({
-  useAuth: () => ({ getToken: vi.fn().mockResolvedValue("test-token") }),
-}))
-
-// Mock CameraCapture component
 vi.mock("@/components/shared/camera-capture", () => ({
   CameraCapture: ({
     children,
@@ -53,28 +53,6 @@ vi.mock("@/components/shared/camera-capture", () => ({
   }) => <div data-testid="camera-capture">{children({ open: vi.fn() })}</div>,
 }))
 
-// Mock framer-motion
-vi.mock("motion/react", () => ({
-  motion: {
-    div: ({
-      children,
-      onPointerDown,
-      ...props
-    }: React.PropsWithChildren<{
-      onPointerDown?: () => void
-      [key: string]: unknown
-    }>) => (
-      <div {...props} onPointerDown={onPointerDown}>
-        {children}
-      </div>
-    ),
-    p: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
-      <p {...props}>{children}</p>
-    ),
-  },
-}))
-
-// Mock BunnyUploadWidget
 vi.mock("@/components/shared/bunny-upload-widget", () => ({
   BunnyUploadWidget: ({
     children,

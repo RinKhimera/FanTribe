@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { applicationSchema, motivationOptions } from "./types"
+import { applicationSchema, motivationOptions } from "@/components/be-creator/types"
 
 describe("applicationSchema", () => {
   describe("fullName", () => {

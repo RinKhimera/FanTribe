@@ -4,16 +4,12 @@ import userEvent from "@testing-library/user-event"
 import { useForm } from "react-hook-form"
 import { describe, expect, it, vi } from "vitest"
 import { Form } from "@/components/ui/form"
-import { StepPersonalInfo } from "./step-personal-info"
-import { ApplicationFormData, applicationSchema } from "./types"
+import { StepPersonalInfo } from "@/components/be-creator/step-personal-info"
+import { ApplicationFormData, applicationSchema } from "@/components/be-creator/types"
 
-// Mock framer-motion
 vi.mock("motion/react", () => ({
   motion: {
-    div: ({
-      children,
-      ...props
-    }: React.PropsWithChildren<Record<string, unknown>>) => (
+    div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
       <div {...props}>{children}</div>
     ),
   },
