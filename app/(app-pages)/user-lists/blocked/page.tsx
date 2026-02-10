@@ -72,7 +72,7 @@ const BlockedPage = () => {
     if (blockedUsers === undefined) {
       return (
         <div className="flex justify-center p-8">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         </div>
       )
     }
@@ -137,7 +137,7 @@ const BlockedPage = () => {
         </Tabs>
 
         <Select defaultValue="all" onValueChange={handleFilterChange}>
-          <SelectTrigger className="mb-4 w-full">
+          <SelectTrigger className="mb-4 w-full" aria-label="Filtrer les utilisateurs bloqués">
             <SelectValue placeholder="Filtrer les utilisateurs bloqués" />
           </SelectTrigger>
           <SelectContent>

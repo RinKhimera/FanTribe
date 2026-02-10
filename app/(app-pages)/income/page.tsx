@@ -103,7 +103,7 @@ const IncomePage = () => {
                   <CardTitle className="text-sm font-medium">
                     Total net gagné
                   </CardTitle>
-                  <Wallet className="text-muted-foreground size-4" />
+                  <Wallet className="text-muted-foreground size-4" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
@@ -122,7 +122,7 @@ const IncomePage = () => {
                   <CardTitle className="text-sm font-medium">
                     Prochain paiement
                   </CardTitle>
-                  <DollarSign className="text-muted-foreground size-4" />
+                  <DollarSign className="text-muted-foreground size-4" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-success text-2xl font-bold">
@@ -141,7 +141,7 @@ const IncomePage = () => {
                   <CardTitle className="text-sm font-medium">
                     Date de paiement
                   </CardTitle>
-                  <Calendar className="text-muted-foreground size-4" />
+                  <Calendar className="text-muted-foreground size-4" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-lg font-semibold capitalize">
@@ -161,7 +161,7 @@ const IncomePage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="size-5" />
+                  <TrendingUp className="size-5" aria-hidden="true" />
                   Comment fonctionnent vos revenus ?
                 </CardTitle>
               </CardHeader>

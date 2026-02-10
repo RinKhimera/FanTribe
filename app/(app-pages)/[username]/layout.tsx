@@ -45,8 +45,8 @@ export default function UserProfileLayout({
     return (
       <PageContainer hideHeader>
         <div className="flex h-screen flex-col items-center justify-center">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground mt-4 text-sm">Chargement...</p>
+          <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
+          <p className="text-muted-foreground mt-4 text-sm">Chargement…</p>
         </div>
       </PageContainer>
     )

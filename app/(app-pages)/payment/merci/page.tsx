@@ -11,7 +11,7 @@ const MerciPage = () => {
   return (
     <main className="border-muted flex h-full min-h-screen w-full flex-col items-center justify-center border-r border-l">
       <div className="flex flex-col items-center gap-10">
-        <CircleCheckBig size={80} />
+        <CircleCheckBig size={80} aria-hidden="true" />
 
         <div className="px-3 text-center text-xl">
           Votre paiement a été effectué avec succès !

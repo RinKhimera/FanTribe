@@ -267,7 +267,7 @@ export default function CreatorApplicationsPage() {
                                         : "border-orange-500/30 bg-orange-500/10 text-orange-600"
                                     )}
                                   >
-                                    <RefreshCw className="mr-1 h-2.5 w-2.5" />
+                                    <RefreshCw className="mr-1 h-2.5 w-2.5" aria-hidden="true" />
                                     Tentative #{application.attemptNumber}
                                   </Badge>
                                 )}
@@ -293,7 +293,7 @@ export default function CreatorApplicationsPage() {
                               variant="outline"
                               className="border-orange-500/30 bg-orange-500/10 font-medium text-orange-600"
                             >
-                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              <AlertTriangle className="mr-1 h-3 w-3" aria-hidden="true" />
                               {application.riskFactors.length}
                             </Badge>
                           ) : (
@@ -304,13 +304,13 @@ export default function CreatorApplicationsPage() {
                         </TableCell>
                         <TableCell className="text-muted-foreground hidden text-sm md:table-cell">
                           <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5" />
+                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                             {formatDate(application.submittedAt)}
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                            <FileText className="h-3.5 w-3.5" />
+                            <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                             {application.identityDocuments.length}
                           </div>
                         </TableCell>
@@ -322,8 +322,9 @@ export default function CreatorApplicationsPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                              aria-label="Voir la candidature"
                             >
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           </Link>
                         </TableCell>
@@ -372,7 +373,7 @@ function StatCard({
         <div
           className={cn("text-muted-foreground", color && colorClasses[color])}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
           {isLoading ? (
@@ -408,7 +409,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="bg-muted/50 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-        <FileText className="text-muted-foreground h-6 w-6" />
+        <FileText className="text-muted-foreground h-6 w-6" aria-hidden="true" />
       </div>
       <h3 className="mb-1 font-medium">Aucune candidature</h3>
       <p className="text-muted-foreground text-sm">

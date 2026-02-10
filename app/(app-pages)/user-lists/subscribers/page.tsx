@@ -55,7 +55,7 @@ const SubscribersPage = () => {
     if (subsStats === undefined) {
       return (
         <div className="flex justify-center p-8">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         </div>
       )
     }
@@ -119,7 +119,7 @@ const SubscribersPage = () => {
         </Tabs>
 
         <Select defaultValue="all" onValueChange={setFilter}>
-          <SelectTrigger className="mb-4 w-full">
+          <SelectTrigger className="mb-4 w-full" aria-label="Filtrer les abonnés">
             <SelectValue placeholder="Filtrer les abonnés" />
           </SelectTrigger>
           <SelectContent>

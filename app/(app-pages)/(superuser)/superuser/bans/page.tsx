@@ -154,7 +154,7 @@ export default function BansPage() {
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
             className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-500/10 ring-1 ring-red-500/20"
           >
-            <Ban className="h-5 w-5 text-red-500" />
+            <Ban aria-hidden="true" className="h-5 w-5 text-red-500" />
           </motion.div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight">
@@ -175,7 +175,7 @@ export default function BansPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <TabsList className="w-full sm:w-auto">
               <TabsTrigger value="active" className="gap-2">
-                <Shield className="h-4 w-4" />
+                <Shield aria-hidden="true" className="h-4 w-4" />
                 <span>Bans actifs</span>
                 {activeBansCount > 0 && (
                   <Badge
@@ -187,7 +187,7 @@ export default function BansPage() {
                 )}
               </TabsTrigger>
               <TabsTrigger value="history" className="gap-2">
-                <History className="h-4 w-4" />
+                <History aria-hidden="true" className="h-4 w-4" />
                 <span>Historique</span>
                 {historyCount > 0 && (
                   <Badge
@@ -207,7 +207,7 @@ export default function BansPage() {
                   key={option.value}
                   onClick={() => setFilter(option.value)}
                   className={cn(
-                    "rounded-full px-3 py-1.5 text-sm font-medium transition-all",
+                    "rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     filter === option.value
                       ? "bg-foreground text-background"
                       : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -304,7 +304,7 @@ export default function BansPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShieldOff className="h-5 w-5 text-emerald-500" />
+              <ShieldOff aria-hidden="true" className="h-5 w-5 text-emerald-500" />
               Lever le ban
             </DialogTitle>
             <DialogDescription>
@@ -337,11 +337,11 @@ export default function BansPage() {
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                     className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
                   />
-                  Traitement...
+                  Traitement\u2026
                 </>
               ) : (
                 <>
-                  <ShieldOff className="h-4 w-4" />
+                  <ShieldOff aria-hidden="true" className="h-4 w-4" />
                   Confirmer
                 </>
               )}
@@ -378,7 +378,7 @@ function BannedUserCard({
         visible: { opacity: 1, y: 0 },
       }}
     >
-      <Card className="group overflow-hidden transition-all hover:shadow-md">
+      <Card className="group overflow-hidden transition-shadow hover:shadow-md">
         <CardContent className="p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* User Info */}
@@ -402,7 +402,7 @@ function BannedUserCard({
                 <div className="flex items-center gap-2">
                   <p className="truncate font-medium">{user.name}</p>
                   <Badge variant="outline" className={cn("shrink-0", config?.className)}>
-                    <TypeIcon className="mr-1 h-3 w-3" />
+                    <TypeIcon aria-hidden="true" className="mr-1 h-3 w-3" />
                     {config?.label}
                   </Badge>
                 </div>
@@ -417,12 +417,12 @@ function BannedUserCard({
             {/* Ban Details */}
             <div className="flex flex-col gap-1 text-sm sm:items-end">
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Calendar className="h-3.5 w-3.5" />
+                <Calendar aria-hidden="true" className="h-3.5 w-3.5" />
                 <span>Banni le {formatDate(user.bannedAt || 0)}</span>
               </div>
               {user.banType === "temporary" && user.banExpiresAt && (
                 <div className="flex items-center gap-1.5 text-amber-600">
-                  <Clock className="h-3.5 w-3.5" />
+                  <Clock aria-hidden="true" className="h-3.5 w-3.5" />
                   <span>{getRemainingTime(user.banExpiresAt)}</span>
                 </div>
               )}
@@ -448,7 +448,7 @@ function BannedUserCard({
               onClick={onUnban}
               className="gap-1.5 border-emerald-500/30 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
             >
-              <ShieldOff className="h-3.5 w-3.5" />
+              <ShieldOff aria-hidden="true" className="h-3.5 w-3.5" />
               Lever le ban
             </Button>
           </div>
@@ -506,11 +506,11 @@ function HistoryCard({
             {/* Timeline */}
             <div className="space-y-1 text-sm sm:text-right">
               <div className="flex items-center gap-1.5 text-muted-foreground sm:justify-end">
-                <UserX className="h-3.5 w-3.5" />
+                <UserX aria-hidden="true" className="h-3.5 w-3.5" />
                 <span>Banni: {formatDateTime(entry.bannedAt)}</span>
               </div>
               <div className="flex items-center gap-1.5 text-emerald-600 sm:justify-end">
-                <User className="h-3.5 w-3.5" />
+                <User aria-hidden="true" className="h-3.5 w-3.5" />
                 <span>Levé: {formatDateTime(entry.liftedAt)}</span>
               </div>
             </div>
@@ -548,7 +548,7 @@ function EmptyState({
       className="flex flex-col items-center justify-center py-16"
     >
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
-        <Icon className="h-8 w-8 text-muted-foreground" />
+        <Icon aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
       </div>
       <h3 className="mb-1 text-lg font-medium">{title}</h3>
       <p className="text-center text-sm text-muted-foreground">{description}</p>

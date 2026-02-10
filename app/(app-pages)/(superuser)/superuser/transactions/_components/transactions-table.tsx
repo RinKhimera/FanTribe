@@ -63,12 +63,12 @@ const SortIcon = ({
   sortOrder: SortOrder
 }) => {
   if (sortField !== field) {
-    return <ArrowUpDown className="ml-2 h-4 w-4" />
+    return <ArrowUpDown className="ml-2 h-4 w-4" aria-hidden="true" />
   }
   return sortOrder === "asc" ? (
-    <ArrowUp className="ml-2 h-4 w-4" />
+    <ArrowUp className="ml-2 h-4 w-4" aria-hidden="true" />
   ) : (
-    <ArrowDown className="ml-2 h-4 w-4" />
+    <ArrowDown className="ml-2 h-4 w-4" aria-hidden="true" />
   )
 }
 
@@ -165,6 +165,7 @@ export function TransactionsTable({
                     variant="ghost"
                     onClick={() => handleSort("date")}
                     className="h-auto p-0 font-medium hover:bg-transparent"
+                    aria-label="Trier par date"
                   >
                     Date
                     <SortIcon
@@ -179,6 +180,7 @@ export function TransactionsTable({
                     variant="ghost"
                     onClick={() => handleSort("creator")}
                     className="h-auto p-0 font-medium hover:bg-transparent"
+                    aria-label="Trier par créatrice"
                   >
                     Créatrice
                     <SortIcon
@@ -193,6 +195,7 @@ export function TransactionsTable({
                     variant="ghost"
                     onClick={() => handleSort("subscriber")}
                     className="h-auto p-0 font-medium hover:bg-transparent"
+                    aria-label="Trier par abonné"
                   >
                     Abonné
                     <SortIcon
@@ -207,6 +210,7 @@ export function TransactionsTable({
                     variant="ghost"
                     onClick={() => handleSort("provider")}
                     className="h-auto p-0 font-medium hover:bg-transparent"
+                    aria-label="Trier par fournisseur"
                   >
                     <span className="hidden lg:inline">Fournisseur</span>
                     <span className="lg:hidden">Fournisseur</span>
@@ -222,6 +226,7 @@ export function TransactionsTable({
                     variant="ghost"
                     onClick={() => handleSort("currency")}
                     className="h-auto p-0 font-medium hover:bg-transparent"
+                    aria-label="Trier par devise"
                   >
                     Devise
                     <SortIcon
@@ -236,6 +241,7 @@ export function TransactionsTable({
                     variant="ghost"
                     onClick={() => handleSort("amount")}
                     className="ml-auto h-auto p-0 font-medium hover:bg-transparent"
+                    aria-label="Trier par montant"
                   >
                     Montant
                     <SortIcon
