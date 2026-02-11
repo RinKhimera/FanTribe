@@ -42,9 +42,6 @@ export const CreatePost = ({
         <Avatar className="size-12 shrink-0">
           <AvatarImage
             src={currentUser?.image || ""}
-            width={100}
-            height={100}
-            className="aspect-square h-full w-full object-cover"
             alt={currentUser?.username || "Profile image"}
           />
           <AvatarFallback className="bg-muted text-muted-foreground font-semibold">

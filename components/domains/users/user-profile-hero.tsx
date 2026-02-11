@@ -77,6 +77,7 @@ export const UserProfileHero = ({
               {userProfile?.image ? (
                 <AvatarImage
                   src={userProfile.image}
+                  sizes="128px"
                   className="object-cover"
                   alt={userProfile?.name || "Profile image"}
                 />

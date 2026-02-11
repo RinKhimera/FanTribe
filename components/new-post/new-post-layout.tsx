@@ -281,9 +281,6 @@ export const NewPostLayout = () => {
               {currentUser?.image ? (
                 <AvatarImage
                   src={currentUser.image}
-                  width={100}
-                  height={100}
-                  className="aspect-square h-full w-full object-cover"
                   alt={currentUser?.username || "Profile image"}
                 />
               ) : (

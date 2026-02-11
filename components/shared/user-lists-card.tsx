@@ -92,9 +92,7 @@ export const UserListsCard = ({
               <AvatarImage
                 src={user.avatarUrl}
                 alt={user.name}
-                width={80}
-                height={80}
-                className="object-cover"
+                sizes="80px"
               />
               <AvatarFallback className="text-xl">
                 {user.name.substring(0, 2).toUpperCase()}
