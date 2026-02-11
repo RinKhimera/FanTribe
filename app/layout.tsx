@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 import ConvexClientProvider from "@/providers/convex-client-provider"
 import TanstackClientProvider from "@/providers/tanstack-provider"
+import { ServiceWorkerRegistration } from "@/components/shared/service-worker-registration"
 import { ThemeProvider } from "@/providers/theme-provider"
 
 const fontSans = FontSans({
@@ -23,6 +24,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_FR",
     siteName: "FanTribe",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
   },
   twitter: {
     card: "summary_large_image",
@@ -60,6 +64,7 @@ export default function RootLayout({
           </ConvexClientProvider>
         </ThemeProvider>
         <Toaster richColors />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   )
