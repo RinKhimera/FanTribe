@@ -174,6 +174,33 @@ export const creatorApplicationDocValidator = v.object({
   previousApplicationId: v.optional(v.id("creatorApplications")),
 })
 
+export const tipDocValidator = v.object({
+  _id: v.id("tips"),
+  _creationTime: v.number(),
+  senderId: v.id("users"),
+  creatorId: v.id("users"),
+  amount: v.number(),
+  currency: v.union(v.literal("XAF"), v.literal("USD")),
+  message: v.optional(v.string()),
+  status: v.union(
+    v.literal("pending"),
+    v.literal("succeeded"),
+    v.literal("failed"),
+    v.literal("refunded"),
+  ),
+  provider: v.string(),
+  providerTransactionId: v.string(),
+  context: v.optional(
+    v.union(
+      v.literal("post"),
+      v.literal("profile"),
+      v.literal("message"),
+    ),
+  ),
+  postId: v.optional(v.id("posts")),
+  conversationId: v.optional(v.id("conversations")),
+})
+
 // Pagination result validator (pour les queries paginées)
 export const paginationResultValidator = (itemValidator: ReturnType<typeof v.object> | ReturnType<typeof v.any>) =>
   v.object({

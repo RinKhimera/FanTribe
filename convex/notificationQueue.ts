@@ -53,11 +53,14 @@ export const enqueueNotifications = internalMutation({
       v.literal("newSubscription"),
       v.literal("renewSubscription"),
       v.literal("subscription_expired"),
+      v.literal("tip"),
     ),
     sender: v.id("users"),
     recipientIds: v.array(v.id("users")),
     post: v.optional(v.id("posts")),
+    tip: v.optional(v.id("tips")),
     comment: v.optional(v.id("comments")),
+    conversation: v.optional(v.id("conversations")),
   },
   returns: v.object({
     totalRecipients: v.number(),
@@ -138,7 +141,9 @@ export const processPendingBatch = internalMutation({
           recipientId,
           sender: batch.sender,
           post: batch.post,
+          tip: batch.tip,
           comment: batch.comment,
+          conversation: batch.conversation,
           read: false,
         })
         processedCount++
@@ -242,7 +247,9 @@ export const processNextBatches = internalMutation({
             recipientId,
             sender: batch.sender,
             post: batch.post,
+            tip: batch.tip,
             comment: batch.comment,
+            conversation: batch.conversation,
             read: false,
           })
           processedCount++
@@ -304,10 +311,12 @@ export const getNextPendingBatches = internalQuery({
         v.literal("messaging_subscription_expiring"),
         v.literal("messaging_subscription_expired"),
         v.literal("conversation_locked"),
+        v.literal("tip"),
       ),
       sender: v.id("users"),
       recipientIds: v.array(v.id("users")),
       post: v.optional(v.id("posts")),
+      tip: v.optional(v.id("tips")),
       comment: v.optional(v.id("comments")),
       conversation: v.optional(v.id("conversations")),
       status: v.union(

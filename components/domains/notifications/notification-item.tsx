@@ -3,6 +3,7 @@
 import { useMutation } from "convex/react"
 import {
   CalendarX,
+  Coins,
   Heart,
   ImagePlus,
   MessageSquareText,
@@ -25,12 +26,13 @@ import NotificationEllipsis from "./notification-ellipsis"
 
 export type ExtendedNotificationProps = Omit<
   Doc<"notifications">,
-  "sender" | "recipientId" | "post" | "comment"
+  "sender" | "recipientId" | "post" | "comment" | "tip"
 > & {
   sender: Doc<"users"> | null
   recipientId: Doc<"users"> | null
   post: Doc<"posts"> | null | undefined
   comment: Doc<"comments"> | null | undefined
+  tip: Doc<"tips"> | null | undefined
 }
 
 interface NotificationItemProps {
@@ -89,6 +91,12 @@ export const NotificationItem = ({
             <CalendarX className={cn(iconClasses, "text-amber-500")} />
           </div>
         )
+      case "tip":
+        return (
+          <div className="flex size-12 items-center justify-center rounded-xl bg-amber-500/10">
+            <Coins className={cn(iconClasses, "text-amber-500")} />
+          </div>
+        )
       default:
         return null
     }
@@ -108,6 +116,10 @@ export const NotificationItem = ({
         return "a partagé une nouvelle publication"
       case "subscription_expired":
         return "Votre abonnement a expiré"
+      case "tip":
+        return notification.tip
+          ? `vous a envoyé un pourboire de ${new Intl.NumberFormat("fr-FR").format(notification.tip.amount)} XAF`
+          : "vous a envoyé un pourboire"
       default:
         return ""
     }
@@ -120,7 +132,9 @@ export const NotificationItem = ({
       try {
         await markAsRead({ notificationId: notification._id })
 
-        if (notification.post) {
+        if (notification.type === "tip") {
+          router.push("/income")
+        } else if (notification.post) {
           const postOwnerUsername =
             notification.type === "newPost"
               ? notification.sender?.username
@@ -292,7 +306,8 @@ export const NotificationItem = ({
 
                 {/* Preview content */}
                 {(notification.comment?.content ||
-                  notification.post?.content) && (
+                  notification.post?.content ||
+                  notification.tip?.message) && (
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -302,7 +317,9 @@ export const NotificationItem = ({
                     <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
                       {notification.type === "comment"
                         ? notification.comment?.content
-                        : notification.post?.content}
+                        : notification.type === "tip"
+                          ? notification.tip?.message
+                          : notification.post?.content}
                     </p>
                   </motion.div>
                 )}

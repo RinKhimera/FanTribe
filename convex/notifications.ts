@@ -33,18 +33,23 @@ export const getUserNotifications = query({
     const commentIds = [
       ...new Set(notifications.filter((n) => n.comment).map((n) => n.comment!)),
     ]
+    const tipIds = [
+      ...new Set(notifications.filter((n) => n.tip).map((n) => n.tip!)),
+    ]
 
     // Fetch all related data in parallel batches
-    const [senders, posts, comments] = await Promise.all([
+    const [senders, posts, comments, tips] = await Promise.all([
       Promise.all(senderIds.map((id) => ctx.db.get(id))),
       Promise.all(postIds.map((id) => ctx.db.get(id))),
       Promise.all(commentIds.map((id) => ctx.db.get(id))),
+      Promise.all(tipIds.map((id) => ctx.db.get(id))),
     ])
 
     // Create lookup maps for O(1) access
     const senderMap = new Map(senders.filter(Boolean).map((s) => [s!._id, s]))
     const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id, p]))
     const commentMap = new Map(comments.filter(Boolean).map((c) => [c!._id, c]))
+    const tipMap = new Map(tips.filter(Boolean).map((t) => [t!._id, t]))
 
     // Enrich notifications using maps (no N+1!)
     return notifications.map((notification) => ({
@@ -54,6 +59,7 @@ export const getUserNotifications = query({
       comment: notification.comment
         ? (commentMap.get(notification.comment) ?? null)
         : null,
+      tip: notification.tip ? (tipMap.get(notification.tip) ?? null) : null,
       recipientId: user,
     }))
   },
@@ -268,6 +274,7 @@ export const getNotificationsByType = query({
         v.literal("comment"),
         v.literal("subscriptions"),
         v.literal("newPost"),
+        v.literal("tip"),
         v.literal("all"),
       ),
     ),
@@ -340,18 +347,23 @@ export const getNotificationsByType = query({
     const commentIds = [
       ...new Set(notifications.filter((n) => n.comment).map((n) => n.comment!)),
     ]
+    const tipIds = [
+      ...new Set(notifications.filter((n) => n.tip).map((n) => n.tip!)),
+    ]
 
     // Fetch all related data in parallel batches
-    const [senders, posts, comments] = await Promise.all([
+    const [senders, posts, comments, tips] = await Promise.all([
       Promise.all(senderIds.map((id) => ctx.db.get(id))),
       Promise.all(postIds.map((id) => ctx.db.get(id))),
       Promise.all(commentIds.map((id) => ctx.db.get(id))),
+      Promise.all(tipIds.map((id) => ctx.db.get(id))),
     ])
 
     // Create lookup maps for O(1) access
     const senderMap = new Map(senders.filter(Boolean).map((s) => [s!._id, s]))
     const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id, p]))
     const commentMap = new Map(comments.filter(Boolean).map((c) => [c!._id, c]))
+    const tipMap = new Map(tips.filter(Boolean).map((t) => [t!._id, t]))
 
     // Enrich notifications using maps (no N+1!)
     return notifications.map((notification) => ({
@@ -362,6 +374,7 @@ export const getNotificationsByType = query({
       comment: notification.comment
         ? (commentMap.get(notification.comment) ?? null)
         : null,
+      tip: notification.tip ? (tipMap.get(notification.tip) ?? null) : null,
     }))
   },
 })

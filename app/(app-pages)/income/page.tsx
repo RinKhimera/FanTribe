@@ -1,24 +1,32 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { Calendar, DollarSign, TrendingUp, Wallet } from "lucide-react"
+import { Calendar, Coins, DollarSign, TrendingUp, Wallet } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PageContainer } from "@/components/layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { formatCustomTimeAgo } from "@/lib/formatters"
 import { logger } from "@/lib/config/logger"
 
 const IncomePage = () => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser()
 
+  const isCreatorOrSuperuser =
+    currentUser &&
+    (currentUser.accountType === "CREATOR" ||
+      currentUser.accountType === "SUPERUSER")
+
   const earnings = useQuery(
     api.transactions.getCreatorEarnings,
-    currentUser &&
-      (currentUser.accountType === "CREATOR" ||
-        currentUser.accountType === "SUPERUSER")
-      ? undefined
-      : "skip",
+    isCreatorOrSuperuser ? undefined : "skip",
+  )
+
+  const tipEarnings = useQuery(
+    api.tips.getCreatorTipEarnings,
+    isCreatorOrSuperuser ? undefined : "skip",
   )
 
   // Vérification des permissions
@@ -157,6 +165,80 @@ const IncomePage = () => {
               </Card>
             </div>
 
+            {/* Tips section */}
+            {tipEarnings && tipEarnings.tipCount > 0 && (
+              <>
+                {/* Tip stats card */}
+                <Card className="border-amber-500/20 bg-amber-500/5">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Pourboires reçus
+                    </CardTitle>
+                    <Coins className="size-4 text-amber-500" aria-hidden="true" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-amber-500">
+                      {formatAmount(tipEarnings.totalTipsNet)} XAF
+                    </div>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {tipEarnings.tipCount} pourboire
+                      {tipEarnings.tipCount > 1 ? "s" : ""} (net après commission)
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Recent tips list */}
+                {tipEarnings.recentTips.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Coins className="size-5 text-amber-500" aria-hidden="true" />
+                        Pourboires récents
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {tipEarnings.recentTips.map((tip) => (
+                          <div
+                            key={tip._id}
+                            className="flex items-center gap-3 rounded-lg border border-white/5 p-3"
+                          >
+                            <Avatar className="size-9">
+                              <AvatarImage
+                                src={tip.sender?.image}
+                                className="object-cover"
+                              />
+                              <AvatarFallback className="bg-muted text-xs">
+                                {tip.sender?.name?.charAt(0) || "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">
+                                  {tip.sender?.name || "Utilisateur"}
+                                </span>
+                                <span className="text-sm font-bold text-amber-500">
+                                  {formatAmount(tip.amount)} XAF
+                                </span>
+                              </div>
+                              {tip.message && (
+                                <p className="text-muted-foreground mt-0.5 line-clamp-1 text-xs">
+                                  {tip.message}
+                                </p>
+                              )}
+                              <p className="text-muted-foreground mt-0.5 text-xs">
+                                {formatCustomTimeAgo(tip._creationTime)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
             {/* Informations sur la commission */}
             <Card>
               <CardHeader>
@@ -171,7 +253,7 @@ const IncomePage = () => {
                     <h3 className="font-semibold">Votre part</h3>
                     <p className="text-primary text-2xl font-bold">70%</p>
                     <p className="text-muted-foreground text-sm">
-                      De chaque abonnement
+                      De chaque abonnement et pourboire
                     </p>
                   </div>
                   <div className="border-muted rounded-lg border p-4">
@@ -193,8 +275,8 @@ const IncomePage = () => {
                       <strong>dernier jeudi de chaque mois</strong>
                     </li>
                     <li>
-                      • Vous recevez 70% du montant total de vos abonnements du
-                      mois
+                      • Vous recevez 70% du montant total de vos abonnements et
+                      pourboires du mois
                     </li>
                     <li>• Les paiements sont automatiques et sécurisés</li>
                     <li>

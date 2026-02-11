@@ -270,6 +270,36 @@ export interface Report {
 }
 
 // ============================================================================
+// Types pour les pourboires
+// ============================================================================
+
+/**
+ * Contexte d'envoi d'un pourboire
+ */
+export type TipContext = "post" | "profile" | "message"
+
+/**
+ * Type pour un pourboire enrichi (avec info sender)
+ */
+export type TipProps = {
+  _id: Id<"tips">
+  _creationTime: number
+  senderId: Id<"users">
+  creatorId: Id<"users">
+  amount: number
+  currency: "XAF" | "USD"
+  message?: string
+  status: "pending" | "succeeded" | "failed" | "refunded"
+  context?: TipContext
+  sender?: {
+    _id: Id<"users">
+    name: string
+    username?: string
+    image: string
+  } | null
+}
+
+// ============================================================================
 // Types pour les services de paiement
 // ============================================================================
 

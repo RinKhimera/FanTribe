@@ -47,4 +47,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     period: MINUTE,
     capacity: 5,
   },
+
+  // Pourboires : 5/heure par user (éviter spam de tips)
+  sendTip: {
+    kind: "fixed window",
+    rate: 5,
+    period: HOUR,
+  },
 })

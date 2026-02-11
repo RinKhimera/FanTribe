@@ -1,11 +1,12 @@
 "use client"
 
 import { motion } from "motion/react"
-import { MapPin } from "lucide-react"
+import { Coins, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useState } from "react"
 import { SubscriptionButton } from "@/components/domains/subscriptions"
+import { TipDialog } from "@/components/domains/tips"
 import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -193,6 +194,25 @@ export const UserProfileHero = ({
             <SubscriptionButton
               userProfile={userProfile}
               subscriptionStatus={subscriptionStatus}
+            />
+          </div>
+        )}
+
+        {/* Tip button */}
+        {!isOwnProfile && userProfile.accountType === "CREATOR" && (
+          <div className="mb-4">
+            <TipDialog
+              creator={userProfile}
+              context="profile"
+              trigger={
+                <Button
+                  variant="outline"
+                  className="w-full rounded-2xl border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500"
+                >
+                  <Coins className="mr-2 size-4" />
+                  Envoyer un pourboire
+                </Button>
+              }
             />
           </div>
         )}

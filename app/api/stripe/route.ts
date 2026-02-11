@@ -41,28 +41,53 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session
         const metadata = session.metadata || {}
 
-        const creatorId = metadata.creatorId
-        const subscriberId = metadata.subscriberId
-
-        const startedAt = session.created
-          ? new Date(session.created * 1000).toISOString()
-          : new Date().toISOString()
-
-        if (!creatorId || !subscriberId || !session.id) break
-
         const currency = session.currency?.toUpperCase() || "USD"
         const amount = convertStripeAmount(session.amount_total, currency)
 
-        await convex.action(api.internalActions.processPayment, {
-          provider: "stripe",
-          providerTransactionId: session.id,
-          creatorId: creatorId as Id<"users">,
-          subscriberId: subscriberId as Id<"users">,
-          amount,
-          currency,
-          paymentMethod: session.payment_method_types?.[0],
-          startedAt,
-        })
+        if (metadata.type === "tip") {
+          // Tip payment
+          const senderId = metadata.senderId
+          const creatorId = metadata.creatorId
+          if (!senderId || !creatorId || !session.id) break
+
+          await convex.action(api.internalActions.processTip, {
+            provider: "stripe",
+            providerTransactionId: session.id,
+            senderId: senderId as Id<"users">,
+            creatorId: creatorId as Id<"users">,
+            amount,
+            currency,
+            message: metadata.tipMessage || undefined,
+            context: (metadata.tipContext as "post" | "profile" | "message") || undefined,
+            postId: metadata.postId
+              ? (metadata.postId as Id<"posts">)
+              : undefined,
+            conversationId: metadata.conversationId
+              ? (metadata.conversationId as Id<"conversations">)
+              : undefined,
+          })
+        } else {
+          // Subscription payment
+          const creatorId = metadata.creatorId
+          const subscriberId = metadata.subscriberId
+
+          const startedAt = session.created
+            ? new Date(session.created * 1000).toISOString()
+            : new Date().toISOString()
+
+          if (!creatorId || !subscriberId || !session.id) break
+
+          await convex.action(api.internalActions.processPayment, {
+            provider: "stripe",
+            providerTransactionId: session.id,
+            creatorId: creatorId as Id<"users">,
+            subscriberId: subscriberId as Id<"users">,
+            amount,
+            currency,
+            paymentMethod: session.payment_method_types?.[0],
+            startedAt,
+          })
+        }
         break
       }
       default:

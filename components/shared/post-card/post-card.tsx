@@ -133,7 +133,7 @@ export const PostCard = ({
               </div>
             )}
 
-            {/* Actions: Like, Comment, Share, Bookmark */}
+            {/* Actions: Like, Comment, Share, Tip, Bookmark */}
             <PostActions
               postId={post._id}
               postUrl={postUrl}
@@ -141,6 +141,8 @@ export const PostCard = ({
               isCommentsOpen={isCommentsOpen}
               onToggleComments={toggleComments}
               hideCommentButton={isDetailView}
+              author={post.author ?? undefined}
+              currentUserId={currentUser._id}
             />
 
             {/* Comments section - hidden in detail view (handled externally) */}

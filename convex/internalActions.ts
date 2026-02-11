@@ -530,6 +530,57 @@ export const processPayment = action({
   },
 })
 
+// ============================================================================
+// Tip Processing
+// ============================================================================
+
+export const processTip = action({
+  args: {
+    provider: v.string(),
+    providerTransactionId: v.string(),
+    senderId: v.id("users"),
+    creatorId: v.id("users"),
+    amount: v.number(),
+    currency: v.string(),
+    message: v.optional(v.string()),
+    context: v.optional(
+      v.union(
+        v.literal("post"),
+        v.literal("profile"),
+        v.literal("message"),
+      ),
+    ),
+    postId: v.optional(v.id("posts")),
+    conversationId: v.optional(v.id("conversations")),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    tipId: v.union(v.id("tips"), v.null()),
+    alreadyProcessed: v.optional(v.boolean()),
+  }),
+  handler: async (ctx, args) => {
+    const result: {
+      success: boolean
+      message: string
+      tipId: Id<"tips"> | null
+      alreadyProcessed?: boolean
+    } = await ctx.runMutation(internal.tips.processTipAtomic, {
+      provider: args.provider,
+      providerTransactionId: args.providerTransactionId,
+      senderId: args.senderId,
+      creatorId: args.creatorId,
+      amount: args.amount,
+      currency: args.currency,
+      message: args.message,
+      context: args.context,
+      postId: args.postId,
+      conversationId: args.conversationId,
+    })
+    return result
+  },
+})
+
 export const checkTransaction = action({
   args: {
     transactionId: v.string(),

@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from "motion/react"
 import {
   Bookmark,
   CheckCircle,
+  Coins,
   Heart,
   MessageCircle,
   Share2,
 } from "lucide-react"
 import { useTransition, useState, useCallback } from "react"
 import { toast } from "sonner"
+import { TipDialog } from "@/components/domains/tips"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -18,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 import { heartPulseVariants, bookmarkVariants } from "@/lib/animations"
 import { logger } from "@/lib/config"
 import { cn } from "@/lib/utils"
@@ -31,6 +33,10 @@ type PostActionsProps = {
   onToggleComments: () => void
   /** Hide comment button (for post detail page) */
   hideCommentButton?: boolean
+  /** Post author — needed for tip button */
+  author?: Doc<"users">
+  /** Current user ID — to hide tip on own posts */
+  currentUserId?: Id<"users">
 }
 
 export const PostActions = ({
@@ -40,6 +46,8 @@ export const PostActions = ({
   isCommentsOpen,
   onToggleComments,
   hideCommentButton = false,
+  author,
+  currentUserId,
 }: PostActionsProps) => {
   const [isLikePending, startLikeTransition] = useTransition()
   const [isBookmarkPending, startBookmarkTransition] = useTransition()
@@ -277,6 +285,34 @@ export const PostActions = ({
               Partager
             </TooltipContent>
           </Tooltip>
+
+          {/* Tip button — visible on other creators' posts only */}
+          {author && author.accountType === "CREATOR" && currentUserId && currentUserId !== author._id && (
+            <TipDialog
+              creator={author}
+              context="post"
+              postId={postId}
+              trigger={
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "group h-10 rounded-full px-4 transition-all duration-300",
+                        "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500",
+                      )}
+                    >
+                      <Coins className="size-5 transition-transform duration-300 group-hover:scale-110" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={4}>
+                    Envoyer un pourboire
+                  </TooltipContent>
+                </Tooltip>
+              }
+            />
+          )}
         </div>
 
         {/* Right actions group */}

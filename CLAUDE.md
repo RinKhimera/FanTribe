@@ -1,137 +1,337 @@
-# FanTribe - Claude Code Context
+# FanTribe
 
-## Project Overview
-FanTribe is a creator-focused social platform (similar to OnlyFans) built for the African market, primarily targeting French-speaking users in Cameroon. Creators can share exclusive content with paying subscribers.
+Creator-focused social platform for the African market (French-speaking). Creators share exclusive content with paying subscribers.
 
 ## Tech Stack
-- **Framework**: Next.js 15 (App Router)
-- **Backend**: Convex (real-time backend with functions, queries, mutations)
-- **Auth**: Clerk
-- **Styling**: Tailwind CSS 4.x + shadcn/ui components
-- **Animations**: Motion (framer-motion successor)
-- **Payments**: CinetPay (African mobile money: OM/MOMO) + Stripe (cards)
-- **Media Storage**: Bunny CDN (videos) + Convex storage (images)
-- **Forms**: React Hook Form + Zod validation
-- **Language**: TypeScript (strict mode)
 
-## Architecture Patterns
+- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
+- **Backend**: Convex (real-time queries, mutations, actions, HTTP endpoints)
+- **Auth**: Clerk (webhooks, JWT tokens with `template: "convex"`)
+- **Styling**: Tailwind CSS 4 (OKLCH colors) + shadcn/ui + Motion (animations)
+- **Payments**: CinetPay (mobile money OM/MOMO) + Stripe (cards)
+- **Media**: Bunny CDN via Convex HTTP Actions (images) + direct XHR (videos)
+- **Monitoring**: Sentry (errors) + Resend (email)
+- **Validation**: Zod (forms + env vars) + Convex validators (backend)
 
-### Directory Structure
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run build-check` | TypeScript + ESLint check (zero warnings) |
+| `npm run lint` | ESLint read-only check |
+| `npm run fix-lint` | ESLint auto-fix |
+| `npm test` | All tests (frontend + convex) |
+| `npm run test:watch` | Watch mode |
+| `npm run test:convex` | Convex tests only |
+| `npm run test:coverage` | Coverage reports |
+| `npx convex dev` | Start Convex dev + regenerate types |
+
+## Architecture
+
 ```
-app/                    # Next.js App Router pages
-├── (app-pages)/        # Main app routes (with layout)
-├── (auth)/             # Auth pages (sign-in, sign-up)
-├── api/                # API routes (webhooks)
+app/                      # Next.js App Router
+├── (app-pages)/          # Main routes (dashboard layout, auth guards)
+├── (auth)/               # Sign-in, sign-up
+├── api/                  # Webhooks only (stripe, cinetpay, clerk)
 components/
-├── domains/            # Feature-specific components
-│   ├── messaging/
-│   ├── notifications/
-│   ├── posts/
-│   ├── subscriptions/
-│   └── users/
-├── shared/             # Reusable components across features
-├── superuser/          # Admin dashboard components
-├── new-post/           # Post creation flow
-└── ui/                 # shadcn/ui base components
-convex/                 # Backend functions
-├── _lib/               # Shared utilities for backend
-hooks/                  # Custom React hooks
+├── domains/              # Feature components (messaging, posts, users, subscriptions, notifications)
+├── shared/               # Cross-feature reusable components
+├── new-post/             # Post creation flow
+├── layout/               # App shell, sidebar, nav
+└── ui/                   # shadcn/ui (CVA + Radix primitives)
+convex/                   # Backend functions
+├── lib/                  # Shared: auth, errors, validators, rateLimiter, bunny, subscriptions, blocks, notifications, signedUrls, batch
+hooks/                    # 12 custom hooks (see below)
 lib/
-├── config/             # Environment, logger config
-├── formatters/         # Date and currency formatters
-│   ├── date/           # formatDate, formatPostDate, formatLastSeen
-│   └── currency/       # formatCurrency, convertCurrency, convertStripeAmount
-├── services/           # External service clients (stripe, bunny)
-└── utils.ts            # General utilities (cn, etc.)
-schemas/                # Zod validation schemas
-types/                  # TypeScript type definitions
+├── config/               # env.client.ts, env.ts (server), logger.ts
+├── formatters/           # date/ (French locale) + currency/ (XAF/USD)
+├── services/             # stripe.ts, cinetpay.ts
+└── utils.ts              # cn() utility
+schemas/                  # Zod validation schemas
+types/                    # Shared TS types (PostMedia, MessageProps, etc.)
+tests/
+├── frontend/             # Vitest + happy-dom + @testing-library
+└── convex/               # Vitest + convex-test (node env)
 ```
 
-### Custom Hooks (hooks/)
-| Hook | Purpose |
-|------|---------|
-| `useAsyncHandler` | Standardized try-catch with toast notifications and logger |
-| `useDialogState` | Dialog open/close state with pending transition |
-| `useDebounce` | Debounce values (e.g., search input) |
-| `useScrollLock` | Lock body scroll (for modals, fullscreen viewers) |
-| `useVideoMetadata` | Fetch Bunny video metadata |
-| `useKeyboardNavigation` | Keyboard navigation in lists |
-| `useCurrentUser` | Get current authenticated user |
-| `useCinetpayPayment` | CinetPay payment processing |
+## Key Files
 
-### Component Patterns
-1. **Sub-component folders**: Large components are split into sub-folders
-   - `post-media.tsx` → `post-media/locked-content-overlay.tsx`
-   - `fullscreen-image-viewer.tsx` → `fullscreen-viewer/*.tsx`
+- `convex/schema.ts` — Data model (all tables, indexes, search indexes)
+- `convex/http.ts` — HTTP Actions (Bunny upload/delete, CORS, webhooks)
+- `convex/lib/auth.ts` — `getAuthenticatedUser()`, `requireSuperuser()`, `requireCreator()`
+- `convex/lib/errors.ts` — `createAppError(code, { userMessage })` bilingual errors
+- `convex/lib/validators.ts` — Shared validators (`postMediaValidator`, `userDocValidator`)
+- `convex/lib/rateLimiter.ts` — Rate limits on mutations (sendMessage, createPost, etc.)
+- `convex/lib/bunny.ts` — Bunny CDN service (upload, delete, signed URLs)
+- `hooks/useAsyncHandler.ts` — Wraps async ops with toast/logger/useTransition
+- `hooks/useBunnyUpload.ts` — Media upload (images via HTTP Action, videos via direct XHR)
+- `hooks/useCurrentUser.ts` — Auth state + user query
+- `hooks/usePresence.ts` — Online presence heartbeat (2min interval)
+- `types/index.ts` — PostMedia, MessageProps, ConversationProps, PaymentStatus
+- `lib/config/env.client.ts` — Zod-validated public env vars
+- `lib/config/env.ts` — Zod-validated server-only secrets
 
-2. **Barrel exports**: Each component folder has an `index.ts` for clean imports
+## Convex Backend Patterns
 
-3. **Controlled vs Uncontrolled**: Many components support both modes
-   - Example: `SubscriptionUnified` accepts `isOpen`/`onClose` OR `trigger`
+### Function Definition
+All functions use explicit `args` + `returns` validators:
+```typescript
+export const myQuery = query({
+  args: { id: v.id("posts") },
+  returns: v.union(v.object({ ... }), v.null()),
+  handler: async (ctx, args) => { ... }
+})
+```
 
-## Coding Conventions
+### Authentication
+```typescript
+// Standard auth check (throws if not authenticated)
+const user = await getAuthenticatedUser(ctx)
 
-### Language
-- All UI text is in **French** (target audience)
-- Code comments can be in English or French
-- Variable/function names in English
+// Optional (returns null if not authenticated)
+const user = await getAuthenticatedUser(ctx, { optional: true })
 
-### State Management
-- Use `useEffectEvent` for setState calls inside effects (React 19 pattern)
-- Prefer computing values inline over storing derived state
-- Use Convex's real-time queries (`useQuery`) for data fetching
+// Role-restricted
+const admin = await requireSuperuser(ctx)
+const creator = await requireCreator(ctx)
+```
 
 ### Error Handling
 ```typescript
-// Use useAsyncHandler for mutations with toast feedback
-const { execute, isPending } = useAsyncHandler({
-  successMessage: "Action réussie",
-  errorMessage: "Erreur lors de l'action",
-  onSuccess: () => closeDialog(),
+throw createAppError("POST_NOT_FOUND")
+throw createAppError("INVALID_INPUT", {
+  userMessage: "Le contenu doit avoir au moins 10 caractères"  // French for user
 })
+// Client: getUserErrorMessage(error) extracts French message
+```
 
-execute(() => someMutation({ ... }))
+### Queries — Always Use Indexes
+```typescript
+// Single index
+ctx.db.query("posts").withIndex("by_author", q => q.eq("author", id))
+
+// Composite index
+ctx.db.query("users").withIndex("by_isOnline_lastSeenAt", q =>
+  q.eq("isOnline", true).lt("lastSeenAt", cutoff)
+)
+
+// Pagination
+ctx.db.query("posts").order("desc").paginate(paginationOpts)
+
+// Search
+ctx.db.query("users").withSearchIndex("search_users", q => q.search("name", term))
+
+// NEVER: unbounded .collect() — always .take(n) or .paginate()
+```
+
+### Rate Limiting
+```typescript
+await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
+// Configured: sendMessage (10/min), createPost (5/hr), addComment (20/min), likePost (30/min)
+```
+
+### Batch Operations
+```typescript
+// Batch-fetch related data with Promise.all
+const authors = await Promise.all(authorIds.map(id => ctx.db.get(id)))
+const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
+```
+
+## Frontend Patterns
+
+### Data Fetching
+```typescript
+// Reactive query
+const data = useQuery(api.posts.getPost, { postId })
+
+// Conditional query (skip when args unavailable)
+const sub = useQuery(api.subscriptions.get, userId ? { userId } : "skip")
+
+// Mutation with useTransition
+const [isPending, startTransition] = useTransition()
+const createPost = useMutation(api.posts.createPost)
+startTransition(async () => { await createPost({ ... }) })
+```
+
+### Async Handler (preferred for mutations with user feedback)
+```typescript
+const { execute, isPending } = useAsyncHandler({
+  successMessage: "Post créé avec succès",
+  errorMessage: "Erreur lors de la création",
+  onSuccess: () => router.push("/"),
+})
+execute(() => createPost({ content, medias, visibility }))
+```
+
+### Forms (React Hook Form + Zod)
+```typescript
+const form = useForm<z.infer<typeof schema>>({
+  resolver: zodResolver(schema),
+  defaultValues: { content: "" },
+})
+// Submit: form.handleSubmit(onSubmit)
+// Reset: form.reset({ content: "" })
+// Field: <FormField control={form.control} name="content" render={...} />
+```
+
+### Animations (motion/react)
+```typescript
+import { motion, AnimatePresence } from "motion/react"
+// Entry: initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+// Interactive: whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+// Swap: <AnimatePresence mode="wait"><motion.div key={state} ...></AnimatePresence>
+// Duration: 150-300ms for UI transitions
 ```
 
 ### Styling
-- Use `cn()` utility for conditional classes
-- Prefer Tailwind classes over custom CSS
-- Glass morphism pattern: `glass-card`, `glass-input`, `glass-button`
-- Use `motion/react` for animations (not framer-motion)
+- `cn()` for conditional Tailwind classes: `cn("base", condition && "active")`
+- Glass effects: `glass-card`, `glass-premium`, `glass-button`, `glass-input`
+- Premium buttons: `btn-premium`, `btn-premium-outline`
+- OKLCH colors via CSS vars: `--primary`, `--gold-500`, etc.
+- Dark mode: automatic via `.dark` class (next-themes)
+
+### Component Types
+- Props use Convex `Doc<"users">` and `Id<"posts">` types
+- shadcn/ui: CVA variants + Radix primitives + `asChild` pattern
+- Next.js 15 params: `params: Promise<{ slug: string }>` → `const { slug } = use(params)`
+
+## Hooks Reference
+
+| Hook | Purpose |
+|------|---------|
+| `useAsyncHandler` | Standardized try-catch with toast + logger + useTransition |
+| `useCurrentUser` | Auth state + current user query (`{ currentUser, isLoading, isAuthenticated }`) |
+| `useBunnyUpload` | Media upload/delete (images via Convex HTTP Action, videos via XHR to Bunny Stream) |
+| `usePresence` | Online presence heartbeat (2min intervals, visibility-aware) |
+| `useDialogState` | Dialog open/close + isPending + startTransition |
+| `useDebounce` | Debounce values (default 300ms) |
+| `useScrollLock` | Lock body scroll for modals/fullscreen |
+| `useBunnyPlayerControl` | Bunny video player controls |
+| `useVideoMetadata` | Fetch Bunny video metadata |
+| `useKeyboardNavigation` | Keyboard nav in lists |
+| `useCinetpayPayment` | CinetPay payment processing |
+| `useSuperuserFilters` | Admin dashboard filter state |
+
+## Coding Conventions
+
+- **UI text**: All in **French** (target audience: Cameroon)
+- **Code**: English variable/function names, comments in English or French
+- **Semi-colons**: Disabled (Prettier `semi: false`)
+- **Imports**: Sorted by `@trivago/prettier-plugin-sort-imports` (node → npm → local)
+- **Path alias**: `@/*` maps to project root
+- **Convex types**: `Doc<"tableName">` for documents, `Id<"tableName">` for IDs
+- **Error messages**: Internal in English, user-facing (`userMessage`) in French
+- **Loading text**: Use `…` not `...` (e.g., "Chargement…", "Envoi…")
+
+## React Performance Rules
+
+Follow these when writing React code:
+
+### Critical
+- **No waterfalls**: `Promise.all()` for independent async ops. Start promises early, await late.
+- **Dynamic imports**: `next/dynamic` for heavy components not needed on initial render (e.g., emoji picker, editors).
+- **No barrel imports from large libs**: lucide-react is handled by `optimizePackageImports` in next.config — safe to import normally.
+
+### High
+- **Minimize RSC serialization**: Pass only needed fields to client components, not full objects.
+- **Suspense boundaries**: Wrap async data-dependent sections, let shell render immediately.
+
+### Medium
+- **Derive state inline**: `const fullName = first + ' ' + last` — no `useState` + `useEffect` for computed values.
+- **Functional setState**: `setItems(curr => [...curr, newItem])` — avoids stale closures, enables stable callbacks.
+- **useTransition**: For non-urgent updates (search filtering, scroll tracking).
+- **Explicit conditionals**: `count > 0 ? <Badge /> : null` — never `count && <Badge />` (renders `0`).
+- **Immutable arrays**: `toSorted()` not `sort()`, `toReversed()` not `reverse()`.
+- **Lazy state init**: `useState(() => expensive())` not `useState(expensive())`.
+- **Narrow effect deps**: Depend on `user.id` not `user`. Derive booleans from continuous values.
+- **Handlers not effects**: User-triggered actions go in event handlers, not `useEffect`.
+
+## UI/UX Rules
+
+Follow these when writing UI components:
+
+### Accessibility
+- Icon-only `<button>` → must have `aria-label`
+- Form `<input>` → must have `<label htmlFor>` or `aria-label`
+- Focus states: `focus-visible:ring-*` — never `outline-none` without replacement
+- Semantic HTML: `<button>` for actions, `<a>`/`<Link>` for navigation — never `onClick` on `<div>`
+
+### Forms
+- Set `autocomplete` and `inputmode` on inputs
+- Never block paste
+- `spellCheck={false}` on emails, codes, usernames
+- Placeholders end with `…`: `"exemple@mail.com…"`
+- Submit button: enabled until request starts, then show spinner
+- Inline error messages; focus first error on submit
+
+### Animation
+- Honor `prefers-reduced-motion` — provide reduced/disabled variant
+- Animate only `transform` and `opacity` (compositor-friendly)
+- Never `transition: all` — list properties explicitly
+- SVG: animate wrapper `<div>`, not SVG element directly
+
+### Content
+- Text overflow: always handle with `truncate`, `line-clamp-*`, or `break-words`
+- `min-w-0` on flex children for truncation to work
+- Number columns: `font-variant-numeric: tabular-nums`
+- Render empty states, never broken UI
+- `touch-action: manipulation` on interactive mobile elements
+
+### Images & Performance
+- Use Next.js `<Image>` with `fill` + `sizes` or explicit `width`/`height`
+- Below-fold: `loading="lazy"`. Above-fold: `priority`
+- Virtualize lists > 50 items (`content-visibility: auto` or virtualization lib)
+
+### Navigation
+- URL reflects app state (filters, tabs, pagination)
+- Destructive actions require confirmation modal
 
 ## Testing
-- **Unit tests**: Vitest
-- **Convex tests**: Separate config (`vitest.convex.config.mts`)
-- Run all tests: `npm test`
-- Run with watch: `npm run test:watch`
 
-## Commands
-```bash
-npm run dev           # Start dev server
-npm run build-check   # TypeScript + ESLint check
-npm run test          # Run all tests
-npm run lint          # Lint with auto-fix
+### Structure
+- **Frontend**: `tests/frontend/` — Vitest + happy-dom + @testing-library
+- **Convex**: `tests/convex/` — Vitest + convex-test (node environment)
+- **Coverage**: 75% frontend, 65% backend (enforced in config)
+
+### Patterns
+```typescript
+// Frontend hook test
+const { result } = renderHook(() => useAsyncHandler({ successMessage: "OK" }))
+await act(async () => { await result.current.execute(() => mockFn()) })
+
+// Convex function test
+const t = convexTest(schema)
+await t.run(async (ctx) => { await ctx.db.insert("users", { ... }) })
+const result = await t.withIdentity({ tokenIdentifier: "test" })
+  .query(api.users.getCurrentUser)
 ```
 
-## Key Business Logic
+## Gotchas
+
+- **`.next/dev/types` cache**: Stale after deleting API routes — delete `.next/dev/types` to clear
+- **Barrel exports in tests**: `hooks/index.ts` evaluates ALL modules — if any import fails, all tests importing from barrel fail. Mock failing modules or import directly.
+- **`env.client.ts` in tests**: Zod parse fails without env vars — mock `@/lib/config/env.client` in tests
+- **Convex scheduler in tests**: `ctx.scheduler.runAfter()` callbacks may fire after test end — handled in `vitest.convex.setup.ts`
+- **`convex/_generated`**: Gitignored — run `npx convex dev` to regenerate after schema changes
+- **ESLint zero-warning**: `--max-warnings 0` in `build-check` — all warnings are errors
+- **Bunny secrets**: All in Convex dashboard env vars, NOT in Next.js/Vercel env
+- **Convex site URL**: `NEXT_PUBLIC_CONVEX_URL.replace(".cloud", ".site")` for HTTP Actions
+- **Auth tokens for HTTP Actions**: `useAuth().getToken({ template: "convex" })` → `Authorization: Bearer ${token}`
+
+## Business Logic
 
 ### Subscriptions
-- Monthly subscription model (1000 XAF/month)
-- Three states: `subscribe`, `renew`, `unsubscribe`
-- Dual payment: CinetPay (mobile money) + Stripe (cards)
-
-### Creator Applications
-- Multi-step application process (be-creator flow)
-- Documents: ID card + selfie for verification
-- Admin approval required
-- Reapplication supported after rejection
+- Monthly model (1000 XAF/month), dual payment: CinetPay (mobile money) + Stripe (cards)
+- States: `subscribe` → `renew` → `unsubscribe`
+- Types: `content_access` (posts) + `messaging_access` (DMs)
 
 ### Content Visibility
-- Posts can be `public` or `subscribers_only`
-- Locked content shows artistic blur overlay
-- Videos stored on Bunny CDN with signed URLs
+- `public` or `subscribers_only` — locked content shows blur overlay
+- Adult content gated by `isAdult` flag + user preference `allowAdultContent`
+- Access check: `canViewSubscribersOnlyContent()` in `convex/lib/subscriptions.ts`
 
-## Currency
-- Primary: XAF (Central African CFA franc) - zero-decimal
-- Secondary: USD (for Stripe international)
-- Conversion rate defined in `lib/formatters/currency/`
+### Currency
+- Primary: XAF (zero-decimal) — `formatCurrency(1000, "XAF")` → `"1 000 XAF"`
+- Secondary: USD (for Stripe) — conversion rate: 1 USD = 562.2 XAF
