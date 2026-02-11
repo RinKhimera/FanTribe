@@ -106,10 +106,7 @@ const BlockedPage = () => {
                   bannerUrl: details.imageBanner || "",
                 }}
                 isBlockedPage={true}
-                onSubscribe={() => {
-                  // Appeler la mutation de déblocage AVANT de la faire
-                  console.log(`Débloquer ${details.username}`)
-                }}
+                onSubscribe={() => {}}
               />
             )
           })}

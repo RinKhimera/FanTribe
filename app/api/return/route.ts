@@ -18,9 +18,6 @@ export async function POST(request: Request) {
     }
 
     // Vérifier d'abord si la transaction existe déjà dans notre base de données
-    console.log(
-      `Return API: Checking if transaction ${transactionId} exists in database`,
-    )
     const transactionStatus = await fetchAction(
       api.internalActions.checkTransaction,
       {
@@ -30,19 +27,12 @@ export async function POST(request: Request) {
 
     // Si la transaction existe déjà, rediriger directement vers la page de succès
     if (transactionStatus.exists) {
-      console.log(
-        `Return API: Transaction ${transactionId} found in database with status ${transactionStatus.status}`,
-      )
       return Response.redirect(
         new URL(`/payment/merci?transaction=${transactionId}`, request.url),
       )
     }
 
     // Si la transaction n'existe pas dans notre base, vérifier avec CinetPay
-    console.log(
-      `Return API: Transaction ${transactionId} not found in database, checking with CinetPay`,
-    )
-
     // Prépare le payload pour CinetPay
     const apiKey = process.env.NEXT_PUBLIC_CINETPAY_API_KEY!
     const siteId = process.env.NEXT_PUBLIC_CINETPAY_SITE_ID!
@@ -101,9 +91,6 @@ export async function POST(request: Request) {
       }
 
       // Rediriger vers la page de succès quoi qu'il arrive (le traitement est idempotent)
-      console.log(
-        `Return API: Payment successful according to CinetPay. Code: ${checkData.code}`,
-      )
       return Response.redirect(
         new URL(`/payment/merci?transaction=${transactionId}`, request.url),
       )

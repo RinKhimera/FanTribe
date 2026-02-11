@@ -1,4 +1,3 @@
-import tanstackQuery from "@tanstack/eslint-plugin-query"
 import nextVitals from "eslint-config-next/core-web-vitals"
 import nextTs from "eslint-config-next/typescript"
 import unusedImports from "eslint-plugin-unused-imports"
@@ -7,16 +6,6 @@ import { defineConfig, globalIgnores } from "eslint/config"
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-
-  // TanStack Query plugin
-  {
-    plugins: {
-      "@tanstack/query": tanstackQuery,
-    },
-    rules: {
-      ...tanstackQuery.configs.recommended.rules,
-    },
-  },
 
   // Unused imports plugin
   {

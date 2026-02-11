@@ -162,8 +162,6 @@ export async function POST(request: Request) {
     }
 
     if (testMode) {
-      console.log("🧪 TEST MODE: Bypassing CinetPay verification")
-
       // Simuler une réponse CinetPay réussie
       const mockResponse: CinetPayResponse = {
         code: "00",

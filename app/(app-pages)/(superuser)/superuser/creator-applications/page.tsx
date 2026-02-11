@@ -36,7 +36,7 @@ import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { useSuperuserFilters } from "@/hooks/useSuperuserFilters"
 import { cn } from "@/lib/utils"
-import { detectRiskFactors } from "@/lib/validators"
+import { detectRiskFactors } from "@/lib/validators/detect-risk-factors"
 
 const filterDefinitions: FilterDefinition[] = [
   {

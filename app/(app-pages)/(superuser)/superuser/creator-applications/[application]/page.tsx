@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { detectRiskFactors } from "@/lib/validators"
+import { detectRiskFactors } from "@/lib/validators/detect-risk-factors"
 import { cn } from "@/lib/utils"
 
 interface ApplicationDetailsProps {

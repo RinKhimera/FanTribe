@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         break
       }
       default:
-        console.log(`Unhandled Stripe event: ${event.type}`)
+        break
     }
   } catch (err) {
     console.error("Stripe webhook handler error:", err)

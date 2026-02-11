@@ -360,10 +360,6 @@ export const markStaleUsersOffline = internalMutation({
 
     const markedOfflineCount = staleUsers.length
 
-    if (markedOfflineCount > 0) {
-      console.log(`Marked ${markedOfflineCount} stale users as offline`)
-    }
-
     return { markedOfflineCount }
   },
 })

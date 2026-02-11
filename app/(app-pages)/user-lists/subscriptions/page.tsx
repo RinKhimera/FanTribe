@@ -92,9 +92,7 @@ const SubscriptionsPage = () => {
                   bannerUrl: details.imageBanner || "",
                 }}
                 isSubscribed={sub.status === "active"}
-                onSubscribe={() =>
-                  console.log(`Toggle subscription for ${details.username}`)
-                }
+                onSubscribe={() => {}}
               />
             )
           })}

@@ -4,7 +4,6 @@ import "@/app/globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 import ConvexClientProvider from "@/providers/convex-client-provider"
-import TanstackClientProvider from "@/providers/tanstack-provider"
 import { ServiceWorkerRegistration } from "@/components/shared/service-worker-registration"
 import { ThemeProvider } from "@/providers/theme-provider"
 
@@ -60,7 +59,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ConvexClientProvider>
-            <TanstackClientProvider>{children}</TanstackClientProvider>
+            {children}
           </ConvexClientProvider>
         </ThemeProvider>
         <Toaster richColors />

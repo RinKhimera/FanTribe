@@ -56,7 +56,6 @@ types/                  # TypeScript type definitions
 | `useScrollLock` | Lock body scroll (for modals, fullscreen viewers) |
 | `useVideoMetadata` | Fetch Bunny video metadata |
 | `useKeyboardNavigation` | Keyboard navigation in lists |
-| `useFormMutation` | Form submission with Convex mutation |
 | `useCurrentUser` | Get current authenticated user |
 | `useCinetpayPayment` | CinetPay payment processing |
 

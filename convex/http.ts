@@ -79,7 +79,7 @@ http.route({
       }
 
       default:
-        console.log("Ignored Clerk webhook event", event.type)
+        break
     }
 
     return new Response(null, { status: 200 })

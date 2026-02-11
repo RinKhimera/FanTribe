@@ -142,9 +142,6 @@ export const cleanUpDraftAssets = internalMutation({
       .take(1000)
 
     const totalAssets = draftAssets.length + draftDocuments.length
-    console.log(
-      `Found ${totalAssets} draft items to clean up (${draftAssets.length} post assets + ${draftDocuments.length} validation documents)`,
-    )
 
     let deleted = 0
     let errors = 0
@@ -184,18 +181,11 @@ export const cleanUpDraftAssets = internalMutation({
             mediaUrls,
           },
         )
-        console.log(
-          `Scheduled deletion of ${mediaUrls.length} Bunny.net assets`,
-        )
       } catch (e) {
         console.error("Failed to schedule Bunny.net assets deletion:", e)
         errors++
       }
     }
-
-    console.log(
-      `Cleaned up draft assets: total=${totalAssets}, dbDeleted=${deleted}, errors=${errors}`,
-    )
 
     return {
       total: totalAssets,

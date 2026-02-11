@@ -12,7 +12,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import { useVideoMetadata } from "@/hooks"
-import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators"
+import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators/video-display-info"
 import { cn } from "@/lib/utils"
 import type { PostMedia as PostMediaType } from "@/types"
 import { BunnyVideoPlayer } from "./bunny-video-player"

@@ -85,10 +85,6 @@ export const enqueueNotifications = internalMutation({
       queueIds.push(id)
     }
 
-    console.log(
-      `📬 Enqueued ${recipientIds.length} notifications in ${batches.length} batches`,
-    )
-
     return {
       totalRecipients: recipientIds.length,
       batchCount: batches.length,
@@ -274,10 +270,6 @@ export const processNextBatches = internalMutation({
       totalFailed += failedCount
     }
 
-    console.log(
-      `📬 Processed ${totalProcessed} notifications from ${pendingBatches.length} batches`,
-    )
-
     return {
       processed: totalProcessed,
       failed: totalFailed,
@@ -446,10 +438,6 @@ export const sendPostNotifications = async (
       createdAt: now,
     })
   }
-
-  console.log(
-    `📬 Queued ${data.recipientIds.length} notifications in ${batches.length} batches`,
-  )
 
   return { direct: false, count: data.recipientIds.length }
 }
