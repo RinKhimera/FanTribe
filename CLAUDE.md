@@ -36,13 +36,13 @@ app/                      # Next.js App Router
 ├── (auth)/               # Sign-in, sign-up
 ├── api/                  # Webhooks only (stripe, cinetpay, clerk)
 components/
-├── domains/              # Feature components (messaging, posts, users, subscriptions, notifications)
+├── domains/              # Feature components (messaging, posts, users, subscriptions, notifications, tips)
 ├── shared/               # Cross-feature reusable components
 ├── new-post/             # Post creation flow
 ├── layout/               # App shell, sidebar, nav
 └── ui/                   # shadcn/ui (CVA + Radix primitives)
 convex/                   # Backend functions
-├── lib/                  # Shared: auth, errors, validators, rateLimiter, bunny, subscriptions, blocks, notifications, signedUrls, batch
+├── lib/                  # Shared: auth, errors, validators, rateLimiter, bunny, constants, subscriptions, blocks, notifications, signedUrls, batch
 hooks/                    # 12 custom hooks (see below)
 lib/
 ├── config/               # env.client.ts, env.ts (server), logger.ts
@@ -69,7 +69,10 @@ tests/
 - `hooks/useBunnyUpload.ts` — Media upload (images via HTTP Action, videos via direct XHR)
 - `hooks/useCurrentUser.ts` — Auth state + user query
 - `hooks/usePresence.ts` — Online presence heartbeat (2min interval)
-- `types/index.ts` — PostMedia, MessageProps, ConversationProps, PaymentStatus
+- `convex/tips.ts` — Tip processing (processTipAtomic) + creator earnings query
+- `convex/lib/constants.ts` — Centralized business constants (commissions, tip presets, limits)
+- `actions/stripe/tip-checkout.ts` — Stripe server action for tip payments (dynamic price_data)
+- `types/index.ts` — PostMedia, MessageProps, ConversationProps, PaymentStatus, TipContext, TipProps
 - `lib/config/env.client.ts` — Zod-validated public env vars
 - `lib/config/env.ts` — Zod-validated server-only secrets
 
@@ -129,7 +132,7 @@ ctx.db.query("users").withSearchIndex("search_users", q => q.search("name", term
 ### Rate Limiting
 ```typescript
 await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
-// Configured: sendMessage (10/min), createPost (5/hr), addComment (20/min), likePost (30/min)
+// Configured: sendMessage (10/min), createPost (5/hr), addComment (20/min), likePost (30/min), sendTip (3/min)
 ```
 
 ### Batch Operations
@@ -319,6 +322,8 @@ const result = await t.withIdentity({ tokenIdentifier: "test" })
 - **Bunny secrets**: All in Convex dashboard env vars, NOT in Next.js/Vercel env
 - **Convex site URL**: `NEXT_PUBLIC_CONVEX_URL.replace(".cloud", ".site")` for HTTP Actions
 - **Auth tokens for HTTP Actions**: `useAuth().getToken({ template: "convex" })` → `Authorization: Bearer ${token}`
+- **Convex `internal` circular types**: `internalActions.ts` functions calling `internal.xxx` can cause circular type inference — use explicit type annotation on `result` variable
+- **Stripe dynamic tips**: Use `price_data` (not fixed `STRIPE_PRICE_ID`) for variable amounts like tips
 
 ## Business Logic
 
@@ -331,6 +336,15 @@ const result = await t.withIdentity({ tokenIdentifier: "test" })
 - `public` or `subscribers_only` — locked content shows blur overlay
 - Adult content gated by `isAdult` flag + user preference `allowAdultContent`
 - Access check: `canViewSubscribersOnlyContent()` in `convex/lib/subscriptions.ts`
+
+### Tips (Pourboires)
+- Any logged-in user can tip a creator (posts, profile, messages)
+- Presets: 500, 1000, 2500, 5000, 10000 XAF + custom (min 500 XAF)
+- Optional message (max 200 chars), private visibility
+- Commission: 70% creator / 30% platform (centralized in `convex/lib/constants.ts`)
+- Dual payment: CinetPay (mobile money) + Stripe (dynamic `price_data`)
+- Idempotent processing via `providerTransactionId` unique index
+- TipDialog component: `components/domains/tips/tip-dialog.tsx`
 
 ### Currency
 - Primary: XAF (zero-decimal) — `formatCurrency(1000, "XAF")` → `"1 000 XAF"`
