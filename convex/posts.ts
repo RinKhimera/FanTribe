@@ -41,6 +41,27 @@ export const createPost = mutation({
     const user = await getAuthenticatedUser(ctx)
     await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
 
+    // Validate media constraints: max 3 medias, no mix images/videos
+    if (args.medias.length > 3) {
+      throw createAppError("INVALID_INPUT", {
+        userMessage: "Maximum 3 médias par publication",
+      })
+    }
+    if (args.medias.length > 0) {
+      const hasImages = args.medias.some((m) => m.type === "image")
+      const hasVideos = args.medias.some((m) => m.type === "video")
+      if (hasImages && hasVideos) {
+        throw createAppError("INVALID_INPUT", {
+          userMessage: "Impossible de mixer images et vidéos dans un même post",
+        })
+      }
+      if (hasVideos && args.medias.length > 1) {
+        throw createAppError("INVALID_INPUT", {
+          userMessage: "1 seule vidéo par publication",
+        })
+      }
+    }
+
     const postId = await ctx.db.insert("posts", {
       author: user._id,
       content: args.content,

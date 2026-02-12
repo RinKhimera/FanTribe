@@ -1,11 +1,10 @@
 export type AspectRatioPreset = {
   label: string
-  value: number | undefined
+  value: number
 }
 
 /** Presets for post and message image cropping */
 export const POST_CROP_PRESETS: AspectRatioPreset[] = [
-  { label: "Libre", value: undefined },
   { label: "1:1", value: 1 },
   { label: "4:3", value: 4 / 3 },
   { label: "3:4", value: 3 / 4 },

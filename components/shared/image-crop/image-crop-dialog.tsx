@@ -66,8 +66,8 @@ export function ImageCropDialog({
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
-  const [activeAspect, setActiveAspect] = useState<number | undefined>(
-    aspectRatio ?? presets?.[0]?.value
+  const [activeAspect, setActiveAspect] = useState<number>(
+    aspectRatio ?? presets?.[0]?.value ?? 1
   )
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -76,7 +76,7 @@ export function ImageCropDialog({
     setCrop({ x: 0, y: 0 })
     setZoom(1)
     setCroppedAreaPixels(null)
-    setActiveAspect(aspectRatio ?? presets?.[0]?.value)
+    setActiveAspect(aspectRatio ?? presets?.[0]?.value ?? 1)
   }, [imageSrc, aspectRatio, presets])
 
   const onCropComplete = useCallback(
@@ -160,7 +160,7 @@ export function ImageCropDialog({
               crop={crop}
               zoom={zoom}
               rotation={0}
-              aspect={activeAspect ?? 4 / 3}
+              aspect={activeAspect}
               cropShape={cropShape}
               showGrid={cropShape === "rect"}
               onCropChange={setCrop}

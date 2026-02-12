@@ -38,6 +38,10 @@ import {
   VisibilitySelector,
 } from "./components"
 
+const MAX_MEDIA = 3
+
+type MediaMode = "empty" | "images" | "video"
+
 type CropQueueState = {
   file: File
   imageSrc: string
@@ -64,6 +68,19 @@ export const NewPostLayout = () => {
   const [visibility, setVisibility] = useState<PostVisibility>("public")
   const [isAdult, setIsAdult] = useState(false)
   const [cropQueue, setCropQueue] = useState<CropQueueState>(null)
+
+  const mediaMode: MediaMode = medias.length === 0
+    ? "empty"
+    : medias[0].type === "video"
+      ? "video"
+      : "images"
+
+  const fileAccept =
+    mediaMode === "images"
+      ? "image/*"
+      : mediaMode === "video"
+        ? "video/*"
+        : "image/*,video/*"
 
   const isPostCreatedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -189,6 +206,10 @@ export const NewPostLayout = () => {
     }
   }
 
+  const handleReorder = (reordered: MediaItem[]) => {
+    setMedias(reordered)
+  }
+
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -198,16 +219,9 @@ export const NewPostLayout = () => {
 
     if (fileInputRef.current) fileInputRef.current.value = ""
 
-    const totalMediasAfterUpload = medias.length + files.length
-    if (totalMediasAfterUpload > 5) {
-      toast.error(
-        `Limite de 5 médias par post. Vous avez ${medias.length} média(s) et essayez d'ajouter ${files.length} média(s).`,
-      )
-      return
-    }
-
+    // Validate individual files
     const validFiles: File[] = []
-    for (const file of Array.from(files)) {
+    for (const file of files) {
       if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
         toast.error(`Format non supporté: ${file.name}`)
         continue
@@ -221,19 +235,43 @@ export const NewPostLayout = () => {
 
     if (validFiles.length === 0) return
 
-    // Split: videos upload immediately, images go to crop queue
     const videoFiles = validFiles.filter((f) => f.type.startsWith("video/"))
     const imageFiles = validFiles.filter((f) => f.type.startsWith("image/"))
 
-    // Upload videos immediately (no crop)
-    for (const videoFile of videoFiles) {
-      await uploadSingleFile(videoFile)
+    // No-mix enforcement
+    if (mediaMode === "video") {
+      toast.error("1 seule vidéo par post. Supprimez la vidéo actuelle pour ajouter d'autres médias.")
+      return
+    }
+    if (mediaMode === "images" && videoFiles.length > 0) {
+      toast.error("Impossible de mixer images et vidéos dans un même post.")
+      return
+    }
+    if (mediaMode === "empty" && videoFiles.length > 0 && imageFiles.length > 0) {
+      toast.error("Impossible de mixer images et vidéos dans un même post.")
+      return
+    }
+
+    // Video mode: accept only 1 video
+    if (videoFiles.length > 0) {
+      if (videoFiles.length > 1) {
+        toast.error("1 seule vidéo par post.")
+      }
+      await uploadSingleFile(videoFiles[0])
+      return
+    }
+
+    // Image mode: check limit
+    const totalAfterUpload = medias.length + imageFiles.length
+    if (totalAfterUpload > MAX_MEDIA) {
+      toast.error(
+        `Limite de ${MAX_MEDIA} images par post. Vous avez ${medias.length} image(s) et essayez d'en ajouter ${imageFiles.length}.`,
+      )
+      return
     }
 
     // Start crop queue for images
-    if (imageFiles.length > 0) {
-      startCropQueue(imageFiles)
-    }
+    startCropQueue(imageFiles)
   }
 
   const handlePostCropConfirm = async (croppedBlob: Blob) => {
@@ -253,10 +291,8 @@ export const NewPostLayout = () => {
   }
 
   const handlePostCropCancel = () => {
-    if (cropQueue) {
-      URL.revokeObjectURL(cropQueue.imageSrc)
-    }
-    setCropQueue(null)
+    // Cancel = skip current image, continue with remaining files in queue
+    processNextInQueue()
   }
 
   const handleRemoveMedia = async (index: number) => {
@@ -385,6 +421,7 @@ export const NewPostLayout = () => {
                             <MediaPreviewGrid
                               medias={medias}
                               onRemove={handleRemoveMedia}
+                              onReorder={handleReorder}
                             />
 
                             {/* Upload Progress */}
@@ -403,8 +440,8 @@ export const NewPostLayout = () => {
                                 <input
                                   ref={fileInputRef}
                                   type="file"
-                                  multiple
-                                  accept="image/*,video/*"
+                                  multiple={mediaMode !== "video"}
+                                  accept={fileAccept}
                                   onChange={handleFileSelect}
                                   className="hidden"
                                 />
@@ -412,7 +449,8 @@ export const NewPostLayout = () => {
                                 {/* Media Button */}
                                 <MediaUploadButton
                                   mediaCount={medias.length}
-                                  maxMedia={5}
+                                  maxMedia={MAX_MEDIA}
+                                  mediaMode={mediaMode}
                                   isPending={isPending}
                                   isUploading={isUploading}
                                   onUploadClick={() =>
@@ -471,7 +509,7 @@ export const NewPostLayout = () => {
           imageSrc={cropQueue.imageSrc}
           open={true}
           onOpenChange={(open) => {
-            if (!open) handlePostCropCancel()
+            if (!open) processNextInQueue()
           }}
           onConfirm={handlePostCropConfirm}
           onCancel={handlePostCropCancel}
