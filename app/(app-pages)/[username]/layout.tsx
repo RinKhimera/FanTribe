@@ -1,78 +1,30 @@
-"use client"
-
-import { useQuery } from "convex/react"
-import { Loader2 } from "lucide-react"
-import { notFound, usePathname } from "next/navigation"
-import { use } from "react"
-import {
-  UserProfileHeader,
-  UserProfileHero,
-  UserProfileTabs,
-} from "@/components/domains/users"
-import { PageContainer } from "@/components/layout"
+import { preloadQuery } from "convex/nextjs"
+import { getAuthToken } from "@/app/auth"
+import { UserProfileShell } from "@/components/domains/users/user-profile-shell"
 import { api } from "@/convex/_generated/api"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
 
-export default function UserProfileLayout({
+export default async function UserProfileLayout({
   children,
   params,
 }: {
   children: React.ReactNode
   params: Promise<{ username: string }>
 }) {
-  const { username } = use(params)
-  const pathname = usePathname()
-  const { currentUser } = useCurrentUser()
+  const { username } = await params
+  const token = await getAuthToken()
 
-  // Detect if we're on a post detail page
-  const isPostPage = pathname.includes("/post/")
-
-  const userProfile = useQuery(api.users.getUserProfile, {
-    username: username,
-  })
-
-  const subscriptionStatus = useQuery(
-    api.subscriptions.getFollowSubscription,
-    userProfile && currentUser
-      ? {
-          creatorId: userProfile._id,
-          subscriberId: currentUser._id,
-        }
-      : "skip",
-  )
-
-  if (userProfile === undefined) {
-    return (
-      <PageContainer hideHeader>
-        <div className="flex h-screen flex-col items-center justify-center">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
-          <p className="text-muted-foreground mt-4 text-sm">Chargement…</p>
-        </div>
-      </PageContainer>
-    )
-  }
-
-  if (userProfile === null) notFound()
-
-  // For post pages, render minimal container without profile components
-  if (isPostPage) {
-    return (
-      <PageContainer hideHeader>
-        {children}
-      </PageContainer>
-    )
-  }
+  const [preloadedProfile, preloadedCurrentUser] = await Promise.all([
+    preloadQuery(api.users.getUserProfile, { username }),
+    preloadQuery(api.users.getCurrentUser, undefined, { token }),
+  ])
 
   return (
-    <PageContainer hideHeader>
-      <UserProfileHeader userProfile={userProfile} currentUser={currentUser} />
-      <UserProfileHero
-        currentUser={currentUser}
-        userProfile={userProfile}
-        subscriptionStatus={subscriptionStatus}
-      />
-      <UserProfileTabs username={username} />
+    <UserProfileShell
+      preloadedProfile={preloadedProfile}
+      preloadedCurrentUser={preloadedCurrentUser}
+      username={username}
+    >
       {children}
-    </PageContainer>
+    </UserProfileShell>
   )
 }

@@ -1,302 +1,36 @@
-"use client"
-
-import { useQuery } from "convex/react"
-import { Calendar, Coins, DollarSign, TrendingUp, Wallet } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { PageContainer } from "@/components/layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { fetchQuery, preloadQuery } from "convex/nextjs"
+import { redirect } from "next/navigation"
+import { getAuthToken } from "@/app/auth"
+import { IncomeContent } from "@/components/domains/income/income-content"
 import { api } from "@/convex/_generated/api"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { formatCustomTimeAgo } from "@/lib/formatters"
-import { logger } from "@/lib/config/logger"
 
-const IncomePage = () => {
-  const { currentUser, isLoading: isUserLoading } = useCurrentUser()
-
-  const isCreatorOrSuperuser =
-    currentUser &&
-    (currentUser.accountType === "CREATOR" ||
-      currentUser.accountType === "SUPERUSER")
-
-  const earnings = useQuery(
-    api.transactions.getCreatorEarnings,
-    isCreatorOrSuperuser ? undefined : "skip",
+const IncomePage = async () => {
+  const token = await getAuthToken()
+  const currentUser = await fetchQuery(
+    api.users.getCurrentUser,
+    undefined,
+    { token },
   )
 
-  const tipEarnings = useQuery(
-    api.tips.getCreatorTipEarnings,
-    isCreatorOrSuperuser ? undefined : "skip",
-  )
-
-  // Vérification des permissions
-  if (isUserLoading) {
-    return (
-      <PageContainer title="Revenus">
-        <div className="space-y-6 p-4">
-          <Skeleton className="h-12 w-64" />
-          <div className="grid gap-4 md:grid-cols-3">
-            <Skeleton className="h-40" />
-            <Skeleton className="h-40" />
-            <Skeleton className="h-40" />
-          </div>
-        </div>
-      </PageContainer>
-    )
-  }
-
+  // Guard côté serveur — redirect les non-créateurs
   if (
     !currentUser ||
     (currentUser.accountType !== "CREATOR" &&
       currentUser.accountType !== "SUPERUSER")
   ) {
-    logger.warn("Access denied to income page", {
-      userId: currentUser?._id,
-      accountType: currentUser?.accountType,
-    })
-
-    return (
-      <PageContainer title="Revenus">
-        <div className="flex flex-1 items-center justify-center p-4">
-          <div className="max-w-md space-y-4 text-center">
-            <div className="border-destructive/50 bg-destructive/10 rounded-lg border p-6">
-              <h2 className="text-destructive text-xl font-semibold">
-                Accès refusé
-              </h2>
-              <p className="text-muted-foreground mt-2">
-                Cette page est réservée aux créateurs. Devenez créateur pour
-                accéder à vos statistiques de revenus.
-              </p>
-            </div>
-          </div>
-        </div>
-      </PageContainer>
-    )
+    redirect("/")
   }
 
-  // Format de la date en français
-  const formatDate = (isoDate: string) => {
-    const date = new Date(isoDate)
-    return new Intl.DateTimeFormat("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date)
-  }
-
-  // Format du montant avec séparateurs
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
+  const [preloadedEarnings, preloadedTips] = await Promise.all([
+    preloadQuery(api.transactions.getCreatorEarnings, undefined, { token }),
+    preloadQuery(api.tips.getCreatorTipEarnings, undefined, { token }),
+  ])
 
   return (
-    <PageContainer title="Revenus">
-      <div className="space-y-6 p-4">
-        {/* Description */}
-        <p className="text-muted-foreground">
-          Consultez vos gains et vos prochains paiements
-        </p>
-
-        {earnings ? (
-          <>
-            {/* Cartes de statistiques */}
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* Total net gagné */}
-              <Card className="border-primary/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total net gagné
-                  </CardTitle>
-                  <Wallet className="text-muted-foreground size-4" aria-hidden="true" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatAmount(earnings.totalNetEarned)} XAF
-                  </div>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {earnings.transactionCount} transaction
-                    {earnings.transactionCount > 1 ? "s" : ""} au total
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Prochain paiement */}
-              <Card className="border-success/20 bg-success/5">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Prochain paiement
-                  </CardTitle>
-                  <DollarSign className="text-muted-foreground size-4" aria-hidden="true" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-success text-2xl font-bold">
-                    {formatAmount(earnings.nextPaymentNet)} XAF
-                  </div>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {earnings.pendingTransactionCount} transaction
-                    {earnings.pendingTransactionCount > 1 ? "s" : ""} en attente
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Date du prochain paiement */}
-              <Card className="border-info/20 bg-info/5">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Date de paiement
-                  </CardTitle>
-                  <Calendar className="text-muted-foreground size-4" aria-hidden="true" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-semibold capitalize">
-                    {formatDate(earnings.nextPaymentDate).split(" ")[0]}
-                  </div>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {formatDate(earnings.nextPaymentDate)
-                      .split(" ")
-                      .slice(1)
-                      .join(" ")}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Tips section */}
-            {tipEarnings && tipEarnings.tipCount > 0 && (
-              <>
-                {/* Tip stats card */}
-                <Card className="border-amber-500/20 bg-amber-500/5">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Pourboires reçus
-                    </CardTitle>
-                    <Coins className="size-4 text-amber-500" aria-hidden="true" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-amber-500">
-                      {formatAmount(tipEarnings.totalTipsNet)} XAF
-                    </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {tipEarnings.tipCount} pourboire
-                      {tipEarnings.tipCount > 1 ? "s" : ""} (net après commission)
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Recent tips list */}
-                {tipEarnings.recentTips.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Coins className="size-5 text-amber-500" aria-hidden="true" />
-                        Pourboires récents
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {tipEarnings.recentTips.map((tip) => (
-                          <div
-                            key={tip._id}
-                            className="flex items-center gap-3 rounded-lg border border-white/5 p-3"
-                          >
-                            <Avatar className="size-9">
-                              <AvatarImage
-                                src={tip.sender?.image}
-                                className="object-cover"
-                              />
-                              <AvatarFallback className="bg-muted text-xs">
-                                {tip.sender?.name?.charAt(0) || "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">
-                                  {tip.sender?.name || "Utilisateur"}
-                                </span>
-                                <span className="text-sm font-bold text-amber-500">
-                                  {formatAmount(tip.amount)} XAF
-                                </span>
-                              </div>
-                              {tip.message && (
-                                <p className="text-muted-foreground mt-0.5 line-clamp-1 text-xs">
-                                  {tip.message}
-                                </p>
-                              )}
-                              <p className="text-muted-foreground mt-0.5 text-xs">
-                                {formatCustomTimeAgo(tip._creationTime)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            )}
-
-            {/* Informations sur la commission */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="size-5" aria-hidden="true" />
-                  Comment fonctionnent vos revenus ?
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="border-primary/20 rounded-lg border p-4">
-                    <h3 className="font-semibold">Votre part</h3>
-                    <p className="text-primary text-2xl font-bold">70%</p>
-                    <p className="text-muted-foreground text-sm">
-                      De chaque abonnement et pourboire
-                    </p>
-                  </div>
-                  <div className="border-muted rounded-lg border p-4">
-                    <h3 className="font-semibold">Commission plateforme</h3>
-                    <p className="text-muted-foreground text-2xl font-bold">
-                      30%
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      Pour l&apos;hébergement et les services
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <h3 className="mb-2 font-semibold">Calendrier de paiement</h3>
-                  <ul className="text-muted-foreground space-y-1 text-sm">
-                    <li>
-                      • Les paiements sont effectués le{" "}
-                      <strong>dernier jeudi de chaque mois</strong>
-                    </li>
-                    <li>
-                      • Vous recevez 70% du montant total de vos abonnements et
-                      pourboires du mois
-                    </li>
-                    <li>• Les paiements sont automatiques et sécurisés</li>
-                    <li>
-                      • Le prochain paiement inclut toutes les transactions
-                      depuis le dernier paiement mensuel
-                    </li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            <Skeleton className="h-40" />
-            <Skeleton className="h-40" />
-            <Skeleton className="h-40" />
-          </div>
-        )}
-      </div>
-    </PageContainer>
+    <IncomeContent
+      preloadedEarnings={preloadedEarnings}
+      preloadedTips={preloadedTips}
+    />
   )
 }
 

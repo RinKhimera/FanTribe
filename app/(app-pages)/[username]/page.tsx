@@ -1,27 +1,15 @@
 "use client"
 
-import { useQuery } from "convex/react"
-import { use } from "react"
 import { UserPosts } from "@/components/domains/users"
-import { api } from "@/convex/_generated/api"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useUserProfileContext } from "@/components/domains/users/user-profile-shell"
 
-const UserProfilePage = ({
-  params,
-}: {
-  params: Promise<{ username: string }>
-}) => {
-  const { username } = use(params)
-  const { currentUser } = useCurrentUser()
-
-  const userProfile = useQuery(api.users.getUserProfile, {
-    username: username,
-  })
+const UserProfilePage = () => {
+  const ctx = useUserProfileContext()
 
   // Layout handles loading and not found states
-  if (!userProfile) return null
+  if (!ctx) return null
 
-  return <UserPosts authorId={userProfile._id} currentUser={currentUser} />
+  return <UserPosts authorId={ctx.userProfile._id} currentUser={ctx.currentUser} />
 }
 
 export default UserProfilePage
