@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "convex/react"
-import { motion } from "motion/react"
 import { ArrowLeft, LoaderCircle, Sparkles } from "lucide-react"
+import { motion } from "motion/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
@@ -12,6 +12,8 @@ import TextareaAutosize from "react-textarea-autosize"
 import { toast } from "sonner"
 import { z } from "zod"
 import { PageContainer } from "@/components/layout/page-container"
+import { POST_CROP_PRESETS } from "@/components/shared/image-crop/aspect-ratio-presets"
+import { ImageCropDialog } from "@/components/shared/image-crop/image-crop-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,13 +30,19 @@ import { cn } from "@/lib/utils"
 import { postFormSchema } from "@/schemas/post"
 import {
   AdultContentToggle,
+  type MediaItem,
   MediaPreviewGrid,
   MediaUploadButton,
+  type PostVisibility,
   UploadProgress,
   VisibilitySelector,
-  type MediaItem,
-  type PostVisibility,
 } from "./components"
+
+type CropQueueState = {
+  file: File
+  imageSrc: string
+  remainingFiles: File[]
+} | null
 
 export const NewPostLayout = () => {
   const router = useRouter()
@@ -51,10 +59,11 @@ export const NewPostLayout = () => {
   const [isPending, startTransition] = useTransition()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
-    {}
+    {},
   )
   const [visibility, setVisibility] = useState<PostVisibility>("public")
   const [isAdult, setIsAdult] = useState(false)
+  const [cropQueue, setCropQueue] = useState<CropQueueState>(null)
 
   const isPostCreatedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -100,11 +109,93 @@ export const NewPostLayout = () => {
   if (isLoading || !currentUser) return null
   if (currentUser.accountType === "USER") return null
 
+  const uploadSingleFile = async (file: File) => {
+    setIsUploading(true)
+
+    const randomSuffix = crypto.randomUUID().replace(/-/g, "").substring(0, 13)
+    const fileExtension = file.name.split(".").pop()
+    const fileName = `${currentUser._id}/${randomSuffix}.${fileExtension}`
+
+    const fileKey = `${file.name}_${Date.now()}`
+    setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
+
+    try {
+      const result = await uploadMedia({
+        file,
+        fileName,
+        userId: currentUser._id,
+        onProgress: (percent) => {
+          setUploadProgress((prev) => ({ ...prev, [fileKey]: percent }))
+        },
+      })
+
+      setUploadProgress((prev) => {
+        const np = { ...prev }
+        delete np[fileKey]
+        return np
+      })
+
+      if (result.success) {
+        const newMedia: MediaItem = {
+          url: result.url,
+          publicId: result.mediaId,
+          type: result.type,
+          mimeType: result.mimeType,
+          fileName: result.fileName,
+          fileSize: result.fileSize,
+        }
+        setMedias((prev) => [...prev, newMedia])
+        if (currentUser) {
+          await createDraftAsset({
+            author: currentUser._id,
+            mediaId: result.mediaId,
+            mediaUrl: result.url,
+            assetType: result.type,
+          })
+        }
+        toast.success("Le média a été ajouté avec succès")
+      } else {
+        toast.error(`Erreur upload ${file.name}: ${result.error}`)
+      }
+    } catch (e) {
+      setUploadProgress((prev) => {
+        const np = { ...prev }
+        delete np[fileKey]
+        return np
+      })
+      logger.error("Failed to upload file", e, { fileName: file.name })
+      toast.error(`Erreur upload ${file.name}`)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const startCropQueue = (files: File[]) => {
+    const [first, ...rest] = files
+    const objectUrl = URL.createObjectURL(first)
+    setCropQueue({ file: first, imageSrc: objectUrl, remainingFiles: rest })
+  }
+
+  const processNextInQueue = () => {
+    if (!cropQueue) return
+    URL.revokeObjectURL(cropQueue.imageSrc)
+
+    if (cropQueue.remainingFiles.length > 0) {
+      const [next, ...rest] = cropQueue.remainingFiles
+      const objectUrl = URL.createObjectURL(next)
+      setCropQueue({ file: next, imageSrc: objectUrl, remainingFiles: rest })
+    } else {
+      setCropQueue(null)
+    }
+  }
+
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files
     if (!files || files.length === 0) return
+
+    if (fileInputRef.current) fileInputRef.current.value = ""
 
     const totalMediasAfterUpload = medias.length + files.length
     if (totalMediasAfterUpload > 5) {
@@ -114,87 +205,57 @@ export const NewPostLayout = () => {
       return
     }
 
-    setIsUploading(true)
-
-    try {
-      for (const file of Array.from(files)) {
-        if (
-          !file.type.startsWith("image/") &&
-          !file.type.startsWith("video/")
-        ) {
-          toast.error(`Format non supporté: ${file.name}`)
-          continue
-        }
-        if (file.size > 300 * 1024 * 1024) {
-          toast.error(`Fichier trop volumineux: ${file.name} (max 300MB)`)
-          continue
-        }
-
-        const randomSuffix = crypto
-          .randomUUID()
-          .replace(/-/g, "")
-          .substring(0, 13)
-        const fileExtension = file.name.split(".").pop()
-        const fileName = `${currentUser._id}/${randomSuffix}.${fileExtension}`
-
-        const fileKey = `${file.name}_${Date.now()}`
-        setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
-
-        try {
-          const result = await uploadMedia({
-            file,
-            fileName,
-            userId: currentUser._id,
-            onProgress: (percent) => {
-              setUploadProgress((prev) => ({ ...prev, [fileKey]: percent }))
-            },
-          })
-
-          setUploadProgress((prev) => {
-            const np = { ...prev }
-            delete np[fileKey]
-            return np
-          })
-
-          if (result.success) {
-            const newMedia: MediaItem = {
-              url: result.url,
-              publicId: result.mediaId,
-              type: result.type,
-              mimeType: result.mimeType,
-              fileName: result.fileName,
-              fileSize: result.fileSize,
-            }
-            setMedias((prev) => [...prev, newMedia])
-            if (currentUser) {
-              await createDraftAsset({
-                author: currentUser._id,
-                mediaId: result.mediaId,
-                mediaUrl: result.url,
-                assetType: result.type,
-              })
-            }
-            toast.success("Le média a été ajouté avec succès")
-          } else {
-            toast.error(`Erreur upload ${file.name}: ${result.error}`)
-          }
-        } catch (e) {
-          setUploadProgress((prev) => {
-            const np = { ...prev }
-            delete np[fileKey]
-            return np
-          })
-          logger.error("Failed to upload file", e, { fileName: file.name })
-          toast.error(`Erreur upload ${file.name}`)
-        }
+    const validFiles: File[] = []
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+        toast.error(`Format non supporté: ${file.name}`)
+        continue
       }
-    } catch (error) {
-      logger.error("Upload error", error)
-      toast.error("Erreur lors de l'upload")
-    } finally {
-      setIsUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
+      if (file.size > 300 * 1024 * 1024) {
+        toast.error(`Fichier trop volumineux: ${file.name} (max 300MB)`)
+        continue
+      }
+      validFiles.push(file)
     }
+
+    if (validFiles.length === 0) return
+
+    // Split: videos upload immediately, images go to crop queue
+    const videoFiles = validFiles.filter((f) => f.type.startsWith("video/"))
+    const imageFiles = validFiles.filter((f) => f.type.startsWith("image/"))
+
+    // Upload videos immediately (no crop)
+    for (const videoFile of videoFiles) {
+      await uploadSingleFile(videoFile)
+    }
+
+    // Start crop queue for images
+    if (imageFiles.length > 0) {
+      startCropQueue(imageFiles)
+    }
+  }
+
+  const handlePostCropConfirm = async (croppedBlob: Blob) => {
+    if (!cropQueue) return
+    const croppedFile = new File([croppedBlob], cropQueue.file.name, {
+      type: croppedBlob.type,
+    })
+    processNextInQueue()
+    await uploadSingleFile(croppedFile)
+  }
+
+  const handlePostCropSkip = async () => {
+    if (!cropQueue) return
+    const originalFile = cropQueue.file
+    processNextInQueue()
+    await uploadSingleFile(originalFile)
+  }
+
+  const handlePostCropCancel = () => {
+    if (cropQueue) {
+      URL.revokeObjectURL(cropQueue.imageSrc)
+    }
+    setCropQueue(null)
   }
 
   const handleRemoveMedia = async (index: number) => {
@@ -247,12 +308,15 @@ export const NewPostLayout = () => {
     })
   }
 
+  // Crop queue count for dialog title
+  const remainingCount = cropQueue ? cropQueue.remainingFiles.length + 1 : 0
+
   // Back button component
   const BackButton = (
     <Button
       variant="ghost"
       size="icon"
-      className="size-9 rounded-full hover:bg-primary/10"
+      className="hover:bg-primary/10 size-9 rounded-full"
       asChild
     >
       <Link href="/">
@@ -262,10 +326,7 @@ export const NewPostLayout = () => {
   )
 
   return (
-    <PageContainer
-      title="Nouvelle publication"
-      headerLeftAction={BackButton}
-    >
+    <PageContainer title="Nouvelle publication" headerLeftAction={BackButton}>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -277,13 +338,13 @@ export const NewPostLayout = () => {
           className={cn(
             "relative rounded-2xl",
             "glass-premium",
-            "border border-primary/10",
+            "border-primary/10 border",
             "p-5 md:p-6",
           )}
         >
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <Avatar className="size-12 shrink-0 ring-2 ring-background">
+            <Avatar className="ring-background size-12 shrink-0 ring-2">
               {currentUser?.image ? (
                 <AvatarImage
                   src={currentUser.image}
@@ -297,7 +358,7 @@ export const NewPostLayout = () => {
             </Avatar>
 
             {/* Form */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
                   <FormField
@@ -311,7 +372,7 @@ export const NewPostLayout = () => {
                               placeholder="Partagez quelque chose avec vos fans..."
                               className={cn(
                                 "w-full resize-none border-none bg-transparent",
-                                "text-lg placeholder:text-muted-foreground/50",
+                                "placeholder:text-muted-foreground/50 text-lg",
                                 "outline-none focus:outline-none",
                               )}
                               minRows={3}
@@ -332,7 +393,7 @@ export const NewPostLayout = () => {
                             />
 
                             {/* Divider */}
-                            <div className="h-px bg-border my-5" />
+                            <div className="bg-border my-5 h-px" />
 
                             {/* Actions Bar */}
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -377,15 +438,15 @@ export const NewPostLayout = () => {
                                 type="submit"
                                 disabled={isPending || isUploading}
                                 className={cn(
-                                  "rounded-full px-6 h-10",
+                                  "h-10 rounded-full px-6",
                                   "font-semibold tracking-wide",
                                   "w-full sm:w-auto",
                                 )}
                               >
                                 {isPending ? (
-                                  <LoaderCircle className="size-4 mr-2 animate-spin" />
+                                  <LoaderCircle className="mr-2 size-4 animate-spin" />
                                 ) : (
-                                  <Sparkles className="size-4 mr-2" />
+                                  <Sparkles className="mr-2 size-4" />
                                 )}
                                 Publier
                               </Button>
@@ -402,6 +463,28 @@ export const NewPostLayout = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Crop Dialog for images */}
+      {cropQueue && (
+        <ImageCropDialog
+          imageSrc={cropQueue.imageSrc}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) handlePostCropCancel()
+          }}
+          onConfirm={handlePostCropConfirm}
+          onCancel={handlePostCropCancel}
+          onSkip={handlePostCropSkip}
+          showSkip={true}
+          cropShape="rect"
+          presets={POST_CROP_PRESETS}
+          title={
+            remainingCount > 1
+              ? `Recadrer l'image (${remainingCount} restante${remainingCount > 1 ? "s" : ""})`
+              : "Recadrer l'image"
+          }
+        />
+      )}
     </PageContainer>
   )
 }
