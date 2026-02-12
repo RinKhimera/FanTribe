@@ -27,6 +27,7 @@ const EditProfile = async (props: {
       creatorId: userProfile._id,
       subscriberId: currentUser._id,
     },
+    { token },
   )
 
   return (

@@ -192,8 +192,9 @@ export const NewPostLayout = () => {
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const files = event.target.files
-    if (!files || files.length === 0) return
+    // Snapshot into a regular array BEFORE resetting input (FileList is live and gets cleared)
+    const files = Array.from(event.target.files ?? [])
+    if (files.length === 0) return
 
     if (fileInputRef.current) fileInputRef.current.value = ""
 
