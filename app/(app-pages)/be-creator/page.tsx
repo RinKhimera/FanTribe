@@ -282,8 +282,8 @@ const BeCreatorPage = () => {
     })
   }
 
-  // Loading state
-  if (!currentUser) {
+  // Loading state — wait for both currentUser AND existingApplication query
+  if (!currentUser || existingApplication === undefined) {
     return (
       <PageContainer
         title="Devenir Créateur"

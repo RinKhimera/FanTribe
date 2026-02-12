@@ -91,8 +91,14 @@ export const NewPostLayout = () => {
     },
   })
 
+  useEffect(() => {
+    if (!isLoading && currentUser?.accountType === "USER") {
+      router.push("/")
+    }
+  }, [isLoading, currentUser?.accountType, router])
+
   if (isLoading || !currentUser) return null
-  if (currentUser.accountType === "USER") router.push("/")
+  if (currentUser.accountType === "USER") return null
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,

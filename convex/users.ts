@@ -33,14 +33,17 @@ export const upsertFromClerk = internalMutation({
       name: `${data.first_name} ${data.last_name}`,
       email: data.email_addresses[0]?.email_address,
       image: data.image_url,
-      accountType: "USER" as const,
       isOnline: true,
     }
 
     const user = await userByExternalId(ctx, data.id)
     if (user === null) {
-      await ctx.db.insert("users", userAttributes)
+      await ctx.db.insert("users", {
+        ...userAttributes,
+        accountType: "USER",
+      })
     } else {
+      // Don't overwrite accountType — it may have been promoted to CREATOR/SUPERUSER
       await ctx.db.patch(user._id, userAttributes)
     }
     return null
@@ -224,8 +227,13 @@ export const getSuggestedCreators = query({
       .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
       .take(200)
 
+    // Exclude current user from suggestions
+    const filtered = creators.filter(
+      (c) => c.externalId !== identity.subject,
+    )
+
     // Mélanger avec Fisher-Yates (distribution uniforme) et prendre les 48 premiers
-    const shuffled = fisherYatesShuffle(creators)
+    const shuffled = fisherYatesShuffle(filtered)
     return shuffled.slice(0, 48)
   },
 })
