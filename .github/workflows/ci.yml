@@ -30,9 +30,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Generate Convex types
-        run: npx convex codegen
-
       - name: Type check
         run: npm run type-check
 
@@ -55,9 +52,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Generate Convex types
-        run: npx convex codegen
-
       - name: Unit tests
         run: npm run test
 
@@ -77,9 +71,6 @@ jobs:
           cache: npm
 
       - run: npm ci
-
-      - name: Generate Convex types
-        run: npx convex codegen
 
       - name: Build Next.js
         run: npm run build

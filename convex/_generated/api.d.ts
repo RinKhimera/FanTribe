@@ -1,0 +1,254 @@
+/* eslint-disable */
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
+
+import type * as assetsDraft from "../assetsDraft.js";
+import type * as bans from "../bans.js";
+import type * as blocks from "../blocks.js";
+import type * as bookmarks from "../bookmarks.js";
+import type * as comments from "../comments.js";
+import type * as creatorApplications from "../creatorApplications.js";
+import type * as crons from "../crons.js";
+import type * as files from "../files.js";
+import type * as http from "../http.js";
+import type * as internalActions from "../internalActions.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_batch from "../lib/batch.js";
+import type * as lib_blocks from "../lib/blocks.js";
+import type * as lib_bunny from "../lib/bunny.js";
+import type * as lib_constants from "../lib/constants.js";
+import type * as lib_errors from "../lib/errors.js";
+import type * as lib_index from "../lib/index.js";
+import type * as lib_messaging from "../lib/messaging.js";
+import type * as lib_notifications from "../lib/notifications.js";
+import type * as lib_rateLimiter from "../lib/rateLimiter.js";
+import type * as lib_signedUrls from "../lib/signedUrls.js";
+import type * as lib_subscriptions from "../lib/subscriptions.js";
+import type * as lib_validators from "../lib/validators.js";
+import type * as likes from "../likes.js";
+import type * as messaging from "../messaging.js";
+import type * as notificationQueue from "../notificationQueue.js";
+import type * as notifications from "../notifications.js";
+import type * as posts from "../posts.js";
+import type * as reports from "../reports.js";
+import type * as subscriptions from "../subscriptions.js";
+import type * as superuser from "../superuser.js";
+import type * as tips from "../tips.js";
+import type * as transactions from "../transactions.js";
+import type * as userStats from "../userStats.js";
+import type * as users from "../users.js";
+import type * as validationDocuments from "../validationDocuments.js";
+
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
+declare const fullApi: ApiFromModules<{
+  assetsDraft: typeof assetsDraft;
+  bans: typeof bans;
+  blocks: typeof blocks;
+  bookmarks: typeof bookmarks;
+  comments: typeof comments;
+  creatorApplications: typeof creatorApplications;
+  crons: typeof crons;
+  files: typeof files;
+  http: typeof http;
+  internalActions: typeof internalActions;
+  "lib/auth": typeof lib_auth;
+  "lib/batch": typeof lib_batch;
+  "lib/blocks": typeof lib_blocks;
+  "lib/bunny": typeof lib_bunny;
+  "lib/constants": typeof lib_constants;
+  "lib/errors": typeof lib_errors;
+  "lib/index": typeof lib_index;
+  "lib/messaging": typeof lib_messaging;
+  "lib/notifications": typeof lib_notifications;
+  "lib/rateLimiter": typeof lib_rateLimiter;
+  "lib/signedUrls": typeof lib_signedUrls;
+  "lib/subscriptions": typeof lib_subscriptions;
+  "lib/validators": typeof lib_validators;
+  likes: typeof likes;
+  messaging: typeof messaging;
+  notificationQueue: typeof notificationQueue;
+  notifications: typeof notifications;
+  posts: typeof posts;
+  reports: typeof reports;
+  subscriptions: typeof subscriptions;
+  superuser: typeof superuser;
+  tips: typeof tips;
+  transactions: typeof transactions;
+  userStats: typeof userStats;
+  users: typeof users;
+  validationDocuments: typeof validationDocuments;
+}>;
+
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {
+  rateLimiter: {
+    lib: {
+      checkRateLimit: FunctionReference<
+        "query",
+        "internal",
+        {
+          config:
+            | {
+                capacity?: number;
+                kind: "token bucket";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: null;
+              }
+            | {
+                capacity?: number;
+                kind: "fixed window";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: number;
+              };
+          count?: number;
+          key?: string;
+          name: string;
+          reserve?: boolean;
+          throws?: boolean;
+        },
+        { ok: true; retryAfter?: number } | { ok: false; retryAfter: number }
+      >;
+      clearAll: FunctionReference<
+        "mutation",
+        "internal",
+        { before?: number },
+        null
+      >;
+      getServerTime: FunctionReference<"mutation", "internal", {}, number>;
+      getValue: FunctionReference<
+        "query",
+        "internal",
+        {
+          config:
+            | {
+                capacity?: number;
+                kind: "token bucket";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: null;
+              }
+            | {
+                capacity?: number;
+                kind: "fixed window";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: number;
+              };
+          key?: string;
+          name: string;
+          sampleShards?: number;
+        },
+        {
+          config:
+            | {
+                capacity?: number;
+                kind: "token bucket";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: null;
+              }
+            | {
+                capacity?: number;
+                kind: "fixed window";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: number;
+              };
+          shard: number;
+          ts: number;
+          value: number;
+        }
+      >;
+      rateLimit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config:
+            | {
+                capacity?: number;
+                kind: "token bucket";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: null;
+              }
+            | {
+                capacity?: number;
+                kind: "fixed window";
+                maxReserved?: number;
+                period: number;
+                rate: number;
+                shards?: number;
+                start?: number;
+              };
+          count?: number;
+          key?: string;
+          name: string;
+          reserve?: boolean;
+          throws?: boolean;
+        },
+        { ok: true; retryAfter?: number } | { ok: false; retryAfter: number }
+      >;
+      resetRateLimit: FunctionReference<
+        "mutation",
+        "internal",
+        { key?: string; name: string },
+        null
+      >;
+    };
+    time: {
+      getServerTime: FunctionReference<"mutation", "internal", {}, number>;
+    };
+  };
+};

@@ -317,7 +317,7 @@ const result = await t.withIdentity({ tokenIdentifier: "test" })
 - **Barrel exports in tests**: `hooks/index.ts` evaluates ALL modules — if any import fails, all tests importing from barrel fail. Mock failing modules or import directly.
 - **`env.client.ts` in tests**: Zod parse fails without env vars — mock `@/lib/config/env.client` in tests
 - **Convex scheduler in tests**: `ctx.scheduler.runAfter()` callbacks may fire after test end — handled in `vitest.convex.setup.ts`
-- **`convex/_generated`**: Gitignored — run `npx convex dev` to regenerate after schema changes
+- **`convex/_generated`**: Committed to git — run `npx convex dev` to regenerate after schema changes, then commit the updated files
 - **ESLint zero-warning**: `--max-warnings 0` in `build-check` — all warnings are errors
 - **Bunny secrets**: All in Convex dashboard env vars, NOT in Next.js/Vercel env
 - **Convex site URL**: `NEXT_PUBLIC_CONVEX_URL.replace(".cloud", ".site")` for HTTP Actions
