@@ -51,6 +51,28 @@ export default defineSchema({
         mobileMoneyNumber2: v.optional(v.string()),
       }),
     ),
+    // Notification preferences
+    notificationPreferences: v.optional(
+      v.object({
+        likes: v.optional(v.boolean()),
+        comments: v.optional(v.boolean()),
+        newPosts: v.optional(v.boolean()),
+        subscriptions: v.optional(v.boolean()),
+        messages: v.optional(v.boolean()),
+        tips: v.optional(v.boolean()),
+        emailNotifications: v.optional(v.boolean()),
+      }),
+    ),
+    // Privacy & security settings
+    privacySettings: v.optional(
+      v.object({
+        profileVisibility: v.optional(
+          v.union(v.literal("public"), v.literal("private"))
+        ),
+        allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+        language: v.optional(v.string()),
+      }),
+    ),
     isBanned: v.optional(v.boolean()),
     banDetails: v.optional(
       v.object({

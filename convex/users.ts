@@ -6,6 +6,7 @@ import {
   mutation,
   query,
 } from "./_generated/server"
+import { getAuthenticatedUser } from "./lib/auth"
 import {
   badgeValidator,
   banDetailsValidator,
@@ -119,6 +120,26 @@ export const getCurrentUser = query({
       ),
       allowAdultContent: v.optional(v.boolean()),
       personalInfo: v.optional(personalInfoValidator),
+      notificationPreferences: v.optional(
+        v.object({
+          likes: v.optional(v.boolean()),
+          comments: v.optional(v.boolean()),
+          newPosts: v.optional(v.boolean()),
+          subscriptions: v.optional(v.boolean()),
+          messages: v.optional(v.boolean()),
+          tips: v.optional(v.boolean()),
+          emailNotifications: v.optional(v.boolean()),
+        }),
+      ),
+      privacySettings: v.optional(
+        v.object({
+          profileVisibility: v.optional(
+            v.union(v.literal("public"), v.literal("private"))
+          ),
+          allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+          language: v.optional(v.string()),
+        }),
+      ),
       isBanned: v.optional(v.boolean()),
       banDetails: v.optional(banDetailsValidator),
       banHistory: v.optional(v.array(banHistoryEntryValidator)),
@@ -816,6 +837,70 @@ export const updateAdultContentPreference = mutation({
 
     await ctx.db.patch(user._id, {
       allowAdultContent: args.allowAdultContent,
+    })
+
+    return { success: true }
+  },
+})
+
+export const updateNotificationPreferences = mutation({
+  args: {
+    likes: v.optional(v.boolean()),
+    comments: v.optional(v.boolean()),
+    newPosts: v.optional(v.boolean()),
+    subscriptions: v.optional(v.boolean()),
+    messages: v.optional(v.boolean()),
+    tips: v.optional(v.boolean()),
+    emailNotifications: v.optional(v.boolean()),
+  },
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+
+    const currentPrefs = user.notificationPreferences || {}
+
+    await ctx.db.patch(user._id, {
+      notificationPreferences: {
+        ...currentPrefs,
+        ...args,
+      },
+    })
+
+    return { success: true }
+  },
+})
+
+export const updatePrivacySettings = mutation({
+  args: {
+    profileVisibility: v.optional(
+      v.union(v.literal("public"), v.literal("private"))
+    ),
+    allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+    language: v.optional(v.string()),
+  },
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+
+    const currentSettings = user.privacySettings || {}
+
+    // Only merge defined fields to avoid setting undefined values
+    const updates: Record<string, unknown> = {}
+    if (args.profileVisibility !== undefined) {
+      updates.profileVisibility = args.profileVisibility
+    }
+    if (args.allowMessagesFromNonSubscribers !== undefined) {
+      updates.allowMessagesFromNonSubscribers = args.allowMessagesFromNonSubscribers
+    }
+    if (args.language !== undefined) {
+      updates.language = args.language
+    }
+
+    await ctx.db.patch(user._id, {
+      privacySettings: {
+        ...currentSettings,
+        ...updates,
+      },
     })
 
     return { success: true }

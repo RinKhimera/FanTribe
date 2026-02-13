@@ -3,13 +3,11 @@ import { useQuery } from "convex/react"
 import {
   BookmarkPlus,
   CircleUserRound,
-  Flame,
   LogOut,
   Settings,
   Sparkles,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { AdultContentSettings } from "@/components/domains/users/adult-content-settings"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -226,25 +224,12 @@ export const UserInfoPopover = ({
             <span>Collections</span>
           </DropdownMenuItem>
 
-          <AdultContentSettings
-            currentUser={currentUser}
-            trigger={
-              <DropdownMenuItem
-                className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Flame className="text-orange-500 mr-3 size-4" />
-                <span>Contenu adulte</span>
-              </DropdownMenuItem>
-            }
-          />
-
           <DropdownMenuItem
             className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
             onClick={() => handleNavigation("/account")}
           >
             <Settings className="text-muted-foreground mr-3 size-4" />
-            <span>Compte</span>
+            <span>Paramètres</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
