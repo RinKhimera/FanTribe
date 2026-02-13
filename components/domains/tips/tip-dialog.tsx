@@ -8,6 +8,7 @@ import {
   Smartphone,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { startStripeTipCheckout } from "@/actions/stripe/tip-checkout"
@@ -150,6 +151,10 @@ export const TipDialog = ({
           conversationId,
         })
       } catch (error) {
+        // Relancer les erreurs de redirection Next.js (comportement normal)
+        if (isRedirectError(error)) {
+          throw error
+        }
         logger.error("Stripe tip checkout failed", error)
         toast.error("Impossible de démarrer le paiement Stripe")
       }

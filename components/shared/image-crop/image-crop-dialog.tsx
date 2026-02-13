@@ -1,9 +1,9 @@
 "use client"
 
-import { motion, AnimatePresence } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import { Check, Crop, Loader2, SkipForward, X, ZoomIn, ZoomOut } from "lucide-react"
 import dynamic from "next/dynamic"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { Area, Point } from "react-easy-crop"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -70,6 +70,10 @@ export function ImageCropDialog({
     aspectRatio ?? presets?.[0]?.value ?? 1
   )
   const [isProcessing, setIsProcessing] = useState(false)
+  // Key used to force Cropper re-mount after image loads (fixes race condition
+  // where react-easy-crop measures the container before dialog animation ends)
+  const [cropperKey, setCropperKey] = useState(0)
+  const mediaLoadedRef = useRef(false)
 
   // Reset internal state when a new image enters (e.g., crop queue advancing)
   useEffect(() => {
@@ -77,7 +81,20 @@ export function ImageCropDialog({
     setZoom(1)
     setCroppedAreaPixels(null)
     setActiveAspect(aspectRatio ?? presets?.[0]?.value ?? 1)
+    mediaLoadedRef.current = false
   }, [imageSrc, aspectRatio, presets])
+
+  // When the image loads inside the Cropper, force a re-mount after a short
+  // delay so react-easy-crop recalculates with stable container dimensions
+  const onMediaLoaded = useCallback(() => {
+    if (!mediaLoadedRef.current) {
+      mediaLoadedRef.current = true
+      // Wait for dialog animation to settle, then remount Cropper
+      setTimeout(() => {
+        setCropperKey((k) => k + 1)
+      }, 300)
+    }
+  }, [])
 
   const onCropComplete = useCallback(
     (_croppedArea: Area, croppedAreaPixels: Area) => {
@@ -141,21 +158,18 @@ export function ImageCropDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Crop area */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-          className="relative mx-4"
-        >
+        {/* Crop area — no scale animation here to avoid race condition
+             with react-easy-crop measuring container dimensions */}
+        <div className="relative mx-4">
           <div
             className={cn(
               "relative overflow-hidden rounded-xl bg-black",
-              cropShape === "round" ? "aspect-square" : "aspect-[4/3]"
+              cropShape === "round" ? "aspect-square" : "aspect-4/3"
             )}
             style={{ touchAction: "none" }}
           >
             <Cropper
+              key={cropperKey}
               image={imageSrc}
               crop={crop}
               zoom={zoom}
@@ -166,6 +180,7 @@ export function ImageCropDialog({
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
+              onMediaLoaded={onMediaLoaded}
               minZoom={1}
               maxZoom={3}
               zoomSpeed={1}
@@ -180,7 +195,7 @@ export function ImageCropDialog({
               cropperProps={{}}
             />
           </div>
-        </motion.div>
+        </div>
 
         {/* Zoom slider */}
         <div className="flex items-center gap-3 px-5">

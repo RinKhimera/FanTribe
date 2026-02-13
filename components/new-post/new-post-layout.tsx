@@ -376,7 +376,7 @@ export const NewPostLayout = () => {
             "relative rounded-2xl",
             "glass-premium",
             "border-primary/10 border",
-            "p-5 md:p-6",
+            "p-4 md:p-5",
           )}
         >
           <div className="flex items-start gap-4">
@@ -417,6 +417,24 @@ export const NewPostLayout = () => {
                               {...field}
                             />
 
+                            {/* Character count */}
+                            {field.value.length > 0 && (
+                              <div className="mt-2 flex justify-end">
+                                <span
+                                  className={cn(
+                                    "text-xs tabular-nums transition-colors duration-200",
+                                    field.value.length > 380
+                                      ? "text-destructive font-medium"
+                                      : field.value.length > 300
+                                        ? "text-amber-500"
+                                        : "text-muted-foreground/50",
+                                  )}
+                                >
+                                  {field.value.length}/400
+                                </span>
+                              </div>
+                            )}
+
                             {/* Media Preview Grid */}
                             <MediaPreviewGrid
                               medias={medias}
@@ -431,12 +449,12 @@ export const NewPostLayout = () => {
                             />
 
                             {/* Divider */}
-                            <div className="bg-border my-5 h-px" />
+                            <div className="my-5 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
                             {/* Actions Bar */}
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                              {/* Left Actions */}
-                              <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center justify-between">
+                              {/* Left: Icon-only action buttons */}
+                              <div className="flex items-center gap-1">
                                 <input
                                   ref={fileInputRef}
                                   type="file"
@@ -446,7 +464,6 @@ export const NewPostLayout = () => {
                                   className="hidden"
                                 />
 
-                                {/* Media Button */}
                                 <MediaUploadButton
                                   mediaCount={medias.length}
                                   maxMedia={MAX_MEDIA}
@@ -458,13 +475,11 @@ export const NewPostLayout = () => {
                                   }
                                 />
 
-                                {/* Visibility Selector */}
                                 <VisibilitySelector
                                   value={visibility}
                                   onChange={setVisibility}
                                 />
 
-                                {/* Adult Content Toggle */}
                                 <AdultContentToggle
                                   value={isAdult}
                                   onChange={setIsAdult}
@@ -472,23 +487,24 @@ export const NewPostLayout = () => {
                                 />
                               </div>
 
-                              {/* Submit Button */}
-                              <Button
+                              {/* Right: Submit button */}
+                              <button
                                 type="submit"
                                 disabled={isPending || isUploading}
                                 className={cn(
-                                  "h-10 rounded-full px-6",
-                                  "font-semibold tracking-wide",
-                                  "w-full sm:w-auto",
+                                  "btn-premium h-9 rounded-full px-5",
+                                  "inline-flex items-center gap-1.5",
+                                  "text-sm font-semibold tracking-wide",
+                                  "disabled:opacity-50 disabled:cursor-not-allowed",
                                 )}
                               >
                                 {isPending ? (
-                                  <LoaderCircle className="mr-2 size-4 animate-spin" />
+                                  <LoaderCircle className="size-4 animate-spin" />
                                 ) : (
-                                  <Sparkles className="mr-2 size-4" />
+                                  <Sparkles className="size-4" />
                                 )}
                                 Publier
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         </FormControl>

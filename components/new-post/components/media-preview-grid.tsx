@@ -16,8 +16,8 @@ import {
   useSortable,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { CircleX, GripVertical, X, ZoomIn } from "lucide-react"
-import { motion, AnimatePresence } from "motion/react"
+import { GripVertical, X, ZoomIn } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -44,16 +44,52 @@ interface MediaPreviewGridProps {
   onReorder: (medias: MediaItem[]) => void
 }
 
-// Sortable wrapper for each media item
+// --- Adaptive grid helpers ---
+
+function getGridLayout(count: number, isVideo: boolean): string {
+  if (isVideo) return "grid-cols-1"
+  switch (count) {
+    case 1:
+      return "grid-cols-1"
+    case 2:
+      return "grid-cols-2"
+    case 3:
+      return "grid-cols-2 grid-rows-2"
+    default:
+      return "grid-cols-2"
+  }
+}
+
+function getItemClasses(count: number, index: number, isVideo: boolean): string {
+  if (isVideo) return ""
+  switch (count) {
+    case 1:
+      return ""
+    case 2:
+      return "aspect-[4/5]"
+    case 3:
+      if (index === 0) return "row-span-2"
+      return "aspect-square"
+    default:
+      return "aspect-video"
+  }
+}
+
+// --- Sortable item ---
+
 function SortableMediaItem({
   media,
   index,
+  count,
+  isVideo,
   onRemove,
   onPreview,
   isDragDisabled,
 }: {
   media: MediaItem
   index: number
+  count: number
+  isVideo: boolean
   onRemove: (index: number) => void
   onPreview: (url: string) => void
   isDragDisabled: boolean
@@ -72,55 +108,66 @@ function SortableMediaItem({
     transition,
   }
 
+  const isSingleImage = count === 1 && !isVideo
+  const isLeftColumn3 = count === 3 && index === 0
+
   return (
     <motion.div
       ref={setNodeRef}
       style={style}
+      layout
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
       className={cn(
-        "group relative overflow-hidden rounded-xl",
-        isDragging && "z-10 opacity-80 shadow-xl",
+        "group relative overflow-hidden",
+        getItemClasses(count, index, isVideo),
+        isDragging && "z-10 ring-2 ring-primary/50 shadow-2xl scale-[1.02]",
       )}
     >
-      {/* Drag handle — top left, images only */}
+      {/* Drag handle — bottom left, images only, 2+ items */}
       {!isDragDisabled && (
         <button
           type="button"
           className={cn(
-            "absolute top-2 left-2 z-10 flex size-8 items-center justify-center rounded-full",
+            "absolute bottom-1.5 left-1.5 z-10",
+            "flex size-7 items-center justify-center gap-0.5 rounded-lg",
             "bg-black/60 hover:bg-black/80",
             "opacity-0 group-hover:opacity-100",
             "cursor-grab active:cursor-grabbing",
             "transition-opacity duration-200",
           )}
-          aria-label="Réorganiser"
+          aria-label={`Réorganiser position ${index + 1}`}
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="size-4 text-white" />
+          <GripVertical className="size-3.5 text-white" />
+          <span className="text-[10px] font-bold text-white/80">
+            {index + 1}
+          </span>
         </button>
       )}
 
       {/* Remove button — top right */}
-      <Button
+      <button
         type="button"
-        size="icon"
-        variant="secondary"
+        aria-label="Supprimer le média"
         className={cn(
-          "absolute top-2 right-2 z-10 size-8",
-          "bg-black/60 hover:bg-black/80",
-          "opacity-0 group-hover:opacity-100",
-          "transition-opacity duration-200",
+          "absolute top-1.5 right-1.5 z-10",
+          "flex size-7 items-center justify-center rounded-full",
+          "bg-black/60 text-white",
+          "opacity-0 transition-all duration-200",
+          "hover:bg-red-500 group-hover:opacity-100",
+          "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/50",
         )}
         onClick={() => onRemove(index)}
       >
-        <CircleX className="size-5 text-white" />
-      </Button>
+        <X className="size-4" />
+      </button>
 
       {media.type === "video" ? (
-        <div className="aspect-video w-full overflow-hidden rounded-xl bg-muted">
+        <div className="aspect-video w-full overflow-hidden bg-muted">
           <iframe
             src={media.url}
             loading="lazy"
@@ -131,7 +178,10 @@ function SortableMediaItem({
         </div>
       ) : (
         <div
-          className="relative cursor-pointer"
+          className={cn(
+            "relative cursor-pointer",
+            !isSingleImage && "h-full",
+          )}
           onClick={() => onPreview(media.url)}
           role="button"
           tabIndex={0}
@@ -139,33 +189,50 @@ function SortableMediaItem({
             if (e.key === "Enter" || e.key === " ") onPreview(media.url)
           }}
         >
-          <Image
-            src={media.url}
-            alt=""
-            width={500}
-            height={300}
-            className="aspect-video w-full rounded-xl object-cover"
-          />
-          {/* Zoom hint */}
+          {isSingleImage ? (
+            <Image
+              src={media.url}
+              alt=""
+              width={600}
+              height={400}
+              className="h-auto max-h-96 w-full object-cover"
+            />
+          ) : isLeftColumn3 ? (
+            <Image
+              src={media.url}
+              alt=""
+              fill
+              sizes="50vw"
+              className="object-cover"
+            />
+          ) : (
+            <Image
+              src={media.url}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 50vw, 300px"
+              className="object-cover"
+            />
+          )}
+
+          {/* Zoom hint — bottom right badge */}
           <div
             className={cn(
-              "absolute inset-0 flex items-center justify-center",
-              "bg-black/0 group-hover:bg-black/20",
-              "transition-colors duration-200",
+              "absolute bottom-1.5 right-1.5 z-10",
+              "flex size-7 items-center justify-center rounded-full",
+              "bg-black/40 opacity-0 group-hover:opacity-100",
+              "transition-opacity duration-200",
             )}
           >
-            <ZoomIn
-              className={cn(
-                "size-6 text-white opacity-0 group-hover:opacity-80",
-                "transition-opacity duration-200",
-              )}
-            />
+            <ZoomIn className="size-3.5 text-white" />
           </div>
         </div>
       )}
     </motion.div>
   )
 }
+
+// --- Main grid component ---
 
 export const MediaPreviewGrid = ({
   medias,
@@ -174,7 +241,8 @@ export const MediaPreviewGrid = ({
 }: MediaPreviewGridProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
-  const isDragDisabled = medias.length <= 1 || medias[0]?.type === "video"
+  const isVideo = medias.length > 0 && medias[0].type === "video"
+  const isDragDisabled = medias.length <= 1 || isVideo
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -208,16 +276,23 @@ export const MediaPreviewGrid = ({
           strategy={rectSortingStrategy}
         >
           <motion.div
+            layout
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mt-4 grid grid-cols-2 gap-3"
+            className={cn(
+              "mt-4 grid overflow-hidden rounded-xl",
+              getGridLayout(medias.length, isVideo),
+              medias.length === 1 ? "gap-0" : "gap-1.5",
+            )}
           >
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {medias.map((media, index) => (
                 <SortableMediaItem
                   key={media.publicId}
                   media={media}
                   index={index}
+                  count={medias.length}
+                  isVideo={isVideo}
                   onRemove={onRemove}
                   onPreview={setPreviewUrl}
                   isDragDisabled={isDragDisabled}
