@@ -3,7 +3,7 @@
 import { Preloaded, usePreloadedQuery, useQuery } from "convex/react"
 import { Loader2 } from "lucide-react"
 import { notFound, usePathname } from "next/navigation"
-import { createContext, useContext } from "react"
+import { createContext, use } from "react"
 import { PageContainer } from "@/components/layout"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
@@ -18,7 +18,7 @@ type UserProfileContextValue = {
 
 const UserProfileContext = createContext<UserProfileContextValue | null>(null)
 
-export const useUserProfileContext = () => useContext(UserProfileContext)
+export const useUserProfileContext = () => use(UserProfileContext)
 
 type UserProfileShellProps = {
   preloadedProfile: Preloaded<typeof api.users.getUserProfile>

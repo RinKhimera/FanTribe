@@ -88,8 +88,8 @@ const SubscribersPage = () => {
                   avatarUrl: details.image,
                   bannerUrl: details.imageBanner || "",
                 }}
-                isSubscribed={sub.status === "active"}
-                onSubscribe={() => {}}
+                mode="subscription-list"
+                subscriptionStatus={sub.status === "active" ? "subscribed" : "unsubscribed"}
               />
             )
           })}

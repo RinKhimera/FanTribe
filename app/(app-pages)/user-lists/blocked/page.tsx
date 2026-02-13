@@ -105,8 +105,7 @@ const BlockedPage = () => {
                   avatarUrl: details.image,
                   bannerUrl: details.imageBanner || "",
                 }}
-                isBlockedPage={true}
-                onSubscribe={() => {}}
+                mode="blocked-list"
               />
             )
           })}

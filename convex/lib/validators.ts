@@ -58,6 +58,24 @@ export const personalInfoValidator = v.object({
   mobileMoneyNumber2: v.optional(v.string()),
 })
 
+export const notificationPreferencesValidator = v.object({
+  likes: v.optional(v.boolean()),
+  comments: v.optional(v.boolean()),
+  newPosts: v.optional(v.boolean()),
+  subscriptions: v.optional(v.boolean()),
+  messages: v.optional(v.boolean()),
+  tips: v.optional(v.boolean()),
+  emailNotifications: v.optional(v.boolean()),
+})
+
+export const privacySettingsValidator = v.object({
+  profileVisibility: v.optional(
+    v.union(v.literal("public"), v.literal("private"))
+  ),
+  allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+  language: v.optional(v.string()),
+})
+
 export const userDocValidator = v.object({
   _id: v.id("users"),
   _creationTime: v.number(),
@@ -81,6 +99,8 @@ export const userDocValidator = v.object({
     v.literal("SUPERUSER"),
   ),
   allowAdultContent: v.optional(v.boolean()),
+  notificationPreferences: v.optional(notificationPreferencesValidator),
+  privacySettings: v.optional(privacySettingsValidator),
   personalInfo: v.optional(personalInfoValidator),
   isBanned: v.optional(v.boolean()),
   banDetails: v.optional(banDetailsValidator),

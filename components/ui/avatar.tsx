@@ -12,10 +12,11 @@ const AvatarContext = React.createContext<{
   onStatusChange: (status: ImageLoadingStatus) => void
 }>({ status: "idle", onStatusChange: () => {} })
 
-const Avatar = React.forwardRef<
-  HTMLSpanElement,
-  React.HTMLAttributes<HTMLSpanElement>
->(({ className, ...props }, ref) => {
+interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
+  ref?: React.Ref<HTMLSpanElement>
+}
+
+const Avatar = ({ className, ref, ...props }: AvatarProps) => {
   const [status, setStatus] = React.useState<ImageLoadingStatus>("idle")
   return (
     <AvatarContext.Provider value={{ status, onStatusChange: setStatus }}>
@@ -29,19 +30,18 @@ const Avatar = React.forwardRef<
       />
     </AvatarContext.Provider>
   )
-})
-Avatar.displayName = "Avatar"
+}
 
-const AvatarImage = React.forwardRef<
-  HTMLImageElement,
-  {
-    src?: string
-    alt?: string
-    sizes?: string
-    className?: string
-  }
->(({ src, alt = "", sizes = "96px", className }, ref) => {
-  const { onStatusChange } = React.useContext(AvatarContext)
+interface AvatarImageProps {
+  src?: string
+  alt?: string
+  sizes?: string
+  className?: string
+  ref?: React.Ref<HTMLImageElement>
+}
+
+const AvatarImage = ({ src, alt = "", sizes = "96px", className, ref }: AvatarImageProps) => {
+  const { onStatusChange } = React.use(AvatarContext)
 
   if (!src) return null
 
@@ -57,14 +57,14 @@ const AvatarImage = React.forwardRef<
       onError={() => onStatusChange("error")}
     />
   )
-})
-AvatarImage.displayName = "AvatarImage"
+}
 
-const AvatarFallback = React.forwardRef<
-  HTMLSpanElement,
-  React.HTMLAttributes<HTMLSpanElement>
->(({ className, ...props }, ref) => {
-  const { status } = React.useContext(AvatarContext)
+interface AvatarFallbackProps extends React.HTMLAttributes<HTMLSpanElement> {
+  ref?: React.Ref<HTMLSpanElement>
+}
+
+const AvatarFallback = ({ className, ref, ...props }: AvatarFallbackProps) => {
+  const { status } = React.use(AvatarContext)
 
   if (status === "loaded") return null
 
@@ -78,7 +78,6 @@ const AvatarFallback = React.forwardRef<
       {...props}
     />
   )
-})
-AvatarFallback.displayName = "AvatarFallback"
+}
 
 export { Avatar, AvatarImage, AvatarFallback }

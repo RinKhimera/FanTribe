@@ -32,6 +32,8 @@ const Cropper = dynamic(() => import("react-easy-crop").then((m) => m.default), 
 
 type CropShape = "round" | "rect"
 
+export type ImageCropDialogMode = "single" | "queue"
+
 type ImageCropDialogProps = {
   imageSrc: string
   open: boolean
@@ -39,7 +41,7 @@ type ImageCropDialogProps = {
   onConfirm: (croppedBlob: Blob) => void
   onCancel: () => void
   onSkip?: () => void
-  showSkip?: boolean
+  mode?: ImageCropDialogMode
   cropShape?: CropShape
   aspectRatio?: number
   presets?: AspectRatioPreset[]
@@ -55,7 +57,7 @@ export function ImageCropDialog({
   onConfirm,
   onCancel,
   onSkip,
-  showSkip = false,
+  mode = "single",
   cropShape = "rect",
   aspectRatio,
   presets,
@@ -260,7 +262,7 @@ export function ImageCropDialog({
 
             <div className="flex-1" />
 
-            {showSkip && onSkip && (
+            {mode === "queue" && onSkip && (
               <Button
                 variant="ghost"
                 size="sm"

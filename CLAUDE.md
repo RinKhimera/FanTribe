@@ -38,7 +38,8 @@ app/                      # Next.js App Router
 components/
 ├── domains/              # Feature components (messaging, posts, users, subscriptions, notifications, tips)
 ├── shared/               # Cross-feature reusable components
-├── new-post/             # Post creation flow
+├── post-composer/        # Post creation compound components (Provider + Frame + Input + Media + Actions + Submit)
+├── new-post/             # Post creation flow (uses PostComposer)
 ├── layout/               # App shell, sidebar, nav
 └── ui/                   # shadcn/ui (CVA + Radix primitives)
 convex/                   # Backend functions
@@ -168,6 +169,60 @@ const { execute, isPending } = useAsyncHandler({
 execute(() => createPost({ content, medias, visibility }))
 ```
 
+### Compound Components (Context + Provider)
+```typescript
+// Pattern: State in Provider, UI in sub-components
+// Example: components/post-composer/
+
+// 1. Context + Provider (post-composer-context.tsx)
+const PostComposerContext = createContext<ContextValue | null>(null)
+export const usePostComposer = () => use(PostComposerContext)
+
+export function PostComposerProvider({ config, children }) {
+  const [content, setContent] = useState("")
+  const value = useMemo(() => ({
+    state: { content, ... },
+    actions: { setContent, submit, ... },
+    config,
+  }), [deps])
+  return <PostComposerContext.Provider value={value}>{children}</PostComposerContext.Provider>
+}
+
+// 2. Sub-components consume context
+export function PostComposerInput() {
+  const { state, actions } = usePostComposer()
+  return <TextareaAutosize value={state.content} onChange={e => actions.setContent(e.target.value)} />
+}
+
+// 3. Usage: Compose with children
+<PostComposerProvider config={{ userId, maxMedia: 3 }}>
+  <PostComposerFrame>
+    <PostComposerInput />
+    <PostComposerMedia />
+    <PostComposerActions />
+    <PostComposerSubmit />
+  </PostComposerFrame>
+</PostComposerProvider>
+```
+
+### State Machines (Explicit Modes)
+```typescript
+// ❌ Boolean props create impossible states
+<Dialog showSkip={true} onSkip={...} />  // 2^n combinations
+
+// ✅ Explicit mode eliminates invalid states
+type DialogMode = "single" | "queue"
+<Dialog mode="queue" onSkip={...} />  // Only valid combinations
+
+// Example: ImageCropDialog
+mode="single"  // No skip button
+mode="queue"   // Shows skip button + remaining count
+
+// Example: UserListsCard
+mode="blocked-list"  // Shows "Débloquer" button
+mode="subscription-list" subscriptionStatus="subscribed"  // Shows "Abonné" button
+```
+
 ### Forms (React Hook Form + Zod)
 ```typescript
 const form = useForm<z.infer<typeof schema>>({
@@ -199,6 +254,21 @@ import { motion, AnimatePresence } from "motion/react"
 - Props use Convex `Doc<"users">` and `Id<"posts">` types
 - shadcn/ui: CVA variants + Radix primitives + `asChild` pattern
 - Next.js 15 params: `params: Promise<{ slug: string }>` → `const { slug } = use(params)`
+
+### React 19 APIs
+```typescript
+// Context: use() instead of useContext()
+import { createContext, use } from "react"
+const value = use(MyContext)  // ✅ React 19
+// const value = useContext(MyContext)  // ❌ Legacy
+
+// Refs: standard prop, no forwardRef needed
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  ref?: React.Ref<HTMLButtonElement>
+}
+const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} />
+// ❌ Don't use React.forwardRef() in React 19
+```
 
 ## Hooks Reference
 
@@ -324,6 +394,7 @@ const result = await t.withIdentity({ tokenIdentifier: "test" })
 - **Auth tokens for HTTP Actions**: `useAuth().getToken({ template: "convex" })` → `Authorization: Bearer ${token}`
 - **Convex `internal` circular types**: `internalActions.ts` functions calling `internal.xxx` can cause circular type inference — use explicit type annotation on `result` variable
 - **Stripe dynamic tips**: Use `price_data` (not fixed `STRIPE_PRICE_ID`) for variable amounts like tips
+- **Validator completeness**: Convex validators used in `returns:` MUST include ALL schema fields. Example: `userDocValidator` needs `notificationPreferences`, `privacySettings` even if optional. Missing fields cause `ReturnsValidationError` at runtime.
 
 ## Business Logic
 

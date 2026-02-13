@@ -11,6 +11,9 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { logger } from "@/lib/config/logger"
 
+export type UserCardMode = "subscription-list" | "blocked-list"
+export type SubscriptionStatus = "subscribed" | "unsubscribed"
+
 interface UserCardProps {
   user: {
     id: Id<"users">
@@ -19,16 +22,16 @@ interface UserCardProps {
     avatarUrl: string
     bannerUrl: string
   }
-  onSubscribe?: () => void
-  isSubscribed?: boolean
-  isBlockedPage?: boolean
+  mode: UserCardMode
+  subscriptionStatus?: SubscriptionStatus
+  onActionSuccess?: () => void
 }
 
 export const UserListsCard = ({
   user,
-  onSubscribe,
-  isSubscribed = false,
-  isBlockedPage = false,
+  mode,
+  subscriptionStatus,
+  onActionSuccess,
 }: UserCardProps) => {
   const [isBlocking, setIsBlocking] = useState(false)
   const blockUser = useMutation(api.blocks.blockUser)
@@ -39,13 +42,13 @@ export const UserListsCard = ({
   const handleBlockUnblock = async () => {
     setIsBlocking(true)
     try {
-      if (isBlockedPage) {
+      if (mode === "blocked-list") {
         // Débloquer l'utilisateur
         await unblockUser({ targetUserId: user.id })
         toast.success("Utilisateur débloqué", {
           description: `Vous avez débloqué ${user.name}`,
         })
-        if (onSubscribe) onSubscribe()
+        onActionSuccess?.()
       } else {
         // Bloquer l'utilisateur
         await blockUser({ targetUserId: user.id })
@@ -56,7 +59,7 @@ export const UserListsCard = ({
     } catch (error) {
       logger.error("Failed to toggle block status", error, {
         userId: user.id,
-        isBlockedPage,
+        mode,
       })
       toast.error("Une erreur s'est produite !", {
         description: "Veuillez vérifier votre connexion internet et réessayer",
@@ -117,14 +120,14 @@ export const UserListsCard = ({
             </div>
 
             <div className="flex gap-2">
-              {/* Bouton d'abonnement */}
-              {!isBlockedPage && onSubscribe && (
+              {/* Bouton d'abonnement (uniquement en mode subscription-list) */}
+              {mode === "subscription-list" && onActionSuccess && (
                 <Button
-                  variant={isSubscribed ? "outline" : "default"}
+                  variant={subscriptionStatus === "subscribed" ? "outline" : "default"}
                   size="sm"
-                  onClick={onSubscribe}
+                  onClick={onActionSuccess}
                 >
-                  {isSubscribed ? "Abonné" : "S'abonner"}
+                  {subscriptionStatus === "subscribed" ? "Abonné" : "S'abonner"}
                 </Button>
               )}
 
@@ -135,14 +138,14 @@ export const UserListsCard = ({
                 onClick={handleBlockUnblock}
                 disabled={isBlocking}
                 className={
-                  isBlockedPage
+                  mode === "blocked-list"
                     ? ""
                     : "text-destructive hover:bg-destructive/10"
                 }
               >
                 {isBlocking ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isBlockedPage ? (
+                ) : mode === "blocked-list" ? (
                   "Débloquer"
                 ) : (
                   "Bloquer"
