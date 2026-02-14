@@ -180,7 +180,7 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
           onConfirm={handleMsgCropConfirm}
           onCancel={handleMsgCropCancel}
           onSkip={handleMsgCropSkip}
-          showSkip={true}
+          mode="queue"
           cropShape="rect"
           presets={POST_CROP_PRESETS}
           title="Recadrer l'image"

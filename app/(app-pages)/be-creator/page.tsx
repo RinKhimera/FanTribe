@@ -120,6 +120,8 @@ const BeCreatorPage = () => {
     const newDirection = step > currentStep ? 1 : -1
     setPage([step, newDirection])
     setCurrentStep(step)
+    // Scroll to top when changing steps
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const validateAndGoNext = async () => {

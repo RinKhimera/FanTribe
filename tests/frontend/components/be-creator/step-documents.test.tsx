@@ -53,12 +53,24 @@ vi.mock("@/components/shared/camera-capture", () => ({
   }) => <div data-testid="camera-capture">{children({ open: vi.fn() })}</div>,
 }))
 
-vi.mock("@/components/shared/bunny-upload-widget", () => ({
-  BunnyUploadWidget: ({
-    children,
-  }: {
-    children: (props: { open: () => void }) => React.ReactNode
-  }) => <div data-testid="upload-widget">{children({ open: vi.fn() })}</div>,
+vi.mock("@/components/be-creator/document-upload-section", () => ({
+  DocumentUploadSection: ({ type, uploadedDocument }: {
+    type: "identityCard" | "selfie"
+    uploadedDocument?: { url: string; mediaId: string; uploadedAt: number }
+  }) => (
+    <div data-testid={`document-upload-${type}`}>
+      {uploadedDocument ? (
+        <div>
+          <span>{type === "identityCard" ? "Document d'identité uploadé" : "Selfie uploadé"}</span>
+        </div>
+      ) : (
+        <div>
+          <button>Uploader</button>
+          <button>Prendre {type === "identityCard" ? "une photo" : "un selfie"}</button>
+        </div>
+      )}
+    </div>
+  ),
 }))
 
 // Wrapper component that provides the form context
