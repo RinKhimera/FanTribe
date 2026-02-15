@@ -161,7 +161,7 @@ export const deletePost = mutation({
         .collect(),
       ctx.db
         .query("notifications")
-        .withIndex("by_post", (q) => q.eq("post", args.postId))
+        .withIndex("by_post", (q) => q.eq("postId", args.postId))
         .collect(),
     ])
 

@@ -21,7 +21,6 @@ type NotificationKey =
   | "comments"
   | "newPosts"
   | "subscriptions"
-  | "messages"
   | "tips"
 
 export default function NotificationsPage() {
@@ -65,13 +64,6 @@ export default function NotificationsPage() {
       description: "Notifications sur vos abonnements",
       icon: Bell,
       iconColor: "text-primary",
-    },
-    {
-      key: "messages" as NotificationKey,
-      label: "Messages",
-      description: "Notifications pour les nouveaux messages",
-      icon: MessageCircle,
-      iconColor: "text-purple-500",
     },
     {
       key: "tips" as NotificationKey,

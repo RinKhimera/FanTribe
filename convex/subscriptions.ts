@@ -6,6 +6,7 @@ import {
   query,
 } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
+import { createNotification } from "./lib/notifications"
 
 // PUBLIC: obtenir la souscription entre deux utilisateurs (content_access par défaut)
 export const getFollowSubscription = query({
@@ -197,13 +198,12 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
       ...expired.map((s) =>
         ctx.db.patch(s._id, { status: "expired", lastUpdateTime: now })
       ),
-      // Batch insert notifications
+      // Batch create notifications (prefs checked per recipient)
       ...expired.map((s) =>
-        ctx.db.insert("notifications", {
-          type: "subscription_expired",
+        createNotification(ctx, {
+          type: "subscriptionExpired",
           recipientId: s.subscriber,
-          sender: s.creator,
-          read: false,
+          actorId: s.creator,
         })
       ),
     ])
@@ -847,14 +847,8 @@ export const checkAndLockExpiredMessagingSubscriptions = internalMutation({
             systemMessageType: "subscription_expired",
           })
 
-          // Créer une notification pour le user
-          await ctx.db.insert("notifications", {
-            type: "messaging_subscription_expired",
-            recipientId: sub.subscriber,
-            sender: sub.creator,
-            read: false,
-            conversation: conversation._id,
-          })
+          // Notification supprimée (type messaging retiré du système)
+          // Le message système dans la conversation suffit à informer l'utilisateur
 
           return { subscriptionId: sub._id, conversationLocked: true }
         }

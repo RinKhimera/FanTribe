@@ -1,6 +1,10 @@
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
+import {
+  createNotification,
+  removeActorFromNotification,
+} from "./lib/notifications"
 import { rateLimiter } from "./lib/rateLimiter"
 import { incrementUserStat } from "./userStats"
 
@@ -35,24 +39,13 @@ export const likePost = mutation({
     // Mise à jour incrémentale des stats du créateur
     await incrementUserStat(ctx, post.author, { totalLikes: 1 })
 
-    // Notification (si pas soi-même)
-    if (post.author !== user._id) {
-      const existingNotif = await ctx.db
-        .query("notifications")
-        .withIndex("by_type_post_sender", (q) =>
-          q.eq("type", "like").eq("post", args.postId).eq("sender", user._id),
-        )
-        .unique()
-      if (!existingNotif) {
-        await ctx.db.insert("notifications", {
-          type: "like",
-          recipientId: post.author,
-          sender: user._id,
-          post: args.postId,
-          read: false,
-        })
-      }
-    }
+    // Notification (groupée par post, prefs vérifiées, anti-spam)
+    await createNotification(ctx, {
+      type: "like",
+      recipientId: post.author,
+      actorId: user._id,
+      postId: args.postId,
+    })
 
     return { liked: true, likeId }
   },
@@ -85,14 +78,13 @@ export const unlikePost = mutation({
     // Mise à jour incrémentale des stats du créateur
     await incrementUserStat(ctx, post.author, { totalLikes: -1 })
 
-    // Supprimer notification associée si existe
-    const notif = await ctx.db
-      .query("notifications")
-      .withIndex("by_type_post_sender", (q) =>
-        q.eq("type", "like").eq("post", args.postId).eq("sender", user._id),
-      )
-      .unique()
-    if (notif) await ctx.db.delete(notif._id)
+    // Supprimer acteur de la notification groupée
+    await removeActorFromNotification(ctx, {
+      type: "like",
+      recipientId: post.author,
+      actorId: user._id,
+      postId: args.postId,
+    })
 
     return { removed: true }
   },

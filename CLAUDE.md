@@ -63,7 +63,9 @@ tests/
 - `convex/http.ts` — HTTP Actions (Bunny upload/delete, CORS, webhooks)
 - `convex/lib/auth.ts` — `getAuthenticatedUser()`, `requireSuperuser()`, `requireCreator()`
 - `convex/lib/errors.ts` — `createAppError(code, { userMessage })` bilingual errors
-- `convex/lib/validators.ts` — Shared validators (`postMediaValidator`, `userDocValidator`)
+- `convex/lib/validators.ts` — Shared validators (`postMediaValidator`, `userDocValidator`, `enrichedNotificationValidator`)
+- `convex/lib/notifications.ts` — Central notification service (`createNotification`, `removeActorFromNotification`)
+- `convex/notifications.ts` — Notification queries/mutations (paginated, typed returns)
 - `convex/lib/rateLimiter.ts` — Rate limits on mutations (sendMessage, createPost, etc.)
 - `convex/lib/bunny.ts` — Bunny CDN service (upload, delete, signed URLs)
 - `hooks/useAsyncHandler.ts` — Wraps async ops with toast/logger/useTransition
@@ -73,7 +75,7 @@ tests/
 - `convex/tips.ts` — Tip processing (processTipAtomic) + creator earnings query
 - `convex/lib/constants.ts` — Centralized business constants (commissions, tip presets, limits)
 - `actions/stripe/tip-checkout.ts` — Stripe server action for tip payments (dynamic price_data)
-- `types/index.ts` — PostMedia, MessageProps, ConversationProps, PaymentStatus, TipContext, TipProps
+- `types/index.ts` — PostMedia, MessageProps, ConversationProps, PaymentStatus, TipContext, TipProps, EnrichedNotification, NotificationType
 - `lib/config/env.client.ts` — Zod-validated public env vars
 - `lib/config/env.ts` — Zod-validated server-only secrets
 
@@ -416,6 +418,17 @@ const result = await t.withIdentity({ tokenIdentifier: "test" })
 - Dual payment: CinetPay (mobile money) + Stripe (dynamic `price_data`)
 - Idempotent processing via `providerTransactionId` unique index
 - TipDialog component: `components/domains/tips/tip-dialog.tsx`
+
+### Notifications
+- **10 types** (camelCase): `like`, `comment`, `newPost`, `newSubscription`, `renewSubscription`, `subscriptionExpired`, `subscriptionConfirmed`, `creatorApplicationApproved`, `creatorApplicationRejected`, `tip`
+- **Write-time grouping**: 1 DB row per group (`groupKey`), `actorIds[]` (last 3) + `actorCount`
+- **Central service**: All creation via `createNotification()` in `convex/lib/notifications.ts` — never insert directly
+- **Preference enforcement**: `shouldNotify()` checks `notificationPreferences` before creating (opt-out model)
+- **Anti-spam**: 50 unread max blocks high-volume types (`like`, `comment`, `newPost`); never blocks `tip`, `subscriptionConfirmed`, `creatorApplication*`
+- **Ungrouping on unlike/comment-delete**: `removeActorFromNotification()` decrements or deletes
+- **Pagination**: Cursor-based via `usePaginatedQuery` (frontend) + `.paginate()` (backend)
+- **Fan-out**: `notificationQueue.ts` handles large recipient lists (>200) via batched queue + cron
+- **Migration**: `clearAllNotifications` internalMutation (run once via dashboard, then delete)
 
 ### Currency
 - Primary: XAF (zero-decimal) — `formatCurrency(1000, "XAF")` → `"1 000 XAF"`

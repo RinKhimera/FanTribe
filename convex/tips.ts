@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { Id } from "./_generated/dataModel"
 import { internalMutation, query } from "./_generated/server"
 import { requireCreator } from "./lib/auth"
+import { createNotification } from "./lib/notifications"
 import {
   TIP_CREATOR_RATE,
   TIP_MESSAGE_MAX_LENGTH,
@@ -111,14 +112,15 @@ export const processTipAtomic = internalMutation({
       conversationId: args.conversationId,
     })
 
-    // 6. NOTIFICATION pour le créateur
-    await ctx.db.insert("notifications", {
+    // 6. NOTIFICATION pour le créateur (prefs vérifiées)
+    await createNotification(ctx, {
       type: "tip",
       recipientId: args.creatorId,
-      sender: args.senderId,
-      read: false,
-      tip: tipId,
-      post: args.postId,
+      actorId: args.senderId,
+      postId: args.postId,
+      tipId,
+      tipAmount: args.amount,
+      tipCurrency: args.currency.toUpperCase(),
     })
 
     // 7. MISE À JOUR des stats créateur

@@ -221,18 +221,47 @@ export const tipDocValidator = v.object({
   conversationId: v.optional(v.id("conversations")),
 })
 
-// Pagination result validator (pour les queries paginées)
-export const paginationResultValidator = (itemValidator: ReturnType<typeof v.object> | ReturnType<typeof v.any>) =>
-  v.object({
-    page: v.array(itemValidator),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-    splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(
-      v.union(
-        v.literal("SplitRecommended"),
-        v.literal("SplitRequired"),
-        v.null(),
-      ),
-    ),
-  })
+// ============================================================================
+// Notification validators
+// ============================================================================
+
+export const notificationTypeValidator = v.union(
+  v.literal("like"),
+  v.literal("comment"),
+  v.literal("newPost"),
+  v.literal("newSubscription"),
+  v.literal("renewSubscription"),
+  v.literal("subscriptionExpired"),
+  v.literal("subscriptionConfirmed"),
+  v.literal("creatorApplicationApproved"),
+  v.literal("creatorApplicationRejected"),
+  v.literal("tip"),
+)
+
+export const actorSummaryValidator = v.object({
+  _id: v.id("users"),
+  name: v.string(),
+  username: v.optional(v.string()),
+  image: v.string(),
+})
+
+export const enrichedNotificationValidator = v.object({
+  _id: v.id("notifications"),
+  _creationTime: v.number(),
+  type: notificationTypeValidator,
+  recipientId: v.id("users"),
+  groupKey: v.string(),
+  actors: v.array(actorSummaryValidator),
+  actorCount: v.number(),
+  postId: v.optional(v.id("posts")),
+  postPreview: v.optional(v.string()),
+  commentId: v.optional(v.id("comments")),
+  commentPreview: v.optional(v.string()),
+  tipId: v.optional(v.id("tips")),
+  tipAmount: v.optional(v.number()),
+  tipCurrency: v.optional(v.string()),
+  tipMessage: v.optional(v.string()),
+  isRead: v.boolean(),
+  lastActivityAt: v.number(),
+})
+

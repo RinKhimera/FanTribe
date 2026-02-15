@@ -12,6 +12,7 @@ import {
   deleteVideoFromBunny,
   extractVideoGuidFromUrl,
 } from "./lib/bunny"
+import { createNotification } from "./lib/notifications"
 import { incrementUserStat } from "./userStats"
 
 type ProcessPaymentResult = {
@@ -439,19 +440,26 @@ export const processPaymentAtomic = internalMutation({
       providerTransactionId,
     })
 
-    // 4. CREER LA NOTIFICATION POUR LE CREATEUR
+    // 4. CREER LES NOTIFICATIONS
     if (
       action === "created" ||
       action === "renewed" ||
       action === "reactivated"
     ) {
+      // Notification pour le créateur (nouvel abo / renouvellement)
       const notificationType =
         action === "created" ? "newSubscription" : "renewSubscription"
-      await ctx.db.insert("notifications", {
-        type: notificationType,
+      await createNotification(ctx, {
+        type: notificationType as "newSubscription" | "renewSubscription",
         recipientId: creatorId,
-        sender: subscriberId,
-        read: false,
+        actorId: subscriberId,
+      })
+
+      // Notification de confirmation pour l'abonné
+      await createNotification(ctx, {
+        type: "subscriptionConfirmed",
+        recipientId: subscriberId,
+        actorId: creatorId,
       })
     }
 
@@ -662,9 +670,10 @@ export const fanoutNewPostNotifications = action({
       await Promise.all(
         slice.map((recipientId) =>
           ctx
-            .runMutation(internal.notifications.insertNewPostNotification, {
+            .runMutation(internal.notifications.createSingleNotification, {
+              type: "newPost",
               recipientId,
-              sender: args.authorId,
+              actorId: args.authorId,
               postId: args.postId,
             })
             .catch((err) => {

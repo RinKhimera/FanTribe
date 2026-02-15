@@ -3,6 +3,7 @@
 import {
   Check,
   ChevronDown,
+  Coins,
   CreditCard,
   Heart,
   ImagePlus,
@@ -19,6 +20,7 @@ export type NotificationFilterType =
   | "comment"
   | "subscriptions"
   | "newPost"
+  | "tip"
 
 interface FilterOption {
   id: NotificationFilterType
@@ -63,6 +65,13 @@ const filterOptions: FilterOption[] = [
     shortLabel: "Publications",
     icon: ImagePlus,
     color: "text-violet-500",
+  },
+  {
+    id: "tip",
+    label: "Pourboires",
+    shortLabel: "Pourboires",
+    icon: Coins,
+    color: "text-amber-500",
   },
 ]
 

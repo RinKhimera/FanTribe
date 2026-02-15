@@ -68,7 +68,7 @@ describe("comments", () => {
       })
       expect(notifications).toHaveLength(1)
       expect(notifications[0].type).toBe("comment")
-      expect(notifications[0].post).toBe(postId)
+      expect(notifications[0].postId).toBe(postId)
     })
 
     it("should not create notification when commenting on own post", async () => {

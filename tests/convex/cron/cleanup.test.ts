@@ -128,7 +128,7 @@ describe("cron jobs cleanup", () => {
         // Batch ancien (devrait être supprimé)
         await ctx.db.insert("pendingNotifications", {
           type: "newPost",
-          sender: userId,
+          actorId: userId,
           recipientIds: [userId],
           status: "completed",
           attempts: 1,
@@ -138,7 +138,7 @@ describe("cron jobs cleanup", () => {
         // Batch récent (ne devrait pas être supprimé)
         await ctx.db.insert("pendingNotifications", {
           type: "newPost",
-          sender: userId,
+          actorId: userId,
           recipientIds: [userId],
           status: "completed",
           attempts: 1,
@@ -180,7 +180,7 @@ describe("cron jobs cleanup", () => {
         // Batch pending ancien
         await ctx.db.insert("pendingNotifications", {
           type: "newPost",
-          sender: userId,
+          actorId: userId,
           recipientIds: [userId],
           status: "pending",
           attempts: 0,
@@ -190,7 +190,7 @@ describe("cron jobs cleanup", () => {
         // Batch failed ancien
         await ctx.db.insert("pendingNotifications", {
           type: "newPost",
-          sender: userId,
+          actorId: userId,
           recipientIds: [userId],
           status: "failed",
           attempts: 3,
@@ -251,9 +251,9 @@ describe("cron jobs cleanup", () => {
       await t.run(async (ctx) => {
         await ctx.db.insert("pendingNotifications", {
           type: "newPost",
-          sender: senderId,
+          actorId: senderId,
           recipientIds: [recipientId],
-          post: postId,
+          postId,
           status: "pending",
           attempts: 0,
           processedCount: 0,
@@ -337,9 +337,9 @@ describe("cron jobs cleanup", () => {
       await t.run(async (ctx) => {
         await ctx.db.insert("pendingNotifications", {
           type: "newPost",
-          sender: senderId,
+          actorId: senderId,
           recipientIds,
-          post: postId,
+          postId,
           status: "pending",
           attempts: 0,
           processedCount: 0,
@@ -405,9 +405,9 @@ describe("cron jobs cleanup", () => {
         internal.notificationQueue.enqueueNotifications,
         {
           type: "newPost",
-          sender: senderId,
+          actorId: senderId,
           recipientIds,
-          post: postId,
+          postId,
         },
       )
 

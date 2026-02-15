@@ -30,8 +30,8 @@ const NotificationEllipsis = ({
 }: NotificationEllipsisProps) => {
   const [isPending, startTransition] = useTransition()
 
-  const markAsRead = useMutation(api.notifications.markNotificationAsRead)
-  const markAsUnread = useMutation(api.notifications.markNotificationAsUnread)
+  const markAsRead = useMutation(api.notifications.markAsRead)
+  const markAsUnread = useMutation(api.notifications.markAsUnread)
   const deleteNotification = useMutation(api.notifications.deleteNotification)
 
   const handleMarkAsRead = () => {

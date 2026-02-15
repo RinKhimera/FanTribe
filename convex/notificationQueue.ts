@@ -1,12 +1,12 @@
 /**
- * Notification Queue - Système de fan-out robuste et scalable
+ * Notification Queue - Systeme de fan-out robuste et scalable
  *
- * Ce module gère l'envoi de notifications pour les créateurs avec beaucoup d'abonnés.
+ * Ce module gere l'envoi de notifications pour les createurs avec beaucoup d'abonnes.
  * Au lieu d'envoyer toutes les notifications en une seule mutation (risque de timeout),
  * on utilise une queue persistante qui :
- * 1. Stocke les batches de notifications à envoyer
+ * 1. Stocke les batches de notifications a envoyer
  * 2. Les traite progressivement via un cron job
- * 3. Gère les erreurs et les retry automatiques
+ * 3. Gere les erreurs et les retry automatiques
  */
 import { v } from "convex/values"
 import { Id } from "./_generated/dataModel"
@@ -15,11 +15,12 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server"
+import { createNotification, NotificationType } from "./lib/notifications"
 
 // Configuration
 const BATCH_SIZE = 50 // Notifications par batch dans la queue
-const MAX_ATTEMPTS = 3 // Nombre max de tentatives avant échec
-const PROCESSING_BATCH_SIZE = 5 // Nombre de jobs à traiter par exécution du cron
+const MAX_ATTEMPTS = 3 // Nombre max de tentatives avant echec
+const PROCESSING_BATCH_SIZE = 5 // Nombre de jobs a traiter par execution du cron
 
 // ============================================================================
 // HELPERS
@@ -41,26 +42,30 @@ const chunkArray = <T>(array: T[], size: number): T[][] => {
 // ============================================================================
 
 /**
- * Ajoute des notifications à la queue pour traitement différé
- * Appelé depuis createPost quand le nombre de destinataires dépasse le seuil
+ * Ajoute des notifications a la queue pour traitement differe
+ * Appele depuis createPost quand le nombre de destinataires depasse le seuil
  */
 export const enqueueNotifications = internalMutation({
   args: {
     type: v.union(
-      v.literal("newPost"),
       v.literal("like"),
       v.literal("comment"),
+      v.literal("newPost"),
       v.literal("newSubscription"),
       v.literal("renewSubscription"),
-      v.literal("subscription_expired"),
+      v.literal("subscriptionExpired"),
+      v.literal("subscriptionConfirmed"),
+      v.literal("creatorApplicationApproved"),
+      v.literal("creatorApplicationRejected"),
       v.literal("tip"),
     ),
-    sender: v.id("users"),
+    actorId: v.id("users"),
     recipientIds: v.array(v.id("users")),
-    post: v.optional(v.id("posts")),
-    tip: v.optional(v.id("tips")),
-    comment: v.optional(v.id("comments")),
-    conversation: v.optional(v.id("conversations")),
+    postId: v.optional(v.id("posts")),
+    tipId: v.optional(v.id("tips")),
+    commentId: v.optional(v.id("comments")),
+    tipAmount: v.optional(v.number()),
+    tipCurrency: v.optional(v.string()),
   },
   returns: v.object({
     totalRecipients: v.number(),
@@ -71,7 +76,7 @@ export const enqueueNotifications = internalMutation({
     const { recipientIds, ...notificationData } = args
     const now = Date.now()
 
-    // Diviser en batches pour éviter les mutations trop volumineuses
+    // Diviser en batches pour eviter les mutations trop volumineuses
     const batches = chunkArray(recipientIds, BATCH_SIZE)
 
     const queueIds: Id<"pendingNotifications">[] = []
@@ -118,7 +123,7 @@ export const processPendingBatch = internalMutation({
       return { success: false, error: "Batch not found" }
     }
 
-    // Vérifier que le batch est en état valide pour traitement
+    // Verifier que le batch est en etat valide pour traitement
     if (batch.status !== "pending" && batch.status !== "processing") {
       return { success: false, error: `Invalid status: ${batch.status}` }
     }
@@ -136,15 +141,15 @@ export const processPendingBatch = internalMutation({
     // Traiter chaque destinataire
     for (const recipientId of batch.recipientIds.slice(processedCount)) {
       try {
-        await ctx.db.insert("notifications", {
-          type: batch.type,
+        await createNotification(ctx, {
+          type: batch.type as NotificationType,
           recipientId,
-          sender: batch.sender,
-          post: batch.post,
-          tip: batch.tip,
-          comment: batch.comment,
-          conversation: batch.conversation,
-          read: false,
+          actorId: batch.actorId,
+          postId: batch.postId,
+          commentId: batch.commentId,
+          tipId: batch.tipId,
+          tipAmount: batch.tipAmount,
+          tipCurrency: batch.tipCurrency,
         })
         processedCount++
       } catch (error) {
@@ -157,7 +162,7 @@ export const processPendingBatch = internalMutation({
       }
     }
 
-    // Mettre à jour le statut
+    // Mettre a jour le statut
     const isComplete = processedCount >= batch.recipientIds.length
     const hasFailed = batch.attempts >= MAX_ATTEMPTS && !isComplete
 
@@ -179,7 +184,7 @@ export const processPendingBatch = internalMutation({
 })
 
 /**
- * Nettoie les batches terminés (garde un historique de 7 jours)
+ * Nettoie les batches termines (garde un historique de 7 jours)
  */
 export const cleanupCompletedBatches = internalMutation({
   args: {},
@@ -203,7 +208,7 @@ export const cleanupCompletedBatches = internalMutation({
 
 /**
  * Traite les prochains batches en attente
- * Appelé par le cron job toutes les minutes
+ * Appele par le cron job toutes les minutes
  */
 export const processNextBatches = internalMutation({
   args: {},
@@ -214,7 +219,7 @@ export const processNextBatches = internalMutation({
     message: v.optional(v.string()),
   }),
   handler: async (ctx) => {
-    // Récupérer les batches en attente (les plus anciens d'abord)
+    // Recuperer les batches en attente (les plus anciens d'abord)
     const pendingBatches = await ctx.db
       .query("pendingNotifications")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
@@ -242,15 +247,15 @@ export const processNextBatches = internalMutation({
       // Traiter chaque destinataire
       for (const recipientId of batch.recipientIds.slice(processedCount)) {
         try {
-          await ctx.db.insert("notifications", {
-            type: batch.type,
+          await createNotification(ctx, {
+            type: batch.type as NotificationType,
             recipientId,
-            sender: batch.sender,
-            post: batch.post,
-            tip: batch.tip,
-            comment: batch.comment,
-            conversation: batch.conversation,
-            read: false,
+            actorId: batch.actorId,
+            postId: batch.postId,
+            commentId: batch.commentId,
+            tipId: batch.tipId,
+            tipAmount: batch.tipAmount,
+            tipCurrency: batch.tipCurrency,
           })
           processedCount++
         } catch (error) {
@@ -262,7 +267,7 @@ export const processNextBatches = internalMutation({
         }
       }
 
-      // Mettre à jour le statut du batch
+      // Mettre a jour le statut du batch
       const isComplete = processedCount >= batch.recipientIds.length
       const hasFailed = batch.attempts >= MAX_ATTEMPTS && !isComplete
 
@@ -290,7 +295,7 @@ export const processNextBatches = internalMutation({
 // ============================================================================
 
 /**
- * Récupère les prochains batches à traiter
+ * Recupere les prochains batches a traiter
  */
 export const getNextPendingBatches = internalQuery({
   args: {
@@ -301,24 +306,24 @@ export const getNextPendingBatches = internalQuery({
       _id: v.id("pendingNotifications"),
       _creationTime: v.number(),
       type: v.union(
-        v.literal("newPost"),
         v.literal("like"),
         v.literal("comment"),
+        v.literal("newPost"),
         v.literal("newSubscription"),
         v.literal("renewSubscription"),
-        v.literal("subscription_expired"),
-        v.literal("new_message"),
-        v.literal("messaging_subscription_expiring"),
-        v.literal("messaging_subscription_expired"),
-        v.literal("conversation_locked"),
+        v.literal("subscriptionExpired"),
+        v.literal("subscriptionConfirmed"),
+        v.literal("creatorApplicationApproved"),
+        v.literal("creatorApplicationRejected"),
         v.literal("tip"),
       ),
-      sender: v.id("users"),
+      actorId: v.id("users"),
       recipientIds: v.array(v.id("users")),
-      post: v.optional(v.id("posts")),
-      tip: v.optional(v.id("tips")),
-      comment: v.optional(v.id("comments")),
-      conversation: v.optional(v.id("conversations")),
+      postId: v.optional(v.id("posts")),
+      tipId: v.optional(v.id("tips")),
+      commentId: v.optional(v.id("comments")),
+      tipAmount: v.optional(v.number()),
+      tipCurrency: v.optional(v.string()),
       status: v.union(
         v.literal("pending"),
         v.literal("processing"),
@@ -395,8 +400,8 @@ export const getQueueStats = internalQuery({
 // ============================================================================
 
 /**
- * Utilisé par createPost pour envoyer les notifications
- * Décide automatiquement entre envoi direct et queue selon le volume
+ * Utilise par createPost pour envoyer les notifications
+ * Decide automatiquement entre envoi direct et queue selon le volume
  */
 export const sendPostNotifications = async (
   ctx: MutationCtx,
@@ -415,12 +420,11 @@ export const sendPostNotifications = async (
     await Promise.all(
       data.recipientIds.map(async (recipientId) => {
         try {
-          await ctx.db.insert("notifications", {
+          await createNotification(ctx, {
             type: "newPost",
             recipientId,
-            sender: data.sender,
-            post: data.postId,
-            read: false,
+            actorId: data.sender,
+            postId: data.postId,
           })
           count++
         } catch (error) {
@@ -438,9 +442,9 @@ export const sendPostNotifications = async (
   for (const batch of batches) {
     await ctx.db.insert("pendingNotifications", {
       type: "newPost",
-      sender: data.sender,
+      actorId: data.sender,
       recipientIds: batch,
-      post: data.postId,
+      postId: data.postId,
       status: "pending",
       attempts: 0,
       processedCount: 0,

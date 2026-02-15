@@ -1,17 +1,20 @@
 "use client"
 
-import { useConvexAuth, useQuery } from "convex/react"
+import { useConvexAuth, usePaginatedQuery } from "convex/react"
 import {
   Bell,
+  Coins,
   CreditCard,
   Heart,
   ImagePlus,
+  Loader2,
   MessageSquareText,
   Sparkles,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useMemo, useState } from "react"
 import { PageContainer } from "@/components/layout"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
 import { containerVariants, itemVariants } from "@/lib/animations"
@@ -21,29 +24,28 @@ import {
   NotificationFilterTabs,
   NotificationFilterType,
 } from "./notification-filter-tabs"
-import {
-  ExtendedNotificationProps,
-  NotificationItem,
-} from "./notification-item"
+import { NotificationItem } from "./notification-item"
+
+const INITIAL_NUM_ITEMS = 20
+const LOAD_MORE_ITEMS = 20
 
 export const NotificationsLayout = () => {
   const { isAuthenticated } = useConvexAuth()
   const [activeFilter, setActiveFilter] =
     useState<NotificationFilterType>("all")
 
-  const userNotifications = useQuery(
-    api.notifications.getNotificationsByType,
-    isAuthenticated
-      ? { type: activeFilter === "all" ? undefined : activeFilter }
-      : "skip",
-  ) as ExtendedNotificationProps[] | undefined
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.notifications.getNotifications,
+    isAuthenticated ? { filter: activeFilter } : "skip",
+    { initialNumItems: INITIAL_NUM_ITEMS },
+  )
 
   const unreadCount = useMemo(() => {
-    if (!userNotifications) return 0
-    return userNotifications.filter((n) => !n.read).length
-  }, [userNotifications])
+    if (!results) return 0
+    return results.filter((n) => !n.isRead).length
+  }, [results])
 
-  const isLoading = userNotifications === undefined && isAuthenticated
+  const isLoading = status === "LoadingFirstPage"
 
   return (
     <PageContainer
@@ -62,7 +64,7 @@ export const NotificationsLayout = () => {
       <div className="px-4 py-4">
         {isLoading ? (
           <NotificationsSkeleton />
-        ) : userNotifications?.length === 0 ? (
+        ) : results?.length === 0 ? (
           <EmptyState filter={activeFilter} />
         ) : (
           <motion.div
@@ -72,7 +74,7 @@ export const NotificationsLayout = () => {
             className="space-y-3"
           >
             <AnimatePresence mode="popLayout">
-              {userNotifications?.map((notification) => (
+              {results?.map((notification) => (
                 <motion.div
                   key={notification._id}
                   variants={itemVariants}
@@ -83,6 +85,30 @@ export const NotificationsLayout = () => {
                 </motion.div>
               ))}
             </AnimatePresence>
+
+            {/* Load more button */}
+            {status === "CanLoadMore" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-center pt-4"
+              >
+                <Button
+                  variant="ghost"
+                  onClick={() => loadMore(LOAD_MORE_ITEMS)}
+                  className="glass-button gap-2"
+                >
+                  <Loader2 className="size-4" />
+                  Charger plus
+                </Button>
+              </motion.div>
+            )}
+
+            {status === "LoadingMore" && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="text-muted-foreground size-5 animate-spin" />
+              </div>
+            )}
           </motion.div>
         )}
       </div>
@@ -144,6 +170,14 @@ const emptyStateConfig: Record<
     iconColor: "text-violet-500",
     accentGradient: "from-violet-500/20 via-transparent to-transparent",
   },
+  tip: {
+    icon: Coins,
+    title: "Aucun pourboire",
+    description: "Les pourboires que vous recevez apparaîtront ici",
+    iconBg: "bg-amber-500/10",
+    iconColor: "text-amber-500",
+    accentGradient: "from-amber-500/20 via-transparent to-transparent",
+  },
 }
 
 const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
@@ -169,7 +203,6 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
 
         {/* Decorative elements - geometric patterns */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {/* Top-right decorative circles */}
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 0.08, scale: 1 }}
@@ -184,8 +217,6 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
             className="absolute top-4 -right-4 size-24 rounded-full border border-current"
             style={{ color: "var(--primary)" }}
           />
-
-          {/* Bottom-left decorative diamond */}
           <motion.div
             initial={{ opacity: 0, rotate: 45, scale: 0.5 }}
             animate={{ opacity: 0.06, rotate: 45, scale: 1 }}
@@ -197,7 +228,6 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
 
         {/* Icon with animated ring */}
         <div className="relative mb-6">
-          {/* Pulsing ring */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: [0.3, 0.1, 0.3], scale: [1, 1.2, 1] }}
@@ -205,8 +235,6 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
             className={cn("absolute inset-0 rounded-2xl", config.iconBg)}
             style={{ margin: "-8px" }}
           />
-
-          {/* Icon container */}
           <motion.div
             initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -225,8 +253,6 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
               className={cn("size-10", config.iconColor)}
               strokeWidth={1.5}
             />
-
-            {/* Sparkle decoration */}
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -238,7 +264,6 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
           </motion.div>
         </div>
 
-        {/* Text content */}
         <motion.h3
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -257,7 +282,6 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
           {config.description}
         </motion.p>
 
-        {/* Subtle bottom decoration line */}
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
