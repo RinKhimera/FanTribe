@@ -6,7 +6,7 @@ import {
   TIP_CREATOR_RATE,
   USD_TO_XAF_RATE,
 } from "./lib/constants"
-import { postMediaValidator } from "./lib/validators"
+import { audienceMetricsValidator, postMediaValidator } from "./lib/validators"
 
 // ============================================================================
 // Helpers
@@ -485,6 +485,190 @@ export const getEngagementStats = query({
         avgEngagement: avgOf(subscriberPosts),
       },
       totalEngagements,
+    }
+  },
+})
+
+/**
+ * Métriques avancées d'audience pour le dashboard créateur.
+ * ARPU, rétention, churn, top fans, abonnés à risque.
+ */
+export const getAudienceMetrics = query({
+  args: {},
+  returns: audienceMetricsValidator,
+  handler: async (ctx) => {
+    const currentUser = await requireCreator(ctx)
+    const now = Date.now()
+
+    // Fetch all content_access subscriptions for this creator
+    const allSubs = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_creator", (q) => q.eq("creator", currentUser._id))
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .take(5000)
+
+    if (allSubs.length === 0) {
+      return {
+        arpu: 0,
+        retentionRate: 0,
+        churnRate: 0,
+        topFans: [],
+        atRiskSubscribers: [],
+      }
+    }
+
+    const activeSubs = allSubs.filter((s) => s.status === "active")
+
+    // --- ARPU: total revenue net / unique subscribers ---
+    const [allTransactions, allTips] = await Promise.all([
+      ctx.db
+        .query("transactions")
+        .withIndex("by_creator", (q) => q.eq("creatorId", currentUser._id))
+        .filter((q) => q.eq(q.field("status"), "succeeded"))
+        .take(5000),
+      ctx.db
+        .query("tips")
+        .withIndex("by_creator_status", (q) =>
+          q.eq("creatorId", currentUser._id).eq("status", "succeeded"),
+        )
+        .take(5000),
+    ])
+
+    const subsGross = allTransactions.reduce(
+      (sum, tx) => sum + normalizeToXAF(tx.amount, tx.currency),
+      0,
+    )
+    const tipsGross = allTips.reduce(
+      (sum, tip) => sum + normalizeToXAF(tip.amount, tip.currency),
+      0,
+    )
+    const totalRevenueNet = Math.round(
+      subsGross * SUBSCRIPTION_CREATOR_RATE +
+        tipsGross * TIP_CREATOR_RATE,
+    )
+
+    const uniqueSubscriberIds = [
+      ...new Set(allSubs.map((s) => s.subscriber)),
+    ]
+    const arpu =
+      uniqueSubscriberIds.length > 0
+        ? Math.round(totalRevenueNet / uniqueSubscriberIds.length)
+        : 0
+
+    // --- Retention rate: % subs who renewed at least once ---
+    const renewedCount = allSubs.filter((s) => s.renewalCount > 0).length
+    const retentionRate =
+      allSubs.length > 0
+        ? Math.round((renewedCount / allSubs.length) * 100)
+        : 0
+
+    // --- Churn rate: expired this month / active at start of month ---
+    const monthStart = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1,
+    ).getTime()
+
+    const expiredThisMonth = allSubs.filter(
+      (s) =>
+        s.status === "expired" &&
+        s.endDate >= monthStart &&
+        s.endDate <= now,
+    ).length
+
+    const activeAtMonthStart = allSubs.filter(
+      (s) => s.startDate < monthStart && s.endDate > monthStart,
+    ).length
+
+    const churnRate =
+      activeAtMonthStart > 0
+        ? Math.round((expiredThisMonth / activeAtMonthStart) * 100)
+        : 0
+
+    // --- Top fans: top 5 by renewalCount ---
+    const sortedByRenewal = [...allSubs]
+      .sort((a, b) => b.renewalCount - a.renewalCount)
+      .slice(0, 5)
+
+    const topFanIds = sortedByRenewal.map((s) => s.subscriber)
+    const topFanUsers = await Promise.all(
+      topFanIds.map((id) => ctx.db.get(id)),
+    )
+
+    // Calculate total spent per top fan
+    const topFanSpent = await Promise.all(
+      topFanIds.map(async (subId) => {
+        const txs = await ctx.db
+          .query("transactions")
+          .withIndex("by_subscriber", (q) => q.eq("subscriberId", subId))
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("creatorId"), currentUser._id),
+              q.eq(q.field("status"), "succeeded"),
+            ),
+          )
+          .take(500)
+        return txs.reduce(
+          (sum, tx) => sum + normalizeToXAF(tx.amount, tx.currency),
+          0,
+        )
+      }),
+    )
+
+    const topFans = sortedByRenewal
+      .map((s, i) => {
+        const user = topFanUsers[i]
+        if (!user) return null
+        return {
+          _id: user._id,
+          name: user.name,
+          username: user.username,
+          image: user.image,
+          renewalCount: s.renewalCount,
+          totalSpent: Math.round(
+            topFanSpent[i] * SUBSCRIPTION_CREATOR_RATE,
+          ),
+        }
+      })
+      .filter((f): f is NonNullable<typeof f> => f !== null)
+
+    // --- At-risk subscribers: active, never renewed, expiring within 7 days ---
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+    const atRiskSubs = activeSubs
+      .filter(
+        (s) =>
+          s.renewalCount === 0 &&
+          s.endDate - now > 0 &&
+          s.endDate - now <= sevenDaysMs,
+      )
+      .slice(0, 10)
+
+    const atRiskIds = atRiskSubs.map((s) => s.subscriber)
+    const atRiskUsers = await Promise.all(
+      atRiskIds.map((id) => ctx.db.get(id)),
+    )
+
+    const atRiskSubscribers = atRiskSubs
+      .map((s, i) => {
+        const user = atRiskUsers[i]
+        if (!user) return null
+        return {
+          _id: user._id,
+          name: user.name,
+          username: user.username,
+          image: user.image,
+          daysLeft: Math.ceil((s.endDate - now) / (1000 * 60 * 60 * 24)),
+          subscriptionId: s._id,
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+
+    return {
+      arpu,
+      retentionRate,
+      churnRate,
+      topFans,
+      atRiskSubscribers,
     }
   },
 })

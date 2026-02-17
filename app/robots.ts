@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         "/superuser/",
         "/dashboard/",
         "/payment/",
-        "/user-lists/",
+        "/subscriptions/",
         "/collections/",
         "/new-post/",
         "/onboarding/",

@@ -20,7 +20,7 @@ type SplitPanelLayoutProps = {
 }
 
 /**
- * SplitPanelLayout - Layout à deux panneaux pour pages type messages/user-lists
+ * SplitPanelLayout - Layout à deux panneaux pour pages type messages/subscriptions
  *
  * Structure :
  * - Header sticky pleine largeur

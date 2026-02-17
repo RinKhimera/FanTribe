@@ -20,7 +20,7 @@ export const RightSidebarRouter = () => {
   const second = segments[1] || ""
 
   // Routes sans sidebar droite (layouts spécifiques)
-  const hiddenRoutes = new Set(["messages", "user-lists"]) // on peut étendre si besoin
+  const hiddenRoutes = new Set(["messages", "subscriptions"]) // on peut étendre si besoin
 
   // Réservés (non username)
   const reserved = new Set([
@@ -29,7 +29,7 @@ export const RightSidebarRouter = () => {
     "notifications",
     "collections",
     "new-post",
-    "user-lists",
+    "subscriptions",
     "payment",
     "be-creator",
     "superuser",

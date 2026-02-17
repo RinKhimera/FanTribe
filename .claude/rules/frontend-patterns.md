@@ -19,7 +19,16 @@ const sub = useQuery(api.subscriptions.get, userId ? { userId } : "skip")
 const [isPending, startTransition] = useTransition()
 const createPost = useMutation(api.posts.createPost)
 startTransition(async () => { await createPost({ ... }) })
+
+// Paginated query (infinite scroll)
+const { results, status, loadMore } = usePaginatedQuery(
+  api.posts.getFeed, isAuthenticated ? queryArgs : "skip",
+  { initialNumItems: 20 },
+)
+const { loadMoreRef } = useInfiniteScroll({ status, loadMore, numItems: 10 })
+// Render: <div ref={loadMoreRef} /> as sentinel element
 ```
+**Caveat**: `usePaginatedQuery` does NOT support `preloadQuery` — paginated pages always start with a client loading state. Use `fetchQuery` for server-side auth guard only, let pagination load client-side.
 
 ## Async Handler (preferred for mutations with user feedback)
 ```typescript
@@ -111,9 +120,13 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 | `usePresence` | Online presence heartbeat (2min intervals, visibility-aware) |
 | `useDialogState` | Dialog open/close + isPending + startTransition |
 | `useDebounce` | Debounce values (default 300ms) |
+| `useInfiniteScroll` | IntersectionObserver sentinel for `usePaginatedQuery` auto-load (`{ status, loadMore }` → `{ loadMoreRef }`) |
 | `useScrollLock` | Lock body scroll for modals/fullscreen |
 | `useBunnyPlayerControl` | Bunny video player controls |
 | `useVideoMetadata` | Fetch Bunny video metadata |
 | `useKeyboardNavigation` | Keyboard nav in lists |
 | `useCinetpayPayment` | CinetPay payment processing |
 | `useSuperuserFilters` | Admin dashboard filter state |
+
+## Navigation Gotcha
+Nav link filters (`creatorOnlyLinks`, `superuserOnlyLinks`) exist in BOTH `components/layout/` AND `components/shared/` (left-sidebar, mobile-menu/mobile-navigation). Update **all 4 files** when changing nav links or visibility rules.

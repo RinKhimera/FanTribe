@@ -68,3 +68,29 @@ await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
 const authors = await Promise.all(authorIds.map(id => ctx.db.get(id)))
 const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
 ```
+
+## Paginated Enrichment Pattern
+For paginated queries needing joined data (e.g., subscription + creator details):
+```typescript
+// 1. Paginate with index
+const result = await ctx.db.query("subscriptions")
+  .withIndex("by_subscriber", q => q.eq("subscriber", userId))
+  .order("desc").paginate(paginationOpts)
+
+// 2. Batch-fetch related IDs (deduplicated)
+const creatorIds = [...new Set(result.page.map(s => s.creator))]
+const creators = await Promise.all(creatorIds.map(id => ctx.db.get(id)))
+const creatorMap = new Map(creatorIds.map((id, i) => [id, creators[i]]))
+
+// 3. Enrich + filter nulls
+const enriched = result.page.map(s => {
+  const creator = creatorMap.get(s.creator)
+  if (!creator) return null
+  return { ...s, creator: { _id: creator._id, name: creator.name } }
+}).filter((e): e is NonNullable<typeof e> => e !== null)
+
+// 4. Return with pagination metadata
+return { ...result, page: enriched }
+```
+- Validator: wrap with `v.object({ page: v.array(enrichedValidator), isDone: v.boolean(), continueCursor: v.string(), ... })`
+- In-memory search: acceptable when joined data volume is bounded (e.g., <100 subs/user)

@@ -52,7 +52,7 @@ components/
 └── ui/                   # shadcn/ui (CVA + Radix primitives)
 convex/                   # Backend functions
 ├── lib/                  # Shared: auth, errors, validators, rateLimiter, bunny, constants, subscriptions, blocks, notifications, signedUrls, batch
-hooks/                    # 12 custom hooks
+hooks/                    # 13 custom hooks
 lib/
 ├── config/               # env.client.ts, env.ts (server), logger.ts
 ├── formatters/           # date/ (French locale) + currency/ (XAF/USD)

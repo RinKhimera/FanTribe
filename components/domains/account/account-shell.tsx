@@ -1,7 +1,7 @@
 "use client"
 
 import { Preloaded, usePreloadedQuery } from "convex/react"
-import { Bell, Lock, Settings, User } from "lucide-react"
+import { Bell, Lock, Settings, Shield, User } from "lucide-react"
 import { PageContainer } from "@/components/layout"
 import { NavigationTabs } from "@/components/layout/navigation-tabs"
 import { api } from "@/convex/_generated/api"
@@ -24,6 +24,7 @@ export const AccountShell = ({
     { href: "/account/preferences", label: "Préférences", icon: Settings },
     { href: "/account/notifications", label: "Notifications", icon: Bell },
     { href: "/account/security", label: "Sécurité", icon: Lock },
+    { href: "/account/blocked", label: "Bloqués", icon: Shield },
   ]
 
   return (

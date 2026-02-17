@@ -63,7 +63,7 @@ export const navigationLinks: NavLink[] = [
   {
     id: "subscriptions",
     title: "Abonnements",
-    href: "/user-lists",
+    href: "/subscriptions",
     icon: Users,
   },
   {

@@ -222,6 +222,102 @@ export const tipDocValidator = v.object({
 })
 
 // ============================================================================
+// Subscription & blocked user enriched validators
+// ============================================================================
+
+const subscriptionStatusValidator = v.union(
+  v.literal("active"),
+  v.literal("expired"),
+  v.literal("canceled"),
+  v.literal("pending"),
+)
+
+export const enrichedSubscriptionEntryValidator = v.object({
+  _id: v.id("subscriptions"),
+  _creationTime: v.number(),
+  status: subscriptionStatusValidator,
+  startDate: v.number(),
+  endDate: v.number(),
+  renewalCount: v.number(),
+  creator: v.object({
+    _id: v.id("users"),
+    name: v.string(),
+    username: v.optional(v.string()),
+    image: v.string(),
+    imageBanner: v.optional(v.string()),
+    isOnline: v.boolean(),
+  }),
+  daysUntilExpiry: v.number(),
+  subscribedDurationMonths: v.number(),
+  creatorLastPostDate: v.union(v.number(), v.null()),
+  creatorExclusivePostCount: v.number(),
+})
+
+export const enrichedBlockedUserValidator = v.object({
+  blockId: v.id("blocks"),
+  blockedAt: v.number(),
+  user: v.object({
+    _id: v.id("users"),
+    name: v.string(),
+    username: v.optional(v.string()),
+    image: v.string(),
+  }),
+})
+
+export const audienceMetricsValidator = v.object({
+  arpu: v.number(),
+  retentionRate: v.number(),
+  churnRate: v.number(),
+  topFans: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+      renewalCount: v.number(),
+      totalSpent: v.number(),
+    }),
+  ),
+  atRiskSubscribers: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+      daysLeft: v.number(),
+      subscriptionId: v.id("subscriptions"),
+    }),
+  ),
+})
+
+// ============================================================================
+// Pagination wrapper validators
+// ============================================================================
+
+const paginationFieldsValidator = {
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+}
+
+export const paginatedSubscriptionsValidator = v.object({
+  page: v.array(enrichedSubscriptionEntryValidator),
+  ...paginationFieldsValidator,
+})
+
+export const paginatedBlockedUsersValidator = v.object({
+  page: v.array(enrichedBlockedUserValidator),
+  ...paginationFieldsValidator,
+})
+
+// ============================================================================
 // Notification validators
 // ============================================================================
 

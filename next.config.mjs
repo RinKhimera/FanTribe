@@ -64,7 +64,17 @@ const nextConfig = {
     return [
       {
         source: "/user-lists",
-        destination: "/user-lists/subscriptions",
+        destination: "/subscriptions",
+        permanent: true,
+      },
+      {
+        source: "/user-lists/subscriptions",
+        destination: "/subscriptions",
+        permanent: true,
+      },
+      {
+        source: "/user-lists/blocked",
+        destination: "/account/blocked",
         permanent: true,
       },
     ]

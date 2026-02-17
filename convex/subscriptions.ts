@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server"
 import { ConvexError, v } from "convex/values"
 import {
   internalMutation,
@@ -7,6 +8,7 @@ import {
 } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
 import { createNotification } from "./lib/notifications"
+import { paginatedSubscriptionsValidator } from "./lib/validators"
 
 // PUBLIC: obtenir la souscription entre deux utilisateurs (content_access par défaut)
 export const getFollowSubscription = query({
@@ -352,6 +354,150 @@ export const getMySubscribersStats = query({
       subscribers: enriched,
       subscribersCount: subscriberIds.length,
       postsCount,
+    }
+  },
+})
+
+// Paginated subscriptions with enriched creator data (for /subscriptions page)
+export const getMySubscriptionsPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    filter: v.optional(
+      v.union(v.literal("all"), v.literal("active"), v.literal("expired")),
+    ),
+    search: v.optional(v.string()),
+  },
+  returns: paginatedSubscriptionsValidator,
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+    const filter = args.filter ?? "all"
+    const now = Date.now()
+
+    // Use appropriate index based on filter
+    let queryBuilder
+    if (filter === "active") {
+      queryBuilder = ctx.db
+        .query("subscriptions")
+        .withIndex("by_subscriber_status", (q) =>
+          q.eq("subscriber", user._id).eq("status", "active"),
+        )
+        .filter((q) => q.eq(q.field("type"), "content_access"))
+    } else if (filter === "expired") {
+      queryBuilder = ctx.db
+        .query("subscriptions")
+        .withIndex("by_subscriber_status", (q) =>
+          q.eq("subscriber", user._id).eq("status", "expired"),
+        )
+        .filter((q) => q.eq(q.field("type"), "content_access"))
+    } else {
+      queryBuilder = ctx.db
+        .query("subscriptions")
+        .withIndex("by_subscriber", (q) => q.eq("subscriber", user._id))
+        .filter((q) => q.eq(q.field("type"), "content_access"))
+    }
+
+    const paginationResult = await queryBuilder
+      .order("desc")
+      .paginate(args.paginationOpts)
+
+    if (paginationResult.page.length === 0) {
+      return { ...paginationResult, page: [] }
+    }
+
+    // Batch fetch creator data + last post + exclusive count
+    const creatorIds = [...new Set(paginationResult.page.map((s) => s.creator))]
+    const [creators, creatorLastPosts, creatorExclusiveCounts] =
+      await Promise.all([
+        Promise.all(creatorIds.map((id) => ctx.db.get(id))),
+        Promise.all(
+          creatorIds.map((id) =>
+            ctx.db
+              .query("posts")
+              .withIndex("by_author", (q) => q.eq("author", id))
+              .order("desc")
+              .first(),
+          ),
+        ),
+        Promise.all(
+          creatorIds.map(async (id) => {
+            const posts = await ctx.db
+              .query("posts")
+              .withIndex("by_author", (q) => q.eq("author", id))
+              .filter((q) =>
+                q.eq(q.field("visibility"), "subscribers_only"),
+              )
+              .take(1000)
+            return posts.length
+          }),
+        ),
+      ])
+
+    const creatorMap = new Map(creatorIds.map((id, i) => [id, creators[i]]))
+    const lastPostMap = new Map(
+      creatorIds.map((id, i) => [id, creatorLastPosts[i]]),
+    )
+    const exclusiveCountMap = new Map(
+      creatorIds.map((id, i) => [id, creatorExclusiveCounts[i]]),
+    )
+
+    // Enrich subscriptions
+    let enriched = paginationResult.page
+      .map((s) => {
+        const creator = creatorMap.get(s.creator)
+        if (!creator) return null
+
+        const daysUntilExpiry =
+          s.status === "active"
+            ? Math.max(
+                0,
+                Math.ceil((s.endDate - now) / (1000 * 60 * 60 * 24)),
+              )
+            : 0
+
+        const subscribedMs = now - s._creationTime
+        const subscribedDurationMonths = Math.max(
+          1,
+          Math.floor(subscribedMs / (30 * 24 * 60 * 60 * 1000)),
+        )
+
+        const lastPost = lastPostMap.get(s.creator)
+
+        return {
+          _id: s._id,
+          _creationTime: s._creationTime,
+          status: s.status as "active" | "expired" | "canceled" | "pending",
+          startDate: s.startDate,
+          endDate: s.endDate,
+          renewalCount: s.renewalCount,
+          creator: {
+            _id: creator._id,
+            name: creator.name,
+            username: creator.username,
+            image: creator.image,
+            imageBanner: creator.imageBanner,
+            isOnline: creator.isOnline,
+          },
+          daysUntilExpiry,
+          subscribedDurationMonths,
+          creatorLastPostDate: lastPost?._creationTime ?? null,
+          creatorExclusivePostCount: exclusiveCountMap.get(s.creator) ?? 0,
+        }
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null)
+
+    // In-memory search filter
+    if (args.search && args.search.trim().length > 0) {
+      const term = args.search.toLowerCase()
+      enriched = enriched.filter(
+        (e) =>
+          e.creator.name.toLowerCase().includes(term) ||
+          (e.creator.username?.toLowerCase().includes(term) ?? false),
+      )
+    }
+
+    return {
+      ...paginationResult,
+      page: enriched,
     }
   },
 })
