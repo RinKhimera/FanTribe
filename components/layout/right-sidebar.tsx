@@ -36,7 +36,7 @@ export const RightSidebar = () => {
   const first = segments[0] || ""
 
   // Routes sans sidebar droite
-  const hiddenRoutes = new Set(["messages", "user-lists"])
+  const hiddenRoutes = new Set(["messages", "user-lists", "dashboard"])
 
 
   // Routes réservées (non-username)
@@ -50,6 +50,7 @@ export const RightSidebar = () => {
     "payment",
     "be-creator",
     "superuser",
+    "dashboard",
     "income",
     "account",
   ])

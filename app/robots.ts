@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         "/messages/",
         "/notifications/",
         "/superuser/",
-        "/income/",
+        "/dashboard/",
         "/payment/",
         "/user-lists/",
         "/collections/",

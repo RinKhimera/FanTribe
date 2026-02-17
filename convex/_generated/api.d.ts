@@ -15,6 +15,7 @@ import type * as bookmarks from "../bookmarks.js";
 import type * as comments from "../comments.js";
 import type * as creatorApplications from "../creatorApplications.js";
 import type * as crons from "../crons.js";
+import type * as dashboard from "../dashboard.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as internalActions from "../internalActions.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   comments: typeof comments;
   creatorApplications: typeof creatorApplications;
   crons: typeof crons;
+  dashboard: typeof dashboard;
   files: typeof files;
   http: typeof http;
   internalActions: typeof internalActions;

@@ -184,7 +184,7 @@ export const NotificationItem = ({
 
         switch (notification.type) {
           case "tip":
-            router.push("/income")
+            router.push("/dashboard/revenue")
             break
           case "creatorApplicationApproved":
           case "creatorApplicationRejected":
