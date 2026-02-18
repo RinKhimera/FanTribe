@@ -121,7 +121,6 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 | `useDialogState` | Dialog open/close + isPending + startTransition |
 | `useDebounce` | Debounce values (default 300ms) |
 | `useInfiniteScroll` | IntersectionObserver sentinel for `usePaginatedQuery` auto-load (`{ status, loadMore }` → `{ loadMoreRef }`) |
-| `useScrollLock` | Lock body scroll for modals/fullscreen |
 | `useBunnyPlayerControl` | Bunny video player controls |
 | `useVideoMetadata` | Fetch Bunny video metadata |
 | `useKeyboardNavigation` | Keyboard nav in lists |

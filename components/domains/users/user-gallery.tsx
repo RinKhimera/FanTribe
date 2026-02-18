@@ -5,7 +5,7 @@ import { ImageIcon, Lock, Play } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useCallback, useMemo, useState } from "react"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import {
@@ -159,21 +159,23 @@ export const UserGallery = ({
   // Extraire les données pour une référence stable dans useMemo
   const galleryLength = userGallery?.length ?? 0
 
-  // Le backend retourne uniquement les médias accessibles (URLs for the fullscreen viewer)
-  const mediaList = useMemo(() => {
-    if (!userGallery) return [] as string[]
-    return userGallery.map((item) => item.media.url)
+  // Le backend retourne uniquement les médias accessibles (slides for the lightbox — images only)
+  const mediaSlides = useMemo(() => {
+    if (!userGallery) return [] as { src: string }[]
+    return userGallery
+      .filter((item) => item.media.type === "image")
+      .map((item) => ({ src: item.media.url }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [galleryLength])
 
   const openViewerAt = useCallback(
     (mediaUrl: string) => {
-      const idx = mediaList.indexOf(mediaUrl)
+      const idx = mediaSlides.findIndex((s) => s.src === mediaUrl)
       if (idx === -1) return
       setViewerIndex(idx)
       setViewerOpen(true)
     },
-    [mediaList],
+    [mediaSlides],
   )
 
   // Split items into columns for masonry layout
@@ -277,8 +279,8 @@ export const UserGallery = ({
         </div>
       </motion.div>
 
-      <FullscreenImageViewer
-        medias={mediaList}
+      <MediaLightbox
+        slides={mediaSlides}
         index={viewerIndex}
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}

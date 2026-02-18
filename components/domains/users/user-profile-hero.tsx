@@ -7,7 +7,7 @@ import Link from "next/link"
 import { useCallback, useState } from "react"
 import { SubscriptionButton } from "@/components/domains/subscriptions"
 import { TipDialog } from "@/components/domains/tips"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -220,8 +220,8 @@ export const UserProfileHero = ({
       </div>
 
       {/* Fullscreen avatar viewer */}
-      <FullscreenImageViewer
-        medias={userProfile?.image ? [userProfile.image] : []}
+      <MediaLightbox
+        slides={userProfile?.image ? [{ src: userProfile.image }] : []}
         index={0}
         open={avatarViewerOpen}
         onClose={() => setAvatarViewerOpen(false)}

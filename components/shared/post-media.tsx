@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import React, { useEffect, useEffectEvent, useState } from "react"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import {
   Carousel,
   type CarouselApi,
@@ -45,7 +45,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   })
 
   const imageMedias = medias.filter((m) => m.type === "image")
-  const imageUrls = imageMedias.map((m) => m.url)
+  const imageSlides = imageMedias.map((m) => ({ src: m.url }))
 
   // Compute slideCount from API instead of storing in state
   const slideCount = carouselApi?.scrollSnapList().length ?? 0
@@ -267,8 +267,8 @@ export const PostMedia: React.FC<PostMediaProps> = ({
           </div>
         )}
 
-        <FullscreenImageViewer
-          medias={imageUrls}
+        <MediaLightbox
+          slides={imageSlides}
           index={viewerIndex}
           open={viewerOpen}
           onClose={() => setViewerOpen(false)}
@@ -282,8 +282,8 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   return (
     <>
       {medias.map((m) => renderMedia(m))}
-      <FullscreenImageViewer
-        medias={imageUrls}
+      <MediaLightbox
+        slides={imageSlides}
         index={viewerIndex}
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}

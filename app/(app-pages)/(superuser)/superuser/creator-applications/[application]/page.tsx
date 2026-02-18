@@ -26,7 +26,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { use, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { RevokeCreatorDialog } from "@/components/superuser/revoke-creator-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -591,8 +591,8 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
       />
 
       {/* Fullscreen Image Viewer */}
-      <FullscreenImageViewer
-        medias={application.identityDocuments.map((doc) => doc.url)}
+      <MediaLightbox
+        slides={application.identityDocuments.map((doc) => ({ src: doc.url }))}
         index={viewerIndex}
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}

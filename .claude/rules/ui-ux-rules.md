@@ -37,6 +37,11 @@ paths:
 - Below-fold: `loading="lazy"`. Above-fold: `priority`
 - Virtualize lists > 50 items (`content-visibility: auto` or virtualization lib)
 
+## Lightbox (yet-another-react-lightbox)
+- Shared component: `components/shared/media-lightbox.tsx` — plugins: Counter, Zoom, Fullscreen
+- **Images only**: Always filter `media.type === "image"` before building slides — Bunny iframe video URLs break as `<img>` src
+- **Zoom + custom render.slide**: YARL's Zoom plugin silently disables if slides lack `width`/`height` when using custom `render.slide`. Prefer YARL's native rendering over custom `NextImageSlide`.
+
 ## Navigation
 - URL reflects app state (filters, tabs, pagination)
 - Destructive actions require confirmation modal
