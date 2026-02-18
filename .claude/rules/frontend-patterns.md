@@ -46,7 +46,7 @@ Pattern: State in Provider, UI in sub-components. See `components/post-composer/
 // 1. Context + Provider with useMemo'd value
 const MyContext = createContext<ContextValue | null>(null)
 export const useMyContext = () => use(MyContext)
-export function MyProvider({ children }) {
+export const MyProvider = ({ children }: { children: React.ReactNode }) => {
   const value = useMemo(() => ({ state, actions }), [deps])
   return <MyContext.Provider value={value}>{children}</MyContext.Provider>
 }
@@ -91,6 +91,22 @@ import { motion, AnimatePresence } from "motion/react"
 - OKLCH colors via CSS vars: `--primary`, `--gold-500`, etc.
 - Dark mode: automatic via `.dark` class (next-themes)
 
+## Function Style — Arrow Functions Only
+**Always use `const` arrow functions** instead of `function` declarations:
+```typescript
+// ✅ Correct
+export const MyComponent = ({ title }: Props) => { ... }
+const handleClick = () => { ... }
+export const getUser = async (id: string) => { ... }
+
+// ❌ Never use function declarations
+export function MyComponent({ title }: Props) { ... }
+function handleClick() { ... }
+export async function getUser(id: string) { ... }
+```
+- Applies to all custom code: components, hooks, helpers, actions, convex functions, API routes, tests
+- **Exception**: `components/ui/` (shadcn-generated) — leave as-is since `npx shadcn add` generates `function` declarations
+
 ## Component Types
 - Props use Convex `Doc<"users">` and `Id<"posts">` types
 - shadcn/ui: CVA variants + Radix primitives + `asChild` pattern
@@ -116,7 +132,7 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 |------|---------|
 | `useAsyncHandler` | Standardized try-catch with toast + logger + useTransition |
 | `useCurrentUser` | Auth state + current user query (`{ currentUser, isLoading, isAuthenticated }`) |
-| `useBunnyUpload` | Media upload/delete (images via Convex HTTP Action, videos via XHR to Bunny Stream) |
+| `useBunnyUpload` | Media upload/delete. Returns `width`/`height` for images (extracted via `Image.onLoad` + ObjectURL before upload) |
 | `usePresence` | Online presence heartbeat (2min intervals, visibility-aware) |
 | `useDialogState` | Dialog open/close + isPending + startTransition |
 | `useDebounce` | Debounce values (default 300ms) |

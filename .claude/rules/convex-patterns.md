@@ -14,6 +14,7 @@ export const myQuery = query({
   handler: async (ctx, args) => { ... }
 })
 ```
+**Helper functions**: Use arrow functions (`const foo = () => ...`), not `function` declarations. See `frontend-patterns.md` → "Function Style".
 
 ## Authentication
 ```typescript
@@ -68,6 +69,24 @@ await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
 const authors = await Promise.all(authorIds.map(id => ctx.db.get(id)))
 const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
 ```
+
+## Returns Validators — Use Shared Validators
+When returning full documents (e.g., user as `author`), **use shared validators** from `convex/lib/validators.ts` (`userDocValidator`, `postMediaValidator`, etc.) instead of inline `v.object({...})`. Inline validators silently miss new schema fields → `ReturnsValidationError` at runtime.
+```typescript
+// ✅ Stays in sync with schema
+returns: v.object({ author: userDocValidator, ... })
+
+// ❌ Breaks when schema gains new fields
+returns: v.object({ author: v.object({ name: v.string(), ... }), ... })
+```
+
+## Migration Scripts (Self-Scheduling Batch)
+For data backfill on existing documents, use `convex/migrations/`:
+1. `internalQuery` — paginated fetch of documents needing migration
+2. `internalMutation` — patch one document
+3. `internalAction` — orchestrator: fetch → process → patch → `ctx.scheduler.runAfter(1000, self, { cursor })`
+
+Run via Convex dashboard. Batch size 25, 1s delay between batches. Delete file after migration.
 
 ## Paginated Enrichment Pattern
 For paginated queries needing joined data (e.g., subscription + creator details):

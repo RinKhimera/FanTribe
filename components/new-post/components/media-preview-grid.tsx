@@ -36,6 +36,8 @@ export interface MediaItem {
   mimeType: string
   fileName: string
   fileSize: number
+  width?: number
+  height?: number
 }
 
 interface MediaPreviewGridProps {

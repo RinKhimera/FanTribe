@@ -30,6 +30,14 @@
 - **Fan-out**: `notificationQueue.ts` handles large recipient lists (>200) via batched queue + cron
 - **Migration**: `clearAllNotifications` internalMutation (run once via dashboard, then delete)
 
+## Post Media Constraints
+- Max **3 images** per post, max **1 video** per post, **no mixing** images + videos
+- Enforced in `convex/posts.ts` (`createPost` mutation) — old posts may violate these rules
+- `PostMedia` schema: `{ type, url, mediaId, mimeType, fileName?, fileSize?, width?, height? }`
+- `width`/`height` extracted at upload via `useBunnyUpload` (Image.onLoad + ObjectURL)
+- **Display**: Single image clamped 4:5→1.91:1; 2 images side-by-side; 3 images 1+2 grid; 4+ images 2x2 with "+N" overlay
+- Grid component: `components/shared/post-media.tsx`
+
 ## Currency
 - Primary: XAF (zero-decimal) — `formatCurrency(1000, "XAF")` → `"1 000 XAF"`
 - Secondary: USD (for Stripe) — conversion rate: 1 USD = 562.2 XAF

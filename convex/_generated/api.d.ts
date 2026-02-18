@@ -34,6 +34,7 @@ import type * as lib_subscriptions from "../lib/subscriptions.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as likes from "../likes.js";
 import type * as messaging from "../messaging.js";
+import type * as migrations_backfillImageDimensions from "../migrations/backfillImageDimensions.js";
 import type * as notificationQueue from "../notificationQueue.js";
 import type * as notifications from "../notifications.js";
 import type * as posts from "../posts.js";
@@ -79,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   "lib/validators": typeof lib_validators;
   likes: typeof likes;
   messaging: typeof messaging;
+  "migrations/backfillImageDimensions": typeof migrations_backfillImageDimensions;
   notificationQueue: typeof notificationQueue;
   notifications: typeof notifications;
   posts: typeof posts;
