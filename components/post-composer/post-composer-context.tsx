@@ -168,6 +168,7 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
             fileSize: result.fileSize,
             width: result.width,
             height: result.height,
+            thumbnailUrl: result.thumbnailUrl,
           }
           addMedia(newMedia)
           await createDraftAsset({
@@ -328,6 +329,7 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
           fileSize: media.fileSize,
           width: media.width,
           height: media.height,
+          thumbnailUrl: media.thumbnailUrl,
         }))
 
         const result = await createPost({

@@ -38,6 +38,7 @@ export interface MediaItem {
   fileSize: number
   width?: number
   height?: number
+  thumbnailUrl?: string
 }
 
 interface MediaPreviewGridProps {

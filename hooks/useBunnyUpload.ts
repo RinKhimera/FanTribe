@@ -18,6 +18,7 @@ type UploadMediaResult = {
   fileSize: number
   width?: number
   height?: number
+  thumbnailUrl?: string
   error?: string
 }
 
@@ -125,7 +126,7 @@ export function useBunnyUpload() {
             }
           }
 
-          const { videoId, accessKey, libraryId, embedUrl } =
+          const { videoId, accessKey, libraryId, embedUrl, thumbnailUrl } =
             await tokenRes.json()
 
           // Step 2 : Upload direct vers Bunny Stream avec progress reel
@@ -180,6 +181,7 @@ export function useBunnyUpload() {
             mimeType: file.type,
             fileName: file.name,
             fileSize: file.size,
+            thumbnailUrl,
           }
         } else {
           // ── IMAGE : upload via Convex HTTP Action ──

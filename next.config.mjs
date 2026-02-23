@@ -35,6 +35,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "vz-d849a0bc-fed.b-cdn.net",
+      },
+      {
+        protocol: "https",
         hostname: "res.cloudinary.com",
       },
     ],

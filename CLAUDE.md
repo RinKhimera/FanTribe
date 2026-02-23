@@ -97,3 +97,4 @@ tests/
 - **Convex `internal` circular types**: `internalActions.ts` functions calling `internal.xxx` can cause circular type inference — use explicit type annotation on `result` variable
 - **Stripe dynamic tips**: Use `price_data` (not fixed `STRIPE_PRICE_ID`) for variable amounts like tips
 - **Validator completeness**: Convex validators used in `returns:` MUST include ALL schema fields. Missing fields cause `ReturnsValidationError` at runtime.
+- **ESLint inline disables vs config overrides**: `eslint-disable-next-line` can fail across environments (CI vs local) if plugin versions differ. Prefer ESLint config overrides in `eslint.config.mjs` for stable suppression (e.g., `@next/next/no-img-element` off for OG image files).

@@ -86,7 +86,18 @@ For data backfill on existing documents, use `convex/migrations/`:
 2. `internalMutation` — patch one document
 3. `internalAction` — orchestrator: fetch → process → patch → `ctx.scheduler.runAfter(1000, self, { cursor })`
 
-Run via Convex dashboard. Batch size 25, 1s delay between batches. Delete file after migration.
+**Critical**: If the action needs Node.js (`"use node"`), it MUST be in a **separate file** from queries/mutations. Convex rejects `"use node"` files containing non-action exports.
+```
+convex/migrations/
+  myMigration.ts          ← query + mutation (default runtime)
+  myMigrationAction.ts    ← "use node" action (Node.js runtime)
+```
+
+Run via Convex dashboard. Batch size 25, 1s delay between batches. Delete files after migration.
+
+## Node.js Packages in Actions
+- `image-size`: Named export — `const { imageSize } = require("image-size")` (NOT `require("image-size")` directly)
+- **EXIF orientation**: `image-size` returns raw pixel dimensions ignoring EXIF rotation. Phone photos often have orientation tags 5-8 (90°/270° rotation) requiring width↔height swap. Use `useBunnyUpload` client-side when possible (browsers auto-rotate via `Image.onLoad`).
 
 ## Paginated Enrichment Pattern
 For paginated queries needing joined data (e.g., subscription + creator details):

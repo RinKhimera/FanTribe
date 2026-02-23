@@ -26,6 +26,14 @@ const eslintConfig = defineConfig([
     },
   },
 
+  // OG image files must use <img> (next/image doesn't work in ImageResponse)
+  {
+    files: ["**/opengraph-image.tsx", "**/twitter-image.tsx"],
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
+
   // Override default ignores of eslint-config-next
   globalIgnores([
     ".next/**",

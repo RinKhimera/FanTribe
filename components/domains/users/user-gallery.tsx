@@ -1,11 +1,12 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { ImageIcon, Lock, Play } from "lucide-react"
+import { ImageIcon, Lock, Play, Video } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useCallback, useMemo, useState } from "react"
 import { MediaLightbox } from "@/components/shared/media-lightbox"
+import { VideoViewerDialog } from "@/components/shared/video-viewer-dialog"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import {
@@ -18,6 +19,57 @@ import type { PostMedia } from "@/types"
 
 // Masonry item heights for visual variety
 const MASONRY_HEIGHTS = ["h-48", "h-64", "h-56", "h-72", "h-52", "h-60"]
+
+const VideoThumbnail = ({
+  thumbnailUrl,
+  isHovered,
+}: {
+  thumbnailUrl?: string
+  isHovered: boolean
+}) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+
+  if (!thumbnailUrl || hasError) {
+    return (
+      <motion.div
+        variants={skeletonVariants}
+        initial="initial"
+        animate="animate"
+        className="bg-muted absolute inset-0 flex items-center justify-center"
+      >
+        <Video className="text-muted-foreground size-10" />
+      </motion.div>
+    )
+  }
+
+  return (
+    <>
+      {!isLoaded && (
+        <motion.div
+          variants={skeletonVariants}
+          initial="initial"
+          animate="animate"
+          className="bg-muted absolute inset-0 flex items-center justify-center"
+        >
+          <Video className="text-muted-foreground size-8" />
+        </motion.div>
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={thumbnailUrl}
+        alt="Aperçu vidéo"
+        className={cn(
+          "absolute inset-0 h-full w-full object-cover transition-all duration-500",
+          isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
+          isHovered && "scale-105",
+        )}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setHasError(true)}
+      />
+    </>
+  )
+}
 
 const GalleryItem = ({
   item,
@@ -58,43 +110,43 @@ const GalleryItem = ({
       >
         {canViewMedia ? (
           <>
-            {/* Loading skeleton */}
-            {!isLoaded && !isVideo && (
-              <motion.div
-                variants={skeletonVariants}
-                initial="initial"
-                animate="animate"
-                className="bg-muted absolute inset-0"
-              />
-            )}
-
             {isVideo ? (
-              <div className="bg-muted/30 relative flex h-full w-full items-center justify-center">
-                <div className="glass-card absolute inset-0 flex items-center justify-center">
-                  <div className="bg-primary/20 flex size-16 items-center justify-center rounded-full backdrop-blur-sm">
-                    <Play className="text-primary ml-1 size-8 fill-current" />
+              <div className="relative h-full w-full">
+                <VideoThumbnail
+                  thumbnailUrl={item.media.thumbnailUrl}
+                  isHovered={isHovered}
+                />
+                {/* Play button overlay */}
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="flex size-14 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
+                    <Play className="ml-1 size-7 fill-white text-white" />
                   </div>
                 </div>
-                <iframe
-                  src={`${mediaUrl}${mediaUrl.includes("?") ? "&" : "?"}preload=false`}
-                  allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
-                  className="absolute inset-0 h-full w-full"
-                  allowFullScreen
-                />
               </div>
             ) : (
-              <Image
-                src={mediaUrl}
-                alt="Media content"
-                fill
-                className={cn(
-                  "object-cover transition-all duration-500",
-                  isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
-                  isHovered && "scale-105",
+              <>
+                {/* Loading skeleton */}
+                {!isLoaded && (
+                  <motion.div
+                    variants={skeletonVariants}
+                    initial="initial"
+                    animate="animate"
+                    className="bg-muted absolute inset-0"
+                  />
                 )}
-                sizes="(max-width: 640px) 50vw, 33vw"
-                onLoad={() => setIsLoaded(true)}
-              />
+                <Image
+                  src={mediaUrl}
+                  alt="Media content"
+                  fill
+                  className={cn(
+                    "object-cover transition-all duration-500",
+                    isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
+                    isHovered && "scale-105",
+                  )}
+                  sizes="(max-width: 640px) 50vw, 33vw"
+                  onLoad={() => setIsLoaded(true)}
+                />
+              </>
             )}
           </>
         ) : (
@@ -155,6 +207,8 @@ export const UserGallery = ({
   const userGallery = useQuery(api.posts.getUserGallery, { authorId })
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false)
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
 
   // Extraire les données pour une référence stable dans useMemo
   const galleryLength = userGallery?.length ?? 0
@@ -177,6 +231,11 @@ export const UserGallery = ({
     },
     [mediaSlides],
   )
+
+  const openVideoViewer = useCallback((videoUrl: string) => {
+    setActiveVideoUrl(videoUrl)
+    setVideoDialogOpen(true)
+  }, [])
 
   // Split items into columns for masonry layout
   const columns = (() => {
@@ -245,7 +304,11 @@ export const UserGallery = ({
               index={i * 3}
               canViewMedia={true}
               isMediaProtected={item.visibility === "subscribers_only"}
-              onOpen={() => openViewerAt(item.media.url)}
+              onOpen={() =>
+                item.media.type === "video"
+                  ? openVideoViewer(item.media.url)
+                  : openViewerAt(item.media.url)
+              }
             />
           ))}
         </div>
@@ -259,7 +322,11 @@ export const UserGallery = ({
               index={i * 3 + 1}
               canViewMedia={true}
               isMediaProtected={item.visibility === "subscribers_only"}
-              onOpen={() => openViewerAt(item.media.url)}
+              onOpen={() =>
+                item.media.type === "video"
+                  ? openVideoViewer(item.media.url)
+                  : openViewerAt(item.media.url)
+              }
             />
           ))}
         </div>
@@ -273,7 +340,11 @@ export const UserGallery = ({
               index={i * 3 + 2}
               canViewMedia={true}
               isMediaProtected={item.visibility === "subscribers_only"}
-              onOpen={() => openViewerAt(item.media.url)}
+              onOpen={() =>
+                item.media.type === "video"
+                  ? openVideoViewer(item.media.url)
+                  : openViewerAt(item.media.url)
+              }
             />
           ))}
         </div>
@@ -285,6 +356,12 @@ export const UserGallery = ({
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}
         onIndexChange={setViewerIndex}
+      />
+
+      <VideoViewerDialog
+        open={videoDialogOpen}
+        onOpenChange={setVideoDialogOpen}
+        videoUrl={activeVideoUrl}
       />
     </>
   )
