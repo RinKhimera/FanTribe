@@ -42,7 +42,6 @@ export default function Image() {
           gap: "32px",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={svgDataUri} alt="" width={400} height={66} />
         <p
           style={{
