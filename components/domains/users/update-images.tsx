@@ -288,7 +288,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => bannerInputRef.current?.click()}
-                  className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30"
+                  className="flex size-12 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30"
                 >
                   <Upload className="size-5" />
                 </motion.button>
@@ -297,7 +297,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleDeleteBanner}
-                  className="hover:bg-destructive/80 flex size-12 items-center justify-center rounded-full bg-white/20 text-white transition-colors"
+                  className="hover:bg-destructive/80 flex size-12 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white transition-colors"
                 >
                   <Trash2 className="size-5" />
                 </motion.button>
@@ -306,11 +306,18 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           </motion.div>
         </AspectRatio>
 
-        {/* Upload hint */}
-        <div className="text-muted-foreground pointer-events-none absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-xs opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-          <Camera className="size-3" />
-          <span>Cliquez pour modifier</span>
-        </div>
+        {/* Always-visible banner edit badge — hides on hover (full overlay takes over) and during upload */}
+        <button
+          type="button"
+          onClick={() => !isPending && bannerInputRef.current?.click()}
+          className={cn(
+            "absolute bottom-2 right-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white backdrop-blur-sm transition-opacity hover:bg-black/80 group-hover:opacity-0",
+            { "opacity-0": isPending }
+          )}
+        >
+          <Camera className="size-3.5" />
+          <span>Modifier</span>
+        </button>
       </div>
 
       {/* Avatar - positioned to overlap banner */}
@@ -342,7 +349,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
             )}
           </Avatar>
 
-          {/* Avatar overlay */}
+          {/* Avatar hover overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             whileHover={{ opacity: 1 }}
@@ -358,6 +365,16 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
               </div>
             )}
           </motion.div>
+
+          {/* Always-visible camera badge */}
+          <div
+            className={cn(
+              "absolute bottom-1 right-1 flex size-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-opacity group-hover:opacity-0 sm:size-9",
+              { "opacity-0": isPending }
+            )}
+          >
+            <Camera className="size-4" />
+          </div>
         </motion.div>
       </div>
 

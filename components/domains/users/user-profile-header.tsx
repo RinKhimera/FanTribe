@@ -10,11 +10,13 @@ import { UserProfileBadgeInline } from "./user-profile-badges"
 type UserProfileHeaderProps = {
   userProfile: Doc<"users">
   currentUser: Doc<"users"> | null | undefined
+  isEditPage?: boolean
 }
 
 export const UserProfileHeader = ({
   userProfile,
   currentUser,
+  isEditPage = false,
 }: UserProfileHeaderProps) => {
   const isOwnProfile = currentUser?.username === userProfile.username
 
@@ -23,7 +25,7 @@ export const UserProfileHeader = ({
       <PageHeader
         className="h-[53px] min-h-[53px]"
         rightAction={
-          isOwnProfile && (
+          isOwnProfile && !isEditPage && (
             <Button
               asChild
               variant="ghost"

@@ -37,8 +37,9 @@ export function UserProfileShell({
   const currentUser = usePreloadedQuery(preloadedCurrentUser)
   const pathname = usePathname()
 
-  // Detect if we're on a post detail page
+  // Detect if we're on a post detail page or edit page
   const isPostPage = pathname.includes("/post/")
+  const isEditPage = pathname.endsWith("/edit")
 
   const subscriptionStatus = useQuery(
     api.subscriptions.getFollowSubscription,
@@ -79,13 +80,18 @@ export function UserProfileShell({
         <UserProfileHeader
           userProfile={userProfile}
           currentUser={currentUser}
+          isEditPage={isEditPage}
         />
-        <UserProfileHero
-          currentUser={currentUser}
-          userProfile={userProfile}
-          subscriptionStatus={subscriptionStatus}
-        />
-        <UserProfileTabs username={username} />
+        {!isEditPage && (
+          <>
+            <UserProfileHero
+              currentUser={currentUser}
+              userProfile={userProfile}
+              subscriptionStatus={subscriptionStatus}
+            />
+            <UserProfileTabs username={username} />
+          </>
+        )}
         {children}
       </PageContainer>
     </UserProfileContext.Provider>
