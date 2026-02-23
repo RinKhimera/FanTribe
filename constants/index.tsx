@@ -5,7 +5,6 @@ import {
   Home,
   LayoutDashboard,
   Mail,
-  Settings,
   Sparkles,
   Users,
 } from "lucide-react"
@@ -77,12 +76,6 @@ export const navigationLinks: NavLink[] = [
     title: "Profil",
     href: (username?: string) => (username ? `/${username}` : "/profile"),
     icon: CircleUserRound,
-  },
-  {
-    id: "account",
-    title: "Paramètres",
-    href: "/account",
-    icon: Settings,
   },
   {
     id: "superuser",

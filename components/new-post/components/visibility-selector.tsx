@@ -90,7 +90,7 @@ export const VisibilitySelector = ({
               className={cn(
                 "flex w-full items-center gap-3 rounded-md px-3 py-2.5",
                 "text-left text-sm transition-colors duration-150",
-                "hover:bg-accent",
+                "cursor-pointer hover:bg-accent",
                 isSelected && "bg-accent/50",
               )}
             >

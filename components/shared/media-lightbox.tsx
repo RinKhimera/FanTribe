@@ -26,8 +26,6 @@ interface MediaLightboxProps {
   onIndexChange?: (index: number) => void
 }
 
-const plugins = [Counter, Zoom, Fullscreen]
-
 export function MediaLightbox({
   slides,
   index,
@@ -35,6 +33,9 @@ export function MediaLightbox({
   onClose,
   onIndexChange,
 }: MediaLightboxProps) {
+  const plugins =
+    slides.length > 1 ? [Counter, Zoom, Fullscreen] : [Zoom, Fullscreen]
+
   return (
     <Lightbox
       open={open}

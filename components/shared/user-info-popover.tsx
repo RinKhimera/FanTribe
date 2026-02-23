@@ -1,11 +1,11 @@
 import { SignOutButton } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import {
-  BookmarkPlus,
   CircleUserRound,
   LogOut,
   Settings,
   Sparkles,
+  Users,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -218,10 +218,10 @@ export const UserInfoPopover = ({
 
           <DropdownMenuItem
             className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
-            onClick={() => handleNavigation("/collections")}
+            onClick={() => handleNavigation("/subscriptions")}
           >
-            <BookmarkPlus className="text-muted-foreground mr-3 size-4" />
-            <span>Collections</span>
+            <Users className="text-muted-foreground mr-3 size-4" />
+            <span>Abonnements</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
