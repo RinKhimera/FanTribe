@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Coins, MapPin } from "lucide-react"
+import { Coins, MapPin, Sparkles } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useState } from "react"
@@ -12,6 +12,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
+import { cn } from "@/lib/utils"
 import {
   UserProfileBadgeInline,
   UserProfileBadges,
@@ -36,6 +37,7 @@ export const UserProfileHero = ({
   subscriptionStatus,
 }: UserProfileHeroProps) => {
   const isOwnProfile = currentUser?.username === userProfile.username
+  const isCreator = userProfile.accountType === "CREATOR" || userProfile.accountType === "SUPERUSER"
 
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false)
 
@@ -72,7 +74,10 @@ export const UserProfileHero = ({
             whileHover={{ scale: 1.05 }}
             type="button"
             onClick={openAvatar}
-            className="focus-visible:ring-ring rounded-full outline-none focus-visible:ring-2"
+            className={cn(
+              "rounded-full outline-none focus-visible:ring-ring focus-visible:ring-2",
+              isCreator && "ring-2 ring-primary/50 shadow-[0_0_15px_oklch(0.541_0.281_293/0.3)]",
+            )}
           >
             <Avatar className="border-background size-24 cursor-pointer border-4 transition hover:brightness-110 sm:size-28">
               {userProfile?.image ? (
@@ -214,6 +219,21 @@ export const UserProfileHero = ({
                 </Button>
               }
             />
+          </div>
+        )}
+
+        {/* Become creator CTA — own profile, USER only */}
+        {isOwnProfile && !isCreator && (
+          <div className="mb-4">
+            <Button
+              asChild
+              className="w-full rounded-2xl bg-linear-to-r from-primary to-purple-600 text-white hover:opacity-90"
+            >
+              <Link href="/be-creator">
+                <Sparkles className="mr-2 size-4" />
+                Devenir créateur
+              </Link>
+            </Button>
           </div>
         )}
 

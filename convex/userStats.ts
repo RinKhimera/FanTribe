@@ -51,7 +51,91 @@ export async function incrementUserStat(
   }
 }
 
-// Get user stats (public)
+// Get profile stats — returns different data based on accountType
+export const getUserProfileStats = query({
+  args: { userId: v.id("users") },
+  returns: v.union(
+    v.object({
+      kind: v.literal("creator"),
+      postsCount: v.number(),
+      subscribersCount: v.number(),
+      totalLikes: v.number(),
+    }),
+    v.object({
+      kind: v.literal("user"),
+      subscriptionsCount: v.number(),
+      likesGivenCount: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId)
+    if (!user) throw new ConvexError("User not found")
+
+    if (user.accountType === "CREATOR" || user.accountType === "SUPERUSER") {
+      // Delegate to existing creator stats logic
+      const cachedStats = await ctx.db
+        .query("userStats")
+        .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+        .unique()
+
+      if (cachedStats) {
+        const FIVE_MINUTES = 5 * 60 * 1000
+        if (Date.now() - cachedStats.lastUpdated < FIVE_MINUTES) {
+          return {
+            kind: "creator" as const,
+            postsCount: cachedStats.postsCount,
+            subscribersCount: cachedStats.subscribersCount,
+            totalLikes: cachedStats.totalLikes,
+          }
+        }
+      }
+
+      const posts = await ctx.db
+        .query("posts")
+        .withIndex("by_author", (q) => q.eq("author", args.userId))
+        .collect()
+      const postsCount = posts.length
+
+      const subscriptions = await ctx.db
+        .query("subscriptions")
+        .withIndex("by_creator", (q) => q.eq("creator", args.userId))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .collect()
+      const subscribersCount = subscriptions.length
+
+      let totalLikes = 0
+      for (const post of posts) {
+        const likes = await ctx.db
+          .query("likes")
+          .withIndex("by_post", (q) => q.eq("postId", post._id))
+          .collect()
+        totalLikes += likes.length
+      }
+
+      return { kind: "creator" as const, postsCount, subscribersCount, totalLikes }
+    }
+
+    // USER stats — count all content_access subscriptions (active + expired)
+    const subs = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_subscriber", (q) => q.eq("subscriber", args.userId))
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .collect()
+
+    const likes = await ctx.db
+      .query("likes")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect()
+
+    return {
+      kind: "user" as const,
+      subscriptionsCount: subs.length,
+      likesGivenCount: likes.length,
+    }
+  },
+})
+
+// Get user stats (public) — kept for backward compatibility
 export const getUserStats = query({
   args: { userId: v.id("users") },
   returns: v.object({

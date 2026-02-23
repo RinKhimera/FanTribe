@@ -502,6 +502,76 @@ export const getMySubscriptionsPaginated = query({
   },
 })
 
+// Public paginated subscriptions for user profile "Abonnements" tab
+export const getPublicSubscriptionsPaginated = query({
+  args: {
+    userId: v.id("users"),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.object({
+    page: v.array(
+      v.object({
+        _id: v.id("subscriptions"),
+        _creationTime: v.number(),
+        creator: v.object({
+          _id: v.id("users"),
+          name: v.string(),
+          username: v.optional(v.string()),
+          image: v.string(),
+          isOnline: v.boolean(),
+        }),
+      }),
+    ),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(
+      v.union(
+        v.literal("SplitRecommended"),
+        v.literal("SplitRequired"),
+        v.null(),
+      ),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const result = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_subscriber", (q) => q.eq("subscriber", args.userId))
+      .filter((q) => q.eq(q.field("type"), "content_access"))
+      .order("desc")
+      .paginate(args.paginationOpts)
+
+    if (result.page.length === 0) {
+      return { ...result, page: [] }
+    }
+
+    // Batch fetch creators
+    const creatorIds = [...new Set(result.page.map((s) => s.creator))]
+    const creators = await Promise.all(creatorIds.map((id) => ctx.db.get(id)))
+    const creatorMap = new Map(creatorIds.map((id, i) => [id, creators[i]]))
+
+    const enriched = result.page
+      .map((s) => {
+        const creator = creatorMap.get(s.creator)
+        if (!creator) return null
+        return {
+          _id: s._id,
+          _creationTime: s._creationTime,
+          creator: {
+            _id: creator._id,
+            name: creator.name,
+            username: creator.username,
+            image: creator.image,
+            isOnline: creator.isOnline,
+          },
+        }
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null)
+
+    return { ...result, page: enriched }
+  },
+})
+
 export const canUserSubscribe = query({
   args: { creatorId: v.id("users") },
   returns: v.object({

@@ -89,7 +89,7 @@ export function UserProfileShell({
               userProfile={userProfile}
               subscriptionStatus={subscriptionStatus}
             />
-            <UserProfileTabs username={username} />
+            <UserProfileTabs username={username} accountType={userProfile.accountType} />
           </>
         )}
         {children}
