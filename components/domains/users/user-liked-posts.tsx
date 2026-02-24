@@ -3,6 +3,7 @@
 import { usePaginatedQuery } from "convex/react"
 import { Heart, Loader2 } from "lucide-react"
 import { useEffect, useRef } from "react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
@@ -71,12 +72,14 @@ export const UserLikedPosts = ({
   // Aucun j'aime
   if (results.length === 0 && status === "Exhausted") {
     return (
-      <div className="mt-16 flex h-full flex-col items-center px-4 text-center">
-        <Heart className="text-muted-foreground/50 mb-4 size-12" />
-        <p className="text-muted-foreground text-xl">
-          Aucun j&apos;aime pour le moment
-        </p>
-      </div>
+      <EmptyState
+        icon={Heart}
+        iconBg="bg-rose-500/10"
+        iconColor="text-rose-500"
+        accentGradient="from-rose-500/20 via-transparent to-transparent"
+        title="Aucun j'aime"
+        description="Les publications aimées apparaîtront ici"
+      />
     )
   }
 

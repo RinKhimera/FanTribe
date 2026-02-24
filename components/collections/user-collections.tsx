@@ -1,4 +1,6 @@
 import { useQuery } from "convex/react"
+import { Bookmark } from "lucide-react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { PostCard } from "@/components/shared/post-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
@@ -34,10 +36,14 @@ export const UserCollections = ({
 
   if (posts.length === 0) {
     return (
-      <div className="text-muted-foreground mt-16 h-full px-4 text-center text-xl">
-        Aucune collection trouvée. Ajoutez des collections en cliquant sur le
-        bouton de signet pour les retrouver ici.
-      </div>
+      <EmptyState
+        icon={Bookmark}
+        iconBg="bg-amber-500/10"
+        iconColor="text-amber-500"
+        accentGradient="from-amber-500/20 via-transparent to-transparent"
+        title="Aucune collection"
+        description="Ajoutez des publications à vos collections en cliquant sur le bouton de signet pour les retrouver ici"
+      />
     )
   }
 

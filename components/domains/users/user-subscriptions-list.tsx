@@ -4,6 +4,7 @@ import { usePaginatedQuery } from "convex/react"
 import { Loader2, Users } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -66,12 +67,14 @@ export const UserSubscriptionsList = ({
   // Aucun abonnement
   if (results.length === 0 && status === "Exhausted") {
     return (
-      <div className="mt-16 flex h-full flex-col items-center px-4 text-center">
-        <Users className="text-muted-foreground/50 mb-4 size-12" />
-        <p className="text-muted-foreground text-xl">
-          Aucun abonnement pour le moment
-        </p>
-      </div>
+      <EmptyState
+        icon={Users}
+        iconBg="bg-emerald-500/10"
+        iconColor="text-emerald-500"
+        accentGradient="from-emerald-500/20 via-transparent to-transparent"
+        title="Aucun abonnement"
+        description="Les abonnements apparaîtront ici"
+      />
     )
   }
 

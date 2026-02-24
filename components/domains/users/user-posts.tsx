@@ -1,8 +1,9 @@
 "use client"
 
 import { usePaginatedQuery } from "convex/react"
-import { Loader2 } from "lucide-react"
+import { FileText, Loader2 } from "lucide-react"
 import { useEffect, useRef } from "react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
@@ -72,9 +73,14 @@ export const UserPosts = ({
   // Aucun post disponible
   if (results.length === 0 && status === "Exhausted") {
     return (
-      <div className="text-muted-foreground mt-16 h-full px-4 text-center text-xl">
-        Pas de posts pour le moment
-      </div>
+      <EmptyState
+        icon={FileText}
+        iconBg="bg-primary/10"
+        iconColor="text-primary"
+        accentGradient="from-primary/20 via-transparent to-transparent"
+        title="Aucune publication"
+        description="Les publications apparaîtront ici"
+      />
     )
   }
 
