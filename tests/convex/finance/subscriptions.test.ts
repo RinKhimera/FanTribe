@@ -383,7 +383,7 @@ describe("subscriptions", () => {
           .withIndex("by_recipient", (q) => q.eq("recipientId", subscriberId))
           .collect()
       })
-      expect(notifications.some((n) => n.type === "subscription_expired")).toBe(true)
+      expect(notifications.some((n) => n.type === "subscriptionExpired")).toBe(true)
     })
 
     it("should not affect non-expired subscriptions", async () => {

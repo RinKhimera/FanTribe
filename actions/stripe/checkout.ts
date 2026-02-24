@@ -16,8 +16,7 @@ export async function startStripeCheckout(params: {
   creatorUsername: string
   action: "subscribe" | "renew"
 }) {
-  const { userId } = await auth()
-  const user = await currentUser()
+  const [{ userId }, user] = await Promise.all([auth(), currentUser()])
 
   if (!userId || !user) {
     return { error: "Unauthorized" }

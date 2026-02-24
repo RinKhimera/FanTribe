@@ -1,5 +1,3 @@
-"use client"
-
 import { SignIn } from "@clerk/nextjs"
 import { ArrowRight, Shield, Sparkles, Users } from "lucide-react"
 import Image from "next/image"

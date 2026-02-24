@@ -30,11 +30,10 @@ export {
   type SubscriptionStatus,
 } from "./subscriptions"
 
-// Notifications (fan-out pattern)
+// Notifications (central service)
 export {
-  NOTIFICATION_BATCH_SIZE,
-  FANOUT_THRESHOLD,
-  createNotificationBatch,
+  createNotification,
+  removeActorFromNotification,
   type NotificationType,
 } from "./notifications"
 
@@ -56,5 +55,4 @@ export {
   banHistoryEntryValidator,
   badgeValidator,
   personalInfoValidator,
-  paginationResultValidator,
 } from "./validators"

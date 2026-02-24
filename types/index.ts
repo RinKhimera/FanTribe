@@ -11,6 +11,49 @@ import { Doc, Id } from "@/convex/_generated/dataModel"
 export type UserProps = Doc<"users"> | undefined
 
 // ============================================================================
+// Types pour les notifications
+// ============================================================================
+
+export type NotificationType =
+  | "like"
+  | "comment"
+  | "newPost"
+  | "newSubscription"
+  | "renewSubscription"
+  | "subscriptionExpired"
+  | "subscriptionConfirmed"
+  | "creatorApplicationApproved"
+  | "creatorApplicationRejected"
+  | "tip"
+
+export type ActorSummary = {
+  _id: Id<"users">
+  name: string
+  username?: string
+  image: string
+}
+
+export type EnrichedNotification = {
+  _id: Id<"notifications">
+  _creationTime: number
+  type: NotificationType
+  recipientId: Id<"users">
+  groupKey: string
+  actors: ActorSummary[]
+  actorCount: number
+  postId?: Id<"posts">
+  postPreview?: string
+  commentId?: Id<"comments">
+  commentPreview?: string
+  tipId?: Id<"tips">
+  tipAmount?: number
+  tipCurrency?: string
+  tipMessage?: string
+  isRead: boolean
+  lastActivityAt: number
+}
+
+// ============================================================================
 // Types pour les médias de posts
 // ============================================================================
 
@@ -223,7 +266,7 @@ export interface ReportedPost {
   _id: Id<"posts">
   _creationTime: number
   content: string
-  medias: (string | PostMedia)[]
+  medias: PostMedia[]
   visibility: "public" | "subscribers_only"
   author: Doc<"users"> | null
 }
@@ -267,6 +310,36 @@ export interface Report {
   reportedPost: ReportedPost | null
   reportedComment: ReportedComment | null
   reviewedByUser: Doc<"users"> | null
+}
+
+// ============================================================================
+// Types pour les pourboires
+// ============================================================================
+
+/**
+ * Contexte d'envoi d'un pourboire
+ */
+export type TipContext = "post" | "profile" | "message"
+
+/**
+ * Type pour un pourboire enrichi (avec info sender)
+ */
+export type TipProps = {
+  _id: Id<"tips">
+  _creationTime: number
+  senderId: Id<"users">
+  creatorId: Id<"users">
+  amount: number
+  currency: "XAF" | "USD"
+  message?: string
+  status: "pending" | "succeeded" | "failed" | "refunded"
+  context?: TipContext
+  sender?: {
+    _id: Id<"users">
+    name: string
+    username?: string
+    image: string
+  } | null
 }
 
 // ============================================================================

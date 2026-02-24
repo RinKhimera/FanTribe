@@ -1,6 +1,11 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
 import { requireSuperuser, requireCreator } from "./lib/auth"
+import {
+  SUBSCRIPTION_CREATOR_RATE,
+  TIP_CREATOR_RATE,
+  USD_TO_XAF_RATE,
+} from "./lib/constants"
 
 // Type pour les données de test (mock IDs)
 type TestUser = {
@@ -618,6 +623,8 @@ export const getCreatorEarnings = query({
     currency: v.string(),
     transactionCount: v.number(),
     pendingTransactionCount: v.number(),
+    totalTipsNet: v.number(),
+    tipCount: v.number(),
   }),
   handler: async (ctx) => {
     const currentUser = await requireCreator(ctx)
@@ -627,9 +634,6 @@ export const getCreatorEarnings = query({
       .withIndex("by_creator", (q) => q.eq("creatorId", currentUser._id))
       .filter((q) => q.eq(q.field("status"), "succeeded"))
       .take(5000)
-
-    // Taux de conversion USD → XAF
-    const USD_TO_XAF_RATE = 562.2
 
     const normalizeToXAF = (amount: number, currency: string): number => {
       if (currency.toUpperCase() === "USD") {
@@ -642,8 +646,7 @@ export const getCreatorEarnings = query({
       return sum + normalizeToXAF(tx.amount, tx.currency)
     }, 0)
 
-    const CREATOR_COMMISSION_RATE = 0.6
-    const totalNetEarned = totalGross * CREATOR_COMMISSION_RATE
+    const totalNetEarned = totalGross * SUBSCRIPTION_CREATOR_RATE
 
     const getLastThursdayOfMonth = (year: number, month: number): Date => {
       const lastDay = new Date(year, month + 1, 0)
@@ -693,15 +696,41 @@ export const getCreatorEarnings = query({
       return sum + normalizeToXAF(tx.amount, tx.currency)
     }, 0)
 
-    const nextPaymentNet = nextPaymentGross * CREATOR_COMMISSION_RATE
+    const nextPaymentNet = nextPaymentGross * SUBSCRIPTION_CREATOR_RATE
+
+    // Tips earnings
+    const allTips = await ctx.db
+      .query("tips")
+      .withIndex("by_creator_status", (q) =>
+        q.eq("creatorId", currentUser._id).eq("status", "succeeded"),
+      )
+      .take(5000)
+
+    const totalTipsGross = allTips.reduce(
+      (sum, tip) => sum + normalizeToXAF(tip.amount, tip.currency),
+      0,
+    )
+    const totalTipsNet = Math.round(totalTipsGross * TIP_CREATOR_RATE)
+
+    // Include tips in next payment calculation
+    const pendingTips = allTips.filter(
+      (tip) => tip._creationTime >= lastPaymentTimestamp,
+    )
+    const pendingTipsGross = pendingTips.reduce(
+      (sum, tip) => sum + normalizeToXAF(tip.amount, tip.currency),
+      0,
+    )
+    const pendingTipsNet = Math.round(pendingTipsGross * TIP_CREATOR_RATE)
 
     return {
-      totalNetEarned: Math.round(totalNetEarned),
-      nextPaymentNet: Math.round(nextPaymentNet),
+      totalNetEarned: Math.round(totalNetEarned) + totalTipsNet,
+      nextPaymentNet: Math.round(nextPaymentNet) + pendingTipsNet,
       nextPaymentDate: nextPaymentDate.toISOString(),
       currency: "XAF",
       transactionCount: allTransactions.length,
-      pendingTransactionCount: pendingTransactions.length,
+      pendingTransactionCount: pendingTransactions.length + pendingTips.length,
+      totalTipsNet,
+      tipCount: allTips.length,
     }
   },
 })

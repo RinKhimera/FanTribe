@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Bell,
   BellOff,
+  Coins,
   Lock,
   MoreVertical,
   Pin,
@@ -15,6 +16,7 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { toast } from "sonner"
+import { TipDialog } from "@/components/domains/tips"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -211,6 +213,23 @@ export const ConversationContent = () => {
 
           {/* Right section - Actions */}
           <div className="flex items-center gap-1">
+            {/* Tip button — only for creator conversations */}
+            {otherParticipant?.accountType === "CREATOR" && conversationId && (
+              <TipDialog
+                creator={otherParticipant}
+                context="message"
+                conversationId={conversationId}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-muted-foreground transition-colors hover:text-amber-500"
+                  >
+                    <Coins size={18} />
+                  </Button>
+                }
+              />
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

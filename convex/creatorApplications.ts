@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { createNotification } from "./lib/notifications"
 import {
   creatorApplicationDocValidator,
   userDocValidator,
@@ -321,6 +322,13 @@ export const reviewApplication = mutation({
         rejectionCount: newRejectionCount,
         reapplicationAllowedAt,
       })
+
+      // Notify the applicant that their application was rejected
+      await createNotification(ctx, {
+        type: "creatorApplicationRejected",
+        recipientId: application.userId,
+        actorId: currentUser._id,
+      })
     } else {
       // Approuvé
       await ctx.db.patch(args.applicationId, {
@@ -331,6 +339,13 @@ export const reviewApplication = mutation({
 
       await ctx.db.patch(application.userId, {
         accountType: "CREATOR",
+      })
+
+      // Notify the applicant that their application was approved
+      await createNotification(ctx, {
+        type: "creatorApplicationApproved",
+        recipientId: application.userId,
+        actorId: currentUser._id,
       })
     }
 

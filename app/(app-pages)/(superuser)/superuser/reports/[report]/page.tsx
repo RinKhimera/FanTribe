@@ -222,12 +222,12 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
             href="/superuser/reports"
             className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-2 text-sm transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Retour aux signalements
           </Link>
           <div className="flex flex-col items-center justify-center py-12">
             <div className="bg-muted/50 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <AlertTriangle className="text-muted-foreground h-8 w-8" />
+              <AlertTriangle className="text-muted-foreground h-8 w-8" aria-hidden="true" />
             </div>
             <h2 className="mb-2 text-xl font-semibold">
               Signalement introuvable
@@ -266,7 +266,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
           href="/superuser/reports"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Retour aux signalements
         </Link>
 
@@ -280,7 +280,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                     variant="outline"
                     className={cn("gap-1", type.className)}
                   >
-                    <TypeIcon className="h-3 w-3" />
+                    <TypeIcon className="h-3 w-3" aria-hidden="true" />
                     {type.label}
                   </Badge>
                   <Badge variant="outline" className={status.className}>
@@ -291,7 +291,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                       variant="outline"
                       className="gap-1 border-red-500/30 bg-red-500/10 text-red-600"
                     >
-                      <AlertTriangle className="h-3 w-3" />
+                      <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                       Urgent
                     </Badge>
                   )}
@@ -302,12 +302,12 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                   </h1>
                   <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-3 text-sm">
                     <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
+                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                       Signalé le {formatShortDate(report.createdAt)}
                     </span>
                     {report.reviewedAt && (
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
+                        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                         Traité le {formatShortDate(report.reviewedAt)}
                       </span>
                     )}
@@ -362,7 +362,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <User className="h-4 w-4" />
+                <User className="h-4 w-4" aria-hidden="true" />
                 Utilisateur signalé
               </CardTitle>
             </CardHeader>
@@ -392,7 +392,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                 </div>
                 <Link href={`/${report.reportedUser.username}`} target="_blank">
                   <Button variant="outline" size="sm" className="gap-1.5">
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                     Voir profil
                   </Button>
                 </Link>
@@ -425,7 +425,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <FileText className="h-4 w-4" />
+                <FileText className="h-4 w-4" aria-hidden="true" />
                 Publication signalée
               </CardTitle>
             </CardHeader>
@@ -459,13 +459,13 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       {report.reportedPost.medias
                         .slice(0, 4)
-                        .map((media: string | { url: string }, index: number) => (
+                        .map((media: { url: string }, index: number) => (
                           <div
                             key={index}
                             className="bg-muted relative aspect-video overflow-hidden rounded-lg"
                           >
                             <Image
-                              src={typeof media === "string" ? media : media.url}
+                              src={media.url}
                               alt={`Média ${index + 1}`}
                               fill
                               className="object-cover"
@@ -488,11 +488,11 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
               {/* Post stats */}
               <div className="text-muted-foreground flex items-center gap-4 text-sm">
                 <span className="flex items-center gap-1">
-                  <Heart className="h-4 w-4" />
+                  <Heart className="h-4 w-4" aria-hidden="true" />
                   {postLikeCount?.count ?? 0}
                 </span>
                 <span className="flex items-center gap-1">
-                  <MessageSquare className="h-4 w-4" />
+                  <MessageSquare className="h-4 w-4" aria-hidden="true" />
                   {postCommentCount?.count ?? 0}
                 </span>
                 <Badge variant="outline" className="text-xs">
@@ -509,7 +509,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-4 w-4" aria-hidden="true" />
                 Commentaire signalé
               </CardTitle>
             </CardHeader>
@@ -559,14 +559,16 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Shield className="h-4 w-4" />
+              <Shield className="h-4 w-4" aria-hidden="true" />
               Notes administratives
             </CardTitle>
           </CardHeader>
           <CardContent>
             {report.status === "pending" || report.status === "reviewing" ? (
               <Textarea
-                placeholder="Ajoutez des notes sur ce signalement..."
+                id="admin-notes"
+                aria-label="Notes administratives"
+                placeholder="Ajoutez des notes sur ce signalement…"
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 className="min-h-24 resize-none"
@@ -598,7 +600,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                     variant="outline"
                     className="w-full gap-2 border-red-500/30 bg-red-500/5 text-red-600 hover:bg-red-500/10 hover:text-red-700"
                   >
-                    <Ban className="h-4 w-4" />
+                    <Ban className="h-4 w-4" aria-hidden="true" />
                     Bannir{" "}
                     {report.reportedUser.username
                       ? `@${report.reportedUser.username}`
@@ -614,7 +616,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                     variant="outline"
                     className="w-full gap-2 border-orange-500/30 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 hover:text-orange-700"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                     Supprimer le contenu
                   </Button>
                 )}
@@ -626,7 +628,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                   variant="outline"
                   className="w-full gap-2"
                 >
-                  <Check className="h-4 w-4" />
+                  <Check className="h-4 w-4" aria-hidden="true" />
                   Classer sans suite
                 </Button>
               </div>
@@ -674,7 +676,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
                   variant="outline"
                   className="w-full gap-2"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                   Rouvrir le signalement
                 </Button>
               </div>
@@ -688,7 +690,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-destructive flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
+              <Trash2 className="h-5 w-5" aria-hidden="true" />
               Supprimer le contenu
             </DialogTitle>
             <DialogDescription>
@@ -698,7 +700,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
           </DialogHeader>
           <div className="space-y-4">
             <Alert className="border-destructive/30 bg-destructive/5">
-              <AlertTriangle className="text-destructive h-4 w-4" />
+              <AlertTriangle className="text-destructive h-4 w-4" aria-hidden="true" />
               <AlertTitle className="text-destructive">Attention</AlertTitle>
               <AlertDescription className="text-destructive/80">
                 {report.type === "post" &&
@@ -708,11 +710,12 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
               </AlertDescription>
             </Alert>
             <div>
-              <label className="mb-1.5 block text-sm font-medium">
+              <label htmlFor="delete-admin-notes" className="mb-1.5 block text-sm font-medium">
                 Note administrative
               </label>
               <Textarea
-                placeholder="Raison de la suppression..."
+                id="delete-admin-notes"
+                placeholder="Raison de la suppression…"
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
               />
@@ -732,7 +735,7 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
               disabled={isPending}
               className="gap-2"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
               Supprimer
             </Button>
           </DialogFooter>

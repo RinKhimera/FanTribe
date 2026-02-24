@@ -1,7 +1,10 @@
 import { ConvexError, v } from "convex/values"
-import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
+import {
+  createNotification,
+  removeActorFromNotification,
+} from "./lib/notifications"
 import { rateLimiter } from "./lib/rateLimiter"
 import { postDocValidator, userDocValidator } from "./lib/validators"
 
@@ -32,28 +35,14 @@ export const addComment = mutation({
       content: args.content.trim(),
     })
 
-    // Notification (si pas soi-même)
-    if (post.author !== user._id) {
-      const existingNotif = await ctx.db
-        .query("notifications")
-        .withIndex("by_type_comment_sender", (q) =>
-          q
-            .eq("type", "comment")
-            .eq("comment", commentId as Id<"comments">)
-            .eq("sender", user._id),
-        )
-        .unique()
-      if (!existingNotif) {
-        await ctx.db.insert("notifications", {
-          type: "comment",
-          recipientId: post.author,
-          sender: user._id,
-          post: args.postId,
-          comment: commentId,
-          read: false,
-        })
-      }
-    }
+    // Notification (groupée par post, prefs vérifiées, anti-spam)
+    await createNotification(ctx, {
+      type: "comment",
+      recipientId: post.author,
+      actorId: user._id,
+      postId: args.postId,
+      commentId,
+    })
 
     return { commentId }
   },
@@ -100,17 +89,15 @@ export const deleteComment = mutation({
 
     await ctx.db.delete(args.commentId)
 
-    // Supprimer notification associée
-    const notif = await ctx.db
-      .query("notifications")
-      .withIndex("by_type_comment_sender", (q) =>
-        q
-          .eq("type", "comment")
-          .eq("comment", args.commentId)
-          .eq("sender", comment.author),
-      )
-      .unique()
-    if (notif) await ctx.db.delete(notif._id)
+    // Supprimer acteur de la notification groupée
+    if (post) {
+      await removeActorFromNotification(ctx, {
+        type: "comment",
+        recipientId: post.author,
+        actorId: comment.author,
+        postId: comment.post,
+      })
+    }
 
     return { deleted: true }
   },

@@ -12,6 +12,7 @@
  * - BUNNY_CDN_HOSTNAME : Hostname de la Pull Zone (ex: "fantribe-media.b-cdn.net")
  * - BUNNY_STREAM_LIBRARY_ID : ID de la bibliotheque Stream
  * - BUNNY_STREAM_API_KEY : Cle API Stream
+ * - BUNNY_STREAM_CDN_HOSTNAME : Hostname du Pull Zone Stream (ex: "vz-xxx.b-cdn.net")
  * - BUNNY_URL_TOKEN_KEY : (optionnel) Cle pour les signed URLs
  */
 
@@ -87,14 +88,16 @@ const getStorageConfig = () => {
 const getStreamConfig = () => {
   const libraryId = process.env.BUNNY_STREAM_LIBRARY_ID
   const apiKey = process.env.BUNNY_STREAM_API_KEY
+  const cdnHostname = process.env.BUNNY_STREAM_CDN_HOSTNAME
+  const urlTokenKey = process.env.BUNNY_URL_TOKEN_KEY
 
-  if (!libraryId || !apiKey) {
+  if (!libraryId || !apiKey || !cdnHostname) {
     throw new Error(
-      "Configuration Bunny Stream manquante. Verifiez BUNNY_STREAM_LIBRARY_ID et BUNNY_STREAM_API_KEY dans le dashboard Convex.",
+      "Configuration Bunny Stream manquante. Verifiez BUNNY_STREAM_LIBRARY_ID, BUNNY_STREAM_API_KEY et BUNNY_STREAM_CDN_HOSTNAME dans le dashboard Convex.",
     )
   }
 
-  return { libraryId, apiKey }
+  return { libraryId, apiKey, cdnHostname, urlTokenKey }
 }
 
 // ============================================================================
@@ -400,6 +403,42 @@ export const getOptimizedImageUrl = (
 export const getEmbedUrl = (videoId: string): string => {
   const config = getStreamConfig()
   return `https://iframe.mediadelivery.net/embed/${config.libraryId}/${videoId}`
+}
+
+/**
+ * Genere une URL signee Bunny CDN (Token Authentication).
+ * Algorithme: SHA256(securityKey + urlPath + expires) -> base64url
+ */
+const signBunnyCdnUrl = async (
+  url: string,
+  securityKey: string,
+  expiresTimestamp: number,
+): Promise<string> => {
+  const urlPath = new URL(url).pathname
+  const hashBase = securityKey + urlPath + expiresTimestamp
+  const data = new TextEncoder().encode(hashBase)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)))
+  const token = base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
+  return `${url}?token=${token}&expires=${expiresTimestamp}`
+}
+
+/**
+ * Construit l'URL thumbnail pour une video Bunny Stream.
+ * Si BUNNY_URL_TOKEN_KEY est configure, genere une URL signee (expiry 10 ans).
+ */
+export const getVideoThumbnailUrl = async (videoId: string): Promise<string> => {
+  const config = getStreamConfig()
+  const baseUrl = `https://${config.cdnHostname}/${videoId}/thumbnail.jpg`
+
+  if (!config.urlTokenKey) {
+    return baseUrl
+  }
+
+  // Expiry 10 ans (~suffisant pour la duree de vie du contenu)
+  const TEN_YEARS_SECONDS = 10 * 365 * 24 * 60 * 60
+  const expires = Math.floor(Date.now() / 1000) + TEN_YEARS_SECONDS
+  return signBunnyCdnUrl(baseUrl, config.urlTokenKey, expires)
 }
 
 /**

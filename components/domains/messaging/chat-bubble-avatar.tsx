@@ -1,5 +1,4 @@
-import Image from "next/image"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MessageProps } from "@/types"
 
 type ChatBubbleAvatarProps = {
@@ -11,12 +10,10 @@ export const ChatBubbleAvatar = ({ message }: ChatBubbleAvatarProps) => {
 
   return (
     <Avatar className="relative h-8 w-8 overflow-visible">
-      <Image
+      <AvatarImage
         src={message.sender.image}
-        width={32}
-        height={32}
+        sizes="32px"
         alt={message.sender.name || "Profile image"}
-        className="rounded-full object-cover"
       />
       <AvatarFallback className="h-8 w-8">
         <div className="h-full w-full animate-pulse rounded-full bg-muted" />

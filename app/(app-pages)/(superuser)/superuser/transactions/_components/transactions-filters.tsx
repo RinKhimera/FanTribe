@@ -73,7 +73,7 @@ export function TransactionsFilters({
           {/* Filtre de période */}
           <div className="space-y-2">
             <Label htmlFor="period" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4" aria-hidden="true" />
               Période
             </Label>
             <Select

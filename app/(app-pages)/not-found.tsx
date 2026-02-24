@@ -12,14 +12,14 @@ export default function NotFound() {
           href="/"
           className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-lg"
         >
-          <ArrowLeft className="size-6" />
+          <ArrowLeft className="size-6" aria-hidden="true" />
           Retour à l&apos;accueil
         </Link>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
         <div className="bg-muted mb-8 flex h-24 w-24 items-center justify-center rounded-full">
-          <UserX className="text-muted-foreground h-12 w-12" />
+          <UserX className="text-muted-foreground h-12 w-12" aria-hidden="true" />
         </div>
 
         <div className="mb-8 text-center">
@@ -37,7 +37,7 @@ export default function NotFound() {
         <div>
           <Button asChild size="lg" className="gap-2">
             <Link href="/">
-              <Home className="h-4 w-4" />
+              <Home className="h-4 w-4" aria-hidden="true" />
               Retour à l&apos;accueil
             </Link>
           </Button>

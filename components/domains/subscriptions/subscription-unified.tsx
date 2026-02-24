@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { motion } from "motion/react"
 import Image from "next/image"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { startStripeCheckout } from "@/actions/stripe/checkout"
@@ -134,6 +135,11 @@ export const SubscriptionUnified = ({
           action: type === "renew" ? "renew" : "subscribe",
         })
       } catch (error) {
+        // Relancer les erreurs de redirection Next.js (comportement normal)
+        if (isRedirectError(error)) {
+          throw error
+        }
+
         const errorMessage =
           error instanceof Error ? error.message : "Erreur inconnue"
 

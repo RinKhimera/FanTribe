@@ -16,54 +16,11 @@ import {
   getCreatorSubscribers,
   hasActiveSubscription,
   postMediaValidator,
+  userDocValidator,
 } from "./lib"
 import { rateLimiter } from "./lib/rateLimiter"
 import { sendPostNotifications } from "./notificationQueue"
 import { incrementUserStat } from "./userStats"
-
-// ============================================================================
-// HELPERS - Media normalization (transition: string → PostMedia)
-// ============================================================================
-
-type PostMedia = {
-  type: "image" | "video"
-  url: string
-  mediaId: string
-  mimeType: string
-  fileName?: string
-  fileSize?: number
-  thumbnailUrl?: string
-  duration?: number
-  width?: number
-  height?: number
-}
-
-/** Normalize a media entry: convert old string format to PostMedia object */
-function normalizeMedia(m: string | PostMedia): PostMedia {
-  if (typeof m !== "string") return m
-  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
-  if (isVideo) {
-    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
-    return {
-      type: "video",
-      url: m,
-      mediaId: guidMatch ? guidMatch[1] : m,
-      mimeType: "video/mp4",
-    }
-  }
-  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
-  return {
-    type: "image",
-    url: m,
-    mediaId: pathMatch ? pathMatch[1] : m,
-    mimeType: "image/jpeg",
-  }
-}
-
-/** Extract plain URL from a media entry (string or PostMedia) */
-function extractMediaUrl(m: string | PostMedia): string {
-  return typeof m === "string" ? m : m.url
-}
 
 // ============================================================================
 // MUTATIONS
@@ -84,6 +41,27 @@ export const createPost = mutation({
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
+
+    // Validate media constraints: max 3 medias, no mix images/videos
+    if (args.medias.length > 3) {
+      throw createAppError("INVALID_INPUT", {
+        userMessage: "Maximum 3 médias par publication",
+      })
+    }
+    if (args.medias.length > 0) {
+      const hasImages = args.medias.some((m) => m.type === "image")
+      const hasVideos = args.medias.some((m) => m.type === "video")
+      if (hasImages && hasVideos) {
+        throw createAppError("INVALID_INPUT", {
+          userMessage: "Impossible de mixer images et vidéos dans un même post",
+        })
+      }
+      if (hasVideos && args.medias.length > 1) {
+        throw createAppError("INVALID_INPUT", {
+          userMessage: "1 seule vidéo par publication",
+        })
+      }
+    }
 
     const postId = await ctx.db.insert("posts", {
       author: user._id,
@@ -154,7 +132,7 @@ export const deletePost = mutation({
 
     // Suppression des médias Bunny.net en parallèle
     if (post.medias && post.medias.length > 0) {
-      const mediaUrls = post.medias.map(extractMediaUrl)
+      const mediaUrls = post.medias.map((m) => m.url)
       const uniqueMedias = [...new Set(mediaUrls)]
       await ctx.scheduler
         .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
@@ -184,7 +162,7 @@ export const deletePost = mutation({
         .collect(),
       ctx.db
         .query("notifications")
-        .withIndex("by_post", (q) => q.eq("post", args.postId))
+        .withIndex("by_post", (q) => q.eq("postId", args.postId))
         .collect(),
     ])
 
@@ -284,31 +262,7 @@ export const getPost = query({
     v.object({
       _id: v.id("posts"),
       _creationTime: v.number(),
-      author: v.object({
-        _id: v.id("users"),
-        _creationTime: v.number(),
-        name: v.string(),
-        username: v.optional(v.string()),
-        email: v.string(),
-        image: v.string(),
-        imageBanner: v.optional(v.string()),
-        bio: v.optional(v.string()),
-        location: v.optional(v.string()),
-        socialLinks: v.optional(v.any()),
-        pinnedPostIds: v.optional(v.array(v.id("posts"))),
-        isOnline: v.boolean(),
-        activeSessions: v.optional(v.number()),
-        lastSeenAt: v.optional(v.number()),
-        tokenIdentifier: v.string(),
-        externalId: v.optional(v.string()),
-        accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
-        allowAdultContent: v.optional(v.boolean()),
-        personalInfo: v.optional(v.any()),
-        isBanned: v.optional(v.boolean()),
-        banDetails: v.optional(v.any()),
-        banHistory: v.optional(v.any()),
-        badges: v.optional(v.any()),
-      }),
+      author: userDocValidator,
       content: v.string(),
       medias: v.array(postMediaValidator),
       visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
@@ -335,10 +289,7 @@ export const getPost = query({
         currentUser?.accountType,
       )
 
-    // Normalize medias to PostMedia[] (convert old strings)
-    const normalizedMedias = (medias || []).map(normalizeMedia)
-
-    return { ...post, medias: normalizedMedias, isMediaLocked, mediaCount, author }
+    return { ...post, medias: medias || [], isMediaLocked, mediaCount, author }
   },
 })
 
@@ -387,7 +338,7 @@ export const getUserPosts = query({
 
       return {
         ...post,
-        medias: isLocked ? [] : (post.medias || []).map(normalizeMedia),
+        medias: isLocked ? [] : post.medias || [],
         isMediaLocked: isLocked && originalMediaCount > 0,
         mediaCount: originalMediaCount,
         author,
@@ -435,7 +386,7 @@ export const getUserPostsWithPinned = query({
 
     // Helper pour filtrer les médias d'un post et normaliser
     const filterPostMedia = <
-      T extends { medias?: Array<string | PostMedia>; visibility?: string },
+      T extends { medias?: Array<{ type: string; url: string }>; visibility?: string },
     >(
       post: T,
       isPinned: boolean,
@@ -446,7 +397,7 @@ export const getUserPostsWithPinned = query({
 
       return {
         ...post,
-        medias: isLocked ? [] : (post.medias || []).map(normalizeMedia),
+        medias: isLocked ? [] : post.medias || [],
         isMediaLocked: isLocked && originalMediaCount > 0,
         mediaCount: originalMediaCount,
         author,
@@ -534,7 +485,7 @@ export const getUserGallery = query({
 
     const galleryItems: Array<{
       _id: string
-      media: PostMedia
+      media: { type: "image" | "video"; url: string; mediaId: string; mimeType: string; fileName?: string; fileSize?: number; thumbnailUrl?: string; duration?: number; width?: number; height?: number }
       visibility: string
     }> = []
 
@@ -548,7 +499,7 @@ export const getUserGallery = query({
         post.medias?.forEach((m, index) => {
           galleryItems.push({
             _id: `${post._id}_${index}`,
-            media: normalizeMedia(m),
+            media: m,
             visibility: post.visibility || "public",
           })
         })
@@ -602,7 +553,7 @@ export const getAllPosts = query({
         const author = await ctx.db.get(post.author)
         return {
           ...post,
-          medias: (post.medias || []).map(normalizeMedia),
+          medias: post.medias || [],
           author,
         }
       }),
@@ -694,7 +645,7 @@ export const getHomePosts = query({
       ...paginationResult,
       page: filtered.map((p) => ({
         ...p,
-        medias: (p.medias || []).map(normalizeMedia),
+        medias: p.medias || [],
         author: authorsMap.get(p.author),
       })),
     }
@@ -777,7 +728,7 @@ export const getHomePostsPaginated = query({
       ...paginationResult,
       page: filtered.map((p) => ({
         ...p,
-        medias: (p.medias || []).map(normalizeMedia),
+        medias: p.medias || [],
         author: authorsMap.get(p.author),
       })),
     }

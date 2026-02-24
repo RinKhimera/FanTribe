@@ -1,51 +1,204 @@
 "use client"
 
 import Image from "next/image"
-import React, { useEffect, useEffectEvent, useMemo, useState } from "react"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
-import {
-  Carousel,
-  type CarouselApi,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+import React, { useState } from "react"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { useVideoMetadata } from "@/hooks"
-import { getOptimalDisplayRatio, getVideoDisplayInfo } from "@/lib/calculators"
+import {
+  getOptimalDisplayRatio,
+  getVideoDisplayInfo,
+} from "@/lib/calculators/video-display-info"
 import { cn } from "@/lib/utils"
 import type { PostMedia as PostMediaType } from "@/types"
 import { BunnyVideoPlayer } from "./bunny-video-player"
 import { LockedContentOverlay } from "./post-media/locked-content-overlay"
 
+// ============================================================================
+// Constants
+// ============================================================================
+
+const RATIO_MIN = 4 / 5 // 0.8 — portrait max (Instagram)
+const RATIO_MAX = 1.91 // landscape max (Instagram)
+const RATIO_DEFAULT = 4 / 3 // fallback for posts without dimensions
+const GRID_GAP = "2px"
+const GRID_RATIO = "16 / 9"
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/** Clamp image aspect ratio between portrait (4:5) and landscape (1.91:1) */
+function getClampedAspectRatio(media: PostMediaType): number {
+  if (media.width && media.height && media.width > 0 && media.height > 0) {
+    const natural = media.width / media.height
+    return Math.min(Math.max(natural, RATIO_MIN), RATIO_MAX)
+  }
+  return RATIO_DEFAULT
+}
+
+// ============================================================================
+// GridCell
+// ============================================================================
+
+interface GridCellProps {
+  media: PostMediaType
+  index: number
+  onOpen: (index: number) => void
+  style?: React.CSSProperties
+  overlay?: string
+}
+
+function GridCell({ media, index, onOpen, style, overlay }: GridCellProps) {
+  return (
+    <button
+      type="button"
+      className="group relative cursor-pointer overflow-hidden focus:outline-none"
+      style={style}
+      onClick={(e) => {
+        e.stopPropagation()
+        onOpen(index)
+      }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <Image
+        src={media.url}
+        alt=""
+        fill
+        sizes="(max-width: 640px) 50vw, 300px"
+        className="object-cover select-none"
+        draggable={false}
+        onContextMenu={(e) => e.preventDefault()}
+      />
+      {/* Hover overlay */}
+      <div className="absolute inset-0 z-10 bg-black/0 transition-colors duration-200 group-hover:bg-black/10" />
+      {/* "+N" overlay for excess images */}
+      {overlay && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
+          <span className="text-2xl font-bold text-white">{overlay}</span>
+        </div>
+      )}
+    </button>
+  )
+}
+
+// ============================================================================
+// ImageGrid
+// ============================================================================
+
+function ImageGrid({
+  images,
+  onOpen,
+}: {
+  images: PostMediaType[]
+  onOpen: (index: number) => void
+}) {
+  const count = images.length
+
+  // Single image — clamped aspect ratio
+  if (count === 1) {
+    return (
+      <button
+        type="button"
+        className="group relative w-full cursor-pointer overflow-hidden rounded-xl focus:outline-none"
+        style={{ aspectRatio: getClampedAspectRatio(images[0]) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          onOpen(0)
+        }}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <Image
+          src={images[0].url}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
+          className="cursor-pointer object-cover select-none"
+          draggable={false}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+        <div className="absolute inset-0 z-10 bg-black/0 transition-colors duration-200 group-hover:bg-black/10" />
+      </button>
+    )
+  }
+
+  // Two images — side-by-side
+  if (count === 2) {
+    return (
+      <div
+        className="grid overflow-hidden rounded-xl"
+        style={{
+          aspectRatio: GRID_RATIO,
+          gap: GRID_GAP,
+          gridTemplateColumns: "1fr 1fr",
+        }}
+      >
+        {images.map((media, i) => (
+          <GridCell key={media.mediaId} media={media} index={i} onOpen={onOpen} />
+        ))}
+      </div>
+    )
+  }
+
+  // Three images — 1 large left + 2 stacked right
+  if (count === 3) {
+    return (
+      <div
+        className="grid overflow-hidden rounded-xl"
+        style={{
+          aspectRatio: GRID_RATIO,
+          gap: GRID_GAP,
+          gridTemplateColumns: "1fr 1fr",
+          gridTemplateRows: "1fr 1fr",
+        }}
+      >
+        <GridCell
+          media={images[0]}
+          index={0}
+          onOpen={onOpen}
+          style={{ gridRow: "1 / 3" }}
+        />
+        <GridCell media={images[1]} index={1} onOpen={onOpen} />
+        <GridCell media={images[2]} index={2} onOpen={onOpen} />
+      </div>
+    )
+  }
+
+  // Four+ images (old posts) — 2x2 grid with "+N" overlay on 4th cell
+  return (
+    <div
+      className="grid overflow-hidden rounded-xl"
+      style={{
+        aspectRatio: GRID_RATIO,
+        gap: GRID_GAP,
+        gridTemplateColumns: "1fr 1fr",
+        gridTemplateRows: "1fr 1fr",
+      }}
+    >
+      {images.slice(0, 4).map((media, i) => (
+        <GridCell
+          key={media.mediaId}
+          media={media}
+          index={i}
+          onOpen={onOpen}
+          overlay={
+            i === 3 && count > 4 ? `+${count - 3}` : undefined
+          }
+        />
+      ))}
+    </div>
+  )
+}
+
+// ============================================================================
+// PostMedia (main export)
+// ============================================================================
+
 interface PostMediaProps {
-  medias: Array<string | PostMediaType>
+  medias: PostMediaType[]
   isMediaLocked?: boolean
   mediaCount?: number
   authorUsername?: string
   onRequireSubscribe: () => void
-}
-
-/** Normalize a media entry: convert old string format to PostMedia object */
-function normalizeMediaEntry(m: string | PostMediaType): PostMediaType {
-  if (typeof m !== "string") return m
-  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
-  if (isVideo) {
-    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
-    return {
-      type: "video",
-      url: m,
-      mediaId: guidMatch ? guidMatch[1] : m,
-      mimeType: "video/mp4",
-    }
-  }
-  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
-  return {
-    type: "image",
-    url: m,
-    mediaId: pathMatch ? pathMatch[1] : m,
-    mimeType: "image/jpeg",
-  }
 }
 
 export const PostMedia: React.FC<PostMediaProps> = ({
@@ -55,64 +208,24 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   authorUsername,
   onRequireSubscribe,
 }) => {
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>()
-  const [currentSlide, setCurrentSlide] = useState(0)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
 
-  // Normalize medias to PostMediaType[] (handles transition from string[])
-  const normalizedMedias = useMemo(
-    () => medias.map(normalizeMediaEntry),
-    [medias],
-  )
+  const videoMedias = medias.filter((m) => m.type === "video")
+  const imageMedias = medias.filter((m) => m.type === "image")
+  const imageSlides = imageMedias.map((m) => ({
+    src: m.url,
+    width: m.width,
+    height: m.height,
+  }))
 
-  // Extract URLs for hooks that need them
-  const mediaUrls = useMemo(() => normalizedMedias.map((m) => m.url), [normalizedMedias])
-
-  // Use the centralized video metadata hook - only when content is not locked
+  // Video metadata hook — only when content is not locked and has videos
   const { metadata: videoMetadata } = useVideoMetadata({
-    mediaUrls: mediaUrls,
-    enabled: !isMediaLocked && normalizedMedias.length > 0,
+    mediaUrls: videoMedias.map((m) => m.url),
+    enabled: !isMediaLocked && videoMedias.length > 0,
   })
 
-  // Liste des seules images (exclut les vidéos)
-  const imageMedias = useMemo(
-    () => normalizedMedias.filter((m) => m.type === "image"),
-    [normalizedMedias],
-  )
-
-  // Image URLs for the fullscreen viewer
-  const imageUrls = useMemo(
-    () => imageMedias.map((m) => m.url),
-    [imageMedias],
-  )
-
-  // Compute slideCount from API instead of storing in state
-  const slideCount = carouselApi?.scrollSnapList().length ?? 0
-
-  // Use useEffectEvent to avoid calling setState synchronously in effect
-  const syncCurrentSlide = useEffectEvent(() => {
-    if (carouselApi) {
-      setCurrentSlide(carouselApi.selectedScrollSnap())
-    }
-  })
-
-  useEffect(() => {
-    if (!carouselApi) return
-
-    syncCurrentSlide()
-
-    carouselApi.on("select", syncCurrentSlide)
-    carouselApi.on("reInit", syncCurrentSlide)
-
-    return () => {
-      carouselApi.off("select", syncCurrentSlide)
-      carouselApi.off("reInit", syncCurrentSlide)
-    }
-  }, [carouselApi])
-
-  // Si le contenu est verrouillé, afficher l'overlay sans URL
-  // Le backend retourne medias=[] quand isMediaLocked=true
+  // Locked content overlay
   if (isMediaLocked) {
     return (
       <LockedContentOverlay
@@ -123,207 +236,46 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     )
   }
 
-  if (!normalizedMedias || normalizedMedias.length === 0) return null
+  if (!medias || medias.length === 0) return null
 
-  const openImage = (media: PostMediaType) => {
-    const idx = imageMedias.indexOf(media)
-    if (idx >= 0) {
-      setViewerIndex(idx)
-      setViewerOpen(true)
-    }
+  const openLightbox = (index: number) => {
+    setViewerIndex(index)
+    setViewerOpen(true)
   }
 
-  const renderMedia = (
-    media: PostMediaType,
-    forceRatio?: string,
-    isInCarousel?: boolean,
-  ) => {
-    if (media.type === "video") {
-      // Obtenir les métadonnées de la vidéo et calculer l'aspect ratio optimal
-      let optimalRatio = forceRatio || "16 / 9"
-
-      if (media.mediaId && videoMetadata[media.mediaId]) {
-        const videoData = videoMetadata[media.mediaId]
-        const videoInfo = getVideoDisplayInfo(videoData)
-        const calculatedRatio = getOptimalDisplayRatio(videoInfo)
-        optimalRatio = forceRatio || calculatedRatio
-      }
-
-      return (
-        <div
-          key={media.url}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <BunnyVideoPlayer
-            src={media.url}
-            aspectRatio={optimalRatio}
-            className={cn(!isInCarousel && "rounded-xl")}
-          />
-        </div>
-      )
+  // Compute video aspect ratio from metadata
+  const getVideoRatio = (media: PostMediaType): string => {
+    if (media.mediaId && videoMetadata[media.mediaId]) {
+      const videoData = videoMetadata[media.mediaId]
+      const videoInfo = getVideoDisplayInfo(videoData)
+      return getOptimalDisplayRatio(videoInfo)
     }
-
-    // Image rendering with modern design
-    // In carousel: use blur background + object-contain (container has fixed 4:5 ratio)
-    // Single media: use natural aspect ratio (no blur needed)
-    if (isInCarousel) {
-      return (
-        <button
-          type="button"
-          key={media.url}
-          onClick={(e) => {
-            e.stopPropagation()
-            openImage(media)
-          }}
-          className="group absolute inset-0 cursor-pointer overflow-hidden focus:outline-none"
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          {/* Blurred background - fills entire container */}
-          <Image
-            src={media.url}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-            className="scale-110 object-cover blur-lg"
-            style={{ filter: "blur(20px)" }}
-            draggable={false}
-            onDragStart={(e) => e.preventDefault()}
-            onContextMenu={(e) => e.preventDefault()}
-          />
-          {/* Main image - centered with object-contain to show complete image */}
-          <Image
-            src={media.url}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-            className="z-10 cursor-pointer object-contain select-none"
-            draggable={false}
-            onDragStart={(e) => e.preventDefault()}
-            onContextMenu={(e) => e.preventDefault()}
-          />
-          {/* Hover overlay */}
-          <div
-            className={cn(
-              "absolute inset-0 z-20 bg-black/0 transition-colors duration-300",
-              "group-hover:bg-black/10",
-            )}
-          />
-        </button>
-      )
-    }
-
-    // Single media: natural aspect ratio, no blur background needed
-    return (
-      <button
-        type="button"
-        key={media.url}
-        onClick={(e) => {
-          e.stopPropagation()
-          openImage(media)
-        }}
-        className="group relative flex w-full cursor-pointer overflow-hidden rounded-xl focus:outline-none"
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        <Image
-          src={media.url}
-          alt=""
-          width={0}
-          height={0}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 600px"
-          className="h-auto max-h-187.5 w-full cursor-pointer object-cover select-none"
-          draggable={false}
-          onDragStart={(e) => e.preventDefault()}
-          onContextMenu={(e) => e.preventDefault()}
-        />
-        {/* Hover overlay */}
-        <div
-          className={cn(
-            "absolute inset-0 z-20 bg-black/0 transition-colors duration-300",
-            "group-hover:bg-black/10",
-          )}
-        />
-      </button>
-    )
+    return "16 / 9"
   }
 
-  // Multiple media: carousel with modern design
-  if (normalizedMedias.length > 1) {
-    return (
-      <div
-        className="relative overflow-hidden rounded-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Carousel setApi={setCarouselApi}>
-          <CarouselContent>
-            {normalizedMedias.map((m) => (
-              <CarouselItem key={m.url}>
-                <div
-                  className="relative w-full overflow-hidden bg-black"
-                  style={{ aspectRatio: "4 / 5" }}
-                >
-                  {renderMedia(m, "4 / 5", true)}
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-
-          {/* Navigation buttons - subtle rounded style */}
-          <CarouselPrevious
-            variant="secondary"
-            size="icon"
-            className={cn(
-              "left-2 size-8 rounded-full",
-              "border-0 bg-black/40 backdrop-blur-sm",
-              "hover:bg-black/60",
-              "transition-all duration-200",
-            )}
-          />
-          <CarouselNext
-            variant="secondary"
-            size="icon"
-            className={cn(
-              "right-2 size-8 rounded-full",
-              "border-0 bg-black/40 backdrop-blur-sm",
-              "hover:bg-black/60",
-              "transition-all duration-200",
-            )}
-          />
-        </Carousel>
-
-        {/* Slide indicator - Minimal style */}
-        {slideCount > 1 && (
-          <div className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2">
-            <div
-              className={cn(
-                "flex items-center gap-1 rounded-full px-2 py-1",
-                "bg-black/50 backdrop-blur-sm",
-                "text-[10px] font-medium text-white",
-              )}
-            >
-              <span className="tabular-nums">{currentSlide + 1}</span>
-              <span className="opacity-60">/</span>
-              <span className="tabular-nums opacity-80">{slideCount}</span>
-            </div>
-          </div>
-        )}
-
-        <FullscreenImageViewer
-          medias={imageUrls}
-          index={viewerIndex}
-          open={viewerOpen}
-          onClose={() => setViewerOpen(false)}
-          onIndexChange={setViewerIndex}
-        />
-      </div>
-    )
-  }
-
-  // Single media
   return (
     <>
-      {normalizedMedias.map((m) => renderMedia(m))}
-      <FullscreenImageViewer
-        medias={imageUrls}
+      {/* Videos first (legacy mixed posts, or single video posts) */}
+      {videoMedias.map((media) => (
+        <div key={media.url} onClick={(e) => e.stopPropagation()}>
+          <BunnyVideoPlayer
+            src={media.url}
+            aspectRatio={getVideoRatio(media)}
+            className="rounded-xl"
+          />
+        </div>
+      ))}
+
+      {/* Image grid */}
+      {imageMedias.length > 0 && (
+        <div className={cn(videoMedias.length > 0 && "mt-0.5")}>
+          <ImageGrid images={imageMedias} onOpen={openLightbox} />
+        </div>
+      )}
+
+      {/* Lightbox for images */}
+      <MediaLightbox
+        slides={imageSlides}
         index={viewerIndex}
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}

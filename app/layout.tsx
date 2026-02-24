@@ -4,7 +4,7 @@ import "@/app/globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 import ConvexClientProvider from "@/providers/convex-client-provider"
-import TanstackClientProvider from "@/providers/tanstack-provider"
+import { ServiceWorkerRegistration } from "@/components/shared/service-worker-registration"
 import { ThemeProvider } from "@/providers/theme-provider"
 
 const fontSans = FontSans({
@@ -13,15 +13,28 @@ const fontSans = FontSans({
 })
 
 export const metadata: Metadata = {
-  title: "FanTribe",
+  metadataBase: new URL("https://fantribe.io"),
+  title: {
+    default: "FanTribe",
+    template: "%s | FanTribe",
+  },
   description: "Le réseau social des créateurs de contenus",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "FanTribe",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 }
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
 }
@@ -46,10 +59,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ConvexClientProvider>
-            <TanstackClientProvider>{children}</TanstackClientProvider>
+            {children}
           </ConvexClientProvider>
         </ThemeProvider>
         <Toaster richColors />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   )

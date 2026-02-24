@@ -11,7 +11,9 @@ import {
   deleteFromBunny,
   deleteVideoFromBunny,
   extractVideoGuidFromUrl,
+  getVideoThumbnailUrl,
 } from "./lib/bunny"
+import { createNotification } from "./lib/notifications"
 import { incrementUserStat } from "./userStats"
 
 type ProcessPaymentResult = {
@@ -439,19 +441,26 @@ export const processPaymentAtomic = internalMutation({
       providerTransactionId,
     })
 
-    // 4. CREER LA NOTIFICATION POUR LE CREATEUR
+    // 4. CREER LES NOTIFICATIONS
     if (
       action === "created" ||
       action === "renewed" ||
       action === "reactivated"
     ) {
+      // Notification pour le créateur (nouvel abo / renouvellement)
       const notificationType =
         action === "created" ? "newSubscription" : "renewSubscription"
-      await ctx.db.insert("notifications", {
-        type: notificationType,
+      await createNotification(ctx, {
+        type: notificationType as "newSubscription" | "renewSubscription",
         recipientId: creatorId,
-        sender: subscriberId,
-        read: false,
+        actorId: subscriberId,
+      })
+
+      // Notification de confirmation pour l'abonné
+      await createNotification(ctx, {
+        type: "subscriptionConfirmed",
+        recipientId: subscriberId,
+        actorId: creatorId,
       })
     }
 
@@ -527,6 +536,57 @@ export const processPayment = action({
         startedAt: args.startedAt,
       },
     )
+  },
+})
+
+// ============================================================================
+// Tip Processing
+// ============================================================================
+
+export const processTip = action({
+  args: {
+    provider: v.string(),
+    providerTransactionId: v.string(),
+    senderId: v.id("users"),
+    creatorId: v.id("users"),
+    amount: v.number(),
+    currency: v.string(),
+    message: v.optional(v.string()),
+    context: v.optional(
+      v.union(
+        v.literal("post"),
+        v.literal("profile"),
+        v.literal("message"),
+      ),
+    ),
+    postId: v.optional(v.id("posts")),
+    conversationId: v.optional(v.id("conversations")),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    tipId: v.union(v.id("tips"), v.null()),
+    alreadyProcessed: v.optional(v.boolean()),
+  }),
+  handler: async (ctx, args) => {
+    const result: {
+      success: boolean
+      message: string
+      tipId: Id<"tips"> | null
+      alreadyProcessed?: boolean
+    } = await ctx.runMutation(internal.tips.processTipAtomic, {
+      provider: args.provider,
+      providerTransactionId: args.providerTransactionId,
+      senderId: args.senderId,
+      creatorId: args.creatorId,
+      amount: args.amount,
+      currency: args.currency,
+      message: args.message,
+      context: args.context,
+      postId: args.postId,
+      conversationId: args.conversationId,
+    })
+    return result
   },
 })
 
@@ -611,9 +671,10 @@ export const fanoutNewPostNotifications = action({
       await Promise.all(
         slice.map((recipientId) =>
           ctx
-            .runMutation(internal.notifications.insertNewPostNotification, {
+            .runMutation(internal.notifications.createSingleNotification, {
+              type: "newPost",
               recipientId,
-              sender: args.authorId,
+              actorId: args.authorId,
               postId: args.postId,
             })
             .catch((err) => {
@@ -756,5 +817,136 @@ export const deleteMultipleBunnyAssets = action({
       failures: failureCount,
       results,
     }
+  },
+})
+
+// ============================================================================
+// Migration: Backfill thumbnailUrl for existing video medias
+// Run once via Convex dashboard, then delete
+// ============================================================================
+
+export const backfillVideoThumbnailsBatch = internalMutation({
+  args: {
+    updates: v.array(
+      v.object({
+        postId: v.id("posts"),
+        thumbnailsByMediaId: v.array(
+          v.object({ mediaId: v.string(), thumbnailUrl: v.string() }),
+        ),
+      }),
+    ),
+  },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    let patched = 0
+    for (const { postId, thumbnailsByMediaId } of args.updates) {
+      const post = await ctx.db.get(postId)
+      if (!post || !post.medias || post.medias.length === 0) continue
+
+      const urlMap = new Map(
+        thumbnailsByMediaId.map((t) => [t.mediaId, t.thumbnailUrl]),
+      )
+
+      let needsPatch = false
+      const updatedMedias = post.medias.map((media) => {
+        const url = urlMap.get(media.mediaId)
+        if (url && media.type === "video" && !media.thumbnailUrl) {
+          needsPatch = true
+          return { ...media, thumbnailUrl: url }
+        }
+        return media
+      })
+
+      if (needsPatch) {
+        await ctx.db.patch(postId, { medias: updatedMedias })
+        patched++
+      }
+    }
+    return patched
+  },
+})
+
+type PostWithVideoMedias = {
+  postId: Id<"posts">
+  videoMediaIds: string[]
+}
+
+export const backfillVideoThumbnails = internalAction({
+  args: {},
+  returns: v.object({
+    totalPosts: v.number(),
+    patchedPosts: v.number(),
+  }),
+  handler: async (ctx) => {
+    // 1. Collect all posts with video medias missing thumbnailUrl
+    const postsToFix: PostWithVideoMedias[] = await ctx.runQuery(
+      internal.internalActions.getPostsWithVideosMissingThumbnails,
+      {},
+    )
+
+    // 2. Generate signed URLs in the action runtime (has crypto access)
+    const BATCH_SIZE = 50
+    let totalPatched = 0
+
+    for (let i = 0; i < postsToFix.length; i += BATCH_SIZE) {
+      const batch = postsToFix.slice(i, i + BATCH_SIZE)
+
+      // Pre-compute signed thumbnail URLs for each post's video medias
+      const updates = await Promise.all(
+        batch.map(async ({ postId, videoMediaIds }) => ({
+          postId,
+          thumbnailsByMediaId: await Promise.all(
+            videoMediaIds.map(async (mediaId) => ({
+              mediaId,
+              thumbnailUrl: await getVideoThumbnailUrl(mediaId),
+            })),
+          ),
+        })),
+      )
+
+      const patched: number = await ctx.runMutation(
+        internal.internalActions.backfillVideoThumbnailsBatch,
+        { updates },
+      )
+      totalPatched += patched
+    }
+
+    console.log(
+      `Backfill complete: ${totalPatched}/${postsToFix.length} posts patched`,
+    )
+
+    return {
+      totalPosts: postsToFix.length,
+      patchedPosts: totalPatched,
+    }
+  },
+})
+
+export const getPostsWithVideosMissingThumbnails = internalQuery({
+  args: {},
+  returns: v.array(
+    v.object({
+      postId: v.id("posts"),
+      videoMediaIds: v.array(v.string()),
+    }),
+  ),
+  handler: async (ctx) => {
+    const posts = await ctx.db.query("posts").collect()
+    return posts
+      .filter((p) =>
+        p.medias?.some(
+          (m: { type: string; thumbnailUrl?: string }) =>
+            m.type === "video" && !m.thumbnailUrl,
+        ),
+      )
+      .map((p) => ({
+        postId: p._id,
+        videoMediaIds: (p.medias ?? [])
+          .filter(
+            (m: { type: string; thumbnailUrl?: string }) =>
+              m.type === "video" && !m.thumbnailUrl,
+          )
+          .map((m: { mediaId: string }) => m.mediaId),
+      }))
   },
 })

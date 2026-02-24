@@ -1,4 +1,4 @@
-import { fetchQuery } from "convex/nextjs"
+import { preloadQuery, preloadedQueryResult } from "convex/nextjs"
 import { notFound, redirect } from "next/navigation"
 import { getAuthToken } from "@/app/auth"
 import { PostLayout } from "@/components/domains/posts"
@@ -10,24 +10,24 @@ const PostDetailsPage = async (props: {
 }) => {
   const params = await props.params
   const token = await getAuthToken()
-  const currentUser = await fetchQuery(api.users.getCurrentUser, undefined, {
-    token,
-  })
+  const currentUser = preloadedQueryResult(
+    await preloadQuery(api.users.getCurrentUser, undefined, { token }),
+  )
 
   if (!currentUser?.username) redirect("/onboarding")
 
-  const userProfile = await fetchQuery(api.users.getUserProfile, {
-    username: params.username,
-  })
+  const [preloadedProfile, preloadedPost] = await Promise.all([
+    preloadQuery(api.users.getUserProfile, { username: params.username }),
+    preloadQuery(api.posts.getPost, { postId: params.postId }),
+  ])
 
+  const userProfile = preloadedQueryResult(preloadedProfile)
   if (userProfile === null) notFound()
 
-  const post = await fetchQuery(api.posts.getPost, {
-    postId: params.postId,
-  })
+  const post = preloadedQueryResult(preloadedPost)
   if (post === null) notFound()
 
-  return <PostLayout currentUser={currentUser} postId={params.postId} />
+  return <PostLayout currentUser={currentUser} preloadedPost={preloadedPost} />
 }
 
 export default PostDetailsPage

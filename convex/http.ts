@@ -17,6 +17,7 @@ import {
   getStreamAccessKey,
   getStreamLibraryId,
   getEmbedUrl,
+  getVideoThumbnailUrl,
   uploadToBunny,
   validateMediaFile,
 } from "./lib/bunny"
@@ -79,7 +80,7 @@ http.route({
       }
 
       default:
-        console.log("Ignored Clerk webhook event", event.type)
+        break
     }
 
     return new Response(null, { status: 200 })
@@ -240,6 +241,7 @@ http.route({
       const videoRecord = await createVideoRecord(videoTitle, collectionId)
 
       // Retourner les infos pour upload direct depuis le client
+      const thumbnailUrl = await getVideoThumbnailUrl(videoRecord.guid)
       return jsonResponse(
         {
           success: true,
@@ -247,6 +249,7 @@ http.route({
           accessKey: getStreamAccessKey(),
           libraryId: getStreamLibraryId(),
           embedUrl: getEmbedUrl(videoRecord.guid),
+          thumbnailUrl,
         },
         200,
         request,

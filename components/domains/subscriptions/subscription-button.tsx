@@ -235,9 +235,9 @@ export const SubscriptionButton = ({
                 className="pointer-events-none absolute inset-0 rounded-full"
                 animate={{
                   boxShadow: [
-                    "0 0 0 0 hsl(var(--primary) / 0)",
-                    "0 0 12px 2px hsl(var(--primary) / 0.3)",
-                    "0 0 0 0 hsl(var(--primary) / 0)",
+                    "0 0 0 0 transparent",
+                    "0 0 12px 2px color-mix(in oklch, var(--primary) 30%, transparent)",
+                    "0 0 0 0 transparent",
                   ],
                 }}
                 transition={{

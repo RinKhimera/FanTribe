@@ -5,6 +5,8 @@ import { motion } from "motion/react"
 import { ImageIcon, Loader2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
+import { POST_CROP_PRESETS } from "@/components/shared/image-crop/aspect-ratio-presets"
+import { ImageCropDialog } from "@/components/shared/image-crop/image-crop-dialog"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -17,11 +19,17 @@ type MediaPopoverProps = {
   conversationId: Id<"conversations">
 }
 
+type CropState = {
+  imageSrc: string
+  file: File
+} | null
+
 export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
   const { currentUser } = useCurrentUser()
   const { uploadMedia } = useBunnyUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [cropState, setCropState] = useState<CropState>(null)
 
   const sendMessage = useMutation(api.messaging.sendMessage)
 
@@ -29,25 +37,29 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
     fileInputRef.current?.click()
   }
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || !currentUser) return
 
-    // Validation du type de fichier (images seulement pour les messages)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+
     if (!file.type.startsWith("image/")) {
       toast.error("Seules les images sont acceptées")
       return
     }
 
-    // Validation de la taille (10MB max)
     const maxFileSize = 10 * 1024 * 1024
     if (file.size > maxFileSize) {
       toast.error("Le fichier est trop volumineux. Taille maximale: 10MB")
       return
     }
 
+    const objectUrl = URL.createObjectURL(file)
+    setCropState({ imageSrc: objectUrl, file })
+  }
+
+  const uploadAndSendImage = async (file: File) => {
+    if (!currentUser) return
     setIsUploading(true)
 
     try {
@@ -68,7 +80,6 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
         throw new Error(result.error || "Upload échoué")
       }
 
-      // Utiliser la nouvelle API sendMessage avec medias
       await sendMessage({
         conversationId,
         medias: [
@@ -98,10 +109,30 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
       })
     } finally {
       setIsUploading(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
     }
+  }
+
+  const handleMsgCropConfirm = async (croppedBlob: Blob) => {
+    if (!cropState) return
+    URL.revokeObjectURL(cropState.imageSrc)
+    const croppedFile = new File([croppedBlob], cropState.file.name, {
+      type: croppedBlob.type,
+    })
+    setCropState(null)
+    await uploadAndSendImage(croppedFile)
+  }
+
+  const handleMsgCropSkip = async () => {
+    if (!cropState) return
+    const originalFile = cropState.file
+    URL.revokeObjectURL(cropState.imageSrc)
+    setCropState(null)
+    await uploadAndSendImage(originalFile)
+  }
+
+  const handleMsgCropCancel = () => {
+    if (cropState) URL.revokeObjectURL(cropState.imageSrc)
+    setCropState(null)
   }
 
   return (
@@ -137,6 +168,24 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
           <ImageIcon size={20} />
         )}
       </Button>
+
+      {/* Crop Dialog */}
+      {cropState && (
+        <ImageCropDialog
+          imageSrc={cropState.imageSrc}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) handleMsgCropCancel()
+          }}
+          onConfirm={handleMsgCropConfirm}
+          onCancel={handleMsgCropCancel}
+          onSkip={handleMsgCropSkip}
+          mode="queue"
+          cropShape="rect"
+          presets={POST_CROP_PRESETS}
+          title="Recadrer l'image"
+        />
+      )}
     </>
   )
 }

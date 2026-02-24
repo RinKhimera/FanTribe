@@ -26,7 +26,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { use, useState, useTransition } from "react"
 import { toast } from "sonner"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { RevokeCreatorDialog } from "@/components/superuser/revoke-creator-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { detectRiskFactors } from "@/lib/validators"
+import { detectRiskFactors } from "@/lib/validators/detect-risk-factors"
 import { cn } from "@/lib/utils"
 
 interface ApplicationDetailsProps {
@@ -135,7 +135,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
     return (
       <div className="flex h-full flex-col items-center justify-center p-8">
         <div className="bg-muted/50 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-          <FileText className="text-muted-foreground h-8 w-8" />
+          <FileText className="text-muted-foreground h-8 w-8" aria-hidden="true" />
         </div>
         <h2 className="mb-2 text-xl font-semibold">Candidature introuvable</h2>
         <p className="text-muted-foreground mb-6 text-center">
@@ -143,7 +143,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
         </p>
         <Link href="/superuser/creator-applications">
           <Button>
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
             Retour aux candidatures
           </Button>
         </Link>
@@ -165,14 +165,14 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
               href="/superuser/creator-applications"
               className="text-muted-foreground hover:text-foreground mb-2 inline-flex items-center gap-1 text-sm transition-colors"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Retour aux candidatures
             </Link>
             <h1 className="text-2xl font-bold">
               {application.personalInfo.fullName}
             </h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
               Soumise le {formatDate(application.submittedAt)}
             </p>
           </div>
@@ -192,7 +192,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                     : "border-orange-500/30 bg-orange-500/10 text-orange-600"
                 )}
               >
-                <RefreshCw className="mr-1 h-3 w-3" />
+                <RefreshCw className="mr-1 h-3 w-3" aria-hidden="true" />
                 Tentative #{application.attemptNumber}
               </Badge>
             )}
@@ -201,7 +201,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                 variant="outline"
                 className="border-orange-500/30 bg-orange-500/10 text-orange-600"
               >
-                <AlertTriangle className="mr-1 h-3 w-3" />
+                <AlertTriangle className="mr-1 h-3 w-3" aria-hidden="true" />
                 {riskFactors.length} risque(s)
               </Badge>
             )}
@@ -253,7 +253,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                   <p className="truncate text-lg font-semibold">
                     {application.user?.name}
                   </p>
-                  <ExternalLink className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-60" />
+                  <ExternalLink className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-60" aria-hidden="true" />
                 </div>
                 <p className="text-muted-foreground truncate text-sm">
                   @{application.user?.username}
@@ -330,7 +330,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <User className="h-4 w-4" />
+              <User className="h-4 w-4" aria-hidden="true" />
               Informations personnelles
             </CardTitle>
           </CardHeader>
@@ -381,7 +381,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Camera className="h-4 w-4" />
+              <Camera className="h-4 w-4" aria-hidden="true" />
               Documents d&apos;identité
               <Badge variant="secondary" className="ml-auto">
                 {application.identityDocuments.length} fichier(s)
@@ -405,7 +405,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                       setViewerIndex(index)
                       setViewerOpen(true)
                     }}
-                    className="relative aspect-video w-full cursor-pointer overflow-hidden rounded-lg border bg-muted transition-all hover:ring-2 hover:ring-primary/50"
+                    className="relative aspect-video w-full cursor-pointer overflow-hidden rounded-lg border bg-muted transition-shadow hover:ring-2 hover:ring-primary/50"
                   >
                     <Image
                       src={doc.url}
@@ -429,7 +429,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4" />
+              <FileText className="h-4 w-4" aria-hidden="true" />
               Motivation
             </CardTitle>
           </CardHeader>
@@ -448,10 +448,11 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
           <CardContent>
             {application.status === "pending" ? (
               <Textarea
-                placeholder="Ajoutez des notes sur cette candidature..."
+                placeholder="Ajoutez des notes sur cette candidature…"
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 className="min-h-24 resize-none"
+                aria-label="Notes administratives"
               />
             ) : (
               <div className="bg-muted/50 min-h-24 rounded-lg p-4">
@@ -590,8 +591,8 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
       />
 
       {/* Fullscreen Image Viewer */}
-      <FullscreenImageViewer
-        medias={application.identityDocuments.map((doc) => doc.url)}
+      <MediaLightbox
+        slides={application.identityDocuments.map((doc) => ({ src: doc.url }))}
         index={viewerIndex}
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}
@@ -613,7 +614,7 @@ function InfoField({
   return (
     <div className="flex items-start gap-3">
       <div className="bg-muted mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md">
-        <Icon className="text-muted-foreground h-4 w-4" />
+        <Icon className="text-muted-foreground h-4 w-4" aria-hidden="true" />
       </div>
       <div className="min-w-0">
         <p className="text-muted-foreground text-xs">{label}</p>

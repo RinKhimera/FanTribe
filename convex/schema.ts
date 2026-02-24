@@ -51,6 +51,29 @@ export default defineSchema({
         mobileMoneyNumber2: v.optional(v.string()),
       }),
     ),
+    // Notification preferences
+    notificationPreferences: v.optional(
+      v.object({
+        likes: v.optional(v.boolean()),
+        comments: v.optional(v.boolean()),
+        newPosts: v.optional(v.boolean()),
+        subscriptions: v.optional(v.boolean()),
+        messages: v.optional(v.boolean()),
+        tips: v.optional(v.boolean()),
+        emailNotifications: v.optional(v.boolean()),
+      }),
+    ),
+    // Privacy & security settings
+    // TODO: A implementer au frontend
+    privacySettings: v.optional(
+      v.object({
+        profileVisibility: v.optional(
+          v.union(v.literal("public"), v.literal("private")),
+        ),
+        allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+        language: v.optional(v.string()),
+      }),
+    ),
     isBanned: v.optional(v.boolean()),
     banDetails: v.optional(
       v.object({
@@ -145,8 +168,7 @@ export default defineSchema({
   posts: defineTable({
     author: v.id("users"),
     content: v.string(),
-    medias: v.array(v.union(
-      v.string(),
+    medias: v.array(
       v.object({
         type: v.union(v.literal("image"), v.literal("video")),
         url: v.string(),
@@ -159,7 +181,7 @@ export default defineSchema({
         width: v.optional(v.number()),
         height: v.optional(v.number()),
       }),
-    )),
+    ),
     visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
     isAdult: v.optional(v.boolean()),
   })
@@ -381,41 +403,76 @@ export default defineSchema({
     .index("by_providerTransactionId", ["providerTransactionId"])
     .index("by_status", ["status"]),
 
+  tips: defineTable({
+    senderId: v.id("users"),
+    creatorId: v.id("users"),
+    amount: v.number(),
+    currency: v.union(v.literal("XAF"), v.literal("USD")),
+    message: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("succeeded"),
+      v.literal("failed"),
+      v.literal("refunded"),
+    ),
+    provider: v.string(),
+    providerTransactionId: v.string(),
+    context: v.optional(
+      v.union(v.literal("post"), v.literal("profile"), v.literal("message")),
+    ),
+    postId: v.optional(v.id("posts")),
+    conversationId: v.optional(v.id("conversations")),
+  })
+    .index("by_creator", ["creatorId"])
+    .index("by_sender", ["senderId"])
+    .index("by_providerTransactionId", ["providerTransactionId"])
+    .index("by_status", ["status"])
+    .index("by_creator_status", ["creatorId", "status"]),
+
   notifications: defineTable({
     type: v.union(
-      v.literal("newPost"),
       v.literal("like"),
       v.literal("comment"),
+      v.literal("newPost"),
       v.literal("newSubscription"),
       v.literal("renewSubscription"),
-      v.literal("subscription_expired"),
-      // Nouveaux types pour messagerie
-      v.literal("new_message"),
-      v.literal("messaging_subscription_expiring"),
-      v.literal("messaging_subscription_expired"),
-      v.literal("conversation_locked"),
+      v.literal("subscriptionExpired"),
+      v.literal("subscriptionConfirmed"),
+      v.literal("creatorApplicationApproved"),
+      v.literal("creatorApplicationRejected"),
+      v.literal("tip"),
     ),
     recipientId: v.id("users"),
-    sender: v.id("users"),
-    read: v.boolean(),
-    post: v.optional(v.id("posts")),
-    comment: v.optional(v.id("comments")),
-    // Nouveau champ pour messagerie
-    conversation: v.optional(v.id("conversations")),
+
+    // Grouping (write-time aggregation)
+    groupKey: v.string(),
+    actorIds: v.array(v.id("users")),
+    actorCount: v.number(),
+
+    // Related entities
+    postId: v.optional(v.id("posts")),
+    commentId: v.optional(v.id("comments")),
+    tipId: v.optional(v.id("tips")),
+    tipAmount: v.optional(v.number()),
+    tipCurrency: v.optional(v.string()),
+
+    // State
+    isRead: v.boolean(),
+    lastActivityAt: v.number(),
   })
-    .index("by_post", ["post"])
-    .index("by_recipient", ["recipientId"])
-    .index("by_recipient_type", ["recipientId", "type"])
-    .index("by_recipient_read", ["recipientId", "read"])
-    .index("by_type_post_sender", ["type", "post", "sender"])
-    .index("by_type_comment_sender", ["type", "comment", "sender"])
-    .index("by_comment", ["comment"]),
+    .index("by_recipient", ["recipientId", "lastActivityAt"])
+    .index("by_recipient_read", ["recipientId", "isRead"])
+    .index("by_recipient_type", ["recipientId", "type", "lastActivityAt"])
+    .index("by_group", ["recipientId", "groupKey"])
+    .index("by_post", ["postId"]),
 
   userStats: defineTable({
     userId: v.id("users"),
     postsCount: v.number(),
     subscribersCount: v.number(),
     totalLikes: v.number(),
+    tipsReceived: v.optional(v.number()),
+    totalTipsAmount: v.optional(v.number()),
     lastUpdated: v.number(),
   }).index("by_userId", ["userId"]),
 
@@ -494,23 +551,24 @@ export default defineSchema({
 
   pendingNotifications: defineTable({
     type: v.union(
-      v.literal("newPost"),
       v.literal("like"),
       v.literal("comment"),
+      v.literal("newPost"),
       v.literal("newSubscription"),
       v.literal("renewSubscription"),
-      v.literal("subscription_expired"),
-      // Nouveaux types pour messagerie
-      v.literal("new_message"),
-      v.literal("messaging_subscription_expiring"),
-      v.literal("messaging_subscription_expired"),
-      v.literal("conversation_locked"),
+      v.literal("subscriptionExpired"),
+      v.literal("subscriptionConfirmed"),
+      v.literal("creatorApplicationApproved"),
+      v.literal("creatorApplicationRejected"),
+      v.literal("tip"),
     ),
-    sender: v.id("users"),
+    actorId: v.id("users"),
     recipientIds: v.array(v.id("users")),
-    post: v.optional(v.id("posts")),
-    comment: v.optional(v.id("comments")),
-    conversation: v.optional(v.id("conversations")),
+    postId: v.optional(v.id("posts")),
+    commentId: v.optional(v.id("comments")),
+    tipId: v.optional(v.id("tips")),
+    tipAmount: v.optional(v.number()),
+    tipCurrency: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),

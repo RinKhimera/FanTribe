@@ -120,6 +120,8 @@ const BeCreatorPage = () => {
     const newDirection = step > currentStep ? 1 : -1
     setPage([step, newDirection])
     setCurrentStep(step)
+    // Scroll to top when changing steps
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const validateAndGoNext = async () => {
@@ -267,8 +269,11 @@ const BeCreatorPage = () => {
         // Move to step 4 (success state) or reload
         goToStep(4)
 
+        // Reset state after animation so the real-time query shows ApplicationStatus
         setTimeout(() => {
-          window.location.reload()
+          setIsReapplying(false)
+          setCurrentStep(1)
+          setPage([1, 0])
         }, 2000)
       } catch (error) {
         console.error(error)
@@ -279,8 +284,8 @@ const BeCreatorPage = () => {
     })
   }
 
-  // Loading state
-  if (!currentUser) {
+  // Loading state — wait for both currentUser AND existingApplication query
+  if (!currentUser || existingApplication === undefined) {
     return (
       <PageContainer
         title="Devenir Créateur"
@@ -288,7 +293,7 @@ const BeCreatorPage = () => {
       >
         <div className="flex flex-col items-center gap-4">
           <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <span className="text-muted-foreground">Chargement...</span>
+          <span className="text-muted-foreground">Chargement…</span>
         </div>
       </PageContainer>
     )
@@ -380,6 +385,7 @@ const BeCreatorPage = () => {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={3}
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"

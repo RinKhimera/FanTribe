@@ -1,138 +1,100 @@
-# FanTribe - Claude Code Context
+# FanTribe
 
-## Project Overview
-FanTribe is a creator-focused social platform (similar to OnlyFans) built for the African market, primarily targeting French-speaking users in Cameroon. Creators can share exclusive content with paying subscribers.
+Creator-focused social platform for the African market (French-speaking). Creators share exclusive content with paying subscribers.
+
+> **Instruction routing**: Detailed rules live in `.claude/rules/`. When adding new patterns or updating existing ones, edit the appropriate rules file — NOT this root file. Route by topic:
+> - Convex/backend → `.claude/rules/convex-patterns.md`
+> - Frontend/React/hooks → `.claude/rules/frontend-patterns.md`
+> - Performance → `.claude/rules/react-performance.md`
+> - UI/UX/accessibility → `.claude/rules/ui-ux-rules.md`
+> - Testing → `.claude/rules/testing.md`
+> - Business logic → `.claude/rules/business-logic.md`
 
 ## Tech Stack
-- **Framework**: Next.js 15 (App Router)
-- **Backend**: Convex (real-time backend with functions, queries, mutations)
-- **Auth**: Clerk
-- **Styling**: Tailwind CSS 4.x + shadcn/ui components
-- **Animations**: Motion (framer-motion successor)
-- **Payments**: CinetPay (African mobile money: OM/MOMO) + Stripe (cards)
-- **Media Storage**: Bunny CDN (videos) + Convex storage (images)
-- **Forms**: React Hook Form + Zod validation
-- **Language**: TypeScript (strict mode)
 
-## Architecture Patterns
+- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
+- **Backend**: Convex (real-time queries, mutations, actions, HTTP endpoints)
+- **Auth**: Clerk (webhooks, JWT tokens with `template: "convex"`)
+- **Styling**: Tailwind CSS 4 (OKLCH colors) + shadcn/ui + Motion (animations)
+- **Payments**: CinetPay (mobile money OM/MOMO) + Stripe (cards)
+- **Media**: Bunny CDN via Convex HTTP Actions (images) + direct XHR (videos)
+- **Monitoring**: Sentry (errors) + Resend (email)
+- **Validation**: Zod (forms + env vars) + Convex validators (backend)
 
-### Directory Structure
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run build-check` | TypeScript + ESLint check (zero warnings) |
+| `npm run lint` | ESLint read-only check |
+| `npm run fix-lint` | ESLint auto-fix |
+| `npm test` | All tests (frontend + convex) |
+| `npm run test:watch` | Watch mode |
+| `npm run test:convex` | Convex tests only |
+| `npm run test:coverage` | Coverage reports |
+| `npx convex dev` | Start Convex dev + regenerate types |
+
+## Architecture
+
 ```
-app/                    # Next.js App Router pages
-├── (app-pages)/        # Main app routes (with layout)
-├── (auth)/             # Auth pages (sign-in, sign-up)
-├── api/                # API routes (webhooks)
+app/                      # Next.js App Router
+├── (app-pages)/          # Main routes (dashboard layout, auth guards)
+├── (auth)/               # Sign-in, sign-up
+├── api/                  # Webhooks only (stripe, cinetpay, clerk)
 components/
-├── domains/            # Feature-specific components
-│   ├── messaging/
-│   ├── notifications/
-│   ├── posts/
-│   ├── subscriptions/
-│   └── users/
-├── shared/             # Reusable components across features
-├── superuser/          # Admin dashboard components
-├── new-post/           # Post creation flow
-└── ui/                 # shadcn/ui base components
-convex/                 # Backend functions
-├── _lib/               # Shared utilities for backend
-hooks/                  # Custom React hooks
+├── domains/              # Feature components (messaging, posts, users, subscriptions, notifications, tips)
+├── shared/               # Cross-feature reusable components
+├── post-composer/        # Post creation compound components (Provider + Frame + Input + Media + Actions + Submit)
+├── new-post/             # Post creation flow (uses PostComposer)
+├── layout/               # App shell, sidebar, nav
+└── ui/                   # shadcn/ui (CVA + Radix primitives)
+convex/                   # Backend functions
+├── lib/                  # Shared: auth, errors, validators, rateLimiter, bunny, constants, subscriptions, blocks, notifications, signedUrls, batch
+hooks/                    # 13 custom hooks
 lib/
-├── config/             # Environment, logger config
-├── formatters/         # Date and currency formatters
-│   ├── date/           # formatDate, formatPostDate, formatLastSeen
-│   └── currency/       # formatCurrency, convertCurrency, convertStripeAmount
-├── services/           # External service clients (stripe, bunny)
-└── utils.ts            # General utilities (cn, etc.)
-schemas/                # Zod validation schemas
-types/                  # TypeScript type definitions
+├── config/               # env.client.ts, env.ts (server), logger.ts
+├── formatters/           # date/ (French locale) + currency/ (XAF/USD)
+├── services/             # stripe.ts, cinetpay.ts
+└── utils.ts              # cn() utility
+schemas/                  # Zod validation schemas
+types/                    # Shared TS types (PostMedia, MessageProps, etc.)
+tests/
+├── frontend/             # Vitest + happy-dom + @testing-library
+└── convex/               # Vitest + convex-test (node env)
 ```
 
-### Custom Hooks (hooks/)
-| Hook | Purpose |
-|------|---------|
-| `useAsyncHandler` | Standardized try-catch with toast notifications and logger |
-| `useDialogState` | Dialog open/close state with pending transition |
-| `useDebounce` | Debounce values (e.g., search input) |
-| `useScrollLock` | Lock body scroll (for modals, fullscreen viewers) |
-| `useVideoMetadata` | Fetch Bunny video metadata |
-| `useKeyboardNavigation` | Keyboard navigation in lists |
-| `useFormMutation` | Form submission with Convex mutation |
-| `useCurrentUser` | Get current authenticated user |
-| `useCinetpayPayment` | CinetPay payment processing |
+## Key Files
 
-### Component Patterns
-1. **Sub-component folders**: Large components are split into sub-folders
-   - `post-media.tsx` → `post-media/locked-content-overlay.tsx`
-   - `fullscreen-image-viewer.tsx` → `fullscreen-viewer/*.tsx`
-
-2. **Barrel exports**: Each component folder has an `index.ts` for clean imports
-
-3. **Controlled vs Uncontrolled**: Many components support both modes
-   - Example: `SubscriptionUnified` accepts `isOpen`/`onClose` OR `trigger`
+- `convex/schema.ts` — Data model (all tables, indexes, search indexes)
+- `convex/http.ts` — HTTP Actions (Bunny upload/delete, CORS, webhooks)
+- `convex/lib/auth.ts` — `getAuthenticatedUser()`, `requireSuperuser()`, `requireCreator()`
+- `convex/lib/errors.ts` — `createAppError(code, { userMessage })` bilingual errors
+- `convex/lib/validators.ts` — Shared validators (`postMediaValidator`, `userDocValidator`, `enrichedNotificationValidator`)
+- `convex/lib/notifications.ts` — Central notification service (`createNotification`, `removeActorFromNotification`)
+- `convex/lib/constants.ts` — Centralized business constants (commissions, tip presets, limits)
+- `types/index.ts` — PostMedia, MessageProps, TipContext, EnrichedNotification, NotificationType
 
 ## Coding Conventions
 
-### Language
-- All UI text is in **French** (target audience)
-- Code comments can be in English or French
-- Variable/function names in English
+- **UI text**: All in **French** (target audience: Cameroon)
+- **Code**: English variable/function names, comments in English or French
+- **Semi-colons**: Disabled (Prettier `semi: false`)
+- **Imports**: Sorted by `@trivago/prettier-plugin-sort-imports` (node → npm → local)
+- **Path alias**: `@/*` maps to project root
+- **Convex types**: `Doc<"tableName">` for documents, `Id<"tableName">` for IDs
+- **Error messages**: Internal in English, user-facing (`userMessage`) in French
+- **Loading text**: Use `…` not `...` (e.g., "Chargement…", "Envoi…")
 
-### State Management
-- Use `useEffectEvent` for setState calls inside effects (React 19 pattern)
-- Prefer computing values inline over storing derived state
-- Use Convex's real-time queries (`useQuery`) for data fetching
+## Gotchas
 
-### Error Handling
-```typescript
-// Use useAsyncHandler for mutations with toast feedback
-const { execute, isPending } = useAsyncHandler({
-  successMessage: "Action réussie",
-  errorMessage: "Erreur lors de l'action",
-  onSuccess: () => closeDialog(),
-})
-
-execute(() => someMutation({ ... }))
-```
-
-### Styling
-- Use `cn()` utility for conditional classes
-- Prefer Tailwind classes over custom CSS
-- Glass morphism pattern: `glass-card`, `glass-input`, `glass-button`
-- Use `motion/react` for animations (not framer-motion)
-
-## Testing
-- **Unit tests**: Vitest
-- **Convex tests**: Separate config (`vitest.convex.config.mts`)
-- Run all tests: `npm test`
-- Run with watch: `npm run test:watch`
-
-## Commands
-```bash
-npm run dev           # Start dev server
-npm run build-check   # TypeScript + ESLint check
-npm run test          # Run all tests
-npm run lint          # Lint with auto-fix
-```
-
-## Key Business Logic
-
-### Subscriptions
-- Monthly subscription model (1000 XAF/month)
-- Three states: `subscribe`, `renew`, `unsubscribe`
-- Dual payment: CinetPay (mobile money) + Stripe (cards)
-
-### Creator Applications
-- Multi-step application process (be-creator flow)
-- Documents: ID card + selfie for verification
-- Admin approval required
-- Reapplication supported after rejection
-
-### Content Visibility
-- Posts can be `public` or `subscribers_only`
-- Locked content shows artistic blur overlay
-- Videos stored on Bunny CDN with signed URLs
-
-## Currency
-- Primary: XAF (Central African CFA franc) - zero-decimal
-- Secondary: USD (for Stripe international)
-- Conversion rate defined in `lib/formatters/currency/`
+- **`.next/dev/types` cache**: Stale after deleting API routes — delete `.next/dev/types` to clear
+- **`convex/_generated`**: Committed to git — run `npx convex dev` to regenerate after schema changes, then commit the updated files
+- **Bunny secrets**: All in Convex dashboard env vars, NOT in Next.js/Vercel env
+- **Convex site URL**: `NEXT_PUBLIC_CONVEX_URL.replace(".cloud", ".site")` for HTTP Actions
+- **Auth tokens for HTTP Actions**: `useAuth().getToken({ template: "convex" })` → `Authorization: Bearer ${token}`
+- **Convex `internal` circular types**: `internalActions.ts` functions calling `internal.xxx` can cause circular type inference — use explicit type annotation on `result` variable
+- **Stripe dynamic tips**: Use `price_data` (not fixed `STRIPE_PRICE_ID`) for variable amounts like tips
+- **Validator completeness**: Convex validators used in `returns:` MUST include ALL schema fields. Missing fields cause `ReturnsValidationError` at runtime.
+- **ESLint inline disables vs config overrides**: `eslint-disable-next-line` can fail across environments (CI vs local) if plugin versions differ. Prefer ESLint config overrides in `eslint.config.mjs` for stable suppression (e.g., `@next/next/no-img-element` off for OG image files).

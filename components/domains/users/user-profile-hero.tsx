@@ -1,16 +1,18 @@
 "use client"
 
 import { motion } from "motion/react"
-import { MapPin } from "lucide-react"
+import { Coins, MapPin, Sparkles } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useState } from "react"
 import { SubscriptionButton } from "@/components/domains/subscriptions"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { TipDialog } from "@/components/domains/tips"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
+import { cn } from "@/lib/utils"
 import {
   UserProfileBadgeInline,
   UserProfileBadges,
@@ -35,6 +37,7 @@ export const UserProfileHero = ({
   subscriptionStatus,
 }: UserProfileHeroProps) => {
   const isOwnProfile = currentUser?.username === userProfile.username
+  const isCreator = userProfile.accountType === "CREATOR" || userProfile.accountType === "SUPERUSER"
 
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false)
 
@@ -71,12 +74,16 @@ export const UserProfileHero = ({
             whileHover={{ scale: 1.05 }}
             type="button"
             onClick={openAvatar}
-            className="focus-visible:ring-ring rounded-full outline-none focus-visible:ring-2"
+            className={cn(
+              "rounded-full outline-none focus-visible:ring-ring focus-visible:ring-2",
+              isCreator && "ring-2 ring-primary/50 shadow-[0_0_15px_oklch(0.541_0.281_293/0.3)]",
+            )}
           >
             <Avatar className="border-background size-24 cursor-pointer border-4 transition hover:brightness-110 sm:size-28">
               {userProfile?.image ? (
                 <AvatarImage
                   src={userProfile.image}
+                  sizes="128px"
                   className="object-cover"
                   alt={userProfile?.name || "Profile image"}
                 />
@@ -196,11 +203,45 @@ export const UserProfileHero = ({
           </div>
         )}
 
+        {/* Tip button */}
+        {!isOwnProfile && userProfile.accountType === "CREATOR" && (
+          <div className="mb-4">
+            <TipDialog
+              creator={userProfile}
+              context="profile"
+              trigger={
+                <Button
+                  variant="outline"
+                  className="w-full rounded-2xl border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500"
+                >
+                  <Coins className="mr-2 size-4" />
+                  Envoyer un pourboire
+                </Button>
+              }
+            />
+          </div>
+        )}
+
+        {/* Become creator CTA — own profile, USER only */}
+        {isOwnProfile && !isCreator && (
+          <div className="mb-4">
+            <Button
+              asChild
+              className="w-full rounded-2xl bg-linear-to-r from-primary to-purple-600 text-white hover:opacity-90"
+            >
+              <Link href="/be-creator">
+                <Sparkles className="mr-2 size-4" />
+                Devenir créateur
+              </Link>
+            </Button>
+          </div>
+        )}
+
       </div>
 
       {/* Fullscreen avatar viewer */}
-      <FullscreenImageViewer
-        medias={userProfile?.image ? [userProfile.image] : []}
+      <MediaLightbox
+        slides={userProfile?.image ? [{ src: userProfile.image }] : []}
         index={0}
         open={avatarViewerOpen}
         onClose={() => setAvatarViewerOpen(false)}

@@ -12,6 +12,7 @@ export type ErrorCode =
   | "COMMENT_NOT_FOUND"
   | "CONVERSATION_NOT_FOUND"
   | "SUBSCRIPTION_NOT_FOUND"
+  | "NOTIFICATION_NOT_FOUND"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "ALREADY_EXISTS"
@@ -59,6 +60,10 @@ const ERROR_MESSAGES: Record<
   SUBSCRIPTION_NOT_FOUND: {
     message: "Subscription not found",
     userMessage: "Abonnement introuvable",
+  },
+  NOTIFICATION_NOT_FOUND: {
+    message: "Notification not found",
+    userMessage: "Notification introuvable",
   },
   UNAUTHORIZED: {
     message: "User is not authorized to perform this action",

@@ -20,7 +20,7 @@ const formatNumber = (num: number): string => {
 }
 
 export const UserProfileStats = ({ userId }: UserProfileStatsProps) => {
-  const stats = useQuery(api.userStats.getUserStats, { userId })
+  const stats = useQuery(api.userStats.getUserProfileStats, { userId })
 
   if (!stats) {
     return (
@@ -36,26 +36,46 @@ export const UserProfileStats = ({ userId }: UserProfileStatsProps) => {
       animate={{ opacity: 1 }}
       className="text-muted-foreground flex flex-wrap items-center gap-x-1 gap-y-0.5 text-sm"
     >
-      <span>
-        <span className="text-foreground font-semibold tabular-nums">
-          {formatNumber(stats.postsCount)}
-        </span>{" "}
-        publication{stats.postsCount !== 1 ? "s" : ""}
-      </span>
-      <span className="text-muted-foreground/50">·</span>
-      <span>
-        <span className="text-foreground font-semibold tabular-nums">
-          {formatNumber(stats.subscribersCount)}
-        </span>{" "}
-        abonné{stats.subscribersCount !== 1 ? "s" : ""}
-      </span>
-      <span className="text-muted-foreground/50">·</span>
-      <span>
-        <span className="text-foreground font-semibold tabular-nums">
-          {formatNumber(stats.totalLikes)}
-        </span>{" "}
-        j&apos;aime
-      </span>
+      {stats.kind === "creator" ? (
+        <>
+          <span>
+            <span className="text-foreground font-semibold tabular-nums">
+              {formatNumber(stats.postsCount)}
+            </span>{" "}
+            publication{stats.postsCount !== 1 ? "s" : ""}
+          </span>
+          <span className="text-muted-foreground/50">·</span>
+          <span>
+            <span className="text-foreground font-semibold tabular-nums">
+              {formatNumber(stats.subscribersCount)}
+            </span>{" "}
+            abonné{stats.subscribersCount !== 1 ? "s" : ""}
+          </span>
+          <span className="text-muted-foreground/50">·</span>
+          <span>
+            <span className="text-foreground font-semibold tabular-nums">
+              {formatNumber(stats.totalLikes)}
+            </span>{" "}
+            j&apos;aime
+          </span>
+        </>
+      ) : (
+        <>
+          <span>
+            <span className="text-foreground font-semibold tabular-nums">
+              {formatNumber(stats.subscriptionsCount)}
+            </span>{" "}
+            abonnement{stats.subscriptionsCount !== 1 ? "s" : ""}
+          </span>
+          <span className="text-muted-foreground/50">·</span>
+          <span>
+            <span className="text-foreground font-semibold tabular-nums">
+              {formatNumber(stats.likesGivenCount)}
+            </span>{" "}
+            j&apos;aime
+          </span>
+        </>
+      )}
     </motion.div>
   )
 }

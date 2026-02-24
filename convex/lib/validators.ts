@@ -58,6 +58,24 @@ export const personalInfoValidator = v.object({
   mobileMoneyNumber2: v.optional(v.string()),
 })
 
+export const notificationPreferencesValidator = v.object({
+  likes: v.optional(v.boolean()),
+  comments: v.optional(v.boolean()),
+  newPosts: v.optional(v.boolean()),
+  subscriptions: v.optional(v.boolean()),
+  messages: v.optional(v.boolean()),
+  tips: v.optional(v.boolean()),
+  emailNotifications: v.optional(v.boolean()),
+})
+
+export const privacySettingsValidator = v.object({
+  profileVisibility: v.optional(
+    v.union(v.literal("public"), v.literal("private"))
+  ),
+  allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+  language: v.optional(v.string()),
+})
+
 export const userDocValidator = v.object({
   _id: v.id("users"),
   _creationTime: v.number(),
@@ -81,6 +99,8 @@ export const userDocValidator = v.object({
     v.literal("SUPERUSER"),
   ),
   allowAdultContent: v.optional(v.boolean()),
+  notificationPreferences: v.optional(notificationPreferencesValidator),
+  privacySettings: v.optional(privacySettingsValidator),
   personalInfo: v.optional(personalInfoValidator),
   isBanned: v.optional(v.boolean()),
   banDetails: v.optional(banDetailsValidator),
@@ -106,7 +126,7 @@ export const postDocValidator = v.object({
   _creationTime: v.number(),
   author: v.id("users"),
   content: v.string(),
-  medias: v.array(v.union(v.string(), postMediaValidator)),
+  medias: v.array(postMediaValidator),
   visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
   isAdult: v.optional(v.boolean()),
 })
@@ -174,18 +194,170 @@ export const creatorApplicationDocValidator = v.object({
   previousApplicationId: v.optional(v.id("creatorApplications")),
 })
 
-// Pagination result validator (pour les queries paginées)
-export const paginationResultValidator = (itemValidator: ReturnType<typeof v.object> | ReturnType<typeof v.any>) =>
-  v.object({
-    page: v.array(itemValidator),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-    splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(
-      v.union(
-        v.literal("SplitRecommended"),
-        v.literal("SplitRequired"),
-        v.null(),
-      ),
+export const tipDocValidator = v.object({
+  _id: v.id("tips"),
+  _creationTime: v.number(),
+  senderId: v.id("users"),
+  creatorId: v.id("users"),
+  amount: v.number(),
+  currency: v.union(v.literal("XAF"), v.literal("USD")),
+  message: v.optional(v.string()),
+  status: v.union(
+    v.literal("pending"),
+    v.literal("succeeded"),
+    v.literal("failed"),
+    v.literal("refunded"),
+  ),
+  provider: v.string(),
+  providerTransactionId: v.string(),
+  context: v.optional(
+    v.union(
+      v.literal("post"),
+      v.literal("profile"),
+      v.literal("message"),
     ),
-  })
+  ),
+  postId: v.optional(v.id("posts")),
+  conversationId: v.optional(v.id("conversations")),
+})
+
+// ============================================================================
+// Subscription & blocked user enriched validators
+// ============================================================================
+
+const subscriptionStatusValidator = v.union(
+  v.literal("active"),
+  v.literal("expired"),
+  v.literal("canceled"),
+  v.literal("pending"),
+)
+
+export const enrichedSubscriptionEntryValidator = v.object({
+  _id: v.id("subscriptions"),
+  _creationTime: v.number(),
+  status: subscriptionStatusValidator,
+  startDate: v.number(),
+  endDate: v.number(),
+  renewalCount: v.number(),
+  creator: v.object({
+    _id: v.id("users"),
+    name: v.string(),
+    username: v.optional(v.string()),
+    image: v.string(),
+    imageBanner: v.optional(v.string()),
+    isOnline: v.boolean(),
+  }),
+  daysUntilExpiry: v.number(),
+  subscribedDurationMonths: v.number(),
+  creatorLastPostDate: v.union(v.number(), v.null()),
+  creatorExclusivePostCount: v.number(),
+})
+
+export const enrichedBlockedUserValidator = v.object({
+  blockId: v.id("blocks"),
+  blockedAt: v.number(),
+  user: v.object({
+    _id: v.id("users"),
+    name: v.string(),
+    username: v.optional(v.string()),
+    image: v.string(),
+  }),
+})
+
+export const audienceMetricsValidator = v.object({
+  arpu: v.number(),
+  retentionRate: v.number(),
+  churnRate: v.number(),
+  topFans: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+      renewalCount: v.number(),
+      totalSpent: v.number(),
+    }),
+  ),
+  atRiskSubscribers: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+      daysLeft: v.number(),
+      subscriptionId: v.id("subscriptions"),
+    }),
+  ),
+})
+
+// ============================================================================
+// Pagination wrapper validators
+// ============================================================================
+
+const paginationFieldsValidator = {
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+  splitCursor: v.optional(v.union(v.string(), v.null())),
+  pageStatus: v.optional(
+    v.union(
+      v.literal("SplitRecommended"),
+      v.literal("SplitRequired"),
+      v.null(),
+    ),
+  ),
+}
+
+export const paginatedSubscriptionsValidator = v.object({
+  page: v.array(enrichedSubscriptionEntryValidator),
+  ...paginationFieldsValidator,
+})
+
+export const paginatedBlockedUsersValidator = v.object({
+  page: v.array(enrichedBlockedUserValidator),
+  ...paginationFieldsValidator,
+})
+
+// ============================================================================
+// Notification validators
+// ============================================================================
+
+export const notificationTypeValidator = v.union(
+  v.literal("like"),
+  v.literal("comment"),
+  v.literal("newPost"),
+  v.literal("newSubscription"),
+  v.literal("renewSubscription"),
+  v.literal("subscriptionExpired"),
+  v.literal("subscriptionConfirmed"),
+  v.literal("creatorApplicationApproved"),
+  v.literal("creatorApplicationRejected"),
+  v.literal("tip"),
+)
+
+export const actorSummaryValidator = v.object({
+  _id: v.id("users"),
+  name: v.string(),
+  username: v.optional(v.string()),
+  image: v.string(),
+})
+
+export const enrichedNotificationValidator = v.object({
+  _id: v.id("notifications"),
+  _creationTime: v.number(),
+  type: notificationTypeValidator,
+  recipientId: v.id("users"),
+  groupKey: v.string(),
+  actors: v.array(actorSummaryValidator),
+  actorCount: v.number(),
+  postId: v.optional(v.id("posts")),
+  postPreview: v.optional(v.string()),
+  commentId: v.optional(v.id("comments")),
+  commentPreview: v.optional(v.string()),
+  tipId: v.optional(v.id("tips")),
+  tipAmount: v.optional(v.number()),
+  tipCurrency: v.optional(v.string()),
+  tipMessage: v.optional(v.string()),
+  isRead: v.boolean(),
+  lastActivityAt: v.number(),
+})
+

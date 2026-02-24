@@ -139,13 +139,13 @@ export default function SuperUserPage() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Pending Applications Card */}
-            <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-md">
+            <Card className="group relative overflow-hidden transition-shadow duration-300 hover:shadow-md">
               <div className="from-orange-500/5 via-amber-500/5 to-transparent absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <CardHeader className="relative pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
-                    <UserPlus className="h-4 w-4" />
+                    <UserPlus className="h-4 w-4" aria-hidden="true" />
                   </div>
                   Candidatures Créateur
                 </CardTitle>
@@ -184,7 +184,7 @@ export default function SuperUserPage() {
                       className="gap-2 transition-transform group-hover:translate-x-0.5"
                     >
                       Examiner
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </Link>
                 </div>
@@ -192,7 +192,7 @@ export default function SuperUserPage() {
                 {/* Stats row */}
                 <div className="border-border/50 flex gap-6 border-t pt-3">
                   <div className="flex items-center gap-2">
-                    <UserCheck className="text-emerald-500 h-4 w-4" />
+                    <UserCheck className="text-emerald-500 h-4 w-4" aria-hidden="true" />
                     <span className="text-sm">
                       <span className="font-medium">
                         {dashboardStats?.applications.approved ?? 0}
@@ -213,13 +213,13 @@ export default function SuperUserPage() {
             </Card>
 
             {/* Pending Reports Card */}
-            <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-md">
+            <Card className="group relative overflow-hidden transition-shadow duration-300 hover:shadow-md">
               <div className="from-rose-500/5 via-pink-500/5 to-transparent absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <CardHeader className="relative pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 text-white shadow-sm">
-                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTriangle className="h-4 w-4" aria-hidden="true" />
                   </div>
                   Signalements
                 </CardTitle>
@@ -259,7 +259,7 @@ export default function SuperUserPage() {
                       className="gap-2 transition-transform group-hover:translate-x-0.5"
                     >
                       Voir tout
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </Link>
                 </div>
@@ -357,7 +357,7 @@ function HealthMetric({
         className={cn(
           "h-2.5 w-2.5 rounded-full",
           statusColors[status],
-          status === "healthy" && "animate-pulse",
+          status === "healthy" && "motion-safe:animate-pulse",
         )}
       />
       <div>

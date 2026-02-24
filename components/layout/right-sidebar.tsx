@@ -26,7 +26,7 @@ const sidebarWrapperClasses = cn(
  *
  * Masquée automatiquement sur :
  * - Mobile et tablet (< 1280px / xl breakpoint)
- * - Pages spéciales (messages, user-lists, superuser/transactions)
+ * - Pages spéciales (messages, subscriptions, superuser/transactions)
  */
 export const RightSidebar = () => {
   const pathname = usePathname()
@@ -36,7 +36,7 @@ export const RightSidebar = () => {
   const first = segments[0] || ""
 
   // Routes sans sidebar droite
-  const hiddenRoutes = new Set(["messages", "user-lists"])
+  const hiddenRoutes = new Set(["messages", "subscriptions", "dashboard"])
 
 
   // Routes réservées (non-username)
@@ -46,10 +46,11 @@ export const RightSidebar = () => {
     "notifications",
     "collections",
     "new-post",
-    "user-lists",
+    "subscriptions",
     "payment",
     "be-creator",
     "superuser",
+    "dashboard",
     "income",
     "account",
   ])

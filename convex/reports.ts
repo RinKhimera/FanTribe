@@ -547,9 +547,7 @@ export const deleteReportedContentAndResolve = mutation({
 
       // Suppression des médias Bunny.net en parallèle
       if (reportedPost.medias && reportedPost.medias.length > 0) {
-        const mediaUrls = reportedPost.medias.map((m: string | { url: string }) =>
-          typeof m === "string" ? m : m.url,
-        )
+        const mediaUrls = reportedPost.medias.map((m) => m.url)
         const uniqueMedias = [...new Set(mediaUrls)]
         await ctx.scheduler
           .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
@@ -579,7 +577,7 @@ export const deleteReportedContentAndResolve = mutation({
           .collect(),
         ctx.db
           .query("notifications")
-          .withIndex("by_post", (q) => q.eq("post", reportedPost._id))
+          .withIndex("by_post", (q) => q.eq("postId", reportedPost._id))
           .collect(),
       ])
 
@@ -599,7 +597,7 @@ export const deleteReportedContentAndResolve = mutation({
         // Supprimer les notifications liées à ce commentaire
         const notifications = await ctx.db
           .query("notifications")
-          .filter((q) => q.eq(q.field("comment"), report.reportedCommentId))
+          .filter((q) => q.eq(q.field("commentId"), report.reportedCommentId))
           .collect()
         for (const notification of notifications) {
           await ctx.db.delete(notification._id)

@@ -937,10 +937,13 @@ describe("reports", () => {
         })
         await ctx.db.insert("notifications", {
           recipientId: creatorId,
-          sender: reporterId,
-          post: postId,
           type: "like",
-          read: false,
+          groupKey: `like:${postId}`,
+          actorIds: [reporterId],
+          actorCount: 1,
+          postId,
+          isRead: false,
+          lastActivityAt: Date.now(),
         })
       })
 

@@ -27,7 +27,7 @@ export function TransactionsSummaryCards({
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i} className="motion-safe:animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div className="bg-muted h-4 w-24 rounded"></div>
               <div className="bg-muted h-4 w-4 rounded"></div>
@@ -57,7 +57,7 @@ export function TransactionsSummaryCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Revenu Total</CardTitle>
-          <DollarSign className="text-muted-foreground h-4 w-4" />
+          <DollarSign className="text-muted-foreground h-4 w-4" aria-hidden="true" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
@@ -77,7 +77,7 @@ export function TransactionsSummaryCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-          <Receipt className="text-muted-foreground h-4 w-4" />
+          <Receipt className="text-muted-foreground h-4 w-4" aria-hidden="true" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{summary.totalTransactions}</div>
@@ -93,7 +93,7 @@ export function TransactionsSummaryCards({
           <CardTitle className="text-sm font-medium">
             Créatrices actives
           </CardTitle>
-          <Users className="text-muted-foreground h-4 w-4" />
+          <Users className="text-muted-foreground h-4 w-4" aria-hidden="true" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
@@ -111,7 +111,7 @@ export function TransactionsSummaryCards({
           <CardTitle className="text-sm font-medium">
             Moyenne/Transaction
           </CardTitle>
-          <TrendingUp className="text-muted-foreground h-4 w-4" />
+          <TrendingUp className="text-muted-foreground h-4 w-4" aria-hidden="true" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">

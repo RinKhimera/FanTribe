@@ -2,12 +2,16 @@
 
 import { useMutation } from "convex/react"
 import {
+  BadgeCheck,
   CalendarX,
+  CheckCircle,
+  Coins,
   Heart,
   ImagePlus,
   MessageSquareText,
   Trash2,
   UserRoundPlus,
+  XCircle,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import Link from "next/link"
@@ -16,25 +20,15 @@ import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
-import { Doc } from "@/convex/_generated/dataModel"
 import { deleteSwipeVariants, notificationVariants } from "@/lib/animations"
 import { logger } from "@/lib/config"
 import { formatCustomTimeAgo } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import { EnrichedNotification } from "@/types"
 import NotificationEllipsis from "./notification-ellipsis"
 
-export type ExtendedNotificationProps = Omit<
-  Doc<"notifications">,
-  "sender" | "recipientId" | "post" | "comment"
-> & {
-  sender: Doc<"users"> | null
-  recipientId: Doc<"users"> | null
-  post: Doc<"posts"> | null | undefined
-  comment: Doc<"comments"> | null | undefined
-}
-
 interface NotificationItemProps {
-  notification: ExtendedNotificationProps
+  notification: EnrichedNotification
   onDelete?: () => void
 }
 
@@ -47,10 +41,14 @@ export const NotificationItem = ({
   const [isDeleting, setIsDeleting] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
-  const markAsRead = useMutation(api.notifications.markNotificationAsRead)
-  const deleteNotification = useMutation(api.notifications.deleteNotification)
+  const markAsRead = useMutation(api.notifications.markAsRead)
+  const deleteNotificationMutation = useMutation(
+    api.notifications.deleteNotification,
+  )
 
-  const timeAgo = formatCustomTimeAgo(notification._creationTime)
+  const timeAgo = formatCustomTimeAgo(notification.lastActivityAt)
+  const primaryActor = notification.actors[0]
+  const isGrouped = notification.actorCount > 1
 
   const getIcon = () => {
     const iconClasses = "size-7 transition-transform group-hover:scale-110"
@@ -83,10 +81,34 @@ export const NotificationItem = ({
             <ImagePlus className={cn(iconClasses, "text-primary")} />
           </div>
         )
-      case "subscription_expired":
+      case "subscriptionExpired":
         return (
           <div className="flex size-12 items-center justify-center rounded-xl bg-amber-500/10">
             <CalendarX className={cn(iconClasses, "text-amber-500")} />
+          </div>
+        )
+      case "subscriptionConfirmed":
+        return (
+          <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-500/10">
+            <CheckCircle className={cn(iconClasses, "text-emerald-500")} />
+          </div>
+        )
+      case "creatorApplicationApproved":
+        return (
+          <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-500/10">
+            <BadgeCheck className={cn(iconClasses, "text-emerald-500")} />
+          </div>
+        )
+      case "creatorApplicationRejected":
+        return (
+          <div className="flex size-12 items-center justify-center rounded-xl bg-rose-500/10">
+            <XCircle className={cn(iconClasses, "text-rose-500")} />
+          </div>
+        )
+      case "tip":
+        return (
+          <div className="flex size-12 items-center justify-center rounded-xl bg-amber-500/10">
+            <Coins className={cn(iconClasses, "text-amber-500")} />
           </div>
         )
       default:
@@ -94,41 +116,109 @@ export const NotificationItem = ({
     }
   }
 
-  const getMessage = () => {
+  const getActorNames = (): string => {
+    if (!primaryActor) return ""
+
+    if (!isGrouped) return primaryActor.name
+
+    const othersCount = notification.actorCount - 1
+    if (notification.actors.length >= 2) {
+      return `${primaryActor.name}, ${notification.actors[1].name}${othersCount > 1 ? ` et ${othersCount - 1} autre${othersCount > 2 ? "s" : ""}` : ""}`
+    }
+    return `${primaryActor.name} et ${othersCount} autre${othersCount > 1 ? "s" : ""}`
+  }
+
+  const getMessage = (): string => {
+    const plural = isGrouped
     switch (notification.type) {
       case "like":
-        return "a aimé votre publication"
+        return plural
+          ? "ont aimé votre publication"
+          : "a aimé votre publication"
       case "comment":
-        return "a commenté votre publication"
+        return plural
+          ? "ont commenté votre publication"
+          : "a commenté votre publication"
       case "newSubscription":
-        return "s'est abonné à vous"
+        return plural
+          ? "se sont abonnés à vous"
+          : "s'est abonné à vous"
       case "renewSubscription":
-        return "a renouvelé son abonnement"
+        return plural
+          ? "ont renouvelé leur abonnement"
+          : "a renouvelé son abonnement"
       case "newPost":
         return "a partagé une nouvelle publication"
-      case "subscription_expired":
-        return "Votre abonnement a expiré"
+      case "subscriptionExpired":
+        return "Votre abonnement a expiré. Renouvelez pour accéder au contenu exclusif."
+      case "subscriptionConfirmed":
+        return "Votre abonnement a été confirmé avec succès"
+      case "creatorApplicationApproved":
+        return "Votre demande de créateur a été approuvée ! Bienvenue."
+      case "creatorApplicationRejected":
+        return "Votre demande de créateur n'a pas été approuvée."
+      case "tip":
+        return notification.tipAmount
+          ? `vous a envoyé un pourboire de ${new Intl.NumberFormat("fr-FR").format(notification.tipAmount)} ${notification.tipCurrency ?? "XAF"}`
+          : "vous a envoyé un pourboire"
       default:
         return ""
     }
   }
+
+  // Types where the notification is about the system, not from a specific actor
+  const isSystemNotification =
+    notification.type === "subscriptionExpired" ||
+    notification.type === "subscriptionConfirmed" ||
+    notification.type === "creatorApplicationApproved" ||
+    notification.type === "creatorApplicationRejected"
 
   const handleRoute = () => {
     if (isDeleting) return
 
     startTransition(async () => {
       try {
-        await markAsRead({ notificationId: notification._id })
+        if (!notification.isRead) {
+          await markAsRead({ notificationId: notification._id })
+        }
 
-        if (notification.post) {
-          const postOwnerUsername =
-            notification.type === "newPost"
-              ? notification.sender?.username
-              : notification.recipientId?.username
-
-          router.push(`/${postOwnerUsername}/post/${notification.post._id}`)
-        } else {
-          router.push(`/${notification.sender?.username}`)
+        switch (notification.type) {
+          case "tip":
+            router.push("/dashboard/revenue")
+            break
+          case "creatorApplicationApproved":
+          case "creatorApplicationRejected":
+            router.push("/account")
+            break
+          case "subscriptionExpired":
+          case "subscriptionConfirmed":
+            if (primaryActor?.username) {
+              router.push(`/${primaryActor.username}`)
+            }
+            break
+          case "newPost":
+            if (notification.postId && primaryActor?.username) {
+              router.push(
+                `/${primaryActor.username}/post/${notification.postId}`,
+              )
+            }
+            break
+          case "like":
+          case "comment":
+            if (notification.postId) {
+              router.push(`/post/${notification.postId}`)
+            }
+            break
+          case "newSubscription":
+          case "renewSubscription":
+            if (primaryActor?.username) {
+              router.push(`/${primaryActor.username}`)
+            }
+            break
+          default:
+            if (primaryActor?.username) {
+              router.push(`/${primaryActor.username}`)
+            }
         }
       } catch (error) {
         logger.error("Erreur lors du marquage de la notification", error, {
@@ -147,7 +237,7 @@ export const NotificationItem = ({
     setIsDeleting(true)
 
     try {
-      await deleteNotification({ notificationId: notification._id })
+      await deleteNotificationMutation({ notificationId: notification._id })
       onDelete?.()
       toast.success("Notification supprimée")
     } catch (error) {
@@ -158,6 +248,14 @@ export const NotificationItem = ({
       setIsDeleting(false)
     }
   }
+
+  // Preview content
+  const previewText =
+    notification.type === "comment"
+      ? notification.commentPreview
+      : notification.type === "tip"
+        ? notification.tipMessage
+        : notification.postPreview
 
   return (
     <AnimatePresence mode="popLayout">
@@ -175,7 +273,7 @@ export const NotificationItem = ({
             animate="animate"
             className={cn(
               "group relative isolate cursor-pointer overflow-hidden rounded-xl transition-all duration-200",
-              notification.read
+              notification.isRead
                 ? "glass-notification"
                 : "glass-notification glass-notification-unread",
             )}
@@ -186,7 +284,7 @@ export const NotificationItem = ({
             whileTap={{ scale: 0.99 }}
           >
             {/* Unread indicator dot */}
-            {!notification.read && (
+            {!notification.isRead && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -196,7 +294,7 @@ export const NotificationItem = ({
 
             <div
               className={cn("flex gap-3 p-4 sm:gap-4", {
-                "opacity-60": notification.read,
+                "opacity-60": notification.isRead,
               })}
             >
               {/* Icon - hidden on very small screens, visible on sm+ */}
@@ -211,44 +309,99 @@ export const NotificationItem = ({
               {/* Content */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2 sm:gap-3">
-                  {/* Avatar + Text */}
+                  {/* Avatar(s) + Text */}
                   <div className="flex min-w-0 flex-1 items-start gap-3">
-                    <Link
-                      href={`/${notification.sender?.username}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="relative z-10 shrink-0"
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ type: "spring", stiffness: 400 }}
-                      >
-                        <Avatar className="ring-background size-10 ring-2">
-                          <AvatarImage
-                            src={notification.sender?.image || ""}
-                            alt={notification.sender?.name || "Profile"}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="bg-muted">
-                            {notification.sender?.name?.charAt(0) || "?"}
-                          </AvatarFallback>
-                        </Avatar>
-                      </motion.div>
-                    </Link>
+                    {/* Avatar stack */}
+                    {!isSystemNotification && primaryActor ? (
+                      <div className="relative shrink-0">
+                        {isGrouped && notification.actors.length >= 2 ? (
+                          // Stacked avatars for grouped notifications
+                          <div className="relative size-10">
+                            <Link
+                              href={`/${notification.actors[1].username}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute top-0 left-0 z-0"
+                            >
+                              <Avatar className="ring-background size-8 ring-2">
+                                <AvatarImage
+                                  src={notification.actors[1].image}
+                                  alt={notification.actors[1].name}
+                                  className="object-cover"
+                                />
+                                <AvatarFallback className="bg-muted text-xs">
+                                  {notification.actors[1].name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </Link>
+                            <Link
+                              href={`/${primaryActor.username}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute right-0 bottom-0 z-10"
+                            >
+                              <Avatar className="ring-background size-8 ring-2">
+                                <AvatarImage
+                                  src={primaryActor.image}
+                                  alt={primaryActor.name}
+                                  className="object-cover"
+                                />
+                                <AvatarFallback className="bg-muted text-xs">
+                                  {primaryActor.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </Link>
+                            {/* Badge count */}
+                            {notification.actorCount > 2 && (
+                              <span className="bg-primary text-primary-foreground absolute -right-1 -top-1 z-20 flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
+                                +{notification.actorCount - 2}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          // Single avatar
+                          <Link
+                            href={`/${primaryActor.username}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative z-10 shrink-0"
+                          >
+                            <motion.div
+                              whileHover={{ scale: 1.1 }}
+                              transition={{ type: "spring", stiffness: 400 }}
+                            >
+                              <Avatar className="ring-background size-10 ring-2">
+                                <AvatarImage
+                                  src={primaryActor.image}
+                                  alt={primaryActor.name}
+                                  className="object-cover"
+                                />
+                                <AvatarFallback className="bg-muted">
+                                  {primaryActor.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </motion.div>
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
+                      // System notification — show icon on mobile
+                      <div className="shrink-0 sm:hidden">{getIcon()}</div>
+                    )}
 
                     <div className="min-w-0 flex-1">
                       <p className="text-sm leading-snug">
-                        <Link
-                          href={`/${notification.sender?.username}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="relative z-10 font-semibold hover:underline"
-                        >
-                          <span className="line-clamp-1 inline">
-                            {notification.sender?.name}
+                        {!isSystemNotification && primaryActor ? (
+                          <>
+                            <span className="font-semibold">
+                              {getActorNames()}
+                            </span>{" "}
+                            <span className="text-muted-foreground">
+                              {getMessage()}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {getMessage()}
                           </span>
-                        </Link>{" "}
-                        <span className="text-muted-foreground">
-                          {getMessage()}
-                        </span>
+                        )}
                       </p>
                       <p className="text-muted-foreground mt-0.5 text-xs">
                         {timeAgo}
@@ -258,7 +411,6 @@ export const NotificationItem = ({
 
                   {/* Actions - always visible on mobile */}
                   <div className="flex shrink-0 items-center gap-0.5">
-                    {/* Delete button - always visible on mobile, hover on desktop */}
                     <motion.button
                       initial={false}
                       animate={{
@@ -270,7 +422,6 @@ export const NotificationItem = ({
                         "relative z-10 rounded-lg p-2 transition-colors",
                         "hover:bg-destructive/10 hover:text-destructive",
                         "text-muted-foreground/60 sm:text-muted-foreground",
-                        // Visible sur mobile, caché sur desktop sauf hover
                         "opacity-100 sm:opacity-0 sm:group-hover:opacity-100",
                       )}
                       disabled={isPending}
@@ -284,15 +435,14 @@ export const NotificationItem = ({
                     >
                       <NotificationEllipsis
                         notificationId={notification._id}
-                        notificationRead={notification.read}
+                        notificationRead={notification.isRead}
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Preview content */}
-                {(notification.comment?.content ||
-                  notification.post?.content) && (
+                {previewText && (
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -300,9 +450,7 @@ export const NotificationItem = ({
                     className="bg-muted/50 mt-3 rounded-lg p-2.5 sm:p-3"
                   >
                     <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
-                      {notification.type === "comment"
-                        ? notification.comment?.content
-                        : notification.post?.content}
+                      {previewText}
                     </p>
                   </motion.div>
                 )}

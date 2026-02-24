@@ -1,27 +1,17 @@
 "use client"
 
-import { useQuery } from "convex/react"
-import { use } from "react"
 import { UserGallery } from "@/components/domains/users"
-import { api } from "@/convex/_generated/api"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useUserProfileContext } from "@/components/domains/users/user-profile-shell"
 
-const UserGalleryPage = ({
-  params,
-}: {
-  params: Promise<{ username: string }>
-}) => {
-  const { username } = use(params)
-  const { currentUser } = useCurrentUser()
-
-  const userProfile = useQuery(api.users.getUserProfile, {
-    username: username,
-  })
+const UserGalleryPage = () => {
+  const ctx = useUserProfileContext()
 
   // Layout handles loading and not found states
-  if (!userProfile || !currentUser) return null
+  if (!ctx?.currentUser) return null
 
-  return <UserGallery authorId={userProfile._id} currentUser={currentUser} />
+  return (
+    <UserGallery authorId={ctx.userProfile._id} currentUser={ctx.currentUser} />
+  )
 }
 
 export default UserGalleryPage

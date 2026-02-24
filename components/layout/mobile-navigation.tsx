@@ -58,7 +58,7 @@ export const MobileNavigation = () => {
   // Filtrer les liens selon le type de compte
   const filteredNavigationLinks = navigationLinks.filter((link) => {
     const superuserOnlyLinks = ["superuser"]
-    const creatorOnlyLinks = ["income"]
+    const creatorOnlyLinks = ["dashboard"]
 
     if (superuserOnlyLinks.includes(link.id)) {
       return currentUser?.accountType === "SUPERUSER"

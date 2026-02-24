@@ -1,15 +1,13 @@
 import { SignOutButton } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import {
-  BookmarkPlus,
   CircleUserRound,
-  Flame,
   LogOut,
   Settings,
   Sparkles,
+  Users,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { AdultContentSettings } from "@/components/domains/users/adult-content-settings"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -43,13 +41,21 @@ export const UserInfoPopover = ({
 }: UserInfoPopoverProps) => {
   const router = useRouter()
 
+  const isCreator =
+    currentUser.accountType === "CREATOR" ||
+    currentUser.accountType === "SUPERUSER"
+
   const mySubsStats = useQuery(
     api.subscriptions.getMyContentAccessSubscriptionsStats,
     {},
   )
   const mySubscribersStats = useQuery(
     api.subscriptions.getMySubscribersStats,
-    {},
+    isCreator ? {} : "skip",
+  )
+  const myLikesCount = useQuery(
+    api.likes.getMyLikesGivenCount,
+    !isCreator ? {} : "skip",
   )
 
   const handleNavigation = (href: string) => {
@@ -101,9 +107,6 @@ export const UserInfoPopover = ({
                   {currentUser?.image ? (
                     <AvatarImage
                       src={currentUser.image}
-                      width={100}
-                      height={100}
-                      className="aspect-square h-full w-full object-cover"
                       alt={currentUser?.username || "Profile image"}
                     />
                   ) : (
@@ -155,9 +158,6 @@ export const UserInfoPopover = ({
               {currentUser?.image ? (
                 <AvatarImage
                   src={currentUser.image}
-                  width={100}
-                  height={100}
-                  className="aspect-square h-full w-full object-cover"
                   alt={currentUser?.username || "Profile image"}
                 />
               ) : (
@@ -176,21 +176,47 @@ export const UserInfoPopover = ({
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats — different for creators vs users */}
           <div className="border-border/50 flex items-center gap-4 border-t px-3 py-2 text-sm">
-            <div className="flex items-center gap-1">
-              <span className="text-foreground font-semibold">
-                {mySubscribersStats?.subscribersCount || 0}
-              </span>
-              <span className="text-muted-foreground">fans</span>
-            </div>
-            <div className="bg-border/50 h-4 w-px" />
-            <div className="flex items-center gap-1">
-              <span className="text-foreground font-semibold">
-                {mySubsStats?.creatorsCount || 0}
-              </span>
-              <span className="text-muted-foreground">abonnements</span>
-            </div>
+            {isCreator ? (
+              <>
+                <div className="flex items-center gap-1">
+                  <span className="text-foreground font-semibold">
+                    {mySubscribersStats?.subscribersCount || 0}
+                  </span>
+                  <span className="text-muted-foreground">
+                    fan{(mySubscribersStats?.subscribersCount || 0) !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="bg-border/50 h-4 w-px" />
+                <div className="flex items-center gap-1">
+                  <span className="text-foreground font-semibold">
+                    {mySubsStats?.creatorsCount || 0}
+                  </span>
+                  <span className="text-muted-foreground">
+                    abonnement{(mySubsStats?.creatorsCount || 0) !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1">
+                  <span className="text-foreground font-semibold">
+                    {mySubsStats?.creatorsCount || 0}
+                  </span>
+                  <span className="text-muted-foreground">
+                    abonnement{(mySubsStats?.creatorsCount || 0) !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="bg-border/50 h-4 w-px" />
+                <div className="flex items-center gap-1">
+                  <span className="text-foreground font-semibold">
+                    {myLikesCount?.count || 0}
+                  </span>
+                  <span className="text-muted-foreground">j&apos;aime</span>
+                </div>
+              </>
+            )}
           </div>
         </DropdownMenuLabel>
 
@@ -226,31 +252,18 @@ export const UserInfoPopover = ({
 
           <DropdownMenuItem
             className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
-            onClick={() => handleNavigation("/collections")}
+            onClick={() => handleNavigation("/subscriptions")}
           >
-            <BookmarkPlus className="text-muted-foreground mr-3 size-4" />
-            <span>Collections</span>
+            <Users className="text-muted-foreground mr-3 size-4" />
+            <span>Abonnements</span>
           </DropdownMenuItem>
-
-          <AdultContentSettings
-            currentUser={currentUser}
-            trigger={
-              <DropdownMenuItem
-                className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Flame className="text-orange-500 mr-3 size-4" />
-                <span>Contenu adulte</span>
-              </DropdownMenuItem>
-            }
-          />
 
           <DropdownMenuItem
             className="focus:bg-foreground/10 cursor-pointer rounded-lg px-3 py-2.5"
             onClick={() => handleNavigation("/account")}
           >
             <Settings className="text-muted-foreground mr-3 size-4" />
-            <span>Compte</span>
+            <span>Paramètres</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 

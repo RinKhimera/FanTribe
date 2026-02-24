@@ -15,7 +15,7 @@ export const DateIndicator = ({
       {!previousMessage ||
       !isSameDay(previousMessage._creationTime, message._creationTime) ? (
         <div className="flex justify-center">
-          <p className="dark:bg-muted z-50 mb-2 rounded-md bg-white p-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="bg-card text-muted-foreground z-50 mb-2 rounded-md p-1 text-sm">
             {getRelativeDateTime(message, previousMessage)}
           </p>
         </div>

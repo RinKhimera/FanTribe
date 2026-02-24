@@ -15,13 +15,30 @@ export default defineConfig({
     },
     include: ["tests/convex/**/*.test.ts"],
     coverage: {
-      include: ["convex/**/*.ts"],
+      include: [
+        "convex/bans.ts",
+        "convex/comments.ts",
+        "convex/creatorApplications.ts",
+        "convex/notifications.ts",
+        "convex/notificationQueue.ts",
+        "convex/reports.ts",
+        "convex/subscriptions.ts",
+        "convex/lib/auth.ts",
+        "convex/lib/batch.ts",
+        "convex/lib/blocks.ts",
+        "convex/lib/rateLimiter.ts",
+        "convex/lib/validators.ts",
+      ],
       exclude: [
         "**/*.test.ts",
         "convex/_generated/**",
-        "convex/auth.config.ts",
-        "convex/http.ts",
       ],
+      thresholds: {
+        lines: 65,
+        branches: 50,
+        functions: 60,
+        statements: 65,
+      },
     },
   },
 })

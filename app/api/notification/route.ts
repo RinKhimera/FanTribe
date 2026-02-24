@@ -11,6 +11,12 @@ const CinetPayMetadataSchema = z.object({
   subscriberId: z.string().min(1, "subscriberId is required"),
   type: z.string().optional(),
   action: z.string().optional(),
+  // Tip-specific fields
+  senderId: z.string().optional(),
+  tipMessage: z.string().optional(),
+  tipContext: z.enum(["post", "profile", "message"]).optional(),
+  postId: z.string().optional(),
+  conversationId: z.string().optional(),
 })
 
 /**
@@ -162,8 +168,6 @@ export async function POST(request: Request) {
     }
 
     if (testMode) {
-      console.log("🧪 TEST MODE: Bypassing CinetPay verification")
-
       // Simuler une réponse CinetPay réussie
       const mockResponse: CinetPayResponse = {
         code: "00",
@@ -185,7 +189,34 @@ export async function POST(request: Request) {
         api_response_id: `api-${Date.now()}`,
       }
 
-      // Traiter le paiement simulé avec la nouvelle signature
+      // Déterminer le type de paiement (tip ou subscription)
+      const metadata = body.cpm_custom
+        ? CinetPayMetadataSchema.parse(JSON.parse(body.cpm_custom))
+        : { type: body.type, senderId: body.senderId, tipMessage: body.tipMessage, tipContext: body.tipContext as "post" | "profile" | "message" | undefined, postId: body.postId, conversationId: body.conversationId, creatorId: body.creatorId, subscriberId: body.subscriberId }
+
+      if (metadata.type === "tip") {
+        const result = await fetchAction(api.internalActions.processTip, {
+          provider: "cinetpay",
+          providerTransactionId: transactionId,
+          senderId: (metadata.senderId || subscriberId) as Id<"users">,
+          creatorId,
+          amount: amountPaid || 500,
+          currency: mockResponse.data.currency,
+          message: metadata.tipMessage || undefined,
+          context: metadata.tipContext as "post" | "profile" | "message" | undefined,
+          postId: metadata.postId ? (metadata.postId as Id<"posts">) : undefined,
+          conversationId: metadata.conversationId ? (metadata.conversationId as Id<"conversations">) : undefined,
+        })
+
+        return Response.json({
+          message: result.alreadyProcessed
+            ? "Tip already processed (TEST MODE)"
+            : "Tip processed successfully (TEST MODE)",
+          result,
+        })
+      }
+
+      // Traiter le paiement d'abonnement simulé
       const result = await fetchAction(api.internalActions.processPayment, {
         provider: "cinetpay",
         providerTransactionId: transactionId,
@@ -253,7 +284,39 @@ export async function POST(request: Request) {
         ? Number(checkData.data.amount)
         : undefined
 
-      // Utilise l'action pour traiter le paiement avec la nouvelle signature
+      // Déterminer le type de paiement depuis les metadata
+      let prodMetadata: z.infer<typeof CinetPayMetadataSchema> | undefined
+      if (body.cpm_custom) {
+        try {
+          prodMetadata = CinetPayMetadataSchema.parse(JSON.parse(body.cpm_custom))
+        } catch {
+          // Metadata parsing failed, treat as subscription
+        }
+      }
+
+      if (prodMetadata?.type === "tip") {
+        const tipResult = await fetchAction(api.internalActions.processTip, {
+          provider: "cinetpay",
+          providerTransactionId: transactionId,
+          senderId: (prodMetadata.senderId || subscriberId) as Id<"users">,
+          creatorId,
+          amount: cinetPayAmount || 0,
+          currency: checkData.data.currency || "XOF",
+          message: prodMetadata.tipMessage || undefined,
+          context: prodMetadata.tipContext as "post" | "profile" | "message" | undefined,
+          postId: prodMetadata.postId ? (prodMetadata.postId as Id<"posts">) : undefined,
+          conversationId: prodMetadata.conversationId ? (prodMetadata.conversationId as Id<"conversations">) : undefined,
+        })
+
+        return Response.json({
+          message: tipResult.alreadyProcessed
+            ? "Tip already processed"
+            : "Tip processed successfully",
+          result: tipResult,
+        })
+      }
+
+      // Traiter le paiement d'abonnement
       const result = await fetchAction(api.internalActions.processPayment, {
         provider: "cinetpay",
         providerTransactionId: transactionId,

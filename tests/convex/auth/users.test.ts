@@ -57,6 +57,48 @@ describe("users", () => {
     expect(user?.name).toBe("Authenticated User")
   })
 
+  it("should preserve accountType when upserting existing user from Clerk", async () => {
+    const t = convexTest(schema)
+
+    // Create a user who is already a CREATOR
+    await t.run(async (ctx) => {
+      await ctx.db.insert("users", {
+        name: "Creator User",
+        externalId: "clerk_456",
+        tokenIdentifier: "test-domain|clerk_456",
+        accountType: "CREATOR",
+        email: "creator@test.com",
+        image: "https://test.com/old.png",
+        isOnline: true,
+      })
+    })
+
+    // Simulate Clerk user.updated webhook
+    const clerkData = {
+      id: "clerk_456",
+      first_name: "Creator",
+      last_name: "Updated",
+      email_addresses: [{ email_address: "creator@test.com" }],
+      image_url: "https://test.com/new.png",
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await t.mutation(internal.users.upsertFromClerk, { data: clerkData as any })
+
+    const user = await t.run(async (ctx) => {
+      return await ctx.db
+        .query("users")
+        .withIndex("by_externalId", (q) => q.eq("externalId", "clerk_456"))
+        .unique()
+    })
+
+    expect(user).not.toBeNull()
+    expect(user?.name).toBe("Creator Updated")
+    expect(user?.image).toBe("https://test.com/new.png")
+    // accountType must NOT be overwritten to "USER"
+    expect(user?.accountType).toBe("CREATOR")
+  })
+
   it("should return null for getCurrentUser when not authenticated", async () => {
     const t = convexTest(schema)
     const user = await t.query(api.users.getCurrentUser, {})

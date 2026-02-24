@@ -16,6 +16,9 @@ type UploadMediaResult = {
   mimeType: string
   fileName: string
   fileSize: number
+  width?: number
+  height?: number
+  thumbnailUrl?: string
   error?: string
 }
 
@@ -30,6 +33,25 @@ type DeleteMediaResult = {
 /** Derive convex.site URL from convex.cloud URL */
 const getConvexSiteUrl = () =>
   clientEnv.NEXT_PUBLIC_CONVEX_URL.replace(".cloud", ".site")
+
+/** Extract image dimensions from a File using an ObjectURL + Image element */
+function extractImageDimensions(
+  file: File,
+): Promise<{ width: number; height: number }> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const img = new window.Image()
+    img.onload = () => {
+      resolve({ width: img.naturalWidth, height: img.naturalHeight })
+      URL.revokeObjectURL(url)
+    }
+    img.onerror = () => {
+      resolve({ width: 0, height: 0 })
+      URL.revokeObjectURL(url)
+    }
+    img.src = url
+  })
+}
 
 // ============================================================================
 // Hook
@@ -104,7 +126,7 @@ export function useBunnyUpload() {
             }
           }
 
-          const { videoId, accessKey, libraryId, embedUrl } =
+          const { videoId, accessKey, libraryId, embedUrl, thumbnailUrl } =
             await tokenRes.json()
 
           // Step 2 : Upload direct vers Bunny Stream avec progress reel
@@ -159,9 +181,13 @@ export function useBunnyUpload() {
             mimeType: file.type,
             fileName: file.name,
             fileSize: file.size,
+            thumbnailUrl,
           }
         } else {
           // ── IMAGE : upload via Convex HTTP Action ──
+
+          // Extract dimensions before upload (instant — reads file header only)
+          const dimensions = await extractImageDimensions(file)
 
           // Simuler le progress (comme NOMAQbanq)
           let simulatedProgress = 0
@@ -224,6 +250,8 @@ export function useBunnyUpload() {
             mimeType: file.type,
             fileName: file.name,
             fileSize: file.size,
+            width: dimensions.width || undefined,
+            height: dimensions.height || undefined,
           }
         }
       } catch (error) {

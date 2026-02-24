@@ -24,8 +24,8 @@ export default function DashboardLayout({
       <section>
         <div className="flex h-screen w-full items-center justify-center">
           <div className="text-center">
-            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
-            <p className="text-muted-foreground text-lg">Chargement...</p>
+            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" aria-hidden="true" />
+            <p className="text-muted-foreground text-lg">Chargement…</p>
           </div>
         </div>
       </section>
@@ -44,9 +44,9 @@ export default function DashboardLayout({
       <section>
         <div className="flex h-screen w-full items-center justify-center">
           <div className="text-center">
-            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" />
+            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" aria-hidden="true" />
             <p className="text-muted-foreground text-lg">
-              Erreur de chargement du profil...
+              Erreur de chargement du profil…
             </p>
           </div>
         </div>

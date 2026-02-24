@@ -8,7 +8,7 @@ import { PageHeader } from "./page-header"
 /**
  * Variants du conteneur de page
  * - default: Largeur standard avec bordures
- * - wide: Pour les layouts type messages/user-lists
+ * - wide: Pour les layouts type messages/subscriptions
  * - full: Pleine largeur sans bordures
  */
 export type PageContainerVariant = "default" | "wide" | "full"

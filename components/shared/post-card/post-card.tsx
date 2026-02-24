@@ -14,15 +14,10 @@ import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { premiumCardVariants } from "@/lib/animations"
 import { cn } from "@/lib/utils"
-import type { PostMedia as PostMediaType } from "@/types"
 
-// ExtendedPost is a type that represents a post with an extended author field.
-// medias accepts both formats: PostMedia[] (normalized by backend) or the union type during transition
-type ExtendedPost = Omit<Doc<"posts">, "author" | "medias"> & {
+type ExtendedPost = Omit<Doc<"posts">, "author"> & {
   author: Doc<"users"> | null | undefined
-  medias: Array<string | PostMediaType>
   isPinned?: boolean
-  // Champs ajoutés par le backend pour le filtrage des médias
   isMediaLocked?: boolean
   mediaCount?: number
 }
@@ -93,7 +88,7 @@ export const PostCard = ({
             variant === "featured" && [
               "border-primary/20 rounded-2xl border",
               "from-primary/5 bg-linear-to-b to-transparent",
-              "shadow-[0_4px_24px_hsl(var(--primary)/15%)]",
+              "shadow-[0_4px_24px_color-mix(in_oklch,var(--primary)_15%,transparent)]",
             ],
             variant === "compact" && "py-1",
           )}
@@ -138,7 +133,7 @@ export const PostCard = ({
               </div>
             )}
 
-            {/* Actions: Like, Comment, Share, Bookmark */}
+            {/* Actions: Like, Comment, Share, Tip, Bookmark */}
             <PostActions
               postId={post._id}
               postUrl={postUrl}
@@ -146,6 +141,8 @@ export const PostCard = ({
               isCommentsOpen={isCommentsOpen}
               onToggleComments={toggleComments}
               hideCommentButton={isDetailView}
+              author={post.author ?? undefined}
+              currentUserId={currentUser._id}
             />
 
             {/* Comments section - hidden in detail view (handled externally) */}

@@ -17,7 +17,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
-import { FullscreenImageViewer } from "@/components/shared/fullscreen-image-viewer"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Tooltip,
@@ -139,8 +139,8 @@ export const MessageBox = ({
         </div>
 
         {imageMedias.length > 0 && (
-          <FullscreenImageViewer
-            medias={imageMedias.map((m) => m.url)}
+          <MediaLightbox
+            slides={imageMedias.map((m) => ({ src: m.url }))}
             index={selectedImageIndex}
             open={imageViewerOpen}
             onClose={() => setImageViewerOpen(false)}
@@ -194,8 +194,8 @@ export const MessageBox = ({
       </div>
 
       {imageMedias.length > 0 && (
-        <FullscreenImageViewer
-          medias={imageMedias.map((m) => m.url)}
+        <MediaLightbox
+          slides={imageMedias.map((m) => ({ src: m.url }))}
           index={selectedImageIndex}
           open={imageViewerOpen}
           onClose={() => setImageViewerOpen(false)}

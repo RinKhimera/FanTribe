@@ -6,6 +6,7 @@ import {
   mutation,
   query,
 } from "./_generated/server"
+import { getAuthenticatedUser } from "./lib/auth"
 import {
   badgeValidator,
   banDetailsValidator,
@@ -15,41 +16,6 @@ import {
   socialLinkValidator,
   userDocValidator,
 } from "./lib/validators"
-
-type PostMedia = {
-  type: "image" | "video"
-  url: string
-  mediaId: string
-  mimeType: string
-  fileName?: string
-  fileSize?: number
-  thumbnailUrl?: string
-  duration?: number
-  width?: number
-  height?: number
-}
-
-/** Normalize a media entry: convert old string format to PostMedia object */
-function normalizePostMedia(m: string | PostMedia): PostMedia {
-  if (typeof m !== "string") return m
-  const isVideo = m.startsWith("https://iframe.mediadelivery.net/embed/")
-  if (isVideo) {
-    const guidMatch = m.match(/\/embed\/\d+\/([^?/]+)/)
-    return {
-      type: "video",
-      url: m,
-      mediaId: guidMatch ? guidMatch[1] : m,
-      mimeType: "video/mp4",
-    }
-  }
-  const pathMatch = m.match(/https:\/\/[^/]+\/(.+)/)
-  return {
-    type: "image",
-    url: m,
-    mediaId: pathMatch ? pathMatch[1] : m,
-    mimeType: "image/jpeg",
-  }
-}
 
 async function userByExternalId(ctx: QueryCtx, externalId: string) {
   return await ctx.db
@@ -68,14 +34,17 @@ export const upsertFromClerk = internalMutation({
       name: `${data.first_name} ${data.last_name}`,
       email: data.email_addresses[0]?.email_address,
       image: data.image_url,
-      accountType: "USER" as const,
       isOnline: true,
     }
 
     const user = await userByExternalId(ctx, data.id)
     if (user === null) {
-      await ctx.db.insert("users", userAttributes)
+      await ctx.db.insert("users", {
+        ...userAttributes,
+        accountType: "USER",
+      })
     } else {
+      // Don't overwrite accountType — it may have been promoted to CREATOR/SUPERUSER
       await ctx.db.patch(user._id, userAttributes)
     }
     return null
@@ -151,6 +120,26 @@ export const getCurrentUser = query({
       ),
       allowAdultContent: v.optional(v.boolean()),
       personalInfo: v.optional(personalInfoValidator),
+      notificationPreferences: v.optional(
+        v.object({
+          likes: v.optional(v.boolean()),
+          comments: v.optional(v.boolean()),
+          newPosts: v.optional(v.boolean()),
+          subscriptions: v.optional(v.boolean()),
+          messages: v.optional(v.boolean()),
+          tips: v.optional(v.boolean()),
+          emailNotifications: v.optional(v.boolean()),
+        }),
+      ),
+      privacySettings: v.optional(
+        v.object({
+          profileVisibility: v.optional(
+            v.union(v.literal("public"), v.literal("private"))
+          ),
+          allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+          language: v.optional(v.string()),
+        }),
+      ),
       isBanned: v.optional(v.boolean()),
       banDetails: v.optional(banDetailsValidator),
       banHistory: v.optional(v.array(banHistoryEntryValidator)),
@@ -259,8 +248,13 @@ export const getSuggestedCreators = query({
       .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
       .take(200)
 
+    // Exclude current user from suggestions
+    const filtered = creators.filter(
+      (c) => c.externalId !== identity.subject,
+    )
+
     // Mélanger avec Fisher-Yates (distribution uniforme) et prendre les 48 premiers
-    const shuffled = fisherYatesShuffle(creators)
+    const shuffled = fisherYatesShuffle(filtered)
     return shuffled.slice(0, 48)
   },
 })
@@ -394,10 +388,6 @@ export const markStaleUsersOffline = internalMutation({
     )
 
     const markedOfflineCount = staleUsers.length
-
-    if (markedOfflineCount > 0) {
-      console.log(`Marked ${markedOfflineCount} stale users as offline`)
-    }
 
     return { markedOfflineCount }
   },
@@ -687,7 +677,7 @@ export const getPinnedPosts = query({
       .filter((post): post is NonNullable<typeof post> => post !== null)
       .map((post) => ({
         ...post,
-        medias: (post.medias || []).map(normalizePostMedia),
+        medias: post.medias || [],
         author: user,
       }))
   },
@@ -847,6 +837,70 @@ export const updateAdultContentPreference = mutation({
 
     await ctx.db.patch(user._id, {
       allowAdultContent: args.allowAdultContent,
+    })
+
+    return { success: true }
+  },
+})
+
+export const updateNotificationPreferences = mutation({
+  args: {
+    likes: v.optional(v.boolean()),
+    comments: v.optional(v.boolean()),
+    newPosts: v.optional(v.boolean()),
+    subscriptions: v.optional(v.boolean()),
+    messages: v.optional(v.boolean()),
+    tips: v.optional(v.boolean()),
+    emailNotifications: v.optional(v.boolean()),
+  },
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+
+    const currentPrefs = user.notificationPreferences || {}
+
+    await ctx.db.patch(user._id, {
+      notificationPreferences: {
+        ...currentPrefs,
+        ...args,
+      },
+    })
+
+    return { success: true }
+  },
+})
+
+export const updatePrivacySettings = mutation({
+  args: {
+    profileVisibility: v.optional(
+      v.union(v.literal("public"), v.literal("private"))
+    ),
+    allowMessagesFromNonSubscribers: v.optional(v.boolean()),
+    language: v.optional(v.string()),
+  },
+  returns: v.object({ success: v.boolean() }),
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+
+    const currentSettings = user.privacySettings || {}
+
+    // Only merge defined fields to avoid setting undefined values
+    const updates: Record<string, unknown> = {}
+    if (args.profileVisibility !== undefined) {
+      updates.profileVisibility = args.profileVisibility
+    }
+    if (args.allowMessagesFromNonSubscribers !== undefined) {
+      updates.allowMessagesFromNonSubscribers = args.allowMessagesFromNonSubscribers
+    }
+    if (args.language !== undefined) {
+      updates.language = args.language
+    }
+
+    await ctx.db.patch(user._id, {
+      privacySettings: {
+        ...currentSettings,
+        ...updates,
+      },
     })
 
     return { success: true }

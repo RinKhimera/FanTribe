@@ -206,14 +206,14 @@ export default function ReportsPage() {
     if (report.type === "post" && report.reportedPost) {
       return (
         report.reportedPost.content?.slice(0, 60) +
-          (report.reportedPost.content?.length > 60 ? "..." : "") ||
+          (report.reportedPost.content?.length > 60 ? "…" : "") ||
         "Post sans texte"
       )
     }
     if (report.type === "comment" && report.reportedComment) {
       return (
         report.reportedComment.content?.slice(0, 60) +
-          (report.reportedComment.content?.length > 60 ? "..." : "") ||
+          (report.reportedComment.content?.length > 60 ? "…" : "") ||
         "Commentaire"
       )
     }
@@ -250,7 +250,7 @@ export default function ReportsPage() {
         {/* Urgent Alert */}
         {urgentCount > 0 && (
           <Alert className="border-red-500/30 bg-red-500/5">
-            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertTriangle className="h-4 w-4 text-red-500" aria-hidden="true" />
             <AlertDescription className="text-red-700 dark:text-red-400">
               <span className="font-semibold">{urgentCount}</span>{" "}
               signalement(s) urgent(s) en attente (harcèlement, violence,
@@ -323,7 +323,7 @@ export default function ReportsPage() {
                                 type.className,
                               )}
                             >
-                              <TypeIcon className="h-3 w-3" />
+                              <TypeIcon className="h-3 w-3" aria-hidden="true" />
                               <span className="hidden sm:inline">
                                 {type.label}
                               </span>
@@ -334,7 +334,7 @@ export default function ReportsPage() {
                           <Link href={`/superuser/reports/${report._id}`}>
                             <div className="flex items-center gap-1.5">
                               {isUrgent && (
-                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" />
+                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" aria-hidden="true" />
                               )}
                               <span className="max-w-30 truncate text-sm font-medium">
                                 {reasonLabels[report.reason] || report.reason}
@@ -379,7 +379,7 @@ export default function ReportsPage() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                            <Calendar className="h-3.5 w-3.5" />
+                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                             {formatDate(report.createdAt)}
                           </div>
                         </TableCell>
@@ -389,8 +389,9 @@ export default function ReportsPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                              aria-label="Voir le signalement"
                             >
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           </Link>
                         </TableCell>
@@ -438,7 +439,7 @@ function StatCard({
     <Card className="p-3">
       <div className="flex items-center gap-3">
         <div className={cn("text-muted-foreground", colorClasses[color])}>
-          <Icon className="h-5 w-5" />
+          <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
           {isLoading ? (
@@ -475,7 +476,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="bg-muted/50 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-        <Flag className="text-muted-foreground h-6 w-6" />
+        <Flag className="text-muted-foreground h-6 w-6" aria-hidden="true" />
       </div>
       <h3 className="mb-1 font-medium">Aucun signalement</h3>
       <p className="text-muted-foreground text-sm">

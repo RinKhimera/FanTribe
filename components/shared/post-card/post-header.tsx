@@ -62,10 +62,7 @@ export const PostHeader = ({
             <Avatar className="size-12">
               <AvatarImage
                 src={author.image}
-                width={48}
-                height={48}
                 alt={author.username || "Profile image"}
-                className="aspect-square object-cover"
               />
               <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
                 {author.name?.charAt(0)?.toUpperCase() || "?"}

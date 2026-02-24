@@ -4,11 +4,9 @@ import { useQuery } from "convex/react"
 import { motion, AnimatePresence } from "motion/react"
 import { ChevronDown, ChevronUp, Loader2 } from "lucide-react"
 import {
-  CSSProperties,
   useCallback,
   useEffect,
   useEffectEvent,
-  useMemo,
   useRef,
   useState,
 } from "react"
@@ -76,7 +74,7 @@ export const MessagesList = ({
   useEffect(() => {
     const container = containerRef.current
     if (container) {
-      container.addEventListener("scroll", handleScroll)
+      container.addEventListener("scroll", handleScroll, { passive: true })
       return () => container.removeEventListener("scroll", handleScroll)
     }
   }, [handleScroll])
@@ -218,34 +216,10 @@ export const MessagesList = ({
     }
   }, [allMessages, isLoadingMore])
 
-  // Style du conteneur (mémorisé)
-  const containerStyle = useMemo<CSSProperties>(
-    () => ({
-      visibility: isReadyToShow ? "visible" : "hidden",
-      transition: "visibility 0s",
-    }),
-    [isReadyToShow]
-  )
-
-  // Liste des messages (mémorisée pour éviter les re-renders inutiles)
-  const messagesList = useMemo(
-    () =>
-      allMessages.map((message, index) => (
-        <motion.div
-          key={message._id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <MessageBox
-            currentUser={currentUser}
-            message={message}
-            previousMessage={index > 0 ? allMessages[index - 1] : undefined}
-          />
-        </motion.div>
-      )),
-    [allMessages, currentUser]
-  )
+  const containerStyle = {
+    visibility: isReadyToShow ? ("visible" as const) : ("hidden" as const),
+    transition: "visibility 0s",
+  }
 
   return (
     <div
@@ -301,7 +275,20 @@ export const MessagesList = ({
         )}
 
         {/* Liste des messages */}
-        {messagesList}
+        {allMessages.map((message, index) => (
+          <motion.div
+            key={message._id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <MessageBox
+              currentUser={currentUser}
+              message={message}
+              previousMessage={index > 0 ? allMessages[index - 1] : undefined}
+            />
+          </motion.div>
+        ))}
 
         {/* Référence pour le scroll */}
         <div ref={messagesEndRef} />

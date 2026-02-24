@@ -1,9 +1,11 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
-import Webcam from "react-webcam"
+import { lazy, Suspense, useCallback, useRef, useState } from "react"
+import type WebcamType from "react-webcam"
 import { Camera, RefreshCw, X } from "lucide-react"
 import { toast } from "sonner"
+
+const Webcam = lazy(() => import("react-webcam"))
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -29,7 +31,7 @@ export const CameraCapture = ({
   facingMode = "environment",
   className,
 }: CameraCaptureProps) => {
-  const webcamRef = useRef<Webcam>(null)
+  const webcamRef = useRef<WebcamType>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [currentFacingMode, setCurrentFacingMode] = useState<
     "user" | "environment"
@@ -164,16 +166,24 @@ export const CameraCapture = ({
               </div>
             ) : (
               <div className="relative overflow-hidden rounded-lg bg-black">
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  screenshotFormat="image/jpeg"
-                  screenshotQuality={0.9}
-                  videoConstraints={videoConstraints}
-                  onUserMediaError={handleUserMediaError}
-                  className="aspect-[4/3] w-full object-cover"
-                  mirrored={currentFacingMode === "user"}
-                />
+                <Suspense
+                  fallback={
+                    <div className="flex aspect-[4/3] w-full items-center justify-center bg-black">
+                      <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    </div>
+                  }
+                >
+                  <Webcam
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    screenshotQuality={0.9}
+                    videoConstraints={videoConstraints}
+                    onUserMediaError={handleUserMediaError}
+                    className="aspect-[4/3] w-full object-cover"
+                    mirrored={currentFacingMode === "user"}
+                  />
+                </Suspense>
 
                 {/* Camera switch button overlay */}
                 {hasMultipleCameras && (

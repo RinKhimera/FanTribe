@@ -9,7 +9,7 @@ import { RightSidebar } from "./right-sidebar"
 /**
  * Layout variants pour différents types de pages
  * - default: Feed standard (50% content, sidebars visibles)
- * - wide: Contenu élargi sans sidebar droite (messages, user-lists)
+ * - wide: Contenu élargi sans sidebar droite (messages, subscriptions)
  * - full: Pleine largeur sans sidebars (superuser/transactions)
  */
 export type LayoutVariant = "default" | "wide" | "full"
@@ -40,7 +40,7 @@ type AppLayoutProps = {
  * </AppLayout>
  *
  * @example
- * // Page avec contenu élargi (messages, user-lists)
+ * // Page avec contenu élargi (messages, subscriptions)
  * <AppLayout currentUser={user} variant="wide">
  *   <PageContainer title="Messages" variant="wide">...</PageContainer>
  * </AppLayout>

@@ -1,4 +1,3 @@
-import tanstackQuery from "@tanstack/eslint-plugin-query"
 import nextVitals from "eslint-config-next/core-web-vitals"
 import nextTs from "eslint-config-next/typescript"
 import unusedImports from "eslint-plugin-unused-imports"
@@ -7,16 +6,6 @@ import { defineConfig, globalIgnores } from "eslint/config"
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-
-  // TanStack Query plugin
-  {
-    plugins: {
-      "@tanstack/query": tanstackQuery,
-    },
-    rules: {
-      ...tanstackQuery.configs.recommended.rules,
-    },
-  },
 
   // Unused imports plugin
   {
@@ -34,6 +23,14 @@ const eslintConfig = defineConfig([
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
       "no-undef": "off",
+    },
+  },
+
+  // OG image files must use <img> (next/image doesn't work in ImageResponse)
+  {
+    files: ["**/opengraph-image.tsx", "**/twitter-image.tsx"],
+    rules: {
+      "@next/next/no-img-element": "off",
     },
   },
 

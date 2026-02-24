@@ -2,6 +2,15 @@ import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "motion",
+      "emoji-picker-react",
+      "embla-carousel-react",
+    ],
+  },
   images: {
     remotePatterns: [
       {
@@ -26,15 +35,50 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "vz-d849a0bc-fed.b-cdn.net",
+      },
+      {
+        protocol: "https",
         hostname: "res.cloudinary.com",
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self'",
+          },
+        ],
+      },
+    ]
   },
   async redirects() {
     return [
       {
         source: "/user-lists",
-        destination: "/user-lists/subscriptions",
+        destination: "/subscriptions",
+        permanent: true,
+      },
+      {
+        source: "/user-lists/subscriptions",
+        destination: "/subscriptions",
+        permanent: true,
+      },
+      {
+        source: "/user-lists/blocked",
+        destination: "/account/blocked",
         permanent: true,
       },
     ]

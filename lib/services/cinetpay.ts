@@ -34,8 +34,7 @@ export const initializeCinetPayPayment = async (
       apikey: process.env.NEXT_PUBLIC_CINETPAY_API_KEY,
       site_id: process.env.NEXT_PUBLIC_CINETPAY_SITE_ID,
       transaction_id: transactionId,
-      // amount: paymentData.amount || 1000,
-      amount: 100,
+      amount: paymentData.amount || 1000,
       currency: "XAF",
       description: paymentData.description || "Abonnement mensuel",
       notify_url:

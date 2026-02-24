@@ -69,8 +69,6 @@ export const CreateComment = ({
           <AvatarImage
             src={currentUser?.image}
             alt={currentUser?.username || "Avatar"}
-            width={44}
-            height={44}
           />
           <AvatarFallback className="size-11">
             <div className="animate-pulse rounded-full bg-gray-500"></div>
@@ -84,8 +82,6 @@ export const CreateComment = ({
           <AvatarImage
             src={currentUser?.image}
             alt={currentUser?.username || "Avatar"}
-            width={32}
-            height={32}
           />
           <AvatarFallback className="size-8">
             <div className="animate-pulse rounded-full bg-gray-500"></div>
