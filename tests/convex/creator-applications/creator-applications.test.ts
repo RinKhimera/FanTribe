@@ -279,7 +279,7 @@ describe("creator-applications", () => {
           applicationReason: "Unauthorized",
           identityDocuments: [],
         }),
-      ).rejects.toThrow("Unauthorized")
+      ).rejects.toThrow("NOT_AUTHENTICATED")
     })
 
     it("should reject submission for a different user", async () => {
@@ -782,7 +782,7 @@ describe("creator-applications", () => {
 
       await expect(
         t.mutation(api.creatorApplications.requestReapplication, { userId }),
-      ).rejects.toThrow("Unauthorized")
+      ).rejects.toThrow("NOT_AUTHENTICATED")
     })
 
     it("should reject reapplication request for a different user", async () => {

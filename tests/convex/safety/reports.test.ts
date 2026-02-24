@@ -193,7 +193,7 @@ describe("reports", () => {
           type: "user",
           reason: "spam",
         }),
-      ).rejects.toThrow("Unauthorized")
+      ).rejects.toThrow("NOT_AUTHENTICATED")
     })
 
     it("should reject self-reporting", async () => {

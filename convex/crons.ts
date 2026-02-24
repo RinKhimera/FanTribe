@@ -10,6 +10,13 @@ crons.daily(
   internal.subscriptions.checkAndUpdateExpiredSubscriptions,
 )
 
+// Levée automatique des bannissements temporaires expirés (une fois par jour à 02:00 UTC)
+crons.daily(
+  "lift-expired-bans",
+  { hourUTC: 2, minuteUTC: 0 },
+  internal.bans.liftExpiredBans,
+)
+
 // Exécution tous les jours à 03:00 UTC (pour ne pas interférer avec d'autres opérations)
 crons.daily(
   "clean-draft-assets",

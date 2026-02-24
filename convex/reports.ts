@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values"
 import { api } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
+import { getAuthenticatedUser } from "./lib/auth"
 import { rateLimiter } from "./lib/rateLimiter"
 
 // Créer un signalement
@@ -29,17 +30,7 @@ export const createReport = mutation({
     message: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Unauthorized")
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser) throw new Error("User not found")
+    const currentUser = await getAuthenticatedUser(ctx)
     await rateLimiter.limit(ctx, "createReport", { key: currentUser._id, throws: true })
 
     // Vérifier qu'il y a soit un utilisateur, soit un post, soit un commentaire signalé

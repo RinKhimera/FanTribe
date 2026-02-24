@@ -8,6 +8,7 @@ import { ConvexError } from "convex/values"
 export type ErrorCode =
   | "NOT_AUTHENTICATED"
   | "USER_NOT_FOUND"
+  | "BANNED"
   | "POST_NOT_FOUND"
   | "COMMENT_NOT_FOUND"
   | "CONVERSATION_NOT_FOUND"
@@ -44,6 +45,11 @@ const ERROR_MESSAGES: Record<
   USER_NOT_FOUND: {
     message: "User not found",
     userMessage: "Utilisateur introuvable",
+  },
+  BANNED: {
+    message: "User account is banned",
+    userMessage:
+      "Votre compte a été suspendu. Vous ne pouvez pas effectuer cette action.",
   },
   POST_NOT_FOUND: {
     message: "Post not found",

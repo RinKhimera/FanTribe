@@ -307,16 +307,7 @@ export const updatePresenceHeartbeat = mutation({
   args: {},
   returns: v.union(v.object({ success: v.boolean() }), v.null()),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return null
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
+    const user = await getAuthenticatedUser(ctx, { optional: true })
     if (!user) return null
 
     await ctx.db.patch(user._id, {
@@ -333,16 +324,7 @@ export const setUserOffline = mutation({
   args: {},
   returns: v.union(v.object({ success: v.boolean() }), v.null()),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return null
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
+    const user = await getAuthenticatedUser(ctx, { optional: true })
     if (!user) return null
 
     // Only set offline if no active sessions from webhooks
@@ -416,21 +398,7 @@ export const updateUserProfile = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError("Not authenticated")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) {
-      throw new ConvexError("User not found")
-    }
+    const user = await getAuthenticatedUser(ctx)
 
     await ctx.db.patch(user._id, {
       name: args.name,
@@ -449,21 +417,7 @@ export const updateProfileImage = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError("Not authenticated")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) {
-      throw new ConvexError("User not found")
-    }
+    const user = await getAuthenticatedUser(ctx)
 
     await ctx.db.patch(user._id, {
       image: args.imgUrl,
@@ -479,21 +433,7 @@ export const updateBannerImage = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new ConvexError("Not authenticated")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!user) {
-      throw new ConvexError("User not found")
-    }
+    const user = await getAuthenticatedUser(ctx)
 
     await ctx.db.patch(user._id, {
       imageBanner: args.bannerUrl,
@@ -604,17 +544,7 @@ export const togglePinnedPost = mutation({
     maxReached: v.optional(v.boolean()),
   }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
+    const user = await getAuthenticatedUser(ctx)
 
     const post = await ctx.db.get(args.postId)
     if (!post || post.author !== user._id) {
@@ -706,22 +636,12 @@ export const updateSocialLinks = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
     // Validate max 5 links
     if (args.socialLinks.length > 5) {
       throw new ConvexError("Maximum 5 liens sociaux autorisés")
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
+    const user = await getAuthenticatedUser(ctx)
 
     await ctx.db.patch(user._id, { socialLinks: args.socialLinks })
     return null
@@ -823,17 +743,7 @@ export const updateAdultContentPreference = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique()
-
-    if (!user) throw new ConvexError("User not found")
+    const user = await getAuthenticatedUser(ctx)
 
     await ctx.db.patch(user._id, {
       allowAdultContent: args.allowAdultContent,

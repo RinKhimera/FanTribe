@@ -156,6 +156,7 @@ export default defineSchema({
     adminNotes: v.optional(v.string()),
     submittedAt: v.number(),
     reviewedAt: v.optional(v.number()),
+    reviewedBy: v.optional(v.id("users")),
     attemptNumber: v.optional(v.number()),
     rejectionCount: v.optional(v.number()),
     previousRejectionReason: v.optional(v.string()),

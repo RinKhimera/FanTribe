@@ -60,6 +60,29 @@ export const getAuthenticatedUser = async <TOptional extends boolean = false>(
     })
   }
 
+  // Vérification du bannissement
+  if (user.isBanned) {
+    // Self-healing : ne pas bloquer si le ban temporaire a expiré
+    const isTempBanExpired =
+      user.banDetails?.type === "temporary" &&
+      user.banDetails?.expiresAt &&
+      Date.now() > user.banDetails.expiresAt
+
+    if (!isTempBanExpired) {
+      if (options?.optional) {
+        return null as TOptional extends true ? Doc<"users"> | null : Doc<"users">
+      }
+      throw createAppError("BANNED", {
+        userMessage: !user.banDetails
+          ? undefined // fallback vers le message par défaut de errors.ts
+          : user.banDetails.type === "permanent"
+            ? "Votre compte a été définitivement suspendu."
+            : "Votre compte est temporairement suspendu.",
+      })
+    }
+    // Ban temporaire expiré : laisser passer, le cron nettoiera la DB
+  }
+
   // Vérification du profil complet
   if (options?.requireCompleteProfile && !user.username) {
     throw createAppError("INVALID_INPUT", {

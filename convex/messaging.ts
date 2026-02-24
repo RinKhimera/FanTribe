@@ -1,41 +1,14 @@
 import { v } from "convex/values"
 import { Doc } from "./_generated/dataModel"
 import { internalMutation, mutation, query } from "./_generated/server"
-import { MutationCtx, QueryCtx } from "./_generated/server"
 import {
   checkConversationPermissions,
   checkMessagingPermission,
   getConversationRole,
   truncateMessagePreview,
 } from "./lib/messaging"
+import { getAuthenticatedUser } from "./lib/auth"
 import { rateLimiter } from "./lib/rateLimiter"
-
-// ============================================
-// HELPERS INTERNES
-// ============================================
-
-/**
- * Récupère l'utilisateur authentifié ou lève une erreur
- */
-const getAuthenticatedUser = async (ctx: MutationCtx | QueryCtx) => {
-  const identity = await ctx.auth.getUserIdentity()
-  if (!identity) {
-    throw new Error("Non authentifié")
-  }
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier),
-    )
-    .unique()
-
-  if (!user) {
-    throw new Error("Utilisateur non trouvé")
-  }
-
-  return user
-}
 
 // ============================================
 // MUTATIONS - Gestion des conversations

@@ -15,6 +15,7 @@ import {
 import { AnimatePresence, motion } from "motion/react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { sendReportEmail } from "@/actions/send-report-email"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -27,6 +28,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { cn } from "@/lib/utils"
 
 interface ReportDialogProps {
@@ -156,6 +158,7 @@ export const ReportDialog = ({
   const [description, setDescription] = useState("")
   const [isPending, setIsPending] = useState(false)
 
+  const { currentUser } = useCurrentUser()
   const createReport = useMutation(api.reports.createReport)
 
   const handleClose = () => {
@@ -185,6 +188,17 @@ export const ReportDialog = ({
       })
 
       if (result.success) {
+        // Fire-and-forget : notifier les admins par email
+        sendReportEmail({
+          reportType: type,
+          reason,
+          description: description || undefined,
+          reporterUsername: currentUser?.username ?? "Utilisateur inconnu",
+          reportedUsername: username,
+        }).catch((err) => {
+          console.error("Failed to send report notification email:", err)
+        })
+
         toast.success("Signalement envoyé", {
           description: "Votre signalement a été transmis à nos équipes de modération.",
         })

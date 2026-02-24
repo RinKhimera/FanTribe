@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { getAuthenticatedUser } from "./lib/auth"
 import { createNotification } from "./lib/notifications"
 import {
   creatorApplicationDocValidator,
@@ -42,17 +43,9 @@ export const submitApplication = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Unauthorized")
+    const currentUser = await getAuthenticatedUser(ctx)
 
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser._id !== args.userId) {
+    if (currentUser._id !== args.userId) {
       throw new Error("Unauthorized")
     }
 
@@ -319,6 +312,7 @@ export const reviewApplication = mutation({
         status: "rejected",
         adminNotes: args.adminNotes,
         reviewedAt: now,
+        reviewedBy: currentUser._id,
         rejectionCount: newRejectionCount,
         reapplicationAllowedAt,
       })
@@ -335,6 +329,7 @@ export const reviewApplication = mutation({
         status: "approved",
         adminNotes: args.adminNotes,
         reviewedAt: now,
+        reviewedBy: currentUser._id,
       })
 
       await ctx.db.patch(application.userId, {
@@ -365,17 +360,9 @@ export const requestReapplication = mutation({
     waitUntil: v.union(v.number(), v.null()),
   }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Unauthorized")
+    const currentUser = await getAuthenticatedUser(ctx)
 
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier),
-      )
-      .unique()
-
-    if (!currentUser || currentUser._id !== args.userId) {
+    if (currentUser._id !== args.userId) {
       throw new Error("Unauthorized")
     }
 
@@ -475,6 +462,7 @@ export const revokeCreatorStatus = mutation({
         adminNotes:
           args.reason || "Statut créateur révoqué par un administrateur",
         reviewedAt: Date.now(),
+        reviewedBy: currentUser._id,
       })
     }
 

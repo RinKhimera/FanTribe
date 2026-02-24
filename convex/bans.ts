@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { internalMutation, mutation, query } from "./_generated/server"
 
 // Bannir un utilisateur (SUPERUSER only)
 export const banUser = mutation({
@@ -380,5 +380,52 @@ export const getUserBanInfo = query({
       banExpiresAt: user.banDetails?.expiresAt,
       banHistory: banHistoryWithAdmins,
     }
+  },
+})
+
+// CRON: Lever automatiquement les bannissements temporaires expirés
+export const liftExpiredBans = internalMutation({
+  args: {},
+  returns: v.object({
+    scanned: v.number(),
+    lifted: v.number(),
+  }),
+  handler: async (ctx) => {
+    const now = Date.now()
+
+    const bannedUsers = await ctx.db
+      .query("users")
+      .withIndex("by_isBanned", (q) => q.eq("isBanned", true))
+      .collect()
+
+    const expiredBans = bannedUsers.filter(
+      (user) =>
+        user.banDetails?.type === "temporary" &&
+        user.banDetails?.expiresAt &&
+        user.banDetails.expiresAt <= now,
+    )
+
+    if (expiredBans.length === 0) {
+      return { scanned: bannedUsers.length, lifted: 0 }
+    }
+
+    await Promise.all(
+      expiredBans.map((user) => {
+        const updatedBanHistory = user.banHistory?.map((entry, index, arr) => {
+          if (index === arr.length - 1 && !entry.liftedAt) {
+            return { ...entry, liftedAt: now }
+          }
+          return entry
+        })
+
+        return ctx.db.patch(user._id, {
+          isBanned: false,
+          banDetails: undefined,
+          banHistory: updatedBanHistory,
+        })
+      }),
+    )
+
+    return { scanned: bannedUsers.length, lifted: expiredBans.length }
   },
 })
