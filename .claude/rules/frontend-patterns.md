@@ -171,12 +171,19 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 ```
 
 ### React 19 Gotchas
-- **No ref mutation in render**: `ref.current = value` in the component body is a side effect. Wrap in `useEffect`:
+- **No ref mutation in render**: `ref.current = value` in the component body triggers `react-hooks/refs`. Two solutions:
   ```typescript
   const callbackRef = useRef(callback)
   // ❌ callbackRef.current = callback  ← side effect in render
-  // ✅ useEffect(() => { callbackRef.current = callback }, [callback])
+
+  // ✅ Option A: useEffectEvent (preferred for effect callbacks)
+  const stableCallback = useEffectEvent(callback)
+  useEffect(() => { window.addEventListener("scroll", stableCallback) }, [])
+
+  // ✅ Option B: useEffect sync (when useEffectEvent doesn't fit)
+  useEffect(() => { callbackRef.current = callback }, [callback])
   ```
+- **`useEffectEvent` restrictions**: Can ONLY be called from Effects and other Effect Events. Cannot be called from `useCallback`, cannot be added to dependency arrays, cannot be passed down as props. Violating this triggers `react-hooks/rules-of-hooks`.
 - **Hooks before early return**: All hooks must be called on every render. Use `"skip"` to disable queries instead of returning before hooks:
   ```typescript
   // ❌ if (!id) return null; const data = useQuery(api.foo, { id })

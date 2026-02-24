@@ -9,18 +9,17 @@ const EditProfile = async (props: {
 }) => {
   const params = await props.params
   const token = await getAuthToken()
-  const currentUser = await fetchQuery(api.users.getCurrentUser, undefined, {
-    token,
-  })
+
+  // Parallel fetch: getCurrentUser and getUserProfile are independent
+  const [currentUser, userProfile] = await Promise.all([
+    fetchQuery(api.users.getCurrentUser, undefined, { token }),
+    fetchQuery(api.users.getUserProfile, { username: params.username }),
+  ])
 
   if (!currentUser?.username) redirect("/onboarding")
-
-  const userProfile = await fetchQuery(api.users.getUserProfile, {
-    username: params.username,
-  })
-
   if (userProfile === null) notFound()
 
+  // Dependent query: needs both currentUser and userProfile
   const subscriptionStatus = await fetchQuery(
     api.subscriptions.getFollowSubscription,
     {

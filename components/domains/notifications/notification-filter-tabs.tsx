@@ -98,8 +98,10 @@ export const NotificationFilterTabs = ({
     [onFilterChange],
   )
 
-  // Close on click outside
+  // Close on click outside or escape key
   useEffect(() => {
+    if (!isOpen) return
+
     const handleClickOutside = (e: MouseEvent) => {
       if (
         containerRef.current &&
@@ -108,22 +110,15 @@ export const NotificationFilterTabs = ({
         setIsOpen(false)
       }
     }
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-      return () => document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [isOpen])
-
-  // Close on escape
-  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsOpen(false)
     }
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape)
-      return () => document.removeEventListener("keydown", handleEscape)
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleEscape)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleEscape)
     }
   }, [isOpen])
 

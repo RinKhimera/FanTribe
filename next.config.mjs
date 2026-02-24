@@ -9,6 +9,7 @@ const nextConfig = {
       "motion",
       "emoji-picker-react",
       "embla-carousel-react",
+      "recharts",
     ],
   },
   images: {

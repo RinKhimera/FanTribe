@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useEffectEvent, useRef } from "react"
 
 type PaginationStatus =
   | "LoadingFirstPage"
@@ -28,13 +28,18 @@ export function useInfiniteScroll({
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
+  // Stable callback that always reads latest loadMore without recreating the observer
+  const handleLoadMore = useEffectEvent(() => {
+    loadMore(numItems)
+  })
+
   useEffect(() => {
     if (!loadMoreRef.current || status !== "CanLoadMore") return
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && status === "CanLoadMore") {
-          loadMore(numItems)
+        if (entries[0].isIntersecting) {
+          handleLoadMore()
         }
       },
       { threshold, rootMargin },
@@ -45,7 +50,7 @@ export function useInfiniteScroll({
     return () => {
       observerRef.current?.disconnect()
     }
-  }, [status, loadMore, numItems, threshold, rootMargin])
+  }, [status, numItems, threshold, rootMargin])
 
   return { loadMoreRef }
 }

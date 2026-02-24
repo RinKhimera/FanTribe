@@ -25,6 +25,7 @@ import { Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
 
 const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👍"]
+const EMPTY_REACTIONS: string[] = []
 
 type ReactionPickerProps = {
   messageId: Id<"messages">
@@ -35,7 +36,7 @@ type ReactionPickerProps = {
 
 export const ReactionPicker = ({
   messageId,
-  currentUserReactions = [],
+  currentUserReactions = EMPTY_REACTIONS,
   onClose,
   align = "center",
 }: ReactionPickerProps) => {

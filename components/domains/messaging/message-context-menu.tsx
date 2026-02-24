@@ -3,7 +3,7 @@
 import { useMutation } from "convex/react"
 import { motion, AnimatePresence } from "motion/react"
 import { Copy, Pencil, Reply, Smile, Trash2 } from "lucide-react"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
   ContextMenu,
@@ -30,6 +30,7 @@ type MessageContextMenuProps = {
 }
 
 const EDIT_TIME_LIMIT_MS = 15 * 60 * 1000 // 15 minutes
+const EMPTY_REACTIONS: string[] = []
 
 export const MessageContextMenu = ({
   children,
@@ -37,22 +38,20 @@ export const MessageContextMenu = ({
   content,
   isFromCurrentUser,
   createdAt,
-  currentUserReactions = [],
+  currentUserReactions = EMPTY_REACTIONS,
   onReply,
 }: MessageContextMenuProps) => {
   const [showReactionPicker, setShowReactionPicker] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [canEdit, setCanEdit] = useState(false)
 
-  // Calculate canEdit on mount and when dependencies change
+  // Derived state updated periodically (Date.now() is impure, can't call during render)
+  const [canEdit, setCanEdit] = useState(false)
   useEffect(() => {
-    const checkCanEdit = () => {
+    const check = () =>
       setCanEdit(isFromCurrentUser && Date.now() - createdAt < EDIT_TIME_LIMIT_MS)
-    }
-    checkCanEdit()
-    // Update every minute to keep it accurate
-    const interval = setInterval(checkCanEdit, 60000)
+    check()
+    const interval = setInterval(check, 60000)
     return () => clearInterval(interval)
   }, [isFromCurrentUser, createdAt])
 
@@ -214,20 +213,20 @@ export const MessageLongPressWrapper = ({
   onLongPress,
   disabled,
 }: MessageLongPressWrapperProps) => {
-  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null)
+  // useRef instead of useState: timer doesn't affect rendering
+  const pressTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleTouchStart = () => {
     if (disabled) return
-    const timer = setTimeout(() => {
+    pressTimerRef.current = setTimeout(() => {
       onLongPress()
     }, 500)
-    setPressTimer(timer)
   }
 
   const handleTouchEnd = () => {
-    if (pressTimer) {
-      clearTimeout(pressTimer)
-      setPressTimer(null)
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current)
+      pressTimerRef.current = null
     }
   }
 
