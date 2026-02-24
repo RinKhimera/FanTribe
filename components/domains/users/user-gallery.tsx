@@ -60,7 +60,7 @@ const VideoThumbnail = ({
         src={thumbnailUrl}
         alt="Aperçu vidéo"
         className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-all duration-500",
+          "absolute inset-0 h-full w-full object-cover transition-[opacity,filter,transform] duration-500",
           isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
           isHovered && "scale-105",
         )}
@@ -103,7 +103,7 @@ const GalleryItem = ({
       {/* Image/Video content */}
       <div
         className={cn(
-          "relative h-full w-full cursor-pointer transition-all duration-300",
+          "relative h-full w-full cursor-pointer transition-[filter] duration-300",
           canViewMedia ? "group-hover:brightness-90" : "brightness-50",
         )}
         onClick={canViewMedia ? onOpen : undefined}
@@ -139,7 +139,7 @@ const GalleryItem = ({
                   alt="Media content"
                   fill
                   className={cn(
-                    "object-cover transition-all duration-500",
+                    "object-cover transition-[opacity,filter,transform] duration-500",
                     isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
                     isHovered && "scale-105",
                   )}

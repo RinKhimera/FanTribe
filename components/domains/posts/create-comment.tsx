@@ -100,7 +100,8 @@ export const CreateComment = ({
                   <div className="flex h-full w-full flex-col">
                     <TextareaAutosize
                       placeholder="Poster votre réponse"
-                      className="mt-1 h-full w-full resize-none border-none bg-transparent text-xl outline-hidden max-sm:text-base"
+                      aria-label="Répondre"
+                      className="mt-1 h-full w-full resize-none border-none bg-transparent text-xl focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring max-sm:text-base"
                       minRows={2}
                       maxRows={8}
                       {...field}
@@ -113,7 +114,7 @@ export const CreateComment = ({
                         className="bg-primary hover:bg-primary/80 w-fit rounded-full px-4 py-2 font-bold max-sm:px-3 max-sm:py-1.5 max-sm:text-sm"
                       >
                         {isPending ? (
-                          <LoaderCircle className="animate-spin" />
+                          <LoaderCircle className="animate-spin" aria-hidden="true" />
                         ) : (
                           "Répondre"
                         )}

@@ -160,7 +160,7 @@ function SortableMediaItem({
           "absolute top-1.5 right-1.5 z-10",
           "flex size-7 items-center justify-center rounded-full",
           "bg-black/60 text-white",
-          "opacity-0 transition-all duration-200",
+          "opacity-0 transition-opacity duration-200",
           "hover:bg-red-500 group-hover:opacity-100",
           "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/50",
         )}
@@ -177,6 +177,7 @@ function SortableMediaItem({
             className="h-full w-full"
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
             allowFullScreen
+            title="Aperçu vidéo"
           />
         </div>
       ) : (
@@ -227,7 +228,7 @@ function SortableMediaItem({
               "transition-opacity duration-200",
             )}
           >
-            <ZoomIn className="size-3.5 text-white" />
+            <ZoomIn aria-hidden="true" className="size-3.5 text-white" />
           </div>
         </div>
       )}

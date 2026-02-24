@@ -146,7 +146,7 @@ export const SubscriptionButton = ({
 
               <div className="relative flex w-full items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <Crown className="h-5 w-5" />
+                  <Crown className="h-5 w-5" aria-hidden="true" />
                   <span>{config.text}</span>
                 </div>
                 <span className="font-bold tabular-nums">1000 XAF</span>
@@ -167,7 +167,7 @@ export const SubscriptionButton = ({
               className={cn(
                 "relative w-full overflow-hidden rounded-full px-6 py-6 text-lg font-semibold",
                 "border-2 border-primary/40 bg-primary/5 backdrop-blur-sm",
-                "transition-all duration-300 hover:border-primary/60 hover:bg-primary/10",
+                "transition-colors duration-300 hover:border-primary/60 hover:bg-primary/10",
                 className,
               )}
             >
@@ -186,10 +186,10 @@ export const SubscriptionButton = ({
 
               <div className="relative flex w-full items-center justify-center gap-2.5">
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-                  <Check className="h-3 w-3 text-primary-foreground" />
+                  <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                 </div>
                 <span>{config.text}</span>
-                <Crown className="h-4 w-4 text-primary/70" />
+                <Crown className="h-4 w-4 text-primary/70" aria-hidden="true" />
               </div>
             </Button>
           </motion.div>
@@ -208,7 +208,7 @@ export const SubscriptionButton = ({
             )}
           >
             <div className="flex w-full items-center justify-center gap-2.5">
-              <LoaderCircle className="h-5 w-5 animate-spin" />
+              <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
               <span>{config.text}</span>
             </div>
           </Button>
@@ -226,7 +226,7 @@ export const SubscriptionButton = ({
               className={cn(
                 "relative w-full overflow-hidden rounded-full px-6 py-6 text-lg font-semibold",
                 "border-2 border-primary bg-transparent",
-                "text-primary transition-all duration-300 hover:bg-primary/10",
+                "text-primary transition-colors duration-300 hover:bg-primary/10",
                 className,
               )}
             >
@@ -249,7 +249,7 @@ export const SubscriptionButton = ({
 
               <div className="relative flex w-full items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <Crown className="h-5 w-5" />
+                  <Crown className="h-5 w-5" aria-hidden="true" />
                   <span>{config.text}</span>
                 </div>
                 <span className="font-bold tabular-nums">1000 XAF</span>

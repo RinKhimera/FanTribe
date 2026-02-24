@@ -27,7 +27,7 @@ interface DatePickerProps {
 export function DatePicker({
   value,
   onChange,
-  placeholder = "Selectionner une date",
+  placeholder = "Sélectionner une date\u2026",
   disabled = false,
   fromYear = 1900,
   toYear = new Date().getFullYear(),
@@ -62,7 +62,7 @@ export function DatePicker({
             className
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
           {selectedDate
             ? format(selectedDate, "d MMMM yyyy", { locale: fr })
             : placeholder}

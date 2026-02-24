@@ -29,6 +29,7 @@ export const CommentItem = ({ comment }: CommentItemProps) => {
         "flex gap-3 px-4 py-2 mx-4 rounded-xl",
         "hover:bg-muted/50 transition-colors duration-200",
       )}
+      role="presentation"
       onClick={(e) => e.stopPropagation()}
     >
       <Link href={`/${comment.author?.username}`} className="shrink-0">
@@ -56,14 +57,14 @@ export const CommentItem = ({ comment }: CommentItemProps) => {
               </Link>
               {isVerified && (
                 <span className="flex items-center justify-center size-4 rounded-full bg-primary shrink-0">
-                  <BadgeCheck className="size-2.5 text-primary-foreground" />
+                  <BadgeCheck aria-hidden="true" className="size-2.5 text-primary-foreground" />
                 </span>
               )}
               <span className="text-muted-foreground/60 text-xs">
                 {formatPostDate(comment._creationTime)}
               </span>
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+            <p className="mt-1 text-sm leading-relaxed text-foreground/90 break-words">
               {comment.content}
             </p>
           </div>

@@ -179,7 +179,7 @@ export const PostActions = ({
                 }}
                 disabled={disabled || isLikePending}
                 className={cn(
-                  "group h-10 gap-2 rounded-full px-4 transition-all duration-300",
+                  "group h-10 gap-2 rounded-full px-4 transition-colors duration-300",
                   disabled && "cursor-not-allowed opacity-50",
                   isLiked
                     ? "text-red-500 hover:bg-red-500/10"
@@ -192,7 +192,7 @@ export const PostActions = ({
                 >
                   <Heart
                     className={cn(
-                      "size-5 transition-all duration-300",
+                      "size-5 transition-[color,fill,filter] duration-300",
                       isLiked && "fill-current drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]",
                     )}
                   />
@@ -233,7 +233,7 @@ export const PostActions = ({
                   }}
                   disabled={disabled}
                   className={cn(
-                    "group h-10 gap-2 rounded-full px-4 transition-all duration-300",
+                    "group h-10 gap-2 rounded-full px-4 transition-colors duration-300",
                     disabled && "cursor-not-allowed opacity-50",
                     isCommentsOpen
                       ? "text-primary hover:bg-primary/10"
@@ -274,7 +274,7 @@ export const PostActions = ({
                   handleShare()
                 }}
                 className={cn(
-                  "group h-10 rounded-full px-4 transition-all duration-300",
+                  "group h-10 rounded-full px-4 transition-colors duration-300",
                   "text-muted-foreground hover:bg-primary/10 hover:text-primary",
                 )}
               >
@@ -299,7 +299,7 @@ export const PostActions = ({
                       variant="ghost"
                       size="sm"
                       className={cn(
-                        "group h-10 rounded-full px-4 transition-all duration-300",
+                        "group h-10 rounded-full px-4 transition-colors duration-300",
                         "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500",
                       )}
                     >
@@ -329,7 +329,7 @@ export const PostActions = ({
                 }}
                 disabled={disabled || isBookmarkPending}
                 className={cn(
-                  "group h-10 rounded-full px-4 transition-all duration-300",
+                  "group h-10 rounded-full px-4 transition-colors duration-300",
                   disabled && "cursor-not-allowed opacity-50",
                   isBookmarked
                     ? "text-primary hover:bg-primary/10"
@@ -342,7 +342,7 @@ export const PostActions = ({
                 >
                   <Bookmark
                     className={cn(
-                      "size-5 transition-all duration-300",
+                      "size-5 transition-[color,fill] duration-300",
                       isBookmarked && "fill-primary",
                     )}
                   />

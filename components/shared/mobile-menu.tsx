@@ -72,14 +72,6 @@ export const MobileMenu = () => {
     return link.href
   }
 
-  // Fonction pour gérer la navigation depuis le Sheet
-  const handleSheetNavigation = (href: string) => {
-    setIsOpen(false)
-    setTimeout(() => {
-      router.push(href)
-    }, 150)
-  }
-
   // Fonction pour gérer le clic sur le bouton "Publier"
   const handlePublishClick = () => {
     setIsOpen(false)
@@ -162,16 +154,16 @@ export const MobileMenu = () => {
                   const href = getHref(link)
 
                   return (
-                    <Button
+                    <Link
                       key={`sheet-${link.id}`}
-                      variant="ghost"
+                      href={href}
                       className={cn(
                         "text-md flex h-12 items-center justify-start space-x-4 rounded-lg px-3 py-2",
                         pathname === href
                           ? "bg-accent font-semibold text-accent-foreground"
                           : "text-foreground hover:bg-accent/70",
                       )}
-                      onClick={() => handleSheetNavigation(href)}
+                      onClick={() => setIsOpen(false)}
                     >
                       <div className="relative">
                         <IconComponent className="size-5" />
@@ -185,7 +177,7 @@ export const MobileMenu = () => {
                         )}
                       </div>
                       <span>{link.title}</span>
-                    </Button>
+                    </Link>
                   )
                 })}
               </div>

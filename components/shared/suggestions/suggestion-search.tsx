@@ -23,7 +23,7 @@ export const SuggestionSearch = ({
       <motion.div
         className={cn(
           "relative overflow-hidden rounded-2xl",
-          "glass-card transition-all duration-300",
+          "glass-card transition-[border-color,box-shadow] duration-300",
           "border border-transparent",
           value && "border-primary/20 shadow-[0_0_20px_-5px_var(--primary)]"
         )}
@@ -46,16 +46,18 @@ export const SuggestionSearch = ({
         <input
           id="suggestion-search"
           type="text"
+          name="search"
+          autoComplete="off"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Rechercher des createurs..."
+          placeholder="Rechercher des cr\u00e9ateurs\u2026"
           className={cn(
             "w-full h-12 bg-transparent",
             "pl-11 pr-11 py-3",
             "text-sm font-medium placeholder:text-muted-foreground/60",
-            "border-none outline-none",
-            "focus:ring-0 focus:outline-none",
-            "transition-all duration-200"
+            "border-none",
+            "focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden",
+            "transition-colors duration-200"
           )}
         />
 
@@ -85,8 +87,9 @@ export const SuggestionSearch = ({
                 "p-1.5 rounded-full",
                 "bg-muted/50 hover:bg-primary/20",
                 "text-muted-foreground hover:text-primary",
-                "transition-all duration-200"
+                "transition-colors duration-200"
               )}
+              aria-label="Effacer la recherche"
             >
               <X className="h-3.5 w-3.5" />
             </motion.button>

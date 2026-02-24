@@ -94,8 +94,9 @@ const NotificationEllipsis = ({
             size="icon"
             variant="ghost"
             className="size-8 rounded-lg opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+            aria-label="Plus d'options"
           >
-            <Ellipsis className="size-4" />
+            <Ellipsis className="size-4" aria-hidden="true" />
           </Button>
         </motion.div>
       </DropdownMenuTrigger>
@@ -110,7 +111,7 @@ const NotificationEllipsis = ({
             disabled={isPending}
             className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5"
           >
-            <EyeOff className="size-4" />
+            <EyeOff className="size-4" aria-hidden="true" />
             <span>Marquer comme non lue</span>
           </DropdownMenuItem>
         ) : (
@@ -119,7 +120,7 @@ const NotificationEllipsis = ({
             disabled={isPending}
             className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5"
           >
-            <Check className="size-4" />
+            <Check className="size-4" aria-hidden="true" />
             <span>Marquer comme lue</span>
           </DropdownMenuItem>
         )}
@@ -131,7 +132,7 @@ const NotificationEllipsis = ({
           disabled={isPending}
           className="text-destructive focus:text-destructive flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5"
         >
-          <Trash2 className="size-4" />
+          <Trash2 className="size-4" aria-hidden="true" />
           <span>Supprimer</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

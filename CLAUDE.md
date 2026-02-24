@@ -48,6 +48,10 @@ components/
 ├── shared/               # Cross-feature reusable components
 ├── post-composer/        # Post creation compound components (Provider + Frame + Input + Media + Actions + Submit)
 ├── new-post/             # Post creation flow (uses PostComposer)
+├── home/                 # Home page components (news feed)
+├── be-creator/           # Creator application flow (step-based)
+├── superuser/            # Admin panel (search, stats, moderation dialogs)
+├── legal/                # Legal pages (layout, sections)
 ├── layout/               # App shell, sidebar, nav
 └── ui/                   # shadcn/ui (CVA + Radix primitives)
 convex/                   # Backend functions

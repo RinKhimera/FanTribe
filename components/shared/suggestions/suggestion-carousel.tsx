@@ -107,8 +107,9 @@ export const SuggestionCarousel = ({
               "h-8 w-8 rounded-full",
               "glass-button border-0",
               "hover:bg-primary/15 hover:text-primary",
-              "transition-all duration-200"
+              "transition-[opacity,background-color] duration-200"
             )}
+            aria-label="Rafraîchir"
           >
             <motion.div
               animate={{ rotate: isRefreshing ? 360 : 0 }}
@@ -131,8 +132,9 @@ export const SuggestionCarousel = ({
                   "glass-button border-0",
                   "hover:bg-primary/15 hover:text-primary",
                   "disabled:opacity-30 disabled:hover:bg-transparent",
-                  "transition-all duration-200"
+                  "transition-[opacity,background-color] duration-200"
                 )}
+                aria-label="Précédent"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -146,8 +148,9 @@ export const SuggestionCarousel = ({
                   "glass-button border-0",
                   "hover:bg-primary/15 hover:text-primary",
                   "disabled:opacity-30 disabled:hover:bg-transparent",
-                  "transition-all duration-200"
+                  "transition-[opacity,background-color] duration-200"
                 )}
+                aria-label="Suivant"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -196,7 +199,7 @@ export const SuggestionCarousel = ({
               key={index}
               onClick={() => api?.scrollTo(index)}
               className={cn(
-                "h-2 rounded-full transition-all duration-300 ease-out",
+                "h-2 rounded-full transition-[width,background-color] duration-300 ease-out",
                 index === current
                   ? "w-7 bg-primary shadow-[0_0_12px_2px_var(--primary)]"
                   : "w-2 bg-muted/60 hover:bg-muted"

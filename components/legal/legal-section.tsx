@@ -38,7 +38,7 @@ export const LegalSection = ({
         // Subtle shadow and glow
         "shadow-lg shadow-black/5 dark:shadow-black/20",
         // Hover effect
-        "transition-all duration-300",
+        "transition-[border-color,box-shadow] duration-300",
         "hover:border-border/60 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/30",
         className,
       )}

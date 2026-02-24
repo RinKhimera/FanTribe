@@ -245,8 +245,9 @@ export const SubscriptionUnified = ({
               size="icon"
               onClick={() => handleOpenChange(false)}
               className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40"
+              aria-label="Fermer"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           )}
 
@@ -261,7 +262,7 @@ export const SubscriptionUnified = ({
               {/* Glow effect */}
               <div className="absolute inset-0 scale-110 rounded-full bg-primary/20 blur-xl" />
               <Avatar className="ring-primary/40 ring-offset-background relative h-28 w-28 ring-4 ring-offset-2 shadow-xl">
-                <AvatarImage src={creator?.image} className="object-cover" />
+                <AvatarImage src={creator?.image} className="object-cover" alt="" />
                 <AvatarFallback className="bg-muted text-2xl">
                   {creator?.name?.charAt(0) || "?"}
                 </AvatarFallback>
@@ -272,7 +273,7 @@ export const SubscriptionUnified = ({
                   animate={{ scale: [1, 1.15, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Crown className="h-4 w-4 text-primary-foreground" />
+                  <Crown className="h-4 w-4 text-primary-foreground" aria-hidden="true" />
                 </motion.div>
               )}
             </div>
@@ -307,7 +308,7 @@ export const SubscriptionUnified = ({
             >
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
-                  <Star className="h-4 w-4 text-white" />
+                  <Star className="h-4 w-4 text-white" aria-hidden="true" />
                 </div>
                 <div className="text-sm font-medium">
                   {type === "subscribe"
@@ -318,7 +319,7 @@ export const SubscriptionUnified = ({
 
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
-                  <MessageCircle className="h-4 w-4 text-white" />
+                  <MessageCircle className="h-4 w-4 text-white" aria-hidden="true" />
                 </div>
                 <div className="text-sm font-medium">
                   {type === "subscribe"
@@ -329,7 +330,7 @@ export const SubscriptionUnified = ({
 
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
-                  <Check className="h-4 w-4 text-white" />
+                  <Check className="h-4 w-4 text-white" aria-hidden="true" />
                 </div>
                 <div className="text-sm font-medium">Sans engagement</div>
               </div>
@@ -355,7 +356,7 @@ export const SubscriptionUnified = ({
             {type === "unsubscribe" ? (
               <Button
                 className={cn(
-                  "w-full text-lg font-semibold shadow-lg transition-all",
+                  "w-full text-lg font-semibold shadow-lg transition-colors",
                   "bg-destructive text-destructive-foreground hover:bg-destructive/90",
                   { "pointer-events-none opacity-70": isPending },
                 )}
@@ -365,8 +366,8 @@ export const SubscriptionUnified = ({
               >
                 {isPending ? (
                   <div className="flex items-center gap-2">
-                    <LoaderCircle className="h-5 w-5 animate-spin" />
-                    Annulation...
+                    <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                    Annulation\u2026
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">Se désabonner</div>
@@ -387,8 +388,8 @@ export const SubscriptionUnified = ({
                   >
                     {isPaymentPending ? (
                       <div className="flex items-center gap-2">
-                        <LoaderCircle className="h-5 w-5 animate-spin" />
-                        Traitement...
+                        <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                        Traitement\u2026
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -413,8 +414,8 @@ export const SubscriptionUnified = ({
                   >
                     {isStripePending ? (
                       <div className="flex items-center gap-2">
-                        <LoaderCircle className="h-5 w-5 animate-spin" />
-                        Redirection...
+                        <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                        Redirection\u2026
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -441,7 +442,7 @@ export const SubscriptionUnified = ({
 
             {type !== "unsubscribe" && (
               <div className="text-muted-foreground mt-4 flex items-center justify-center gap-2 text-xs">
-                <Shield className="h-3.5 w-3.5" />
+                <Shield className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Paiement sécurisé</span>
                 <span>•</span>
                 <span>Annulation facile</span>

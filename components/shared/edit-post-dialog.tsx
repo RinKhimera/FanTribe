@@ -211,7 +211,7 @@ export const EditPostDialog = ({
                 onChange={(e) => setContent(e.target.value)}
                 disabled={!canEditContent}
                 className={cn(
-                  "min-h-30 resize-none transition-all duration-200",
+                  "min-h-30 resize-none transition-[border-color,box-shadow] duration-200",
                   "focus:ring-primary/20 focus:ring-2",
                   !canEditContent &&
                     "bg-muted/50 cursor-not-allowed opacity-60",
@@ -253,7 +253,7 @@ export const EditPostDialog = ({
                 onClick={() => setVisibility("public")}
                 disabled={!canEditVisibility}
                 className={cn(
-                  "relative flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all duration-200",
+                  "relative flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-[border-color,background-color] duration-200",
                   "focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none",
                   visibility === "public"
                     ? "border-green-500/50 bg-green-500/10"
@@ -301,7 +301,7 @@ export const EditPostDialog = ({
                 onClick={() => setVisibility("subscribers_only")}
                 disabled={!canEditVisibility}
                 className={cn(
-                  "relative flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all duration-200",
+                  "relative flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-[border-color,background-color] duration-200",
                   "focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none",
                   visibility === "subscribers_only"
                     ? "border-primary/50 bg-primary/10"
@@ -353,7 +353,7 @@ export const EditPostDialog = ({
               type="button"
               onClick={() => setIsAdult(!isAdult)}
               className={cn(
-                "flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 transition-all duration-200",
+                "flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl border p-3 transition-[border-color,background-color] duration-200",
                 "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                 isAdult
                   ? "border-orange-500/50 bg-orange-500/10 focus-visible:ring-orange-500"
@@ -363,13 +363,13 @@ export const EditPostDialog = ({
               <div className="flex items-center gap-3">
                 <div
                   className={cn(
-                    "flex size-9 items-center justify-center rounded-lg transition-all duration-300",
+                    "flex size-9 items-center justify-center rounded-lg transition-colors duration-300",
                     isAdult ? "bg-orange-500/20" : "bg-muted",
                   )}
                 >
                   <Flame
                     className={cn(
-                      "size-4 transition-all duration-300",
+                      "size-4 transition-[color,filter] duration-300",
                       isAdult
                         ? "text-orange-500 drop-shadow-[0_0_4px_rgba(249,115,22,0.5)]"
                         : "text-muted-foreground",
@@ -396,7 +396,7 @@ export const EditPostDialog = ({
               {/* Custom Toggle Switch */}
               <div
                 className={cn(
-                  "relative h-6 w-11 shrink-0 rounded-full transition-all duration-300",
+                  "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300",
                   "ring-1 ring-inset",
                   isAdult
                     ? "bg-orange-500 ring-orange-600/20"
@@ -408,7 +408,7 @@ export const EditPostDialog = ({
                 )}
                 <div
                   className={cn(
-                    "absolute top-0.5 size-5 rounded-full transition-all duration-300",
+                    "absolute top-0.5 size-5 rounded-full transition-[left] duration-300",
                     "bg-white shadow-md",
                     "flex items-center justify-center",
                     isAdult ? "left-5.5" : "left-0.5",
@@ -446,7 +446,7 @@ export const EditPostDialog = ({
             {isPending ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Enregistrement...
+                Enregistrement\u2026
               </>
             ) : (
               "Enregistrer"

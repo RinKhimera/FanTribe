@@ -92,22 +92,24 @@ export const EditMessageDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-full bg-amber-500/20">
-              <Pencil size={16} className="text-amber-500" />
+              <Pencil size={16} className="text-amber-500" aria-hidden="true" />
             </div>
             Modifier le message
           </DialogTitle>
           <DialogDescription className="flex items-center gap-1.5 text-muted-foreground">
-            <Clock size={14} />
+            <Clock size={14} aria-hidden="true" />
             Modifiable pendant 15 minutes après l&apos;envoi
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4">
           <Textarea
+            aria-label="Modifier le message"
+            name="editMessage"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Votre message..."
+            placeholder="Votre message…"
             className="min-h-[100px] resize-none border-white/10 bg-white/5 focus-visible:ring-amber-500/50"
             autoFocus
           />

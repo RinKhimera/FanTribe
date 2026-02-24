@@ -105,7 +105,7 @@ export const PostHeader = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="flex items-center justify-center size-[18px] rounded-full bg-primary shrink-0">
-                    <BadgeCheck className="size-3 text-primary-foreground" />
+                    <BadgeCheck aria-hidden="true" className="size-3 text-primary-foreground" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={4}>

@@ -203,7 +203,7 @@ export const StepDocuments = ({
                       <Label>Précisez votre motivation</Label>
                       <FormControl>
                         <Textarea
-                          placeholder="Décrivez votre motivation spécifique..."
+                          placeholder="Décrivez votre motivation spécifique…"
                           className="input-premium mt-2 min-h-20 resize-none"
                           {...field}
                         />
@@ -241,7 +241,7 @@ export const StepDocuments = ({
           {isSubmitting ? (
             <>
               <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              Soumission en cours...
+              Soumission en cours…
             </>
           ) : (
             <>

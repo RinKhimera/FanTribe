@@ -124,7 +124,7 @@ describe("StepPersonalInfo", () => {
       <TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} isValidating={true} />
     )
 
-    expect(screen.getByText("Validation...")).toBeInTheDocument()
+    expect(screen.getByText("Validation…")).toBeInTheDocument()
   })
 
   it("should disable continue button when isValidating is true", () => {

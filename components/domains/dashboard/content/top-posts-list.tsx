@@ -89,11 +89,11 @@ export const TopPostsList = ({ posts }: TopPostsListProps) => {
                   <p className="line-clamp-2 text-sm">{post.content}</p>
                   <div className="mt-1.5 flex items-center gap-3">
                     <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                      <Heart className="h-3 w-3" />
+                      <Heart aria-hidden="true" className="h-3 w-3" />
                       {post.likeCount}
                     </span>
                     <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                      <MessageSquareText className="h-3 w-3" />
+                      <MessageSquareText aria-hidden="true" className="h-3 w-3" />
                       {post.commentCount}
                     </span>
                     {post.visibility === "subscribers_only" && (
@@ -101,7 +101,7 @@ export const TopPostsList = ({ posts }: TopPostsListProps) => {
                         variant="outline"
                         className="h-5 gap-1 px-1.5 text-[10px]"
                       >
-                        <Lock className="h-2.5 w-2.5" />
+                        <Lock aria-hidden="true" className="h-2.5 w-2.5" />
                         Abonnés
                       </Badge>
                     )}

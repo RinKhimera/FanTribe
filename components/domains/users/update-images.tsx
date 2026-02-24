@@ -244,6 +244,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
         type="file"
         accept="image/*"
         className="hidden"
+        aria-label="Choisir un fichier"
         onChange={(e) => handleFileSelect(e, "avatar")}
       />
       <input
@@ -251,6 +252,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
         type="file"
         accept="image/*"
         className="hidden"
+        aria-label="Choisir un fichier"
         onChange={(e) => handleFileSelect(e, "banner")}
       />
 
@@ -289,6 +291,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => bannerInputRef.current?.click()}
                   className="flex size-12 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30"
+                  aria-label="Changer la bannière"
                 >
                   <Upload className="size-5" />
                 </motion.button>
@@ -298,6 +301,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleDeleteBanner}
                   className="hover:bg-destructive/80 flex size-12 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white transition-colors"
+                  aria-label="Supprimer la bannière"
                 >
                   <Trash2 className="size-5" />
                 </motion.button>

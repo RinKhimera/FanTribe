@@ -182,6 +182,7 @@ export const MessageForm = ({
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Emoji"
                 className={cn(
                   "size-9 rounded-full transition-colors",
                   isEmojiOpen
@@ -219,8 +220,11 @@ export const MessageForm = ({
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Écrivez un message..."
-              className="placeholder:text-muted-foreground/50 h-10 rounded-full border-white/10 bg-white/5 pr-4 pl-4 text-sm shadow-sm transition-all focus-visible:border-amber-500/30 focus-visible:ring-amber-500/20"
+              aria-label="Message"
+              name="message"
+              autoComplete="off"
+              placeholder="Écrivez un message…"
+              className="placeholder:text-muted-foreground/50 h-10 rounded-full border-white/10 bg-white/5 pr-4 pl-4 text-sm shadow-sm transition-[border-color,box-shadow] focus-visible:border-amber-500/30 focus-visible:ring-amber-500/20"
               value={msgText}
               onChange={(e) => {
                 setMsgText(e.target.value)
@@ -243,8 +247,9 @@ export const MessageForm = ({
                 <Button
                   type="submit"
                   size="icon"
+                  aria-label="Envoyer"
                   disabled={!canSend || isSending}
-                  className="size-10 rounded-full bg-linear-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/25 transition-all hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/40 disabled:opacity-50"
+                  className="size-10 rounded-full bg-linear-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/25 transition-[background,box-shadow,opacity] hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/40 disabled:opacity-50"
                 >
                   {isSending ? (
                     <motion.div
@@ -273,6 +278,7 @@ export const MessageForm = ({
                   type="button"
                   size="icon"
                   variant="ghost"
+                  aria-label="Message vocal"
                   className="text-muted-foreground size-10 rounded-full"
                   disabled
                 >

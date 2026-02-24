@@ -21,8 +21,10 @@ paths:
 
 ## Animation
 - Honor `prefers-reduced-motion` — provide reduced/disabled variant
+- `<MotionConfig reducedMotion="user">` wraps root layout (`app/layout.tsx`) — all `motion/react` animations inherit this automatically
+- CSS-only animations: prefix with `motion-safe:` (e.g., `motion-safe:animate-pulse`, `motion-safe:animate-in`)
 - Animate only `transform` and `opacity` (compositor-friendly)
-- Never `transition: all` — list properties explicitly
+- Never `transition: all` — list properties explicitly (e.g., `transition-colors`, `transition-[border-color,box-shadow]`)
 - SVG: animate wrapper `<div>`, not SVG element directly
 
 ## Content
@@ -45,3 +47,4 @@ paths:
 ## Navigation
 - URL reflects app state (filters, tabs, pagination)
 - Destructive actions require confirmation modal
+- **Sheet/drawer nav items**: Use `<Link href={href} onClick={() => setIsOpen(false)}>`, never `<Button onClick={() => router.push(href)}>` — breaks prefetching, middle-click, and accessibility

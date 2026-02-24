@@ -152,8 +152,8 @@ export const PostEllipsis = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button size="icon" variant="ghost">
-          <Ellipsis />
+        <Button size="icon" variant="ghost" aria-label="Plus d'options">
+          <Ellipsis aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64">
@@ -164,7 +164,7 @@ export const PostEllipsis = ({
               onClick={() => handlePinToggle()}
               disabled={isPinPending}
             >
-              <Pin className="mr-2 size-4" />
+              <Pin className="mr-2 size-4" aria-hidden="true" />
               {isPinned ? "Désépingler du profil" : "Épingler au profil"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -173,7 +173,7 @@ export const PostEllipsis = ({
 
         {/* Option de partage (disponible pour tous) */}
         <DropdownMenuItem onClick={handleShareLink}>
-          <Share2 className="mr-2 size-4" />
+          <Share2 className="mr-2 size-4" aria-hidden="true" />
           Partager la publication
         </DropdownMenuItem>
 
@@ -185,7 +185,7 @@ export const PostEllipsis = ({
               variant="destructive"
               onSelect={() => setShowReportDialog(true)}
             >
-              <Flag className="mr-2 size-4" />
+              <Flag className="mr-2 size-4" aria-hidden="true" />
               Signaler la publication
             </DropdownMenuItem>
           )}
@@ -193,7 +193,7 @@ export const PostEllipsis = ({
           {/* Modifier - pour auteur ou admin */}
           {canEdit && postAuthorId && (
             <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>
-              <Pencil className="mr-2 size-4" />
+              <Pencil className="mr-2 size-4" aria-hidden="true" />
               Modifier la publication
             </DropdownMenuItem>
           )}
@@ -205,9 +205,9 @@ export const PostEllipsis = ({
               onSelect={() => setShowDeleteDialog(true)}
             >
               {isAuthor ? (
-                <Trash2 className="mr-2 size-4" />
+                <Trash2 className="mr-2 size-4" aria-hidden="true" />
               ) : (
-                <Sparkles className="mr-2 size-4" />
+                <Sparkles className="mr-2 size-4" aria-hidden="true" />
               )}
               Supprimer la publication
             </DropdownMenuItem>
@@ -251,7 +251,7 @@ export const PostEllipsis = ({
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={deleteHandler} disabled={isPending}>
               {isPending ? (
-                <LoaderCircle className="animate-spin" />
+                <LoaderCircle className="animate-spin" aria-hidden="true" />
               ) : (
                 "Supprimer"
               )}
@@ -278,7 +278,7 @@ export const PostEllipsis = ({
               disabled={isPinPending}
             >
               {isPinPending ? (
-                <LoaderCircle className="animate-spin" />
+                <LoaderCircle className="animate-spin" aria-hidden="true" />
               ) : (
                 "Remplacer"
               )}

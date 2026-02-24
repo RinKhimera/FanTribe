@@ -80,12 +80,12 @@ export const NewsFeed = ({
 
   // Afficher un loader si currentUser n'est pas encore défini
   if (!currentUser) {
-    return <PremiumLoader message="Chargement du fil d'actualité..." />
+    return <PremiumLoader message="Chargement du fil d'actualité…" />
   }
 
   // Premier chargement
   if (status === "LoadingFirstPage") {
-    return <PremiumLoader message="Chargement des publications..." />
+    return <PremiumLoader message="Chargement des publications…" />
   }
 
   // Aucun post disponible
@@ -136,7 +136,7 @@ export const NewsFeed = ({
           <div className="flex items-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
             <p className="text-muted-foreground text-sm">
-              Chargement...
+              Chargement…
             </p>
           </div>
         </div>
@@ -148,7 +148,7 @@ export const NewsFeed = ({
           <div className="flex items-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
             <p className="text-muted-foreground text-sm">
-              Chargement de plus de publications...
+              Chargement de plus de publications…
             </p>
           </div>
         </div>

@@ -10,7 +10,7 @@ export const ImageUploadInfo = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size={"icon"} variant="ghost" className="rounded-full">
+        <Button size={"icon"} variant="ghost" className="rounded-full" aria-label="Informations">
           <Info size={20} />
         </Button>
       </PopoverTrigger>

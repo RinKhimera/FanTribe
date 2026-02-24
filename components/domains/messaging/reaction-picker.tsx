@@ -76,7 +76,7 @@ export const ReactionPicker = ({
             transition={{ delay: index * 0.03 }}
             onClick={() => handleReaction(emoji)}
             className={cn(
-              "relative flex size-8 items-center justify-center rounded-full text-lg transition-all hover:scale-125 hover:bg-white/10",
+              "relative flex size-8 items-center justify-center rounded-full text-lg transition-[transform,background-color] hover:scale-125 hover:bg-white/10",
               hasReacted && "bg-amber-500/20"
             )}
           >
@@ -98,6 +98,7 @@ export const ReactionPicker = ({
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            aria-label="Plus de réactions"
             className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
           >
             <Plus size={16} />

@@ -77,7 +77,7 @@ export const UserInfoPopover = ({
             <button
               className={cn(
                 // Base styles
-                "flex cursor-pointer items-center transition-all duration-200",
+                "flex cursor-pointer items-center transition-colors duration-200",
                 "rounded-xl",
                 "hover:bg-foreground/10",
                 "data-[state=open]:bg-foreground/10",

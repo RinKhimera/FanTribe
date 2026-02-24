@@ -55,7 +55,7 @@ export const MediaUploadButton = ({
               "size-9 rounded-full",
               "text-muted-foreground",
               "hover:bg-primary/10 hover:text-primary",
-              "transition-all duration-200",
+              "transition-colors duration-200",
               isDisabled && "opacity-50 cursor-not-allowed",
             )}
             onClick={onUploadClick}

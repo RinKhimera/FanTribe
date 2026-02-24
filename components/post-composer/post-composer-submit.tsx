@@ -27,13 +27,14 @@ export function PostComposerSubmit({
         "inline-flex items-center gap-1.5",
         "text-sm font-semibold tracking-wide",
         "disabled:opacity-50 disabled:cursor-not-allowed",
+        "focus-visible:ring-1 focus-visible:ring-ring",
         className,
       )}
     >
       {state.isPending ? (
-        <LoaderCircle className="size-4 animate-spin" />
+        <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
       ) : (
-        <Sparkles className="size-4" />
+        <Sparkles aria-hidden="true" className="size-4" />
       )}
       {text}
     </button>

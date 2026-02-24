@@ -28,7 +28,7 @@ export const AtRiskSubscribersList = ({
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <AlertTriangle aria-hidden="true" className="h-5 w-5 text-amber-500" />
           <CardTitle className="text-base font-semibold">
             Abonnés à risque
           </CardTitle>
@@ -45,7 +45,7 @@ export const AtRiskSubscribersList = ({
       <CardContent>
         {subscribers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <CheckCircle className="mb-2 h-8 w-8 text-emerald-500/40" />
+            <CheckCircle aria-hidden="true" className="mb-2 h-8 w-8 text-emerald-500/40" />
             <p className="text-sm text-emerald-600">
               Aucun abonné à risque
             </p>

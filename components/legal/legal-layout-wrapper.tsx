@@ -31,7 +31,7 @@ export const LegalLayoutWrapper = ({ children }: LegalLayoutWrapperProps) => {
               "border-t-primary",
             )}
           />
-          <p className="text-sm text-muted-foreground">Chargement...</p>
+          <p className="text-sm text-muted-foreground">Chargement…</p>
         </div>
       </div>
     )

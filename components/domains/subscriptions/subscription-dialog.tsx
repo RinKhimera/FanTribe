@@ -24,8 +24,8 @@ export const SubscriptionDialog = ({
         return {
           triggerText: "S'ABONNER",
           triggerClass:
-            "from-primary to-primary/80 mt-3 w-full justify-between rounded-2xl bg-linear-to-r text-lg font-semibold shadow-lg transition-all hover:shadow-xl",
-          icon: <Crown className="h-5 w-5" />,
+            "from-primary to-primary/80 mt-3 w-full justify-between rounded-2xl bg-linear-to-r text-lg font-semibold shadow-lg transition-shadow hover:shadow-xl",
+          icon: <Crown className="h-5 w-5" aria-hidden="true" />,
         }
       case "renew":
         return {

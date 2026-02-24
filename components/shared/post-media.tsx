@@ -52,13 +52,14 @@ function GridCell({ media, index, onOpen, style, overlay }: GridCellProps) {
   return (
     <button
       type="button"
-      className="group relative cursor-pointer overflow-hidden focus:outline-none"
+      className="group relative cursor-pointer overflow-hidden focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
       style={style}
       onClick={(e) => {
         e.stopPropagation()
         onOpen(index)
       }}
       onContextMenu={(e) => e.preventDefault()}
+      aria-label="Voir le média"
     >
       <Image
         src={media.url}
@@ -99,13 +100,14 @@ function ImageGrid({
     return (
       <button
         type="button"
-        className="group relative w-full cursor-pointer overflow-hidden rounded-xl focus:outline-none"
+        className="group relative w-full cursor-pointer overflow-hidden rounded-xl focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
         style={{ aspectRatio: getClampedAspectRatio(images[0]) }}
         onClick={(e) => {
           e.stopPropagation()
           onOpen(0)
         }}
         onContextMenu={(e) => e.preventDefault()}
+        aria-label="Voir le média"
       >
         <Image
           src={images[0].url}

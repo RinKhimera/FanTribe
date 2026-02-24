@@ -33,9 +33,9 @@ export const NewPostLayout = () => {
   if (currentUser.accountType === "USER") return null
 
   const BackButton = (
-    <Button variant="ghost" size="icon" className="hover:bg-primary/10 size-9 rounded-full" asChild>
+    <Button variant="ghost" size="icon" className="hover:bg-primary/10 size-9 rounded-full" asChild aria-label="Retour">
       <Link href="/">
-        <ArrowLeft className="size-5" />
+        <ArrowLeft aria-hidden="true" className="size-5" />
       </Link>
     </Button>
   )

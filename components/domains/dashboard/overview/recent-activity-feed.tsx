@@ -74,9 +74,9 @@ export const RecentActivityFeed = ({
                 }
               >
                 {activity.type === "new_subscriber" ? (
-                  <UserPlus className="h-4 w-4 text-emerald-500" />
+                  <UserPlus aria-hidden="true" className="h-4 w-4 text-emerald-500" />
                 ) : (
-                  <Coins className="h-4 w-4 text-amber-500" />
+                  <Coins aria-hidden="true" className="h-4 w-4 text-amber-500" />
                 )}
               </div>
 

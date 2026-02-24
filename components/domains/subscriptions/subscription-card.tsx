@@ -50,7 +50,7 @@ export const SubscriptionCard = ({
       whileHover="hover"
       whileTap="tap"
     >
-      <Card className="overflow-hidden transition-all">
+      <Card className="overflow-hidden transition-[border-color,box-shadow]">
         <CardContent className="p-4">
           <div className="flex gap-3">
             {/* Avatar with online indicator */}
@@ -105,18 +105,18 @@ export const SubscriptionCard = ({
               {/* Meta row */}
               <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
                 <span className="flex items-center gap-1">
-                  <Clock className="size-3" />
+                  <Clock className="size-3" aria-hidden="true" />
                   Abonné depuis {subscribedDurationMonths} mois
                 </span>
                 {renewalCount > 0 && (
                   <span className="flex items-center gap-1">
-                    <RefreshCw className="size-3" />
+                    <RefreshCw className="size-3" aria-hidden="true" />
                     {renewalCount} renouvellement{renewalCount > 1 ? "s" : ""}
                   </span>
                 )}
                 {creatorExclusivePostCount > 0 && (
                   <span className="flex items-center gap-1">
-                    <Lock className="size-3" />
+                    <Lock className="size-3" aria-hidden="true" />
                     {creatorExclusivePostCount} post{creatorExclusivePostCount > 1 ? "s" : ""} exclusif{creatorExclusivePostCount > 1 ? "s" : ""}
                   </span>
                 )}

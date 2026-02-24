@@ -194,7 +194,7 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
                 href={page.href}
                 className={cn(
                   "shrink-0 rounded-full px-4 py-2 text-sm font-medium",
-                  "border transition-all duration-200",
+                  "border transition-[border-color,color] duration-200",
                   isActive
                     ? "border-primary/30 bg-primary/10 text-foreground"
                     : "border-border/50 bg-muted/30 text-muted-foreground hover:border-border hover:text-foreground",

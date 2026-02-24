@@ -98,7 +98,7 @@ export const NotificationsLayout = () => {
                   onClick={() => loadMore(LOAD_MORE_ITEMS)}
                   className="glass-button gap-2"
                 >
-                  <Loader2 className="size-4" />
+                  <Loader2 className="size-4" aria-hidden="true" />
                   Charger plus
                 </Button>
               </motion.div>
@@ -106,7 +106,7 @@ export const NotificationsLayout = () => {
 
             {status === "LoadingMore" && (
               <div className="flex justify-center py-4">
-                <Loader2 className="text-muted-foreground size-5 animate-spin" />
+                <Loader2 className="text-muted-foreground size-5 animate-spin" aria-hidden="true" />
               </div>
             )}
           </motion.div>
@@ -252,6 +252,7 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
             <Icon
               className={cn("size-10", config.iconColor)}
               strokeWidth={1.5}
+              aria-hidden="true"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -259,7 +260,7 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
               transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
               className="absolute -top-1 -right-1"
             >
-              <Sparkles className="size-5 text-amber-400" strokeWidth={2} />
+              <Sparkles className="size-5 text-amber-400" strokeWidth={2} aria-hidden="true" />
             </motion.div>
           </motion.div>
         </div>

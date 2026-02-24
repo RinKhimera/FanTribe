@@ -37,7 +37,7 @@ export const AboutSection = ({ form }: AboutSectionProps) => {
             </FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Parlez de vous en quelques mots..."
+                placeholder="Parlez de vous en quelques mots\u2026"
                 className="glass-input min-h-24 resize-none rounded-xl border-0"
                 {...field}
               />
@@ -63,6 +63,7 @@ export const AboutSection = ({ form }: AboutSectionProps) => {
                 <Input
                   placeholder="Paris, France"
                   className="glass-input rounded-xl border-0 pl-10"
+                  autoComplete="address-level2"
                   {...field}
                 />
                 <MapPin className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />

@@ -62,9 +62,9 @@ export const NewsFeed = ({
   if (!currentUser) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         <p className="text-muted-foreground mt-4 text-sm">
-          Chargement du fil d&apos;actualité...
+          Chargement du fil d&apos;actualit\u00e9\u2026
         </p>
       </div>
     )
@@ -74,9 +74,9 @@ export const NewsFeed = ({
   if (status === "LoadingFirstPage") {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         <p className="text-muted-foreground mt-4 text-sm">
-          Chargement des publications...
+          Chargement des publications\u2026
         </p>
       </div>
     )
@@ -108,9 +108,9 @@ export const NewsFeed = ({
           ref={loadMoreRef}
           className="flex flex-col items-center justify-center py-8"
         >
-          <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
-            Chargement de plus de publications...
+            Chargement de plus de publications\u2026
           </p>
         </div>
       )}
@@ -118,9 +118,9 @@ export const NewsFeed = ({
       {/* Chargement en cours */}
       {status === "LoadingMore" && (
         <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
-            Chargement de plus de publications...
+            Chargement de plus de publications\u2026
           </p>
         </div>
       )}

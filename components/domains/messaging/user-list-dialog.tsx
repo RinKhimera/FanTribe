@@ -174,7 +174,7 @@ export const UserListDialog = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" aria-label="Nouveau message">
           <MailPlus className="h-5 w-5" />
         </Button>
       </DialogTrigger>
@@ -187,7 +187,10 @@ export const UserListDialog = () => {
 
         {/* Barre de recherche */}
         <Input
-          placeholder="Rechercher..."
+          aria-label="Rechercher"
+          name="search"
+          autoComplete="off"
+          placeholder="Rechercher…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="mb-2"
@@ -238,7 +241,7 @@ export const UserListDialog = () => {
                   )}
                 </div>
 
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                <MessageSquare className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </button>
             ))
           )}

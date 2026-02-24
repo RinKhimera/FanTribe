@@ -10,7 +10,7 @@ type PostComposerInputProps = {
 }
 
 export function PostComposerInput({
-  placeholder = "Partagez quelque chose avec vos fans...",
+  placeholder = "Partagez quelque chose avec vos fans\u2026",
   maxLength = 400,
 }: PostComposerInputProps) {
   const { state, actions } = usePostComposer()
@@ -22,12 +22,13 @@ export function PostComposerInput({
         className={cn(
           "w-full resize-none border-none bg-transparent",
           "placeholder:text-muted-foreground/50 text-lg",
-          "outline-none focus:outline-none",
+          "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
         )}
         minRows={3}
         maxRows={12}
         value={state.content}
         onChange={(e) => actions.setContent(e.target.value)}
+        aria-label="Contenu de la publication"
       />
 
       {/* Character count */}

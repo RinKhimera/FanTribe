@@ -152,7 +152,7 @@ export const NavigationTabs = ({
                     className={cn(
                       "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5",
                       "text-[10px] leading-none font-bold",
-                      "animate-in zoom-in-50 duration-200",
+                      "motion-safe:animate-in motion-safe:zoom-in-50 duration-200",
                       active
                         ? "bg-primary text-primary-foreground"
                         : "bg-destructive text-white",
@@ -166,7 +166,7 @@ export const NavigationTabs = ({
                 <div
                   className={cn(
                     "absolute right-2 bottom-0 left-2 h-0.5 rounded-t-full",
-                    "transition-all duration-200",
+                    "transition-[opacity,background-color] duration-200",
                     active
                       ? "bg-primary opacity-100"
                       : "bg-primary opacity-0 group-hover:opacity-30",

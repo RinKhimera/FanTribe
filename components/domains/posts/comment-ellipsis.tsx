@@ -96,8 +96,8 @@ export const CommentEllipsis = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button size="icon" variant="ghost" className="h-8 w-8">
-          <Ellipsis className="h-4 w-4" />
+        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Plus d'options">
+          <Ellipsis className="h-4 w-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60" align="end">
@@ -107,7 +107,7 @@ export const CommentEllipsis = ({
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
               <DialogTrigger asChild>
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <Pencil className="mr-2 h-4 w-4" />
+                  <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
                   Modifier le commentaire
                 </DropdownMenuItem>
               </DialogTrigger>
@@ -122,7 +122,7 @@ export const CommentEllipsis = ({
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   className="min-h-[100px]"
-                  placeholder="Écrivez votre commentaire..."
+                  placeholder="\u00c9crivez votre commentaire\u2026"
                 />
                 <DialogFooter>
                   <Button
@@ -139,7 +139,7 @@ export const CommentEllipsis = ({
                     disabled={isUpdating || !editContent.trim()}
                   >
                     {isUpdating ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                      <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
                     ) : (
                       "Enregistrer"
                     )}
@@ -160,7 +160,7 @@ export const CommentEllipsis = ({
                 variant="destructive"
                 onSelect={(e) => e.preventDefault()}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
                 Supprimer le commentaire
               </DropdownMenuItem>
             </AlertDialogTrigger>
@@ -176,7 +176,7 @@ export const CommentEllipsis = ({
                 <AlertDialogCancel>Annuler</AlertDialogCancel>
                 <AlertDialogAction onClick={deleteHandler} disabled={isPending}>
                   {isPending ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : (
                     "Supprimer"
                   )}
@@ -194,7 +194,7 @@ export const CommentEllipsis = ({
               variant="destructive"
               onSelect={() => setShowReportDialog(true)}
             >
-              <Flag className="mr-2 h-4 w-4" />
+              <Flag className="mr-2 h-4 w-4" aria-hidden="true" />
               Signaler le commentaire
             </DropdownMenuItem>
           </>

@@ -247,7 +247,7 @@ export const MessagesList = ({
                 {isLoadingMore ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    Chargement...
+                    Chargement…
                   </>
                 ) : (
                   <>
@@ -302,6 +302,7 @@ export const MessagesList = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             onClick={scrollToBottom}
+            aria-label="Défiler vers le bas"
             className="absolute bottom-4 right-4 z-10 flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/80 text-foreground shadow-lg backdrop-blur-sm transition-colors hover:bg-black/90"
           >
             <ChevronDown size={20} />

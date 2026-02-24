@@ -70,6 +70,7 @@ export const BunnyVideoPlayer: React.FC<BunnyVideoPlayerProps> = ({
         allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
         className="absolute inset-0 h-full w-full"
         allowFullScreen
+        title="Lecteur vid\u00e9o"
       />
     </div>
   )

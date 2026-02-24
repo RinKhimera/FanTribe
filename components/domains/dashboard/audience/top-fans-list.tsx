@@ -33,7 +33,7 @@ export const TopFansList = ({ fans }: TopFansListProps) => {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Crown className="text-amber-500 h-5 w-5" />
+          <Crown aria-hidden="true" className="text-amber-500 h-5 w-5" />
           <CardTitle className="text-base font-semibold">
             Top fans fidèles
           </CardTitle>
@@ -42,7 +42,7 @@ export const TopFansList = ({ fans }: TopFansListProps) => {
       <CardContent>
         {fans.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <Trophy className="text-muted-foreground/40 mb-2 h-8 w-8" />
+            <Trophy aria-hidden="true" className="text-muted-foreground/40 mb-2 h-8 w-8" />
             <p className="text-muted-foreground text-sm">
               Aucun fan avec renouvellements
             </p>

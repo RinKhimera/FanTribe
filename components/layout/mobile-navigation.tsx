@@ -87,12 +87,6 @@ export const MobileNavigation = () => {
     return link.href
   }
 
-  // Navigation depuis le Sheet
-  const handleSheetNavigation = (href: string) => {
-    setIsOpen(false)
-    setTimeout(() => router.push(href), 150)
-  }
-
   // Clic sur "Publier"
   const handlePublishClick = () => {
     setIsOpen(false)
@@ -116,11 +110,12 @@ export const MobileNavigation = () => {
         "border-border border-t",
         "bg-background/95 backdrop-blur-sm",
         "supports-backdrop-filter:bg-background/60",
+        "pb-[env(safe-area-inset-bottom)]",
         // Afficher uniquement sur mobile
         "min-[500px]:hidden",
       )}
     >
-      <div className="flex h-full items-center justify-around px-1">
+      <div className="flex h-full items-center justify-around px-1 touch-manipulation">
         {/* Liens d'accès rapide */}
         {quickAccessLinks.map((link) => {
           const IconComponent = link.icon
@@ -191,16 +186,16 @@ export const MobileNavigation = () => {
                   const isActive = pathname === href
 
                   return (
-                    <Button
+                    <Link
                       key={`sheet-${link.id}`}
-                      variant="ghost"
+                      href={href}
                       className={cn(
                         "text-md flex h-12 items-center justify-start space-x-4 rounded-lg px-3 py-2",
                         isActive
                           ? "bg-accent text-accent-foreground font-semibold"
                           : "text-foreground hover:bg-accent/70",
                       )}
-                      onClick={() => handleSheetNavigation(href)}
+                      onClick={() => setIsOpen(false)}
                     >
                       <div className="relative">
                         <IconComponent className="size-5" />
@@ -214,7 +209,7 @@ export const MobileNavigation = () => {
                         )}
                       </div>
                       <span>{link.title}</span>
-                    </Button>
+                    </Link>
                   )
                 })}
               </div>

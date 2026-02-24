@@ -61,7 +61,7 @@ export const UserLikedPosts = ({
   if (status === "LoadingFirstPage") {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         <p className="text-muted-foreground mt-4 text-sm">
           Chargement…
         </p>
@@ -95,7 +95,7 @@ export const UserLikedPosts = ({
           ref={loadMoreRef}
           className="flex flex-col items-center justify-center py-8"
         >
-          <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
             Chargement…
           </p>
@@ -105,7 +105,7 @@ export const UserLikedPosts = ({
       {/* Chargement en cours */}
       {status === "LoadingMore" && (
         <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="text-primary h-6 w-6 animate-spin" />
+          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
             Chargement…
           </p>

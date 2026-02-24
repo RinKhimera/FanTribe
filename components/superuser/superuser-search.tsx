@@ -179,7 +179,7 @@ export function SuperuserSearch() {
       <div
         className={cn(
           "flex items-center gap-2 rounded-lg border px-3 py-1.5",
-          "bg-muted/50 transition-all duration-200",
+          "bg-muted/50 transition-colors duration-200",
           "focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/20",
           isOpen && "ring-2 ring-primary/20 bg-background",
         )}
@@ -188,7 +188,7 @@ export function SuperuserSearch() {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Rechercher..."
+          placeholder="Rechercher…"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
@@ -199,7 +199,7 @@ export function SuperuserSearch() {
           className={cn(
             "bg-transparent text-sm outline-none",
             "placeholder:text-muted-foreground/60",
-            "w-32 focus:w-48 transition-all duration-200",
+            "w-32 focus:w-48 transition-[width] duration-200",
           )}
         />
         {query && (

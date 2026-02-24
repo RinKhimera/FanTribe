@@ -193,6 +193,7 @@ export const CameraCapture = ({
                     size="icon"
                     className="absolute right-3 top-3 bg-black/50 hover:bg-black/70"
                     onClick={handleSwitchCamera}
+                    aria-label="Changer de caméra"
                   >
                     <RefreshCw className="size-4" />
                   </Button>

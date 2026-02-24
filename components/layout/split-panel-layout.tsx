@@ -53,6 +53,7 @@ export const SplitPanelLayout = ({
         "min-h-screen min-[501px]:h-screen",
         "border-muted border-r border-l",
         "max-[500px]:pb-(--mobile-nav-height)",
+        "pb-[env(safe-area-inset-bottom)]",
         className,
       )}
     >
@@ -66,6 +67,7 @@ export const SplitPanelLayout = ({
           className={cn(
             "border-muted border-r",
             "min-[501px]:overflow-y-auto",
+            "overscroll-contain",
             showNavigationOnMobile
               ? "w-full lg:w-(--content-split-nav-width)"
               : "max-lg:hidden lg:block lg:w-(--content-split-nav-width) w-(--content-split-nav-width)",
@@ -78,6 +80,7 @@ export const SplitPanelLayout = ({
         <div
           className={cn(
             "min-[501px]:overflow-y-auto",
+            "overscroll-contain",
             showNavigationOnMobile
               ? "hidden lg:block lg:w-(--content-split-main-width)"
               : "max-lg:w-full lg:w-(--content-split-main-width) w-(--content-split-main-width)",

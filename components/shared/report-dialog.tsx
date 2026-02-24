@@ -299,7 +299,7 @@ export const ReportDialog = ({
                   custom={index}
                   onClick={() => setReason(r.value)}
                   className={cn(
-                    "group relative flex items-start gap-3 rounded-xl p-3.5 text-left transition-all duration-200",
+                    "group relative flex items-start gap-3 rounded-xl p-3.5 text-left transition-colors duration-200",
                     "border outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                     isSelected
                       ? "border-primary/50 bg-primary/8 shadow-[0_0_20px_-4px] shadow-primary/25"
@@ -395,7 +395,7 @@ export const ReportDialog = ({
                 </Label>
                 <Textarea
                   id="description"
-                  placeholder="Décrivez le problème en détail pour nous aider à mieux comprendre la situation..."
+                  placeholder="D\u00e9crivez le probl\u00e8me en d\u00e9tail pour nous aider \u00e0 mieux comprendre la situation\u2026"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="mt-2 min-h-[100px] resize-none bg-muted/30 transition-colors focus:bg-muted/50"
@@ -427,7 +427,7 @@ export const ReportDialog = ({
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground"
                 />
-                Envoi...
+                Envoi\u2026
               </>
             ) : (
               <>

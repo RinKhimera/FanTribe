@@ -250,7 +250,7 @@ export const StepPersonalInfo = ({
           {isValidating ? (
             <>
               <div className="mr-2 size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              Validation...
+              Validation…
             </>
           ) : (
             <>

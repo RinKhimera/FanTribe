@@ -155,7 +155,7 @@ export const LeftSidebar = ({ currentUser }: LeftSidebarProps) => {
                           className={cn(
                             // Base styles
                             "group relative flex items-center",
-                            "rounded-xl transition-all duration-200",
+                            "rounded-xl transition-colors duration-200",
                             // Padding adaptatif
                             "p-3 xl:px-4 xl:py-3",
                             // Largeur
@@ -195,7 +195,7 @@ export const LeftSidebar = ({ currentUser }: LeftSidebarProps) => {
                                   "absolute -top-1.5 -right-1.5",
                                   "flex h-5 min-w-5 items-center justify-center",
                                   "rounded-full px-1 text-xs font-bold",
-                                  "animate-in zoom-in-50 duration-200",
+                                  "motion-safe:animate-in motion-safe:zoom-in-50 duration-200",
                                 )}
                               >
                                 {badgeValue > 99 ? "99+" : badgeValue}
@@ -241,7 +241,7 @@ export const LeftSidebar = ({ currentUser }: LeftSidebarProps) => {
                       "group relative overflow-hidden",
                       "bg-primary hover:bg-primary/90",
                       "text-primary-foreground font-semibold",
-                      "transition-all duration-200",
+                      "transition-[color,background-color,box-shadow,transform] duration-200",
                       // Mode compact : bouton carré
                       "max-xl:h-12 max-xl:w-12 max-xl:rounded-xl max-xl:p-0",
                       // Mode full : bouton large

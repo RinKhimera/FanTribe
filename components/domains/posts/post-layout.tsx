@@ -49,8 +49,9 @@ export const PostLayout = ({
             size="icon"
             onClick={() => router.back()}
             className="size-9 rounded-full hover:bg-muted/80 transition-colors -ml-1"
+            aria-label="Retour"
           >
-            <ArrowLeft className="size-5" />
+            <ArrowLeft className="size-5" aria-hidden="true" />
           </Button>
           <h1 className="text-lg font-semibold tracking-tight">Publication</h1>
         </div>

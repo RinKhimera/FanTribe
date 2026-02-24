@@ -96,7 +96,7 @@ export const BlockedUsersContent = () => {
 
       {/* Search */}
       <div className="relative">
-        <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+        <Search aria-hidden="true" className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -104,6 +104,8 @@ export const BlockedUsersContent = () => {
           className="pl-9"
           aria-label="Rechercher un utilisateur bloqué"
           spellCheck={false}
+          name="search"
+          autoComplete="off"
         />
       </div>
 
@@ -130,7 +132,7 @@ export const BlockedUsersContent = () => {
       {!isLoading && blockedUsers.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="bg-muted mb-4 rounded-full p-4">
-            <Shield className="text-muted-foreground size-8" />
+            <Shield aria-hidden="true" className="text-muted-foreground size-8" />
           </div>
           <p className="font-medium">Aucun utilisateur bloqué</p>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -197,9 +199,9 @@ export const BlockedUsersContent = () => {
                         className="shrink-0"
                       >
                         {isUnblocking ? (
-                          <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                          <Loader2 aria-hidden="true" className="mr-1.5 size-3.5 animate-spin" />
                         ) : (
-                          <UserX className="mr-1.5 size-3.5" />
+                          <UserX aria-hidden="true" className="mr-1.5 size-3.5" />
                         )}
                         Débloquer
                       </Button>

@@ -272,7 +272,7 @@ export const NotificationItem = ({
             initial="initial"
             animate="animate"
             className={cn(
-              "group relative isolate cursor-pointer overflow-hidden rounded-xl transition-all duration-200",
+              "group relative isolate cursor-pointer overflow-hidden rounded-xl transition-colors duration-200",
               notification.isRead
                 ? "glass-notification"
                 : "glass-notification glass-notification-unread",

@@ -74,6 +74,7 @@ export const UserProfileHero = ({
             whileHover={{ scale: 1.05 }}
             type="button"
             onClick={openAvatar}
+            aria-label="Voir la photo de profil"
             className={cn(
               "rounded-full outline-none focus-visible:ring-ring focus-visible:ring-2",
               isCreator && "ring-2 ring-primary/50 shadow-[0_0_15px_oklch(0.541_0.281_293/0.3)]",
@@ -142,7 +143,7 @@ export const UserProfileHero = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-foreground/90 mb-2 text-sm leading-relaxed"
+            className="text-foreground/90 mb-2 text-sm leading-relaxed break-words"
           >
             {userProfile.bio}
           </motion.p>
@@ -156,7 +157,7 @@ export const UserProfileHero = ({
             transition={{ delay: 0.12 }}
             className="text-muted-foreground mb-2 flex items-center gap-1.5 text-sm"
           >
-            <MapPin className="size-3.5" />
+            <MapPin className="size-3.5" aria-hidden="true" />
             <span>{userProfile.location}</span>
           </motion.div>
         )}

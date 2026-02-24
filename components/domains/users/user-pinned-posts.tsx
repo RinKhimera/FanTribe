@@ -46,7 +46,7 @@ export const UserPinnedPosts = ({
           initial="initial"
           animate="animate"
         >
-          <Pin className="text-primary size-5" />
+          <Pin className="text-primary size-5" aria-hidden="true" />
         </motion.div>
         <h3 className="text-sm font-semibold uppercase tracking-wide">
           Publications épinglées
@@ -91,7 +91,7 @@ const PinnedPostCard = ({ post, username }: PinnedPostCardProps) => {
         whileHover={{ scale: 1.02, y: -4 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "glass-card group relative overflow-hidden rounded-xl transition-all",
+          "glass-card group relative overflow-hidden rounded-xl transition-[border-color,box-shadow]",
           "hover:shadow-xl"
         )}
       >
@@ -102,7 +102,7 @@ const PinnedPostCard = ({ post, username }: PinnedPostCardProps) => {
           transition={{ delay: 0.2, type: "spring" }}
           className="bg-primary absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full shadow-lg"
         >
-          <Pin className="size-3.5 text-white" />
+          <Pin className="size-3.5 text-white" aria-hidden="true" />
         </motion.div>
 
         {/* Media preview */}

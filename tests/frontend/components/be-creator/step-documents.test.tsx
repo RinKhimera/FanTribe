@@ -223,7 +223,7 @@ describe("StepDocuments", () => {
 
       expect(screen.getByText("Précisez votre motivation")).toBeInTheDocument()
       expect(
-        screen.getByPlaceholderText("Décrivez votre motivation spécifique...")
+        screen.getByPlaceholderText("Décrivez votre motivation spécifique\u2026")
       ).toBeInTheDocument()
     })
 
@@ -357,7 +357,7 @@ describe("StepDocuments", () => {
         />
       )
 
-      expect(screen.getByText("Soumission en cours...")).toBeInTheDocument()
+      expect(screen.getByText("Soumission en cours\u2026")).toBeInTheDocument()
     })
 
     it("should show warning message when documents are incomplete", () => {

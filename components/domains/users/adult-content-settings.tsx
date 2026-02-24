@@ -58,7 +58,7 @@ export const AdultContentSettings = ({
       <DialogTrigger asChild>
         {trigger || (
           <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ShieldAlert className="size-4" />
+            <ShieldAlert className="size-4" aria-hidden="true" />
             Contenu adulte
           </button>
         )}
@@ -76,7 +76,7 @@ export const AdultContentSettings = ({
                 "bg-orange-500/10 ring-1 ring-orange-500/20"
               )}
             >
-              <Flame className="size-5 text-orange-500" />
+              <Flame className="size-5 text-orange-500" aria-hidden="true" />
             </div>
             <div>
               <DialogTitle className="text-left">Contenu adulte</DialogTitle>
@@ -95,7 +95,7 @@ export const AdultContentSettings = ({
             disabled={isPending}
             className={cn(
               "w-full flex items-center justify-between gap-4 p-4 rounded-xl",
-              "border transition-all duration-300",
+              "border transition-[background-color,border-color] duration-300",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
               "disabled:opacity-70 disabled:cursor-not-allowed",
               localValue
@@ -117,7 +117,7 @@ export const AdultContentSettings = ({
             {/* Custom Toggle Switch */}
             <div
               className={cn(
-                "relative shrink-0 h-7 w-12 rounded-full transition-all duration-300",
+                "relative shrink-0 h-7 w-12 rounded-full transition-colors duration-300",
                 "ring-1 ring-inset",
                 localValue
                   ? "bg-orange-500 ring-orange-600/20"
@@ -132,20 +132,21 @@ export const AdultContentSettings = ({
               {/* Thumb */}
               <div
                 className={cn(
-                  "absolute top-0.5 size-6 rounded-full transition-all duration-300",
+                  "absolute top-0.5 size-6 rounded-full transition-[left] duration-300",
                   "bg-white shadow-md",
                   "flex items-center justify-center",
                   localValue ? "left-[22px]" : "left-0.5"
                 )}
               >
                 {isPending ? (
-                  <Loader2 className="size-3 text-muted-foreground animate-spin" />
+                  <Loader2 className="size-3 text-muted-foreground animate-spin" aria-hidden="true" />
                 ) : (
                   <Flame
                     className={cn(
                       "size-3 transition-colors duration-300",
                       localValue ? "text-orange-500" : "text-muted-foreground/50"
                     )}
+                    aria-hidden="true"
                   />
                 )}
               </div>
@@ -159,7 +160,7 @@ export const AdultContentSettings = ({
               "bg-muted/50 border border-border/50"
             )}
           >
-            <ShieldAlert className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+            <ShieldAlert className="size-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden="true" />
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Ce paramètre affecte uniquement le contenu public marqué comme

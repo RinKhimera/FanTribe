@@ -33,7 +33,7 @@ export const CreatePost = ({
         "mx-4 my-4 p-5 rounded-2xl",
         "glass-premium",
         "border border-primary/10",
-        "hover:border-primary/25 transition-all duration-300",
+        "hover:border-primary/25 transition-[border-color,box-shadow] duration-300",
         "hover:shadow-[0_4px_24px_color-mix(in_oklch,var(--primary)_25%,transparent)]",
       )}
       onClick={handleCreatePostClick}
@@ -51,11 +51,11 @@ export const CreatePost = ({
 
         <div className="flex-1">
           <TextareaAutosize
-            placeholder="Partager une publication..."
+            placeholder="Partager une publication\u2026"
             className={cn(
               "w-full cursor-pointer resize-none border-none bg-transparent",
               "text-lg placeholder:text-muted-foreground/50",
-              "outline-none focus:outline-none",
+              "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
             )}
             onClick={(e) => {
               e.stopPropagation()
@@ -78,7 +78,7 @@ export const CreatePost = ({
                 className={cn(
                   "rounded-full h-10 w-10",
                   "hover:bg-primary/10 hover:text-primary",
-                  "transition-all duration-200",
+                  "transition-colors duration-200",
                 )}
                 onClick={(e) => {
                   e.stopPropagation()

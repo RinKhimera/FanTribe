@@ -102,7 +102,7 @@ export const PostDetailComments = ({
     >
       {/* Comments Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-border/40 border-t">
-        <MessageCircle className="size-4 text-muted-foreground" />
+        <MessageCircle className="size-4 text-muted-foreground" aria-hidden="true" />
         <span className="text-sm font-medium text-muted-foreground">
           {totalComments} commentaire{totalComments !== 1 ? "s" : ""}
         </span>
@@ -153,7 +153,7 @@ export const PostDetailComments = ({
                     "relative rounded-2xl overflow-hidden",
                     "bg-background border border-border/60",
                     "focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10",
-                    "transition-all duration-200",
+                    "transition-[border-color,box-shadow] duration-200",
                   )}
                 >
                   <TextareaAutosize
@@ -161,12 +161,13 @@ export const PostDetailComments = ({
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ajouter un commentaire..."
+                    placeholder="Ajouter un commentaire\u2026"
+                    aria-label="Commentaire"
                     className={cn(
                       "w-full resize-none bg-transparent",
                       "px-4 py-3 text-sm leading-relaxed",
                       "placeholder:text-muted-foreground/50",
-                      "focus:outline-none",
+                      "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
                     )}
                     disabled={isSubmitting}
                     minRows={1}
@@ -212,7 +213,7 @@ export const PostDetailComments = ({
             )}
           >
             <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Lock className="size-4 text-primary" />
+              <Lock className="size-4 text-primary" aria-hidden="true" />
             </div>
             <div className="text-center">
               <p className="text-sm font-medium">Contenu réservé aux abonnés</p>
@@ -230,7 +231,7 @@ export const PostDetailComments = ({
           <div className="flex items-center justify-center py-12 gap-3">
             <Loader2 className="text-primary size-5 animate-spin" />
             <span className="text-sm text-muted-foreground">
-              Chargement des commentaires...
+              Chargement des commentaires\u2026
             </span>
           </div>
         ) : comments && comments.length > 0 ? (
@@ -258,7 +259,7 @@ export const PostDetailComments = ({
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-16 px-6">
             <div className="size-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-              <MessageCircle className="size-7 text-muted-foreground/50" />
+              <MessageCircle className="size-7 text-muted-foreground/50" aria-hidden="true" />
             </div>
             <p className="text-muted-foreground text-sm text-center font-medium">
               Aucun commentaire

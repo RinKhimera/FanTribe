@@ -120,7 +120,7 @@ export const RevokeCreatorDialog = ({
             </Label>
             <Textarea
               id="reason"
-              placeholder="Raison de la révocation..."
+              placeholder="Raison de la révocation…"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="min-h-[80px] resize-none"
@@ -145,7 +145,7 @@ export const RevokeCreatorDialog = ({
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
                 />
-                Révocation...
+                Révocation…
               </>
             ) : (
               <>

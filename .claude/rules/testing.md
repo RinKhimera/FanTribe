@@ -29,3 +29,4 @@ const result = await t.withIdentity({ tokenIdentifier: "test" })
 - **`env.client.ts`**: Zod parse fails without env vars — mock `@/lib/config/env.client` in tests
 - **Convex scheduler**: `ctx.scheduler.runAfter()` callbacks may fire after test end — handled in `vitest.convex.setup.ts`
 - **ESLint zero-warning**: `--max-warnings 0` in `build-check` — all warnings are errors
+- **UI text changes break test assertions**: Tests use `getByText()` / `getByPlaceholderText()` with exact strings. When changing user-visible text in components (e.g., `"..."` → `"…"`, translations), always search `tests/` for matching assertions — they live outside `components/` so component-scoped operations miss them.

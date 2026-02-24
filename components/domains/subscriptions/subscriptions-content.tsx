@@ -64,7 +64,7 @@ export const SubscriptionsContent = () => {
       <div className="px-4 py-4 space-y-4">
         {/* Search bar */}
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
           <Input
             type="text"
             placeholder="Rechercher un créateur…"
@@ -132,7 +132,7 @@ export const SubscriptionsContent = () => {
         {/* Loading more indicator */}
         {status === "LoadingMore" && (
           <div className="flex justify-center py-4">
-            <Loader2 className="text-muted-foreground size-5 animate-spin" />
+            <Loader2 className="text-muted-foreground size-5 animate-spin" aria-hidden="true" />
           </div>
         )}
       </div>
@@ -163,7 +163,7 @@ const EmptyState = ({ isFiltered }: { isFiltered: boolean }) => {
             }}
             className="relative flex size-20 items-center justify-center rounded-2xl bg-primary/10"
           >
-            <Users className="size-10 text-primary" strokeWidth={1.5} />
+            <Users className="size-10 text-primary" strokeWidth={1.5} aria-hidden="true" />
           </motion.div>
         </div>
 

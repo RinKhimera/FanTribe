@@ -50,6 +50,7 @@ export const IdentitySection = ({
                 <Input
                   placeholder="Votre nom public"
                   className="glass-input rounded-xl border-0 pl-10"
+                  autoComplete="name"
                   {...field}
                 />
                 <Sparkles className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -80,6 +81,8 @@ export const IdentitySection = ({
                     checkUsername === false && "ring-destructive ring-2",
                     checkUsername === true && "ring-2 ring-emerald-500"
                   )}
+                  autoComplete="username"
+                  spellCheck={false}
                   {...field}
                 />
                 <AtSign className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />

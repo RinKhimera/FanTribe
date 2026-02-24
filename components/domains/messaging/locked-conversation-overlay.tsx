@@ -55,9 +55,9 @@ export const LockedConversationOverlay = ({
                   }`}
                 >
                   {isBlocked ? (
-                    <MessageCircleOff size={28} className="text-destructive" />
+                    <MessageCircleOff size={28} className="text-destructive" aria-hidden="true" />
                   ) : (
-                    <Lock size={28} className="text-amber-500" />
+                    <Lock size={28} className="text-amber-500" aria-hidden="true" />
                   )}
                 </motion.div>
               </div>

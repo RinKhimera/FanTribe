@@ -161,6 +161,7 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                     value={field.value || ""}
                     placeholder={config.placeholder}
                     className="glass-input rounded-xl border-0 pl-14 pr-10"
+                    autoComplete="url"
                     onBlur={(e) => {
                       field.onBlur()
                       handleBlur(e)
@@ -202,6 +203,7 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                   size="icon"
                   onClick={onRemove}
                   className="hover:bg-destructive/10 hover:text-destructive size-10 rounded-xl transition-colors"
+                  aria-label="Supprimer le lien"
                 >
                   <Trash2 className="size-4" />
                 </Button>

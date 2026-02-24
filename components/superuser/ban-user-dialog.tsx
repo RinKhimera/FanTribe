@@ -139,7 +139,7 @@ export const BanUserDialog = ({
               <Label
                 htmlFor="temporary"
                 className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all",
+                  "flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-[border-color,background-color]",
                   banType === "temporary"
                     ? "border-amber-500/50 bg-amber-500/5"
                     : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50"
@@ -165,7 +165,7 @@ export const BanUserDialog = ({
               <Label
                 htmlFor="permanent"
                 className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all",
+                  "flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-[border-color,background-color]",
                   banType === "permanent"
                     ? "border-destructive/50 bg-destructive/5"
                     : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50"
@@ -223,7 +223,7 @@ export const BanUserDialog = ({
             </Label>
             <Textarea
               id="reason"
-              placeholder="Décrivez la raison du bannissement..."
+              placeholder="Décrivez la raison du bannissement…"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="min-h-[100px] resize-none"
@@ -249,7 +249,7 @@ export const BanUserDialog = ({
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   className="h-4 w-4 rounded-full border-2 border-destructive-foreground/30 border-t-destructive-foreground"
                 />
-                Bannissement...
+                Bannissement…
               </>
             ) : (
               <>

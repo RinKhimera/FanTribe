@@ -236,6 +236,7 @@ export const MessagingSubscriptionModal = ({
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Fermer"
             onClick={onClose}
             className="absolute right-2 top-2 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40"
           >
@@ -252,7 +253,7 @@ export const MessagingSubscriptionModal = ({
             <div className="relative">
               <div className="absolute inset-0 scale-110 rounded-full bg-primary/20 blur-xl" />
               <Avatar className="relative h-24 w-24 ring-4 ring-primary/40 ring-offset-2 ring-offset-background shadow-xl">
-                <AvatarImage src={creator.image} className="object-cover" />
+                <AvatarImage src={creator.image} alt="" className="object-cover" />
                 <AvatarFallback className="bg-muted text-xl">
                   {creator.name?.charAt(0) || "?"}
                 </AvatarFallback>
@@ -317,7 +318,7 @@ export const MessagingSubscriptionModal = ({
                 className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/5 p-2.5 backdrop-blur-sm"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
-                  <feature.icon className="h-4 w-4 text-white" />
+                  <feature.icon className="h-4 w-4 text-white" aria-hidden="true" />
                 </div>
                 <div className="text-sm font-medium">{feature.text}</div>
               </div>

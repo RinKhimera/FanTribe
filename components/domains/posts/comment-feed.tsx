@@ -20,7 +20,7 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
           key={comment._id}
           className="flex space-x-4 border-b px-4 pt-4 pb-2"
         >
-          <div className="flex w-full flex-col">
+          <div className="flex w-full min-w-0 flex-col">
             <div className="flex items-center justify-between">
               <Link href={`/${comment.author?.username}`}>
                 <div className="flex items-center gap-3">
@@ -34,8 +34,8 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-left max-sm:text-sm">
-                    <div className="font-bold">{comment.author?.name}</div>
-                    <div className="text-muted-foreground">
+                    <div className="font-bold truncate">{comment.author?.name}</div>
+                    <div className="text-muted-foreground truncate">
                       @{comment.author?.username}
                     </div>
                   </div>
@@ -55,7 +55,7 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
               </div>
             </div>
             <div className="mt-1 flex flex-col sm:ml-[52px]">
-              <div className="w-full text-base">
+              <div className="w-full text-base break-words">
                 {comment.content
                   .split("\n")
                   .filter((line) => line.trim() !== "")

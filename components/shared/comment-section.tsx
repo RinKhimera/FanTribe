@@ -121,7 +121,7 @@ export const CommentSection = ({
                   <div className="flex items-center justify-center py-8">
                     <div className="flex items-center gap-3">
                       <Loader2 className="text-primary h-5 w-5 animate-spin" />
-                      <span className="text-muted-foreground text-sm">Chargement...</span>
+                      <span className="text-muted-foreground text-sm">Chargement\u2026</span>
                     </div>
                   </div>
                 ) : (
@@ -206,13 +206,14 @@ export const CommentSection = ({
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
                           onClick={(e) => e.stopPropagation()}
-                          placeholder="Ajouter un commentaire..."
+                          placeholder="Ajouter un commentaire\u2026"
                           className={cn(
                             "min-h-10 resize-none text-sm py-2.5",
                             "placeholder:text-muted-foreground/60",
                           )}
                           disabled={isSubmitting}
                           rows={1}
+                          aria-label="Commentaire"
                         />
 
                         <Button
@@ -224,6 +225,7 @@ export const CommentSection = ({
                             "disabled:opacity-50 disabled:cursor-not-allowed",
                           )}
                           onClick={(e) => e.stopPropagation()}
+                          aria-label="Envoyer"
                         >
                           {isSubmitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

@@ -48,7 +48,7 @@ export const LockedContentOverlay = ({
               "bg-primary",
             )}
           >
-            <Lock className="size-7 text-primary-foreground" />
+            <Lock aria-hidden="true" className="size-7 text-primary-foreground" />
           </div>
 
           {/* Title */}
@@ -67,9 +67,9 @@ export const LockedContentOverlay = ({
           {mediaCount > 0 && (
             <div className="mb-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
               {mediaCount === 1 ? (
-                <ImageIcon className="size-3.5" />
+                <ImageIcon aria-hidden="true" className="size-3.5" />
               ) : (
-                <Film className="size-3.5" />
+                <Film aria-hidden="true" className="size-3.5" />
               )}
               <span>
                 {mediaCount} {mediaCount === 1 ? "média" : "médias"} exclusif
@@ -89,7 +89,7 @@ export const LockedContentOverlay = ({
               onRequireSubscribe()
             }}
           >
-            <Sparkles className="mr-2 size-4" />
+            <Sparkles aria-hidden="true" className="mr-2 size-4" />
             S&apos;abonner
           </Button>
         </div>

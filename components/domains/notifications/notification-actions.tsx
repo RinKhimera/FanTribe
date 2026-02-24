@@ -57,11 +57,12 @@ export const NotificationActions = ({
           onClick={handleMarkAllAsRead}
           disabled={isPending || unreadCount === 0}
           className="glass-button gap-1.5 rounded-lg px-2.5"
+          aria-label="Tout marquer comme lu"
         >
           {isPending ? (
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           ) : (
-            <CheckCheck className="size-4" />
+            <CheckCheck className="size-4" aria-hidden="true" />
           )}
           <span className="hidden sm:inline">Tout lu</span>
         </Button>

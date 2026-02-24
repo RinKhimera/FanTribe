@@ -49,7 +49,7 @@ export const UserSocialLinks = ({ socialLinks }: UserSocialLinksProps) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(
-                      "flex items-center gap-2 rounded-full px-4 py-2 transition-all",
+                      "flex items-center gap-2 rounded-full px-4 py-2 transition-colors",
                       config.bgColor
                     )}
                   >
@@ -92,7 +92,7 @@ export const UserSocialLinksCompact = ({ socialLinks }: UserSocialLinksProps) =>
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(
-                      "flex size-9 items-center justify-center rounded-lg transition-all",
+                      "flex size-9 items-center justify-center rounded-lg transition-colors",
                       config.bgColor
                     )}
                   >

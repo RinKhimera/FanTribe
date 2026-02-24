@@ -105,7 +105,7 @@ export function SuperuserStatsCard({
     <Card
       className={cn(
         "group relative overflow-hidden border-l-4 p-5",
-        "transition-all duration-300 ease-out",
+        "transition-[box-shadow,transform] duration-300 ease-out",
         "hover:shadow-lg hover:-translate-y-0.5",
         scheme.accentBorder,
         className

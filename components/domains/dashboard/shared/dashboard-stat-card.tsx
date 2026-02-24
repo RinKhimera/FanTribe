@@ -117,7 +117,7 @@ export function DashboardStatCard({
       <Card
         className={cn(
           "group relative h-full overflow-hidden border-l-4 p-5",
-          "transition-all duration-300 ease-out",
+          "transition-[box-shadow,transform] duration-300 ease-out",
           "hover:shadow-lg hover:-translate-y-0.5",
           scheme.accentBorder,
           className,
@@ -140,7 +140,7 @@ export function DashboardStatCard({
             </p>
 
             <div className="flex items-baseline gap-2">
-              <p className="text-foreground text-3xl font-bold tracking-tight">
+              <p className="text-foreground text-3xl font-bold tracking-tight tabular-nums">
                 {value}
               </p>
 
@@ -155,9 +155,9 @@ export function DashboardStatCard({
                   )}
                 >
                   {trend.isPositive ? (
-                    <TrendingUp className="h-3 w-3" />
+                    <TrendingUp aria-hidden="true" className="h-3 w-3" />
                   ) : (
-                    <TrendingDown className="h-3 w-3" />
+                    <TrendingDown aria-hidden="true" className="h-3 w-3" />
                   )}
                   {trend.value > 0 ? "+" : ""}
                   {trend.value}%
@@ -179,7 +179,7 @@ export function DashboardStatCard({
               scheme.iconColor,
             )}
           >
-            <Icon className="h-6 w-6" strokeWidth={2} />
+            <Icon aria-hidden="true" className="h-6 w-6" strokeWidth={2} />
           </div>
         </div>
 

@@ -142,12 +142,14 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
         type="file"
         className="hidden"
         accept="image/*"
+        aria-label="Choisir un fichier"
         onChange={handleFileChange}
         disabled={isUploading}
       />
       <Button
         variant="ghost"
         size="icon"
+        aria-label="Ajouter une image"
         className={cn(
           "size-9 rounded-full transition-colors",
           isUploading

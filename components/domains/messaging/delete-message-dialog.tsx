@@ -53,7 +53,7 @@ export const DeleteMessageDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-full bg-destructive/20">
-              <Trash2 size={16} className="text-destructive" />
+              <Trash2 size={16} className="text-destructive" aria-hidden="true" />
             </div>
             Supprimer le message
           </DialogTitle>
@@ -62,6 +62,7 @@ export const DeleteMessageDialog = ({
               <AlertTriangle
                 size={18}
                 className="mt-0.5 shrink-0 text-amber-500"
+                aria-hidden="true"
               />
               <div className="space-y-1 text-sm">
                 <span className="block font-medium text-amber-500">

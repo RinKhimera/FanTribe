@@ -126,7 +126,7 @@ export const ConversationContent = () => {
               className="absolute inset-0 rounded-full border-2 border-amber-500/20 border-t-amber-500"
             />
           </div>
-          <span className="text-sm text-muted-foreground">Chargement...</span>
+          <span className="text-sm text-muted-foreground">Chargement…</span>
         </motion.div>
       </div>
     )
@@ -155,6 +155,7 @@ export const ConversationContent = () => {
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Retour"
               className="size-8 lg:hidden"
               onClick={() => router.push("/messages")}
             >
@@ -166,9 +167,10 @@ export const ConversationContent = () => {
               href={`/${otherParticipant?.username}`}
               className="relative"
             >
-              <Avatar className="size-10 ring-2 ring-white/10 transition-all hover:ring-amber-500/30">
+              <Avatar className="size-10 ring-2 ring-white/10 transition-shadow hover:ring-amber-500/30">
                 <AvatarImage
                   src={otherParticipant?.image}
+                  alt=""
                   className="object-cover"
                 />
                 <AvatarFallback className="bg-linear-to-br from-amber-500/20 to-orange-500/20 text-sm">
@@ -223,6 +225,7 @@ export const ConversationContent = () => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    aria-label="Envoyer un pourboire"
                     className="size-8 text-muted-foreground transition-colors hover:text-amber-500"
                   >
                     <Coins size={18} />
@@ -235,6 +238,7 @@ export const ConversationContent = () => {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Plus d'options"
                   className="size-8 text-muted-foreground hover:text-foreground"
                 >
                   <MoreVertical size={18} />

@@ -187,6 +187,7 @@ export const TipDialog = ({
                 <AvatarImage
                   src={creator.image}
                   className="object-cover"
+                  alt=""
                 />
                 <AvatarFallback className="bg-muted text-xl">
                   {creator.name?.charAt(0) || "?"}
@@ -197,7 +198,7 @@ export const TipDialog = ({
                 animate={{ scale: [1, 1.12, 1] }}
                 transition={{ duration: 2.5, repeat: Infinity }}
               >
-                <Coins className="size-3.5 text-white" />
+                <Coins className="size-3.5 text-white" aria-hidden="true" />
               </motion.div>
             </div>
           </motion.div>
@@ -232,7 +233,7 @@ export const TipDialog = ({
                 type="button"
                 onClick={() => handleSelectPreset(preset)}
                 className={cn(
-                  "rounded-xl border p-2.5 text-center text-sm font-semibold transition-all",
+                  "rounded-xl border p-2.5 text-center text-sm font-semibold transition-colors",
                   !isCustom && selectedAmount === preset
                     ? "border-amber-500/60 bg-amber-500/10 text-amber-500 shadow-sm shadow-amber-500/10"
                     : "border-white/10 bg-white/5 text-muted-foreground hover:border-amber-500/30 hover:text-foreground",
@@ -246,7 +247,7 @@ export const TipDialog = ({
               type="button"
               onClick={() => setIsCustom(true)}
               className={cn(
-                "rounded-xl border p-2.5 text-center text-sm font-semibold transition-all",
+                "rounded-xl border p-2.5 text-center text-sm font-semibold transition-colors",
                 isCustom
                   ? "border-amber-500/60 bg-amber-500/10 text-amber-500 shadow-sm shadow-amber-500/10"
                   : "border-white/10 bg-white/5 text-muted-foreground hover:border-amber-500/30 hover:text-foreground",
@@ -275,6 +276,9 @@ export const TipDialog = ({
                     max={TIP_MAX}
                     className="pr-14 text-center text-lg font-semibold"
                     autoFocus
+                    aria-label="Montant personnalisé"
+                    name="customAmount"
+                    inputMode="numeric"
                   />
                   <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium">
                     XAF
@@ -300,6 +304,8 @@ export const TipDialog = ({
               maxLength={TIP_MESSAGE_MAX}
               className="min-h-[60px] resize-none text-sm"
               rows={2}
+              aria-label="Message optionnel"
+              name="tipMessage"
             />
             {tipMessage.length > 0 && (
               <p className="text-muted-foreground mt-1 text-right text-xs">
@@ -344,7 +350,7 @@ export const TipDialog = ({
                 {isCinetpayPending ? (
                   <span className="flex items-center gap-2">
                     <LoaderCircle className="size-5 animate-spin" />
-                    Traitement...
+                    Traitement\u2026
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
@@ -373,7 +379,7 @@ export const TipDialog = ({
                 {isStripePending ? (
                   <span className="flex items-center gap-2">
                     <LoaderCircle className="size-5 animate-spin" />
-                    Redirection...
+                    Redirection\u2026
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
@@ -387,7 +393,7 @@ export const TipDialog = ({
 
           {/* Footer */}
           <div className="text-muted-foreground flex items-center justify-center gap-2 text-xs">
-            <Shield className="size-3.5" />
+            <Shield className="size-3.5" aria-hidden="true" />
             <span>Paiement sécurisé</span>
             <span>•</span>
             <span>Privé</span>

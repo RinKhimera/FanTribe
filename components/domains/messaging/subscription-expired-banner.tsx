@@ -74,9 +74,9 @@ export const SubscriptionExpiredBanner = ({
           )}
         >
           {isWarning ? (
-            <Clock size={16} className="text-amber-500" />
+            <Clock size={16} className="text-amber-500" aria-hidden="true" />
           ) : (
-            <AlertCircle size={16} className="text-destructive" />
+            <AlertCircle size={16} className="text-destructive" aria-hidden="true" />
           )}
         </div>
 

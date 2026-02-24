@@ -38,7 +38,7 @@ export const AdultContentToggle = ({
           onClick={() => onChange(!value)}
           className={cn(
             "size-9 rounded-full",
-            "transition-all duration-200",
+            "transition-colors duration-200",
             !value && [
               "text-muted-foreground",
               "hover:bg-orange-500/10 hover:text-orange-500",
@@ -52,7 +52,7 @@ export const AdultContentToggle = ({
         >
           <Flame
             className={cn(
-              "size-5 transition-all duration-200",
+              "size-5 transition-colors duration-200",
               value && "drop-shadow-[0_0_4px_rgba(249,115,22,0.5)]",
             )}
           />

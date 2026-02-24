@@ -147,7 +147,7 @@ export const EditProfileForm = ({
               {isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  <span>Enregistrement...</span>
+                  <span>Enregistrement…</span>
                 </>
               ) : isOnboarding ? (
                 <>

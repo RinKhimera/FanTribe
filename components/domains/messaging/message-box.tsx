@@ -92,7 +92,7 @@ export const MessageBox = ({
         <div className="group flex max-w-[85%] gap-2 sm:max-w-[75%]">
           {/* Avatar */}
           <Avatar className="size-8 shrink-0 ring-1 ring-white/10">
-            <AvatarImage src={message.sender?.image} className="object-cover" />
+            <AvatarImage src={message.sender?.image} alt="" className="object-cover" />
             <AvatarFallback className="bg-linear-to-br from-amber-500/20 to-orange-500/20 text-xs">
               {message.sender?.name?.charAt(0) ?? "?"}
             </AvatarFallback>
@@ -295,7 +295,7 @@ const MediaItem = ({
           width={isGrid ? 200 : 300}
           height={isGrid ? 200 : 300}
           className={cn(
-            "cursor-pointer object-cover transition-all",
+            "cursor-pointer object-cover transition-opacity",
             isGrid ? "aspect-square" : "max-h-80 w-auto"
           )}
           onClick={onClick}
@@ -314,7 +314,7 @@ const MediaItem = ({
           className="max-h-80 w-full rounded-lg"
         />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity">
-          <Play size={48} className="text-white" fill="white" />
+          <Play size={48} className="text-white" fill="white" aria-hidden="true" />
         </div>
       </div>
     )
@@ -336,7 +336,7 @@ const MediaItem = ({
       className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 transition-colors hover:bg-white/10"
     >
       <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500/20">
-        <FileText size={20} className="text-amber-500" />
+        <FileText size={20} className="text-amber-500" aria-hidden="true" />
       </div>
       <span className="text-sm">Document</span>
     </Link>
@@ -359,7 +359,7 @@ const ReplyPreview = ({
         alignRight && "ml-auto"
       )}
     >
-      <Reply size={12} className="shrink-0 text-amber-500" />
+      <Reply size={12} className="shrink-0 text-amber-500" aria-hidden="true" />
       <span className="truncate max-w-[200px]">
         {reply.content || "[Message supprimé]"}
       </span>
@@ -391,7 +391,7 @@ const MessageFooter = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="flex cursor-help items-center gap-0.5 text-amber-500/70">
-                <EyeOff size={10} />
+                <EyeOff size={10} aria-hidden="true" />
               </span>
             </TooltipTrigger>
             <TooltipContent
@@ -406,7 +406,7 @@ const MessageFooter = ({
       )}
       {isEdited && (
         <span className="flex items-center gap-0.5 text-amber-500/70">
-          <Pencil size={9} />
+          <Pencil size={9} aria-hidden="true" />
           modifié
         </span>
       )}
@@ -507,7 +507,7 @@ const DeletedMessage = ({
             : "rounded-tl-sm border-white/10 text-muted-foreground/50"
         )}
       >
-        <Trash2 size={14} />
+        <Trash2 size={14} aria-hidden="true" />
         Message supprimé
       </div>
     </motion.div>

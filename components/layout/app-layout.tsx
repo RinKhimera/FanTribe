@@ -56,6 +56,12 @@ export const AppLayout = ({
 
   return (
     <div className={cn("relative min-h-screen w-full", className)}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"
+      >
+        Aller au contenu principal
+      </a>
       <div
         className={cn(
           "mx-auto flex min-h-screen w-full gap-(--layout-gap)",
@@ -67,6 +73,7 @@ export const AppLayout = ({
 
         {/* Zone de contenu principal - flex-1 pour prendre l'espace restant */}
         <main
+          id="main-content"
           className={cn(
             "flex min-h-screen flex-1 flex-col",
             // Sur mobile, prend toute la largeur

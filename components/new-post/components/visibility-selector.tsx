@@ -60,7 +60,7 @@ export const VisibilitySelector = ({
                 "size-9 rounded-full",
                 "text-muted-foreground",
                 "hover:bg-primary/10 hover:text-primary",
-                "transition-all duration-200",
+                "transition-colors duration-200",
               )}
               aria-label={current.label}
             >

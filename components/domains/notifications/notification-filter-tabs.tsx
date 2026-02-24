@@ -133,7 +133,7 @@ export const NotificationFilterTabs = ({
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "glass-button flex items-center gap-2.5 rounded-xl px-4 py-2.5 transition-all",
+          "glass-button flex items-center gap-2.5 rounded-xl px-4 py-2.5 transition-colors",
           "border border-white/10 hover:border-white/20",
           isOpen && "ring-primary/30 border-primary/50 ring-2",
         )}
@@ -180,7 +180,7 @@ export const NotificationFilterTabs = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.03, duration: 0.15 }}
                   className={cn(
-                    "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all",
+                    "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
                     isActive
                       ? "bg-primary/10 text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",

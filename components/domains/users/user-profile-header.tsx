@@ -31,9 +31,10 @@ export const UserProfileHeader = ({
               variant="ghost"
               size="icon"
               className="glass-button size-9 rounded-full"
+              aria-label="Paramètres"
             >
               <Link href={`/${currentUser?.username}/edit`}>
-                <Settings className="size-4" />
+                <Settings className="size-4" aria-hidden="true" />
               </Link>
             </Button>
           )

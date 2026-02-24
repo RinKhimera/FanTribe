@@ -20,6 +20,7 @@ export function PostComposerActions() {
         accept={state.fileAccept}
         onChange={actions.handleFileSelect}
         className="hidden"
+        aria-label="Choisir un fichier"
       />
 
       {/* Media Upload Button */}

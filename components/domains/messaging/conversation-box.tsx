@@ -66,7 +66,7 @@ export const ConversationBox = ({
 
     // Texte tronqué
     return conversation.lastMessagePreview.length > 40
-      ? `${conversation.lastMessagePreview.slice(0, 40)}...`
+      ? `${conversation.lastMessagePreview.slice(0, 40)}…`
       : conversation.lastMessagePreview
   }
 
@@ -76,7 +76,7 @@ export const ConversationBox = ({
       whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "relative flex cursor-pointer items-center gap-3 border-b border-white/5 p-4 transition-all",
+        "relative flex cursor-pointer items-center gap-3 border-b border-white/5 p-4 transition-[background-color,opacity]",
         isSelected && "bg-white/5",
         conversation.isLocked && "opacity-60"
       )}
@@ -102,12 +102,13 @@ export const ConversationBox = ({
       <div className="relative">
         <Avatar
           className={cn(
-            "size-12 ring-2 transition-all",
+            "size-12 ring-2 transition-shadow",
             conversation.hasUnread ? "ring-amber-500/30" : "ring-white/5"
           )}
         >
           <AvatarImage
             src={conversation.otherParticipant?.image}
+            alt=""
             className="object-cover"
           />
           <AvatarFallback className="bg-linear-to-br from-amber-500/20 to-orange-500/20 text-sm font-medium">

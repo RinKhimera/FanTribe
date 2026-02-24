@@ -232,7 +232,7 @@ export function ImageCropDialog({
                     whileTap={{ scale: 0.96 }}
                     onClick={() => handlePresetChange(preset)}
                     className={cn(
-                      "rounded-full px-3 py-1 text-xs font-medium transition-all duration-200",
+                      "rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200",
                       isActive
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "glass-button text-muted-foreground hover:text-foreground"
