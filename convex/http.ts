@@ -11,12 +11,12 @@ import {
   deleteVideoFromBunny,
   extractVideoGuidFromUrl,
   generateStoragePath,
+  getEmbedUrl,
   getExtensionFromMimeType,
   getMultipleVideos,
   getOrCreateUserCollection,
   getStreamAccessKey,
   getStreamLibraryId,
-  getEmbedUrl,
   getVideoThumbnailUrl,
   uploadToBunny,
   validateMediaFile,
@@ -108,8 +108,8 @@ async function validateRequest(req: Request): Promise<WebhookEvent | null> {
 // ============================================================================
 
 const ALLOWED_ORIGINS = [
-  "https://fantribe.app",
-  "https://www.fantribe.app",
+  "https://fantribe.io",
+  "https://www.fantribe.io",
   "http://localhost:3000",
 ]
 
@@ -172,7 +172,8 @@ http.route({
 
       // Generer le chemin de stockage
       const extension = getExtensionFromMimeType(file.type)
-      const storagePath = fileName || generateStoragePath(identity.subject, extension)
+      const storagePath =
+        fileName || generateStoragePath(identity.subject, extension)
 
       // Upload vers Bunny Storage
       const fileBuffer = await file.arrayBuffer()
@@ -222,7 +223,10 @@ http.route({
 
     try {
       const body = await request.json()
-      const { fileName, userId } = body as { fileName?: string; userId?: string }
+      const { fileName, userId } = body as {
+        fileName?: string
+        userId?: string
+      }
 
       if (!fileName || !userId) {
         return jsonResponse(
@@ -302,12 +306,14 @@ http.route({
 
       if (type === "video") {
         // Extraire le GUID si on recoit une URL
-        const videoId = mediaUrl
-          ? extractVideoGuidFromUrl(mediaUrl)
-          : mediaId
+        const videoId = mediaUrl ? extractVideoGuidFromUrl(mediaUrl) : mediaId
 
         if (!videoId) {
-          return jsonResponse({ error: "mediaId ou mediaUrl requis pour video" }, 400, request)
+          return jsonResponse(
+            { error: "mediaId ou mediaUrl requis pour video" },
+            400,
+            request,
+          )
         }
 
         success = await deleteVideoFromBunny(videoId)
@@ -321,7 +327,11 @@ http.route({
         }
 
         if (!storagePath) {
-          return jsonResponse({ error: "mediaId ou mediaUrl requis pour image" }, 400, request)
+          return jsonResponse(
+            { error: "mediaId ou mediaUrl requis pour image" },
+            400,
+            request,
+          )
         }
 
         success = await deleteFromBunny(storagePath)
@@ -330,7 +340,11 @@ http.route({
       return jsonResponse({ success }, success ? 200 : 500, request)
     } catch (error) {
       console.error("Delete error:", error)
-      return jsonResponse({ error: "Erreur lors de la suppression" }, 500, request)
+      return jsonResponse(
+        { error: "Erreur lors de la suppression" },
+        500,
+        request,
+      )
     }
   }),
 })
@@ -360,7 +374,11 @@ http.route({
       const body = await request.json()
       const { videoGuids } = body as { videoGuids?: string[] }
 
-      if (!videoGuids || !Array.isArray(videoGuids) || videoGuids.length === 0) {
+      if (
+        !videoGuids ||
+        !Array.isArray(videoGuids) ||
+        videoGuids.length === 0
+      ) {
         return jsonResponse({ error: "videoGuids array requis" }, 400, request)
       }
 
