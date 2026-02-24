@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
+import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 type UserInfoPopoverProps = {
@@ -185,7 +186,7 @@ export const UserInfoPopover = ({
                     {mySubscribersStats?.subscribersCount || 0}
                   </span>
                   <span className="text-muted-foreground">
-                    fan{(mySubscribersStats?.subscribersCount || 0) !== 1 ? "s" : ""}
+                    {pluralize(mySubscribersStats?.subscribersCount || 0, "fan")}
                   </span>
                 </div>
                 <div className="bg-border/50 h-4 w-px" />
@@ -194,7 +195,7 @@ export const UserInfoPopover = ({
                     {mySubsStats?.creatorsCount || 0}
                   </span>
                   <span className="text-muted-foreground">
-                    abonnement{(mySubsStats?.creatorsCount || 0) !== 1 ? "s" : ""}
+                    {pluralize(mySubsStats?.creatorsCount || 0, "abonnement")}
                   </span>
                 </div>
               </>
@@ -205,7 +206,7 @@ export const UserInfoPopover = ({
                     {mySubsStats?.creatorsCount || 0}
                   </span>
                   <span className="text-muted-foreground">
-                    abonnement{(mySubsStats?.creatorsCount || 0) !== 1 ? "s" : ""}
+                    {pluralize(mySubsStats?.creatorsCount || 0, "abonnement")}
                   </span>
                 </div>
                 <div className="bg-border/50 h-4 w-px" />

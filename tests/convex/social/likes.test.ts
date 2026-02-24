@@ -283,7 +283,7 @@ describe("likes", () => {
       expect(result).toHaveLength(1)
       expect(result[0]._id).toBeDefined()
       expect(result[0].user).toBeDefined()
-      expect(result[0].user.name).toBe("Test User")
+      expect(result[0].user!.name).toBe("Test User")
     })
   })
 })

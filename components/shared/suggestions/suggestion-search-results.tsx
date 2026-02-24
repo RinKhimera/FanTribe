@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { Search, Loader2 } from "lucide-react"
 import { SuggestionCard } from "./suggestion-card"
 import { UserProps } from "@/types"
+import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 interface SuggestionSearchResultsProps {
@@ -150,7 +151,7 @@ export const SuggestionSearchResults = ({
             transition={{ delay: 0.4 }}
             className="text-xs text-muted-foreground text-center pt-2"
           >
-            {results.length} resultat{results.length > 1 ? "s" : ""} trouve{results.length > 1 ? "s" : ""}
+            {results.length} {pluralize(results.length, "resultat")} {pluralize(results.length, "trouve")}
           </motion.p>
         </motion.div>
       )}

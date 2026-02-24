@@ -20,35 +20,27 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
-import { Doc, Id } from "@/convex/_generated/dataModel"
 import { heartPulseVariants, bookmarkVariants } from "@/lib/animations"
 import { logger } from "@/lib/config"
 import { cn } from "@/lib/utils"
+import { usePostCard } from "./post-card-context"
 
-type PostActionsProps = {
-  postId: Id<"posts">
-  postUrl: string
-  disabled?: boolean
-  isCommentsOpen: boolean
-  onToggleComments: () => void
-  /** Hide comment button (for post detail page) */
-  hideCommentButton?: boolean
-  /** Post author — needed for tip button */
-  author?: Doc<"users">
-  /** Current user ID — to hide tip on own posts */
-  currentUserId?: Id<"users">
-}
+export const PostActions = () => {
+  const {
+    post,
+    postUrl,
+    canViewMedia,
+    isCommentsOpen,
+    toggleComments,
+    isDetailView,
+    currentUser,
+  } = usePostCard()
 
-export const PostActions = ({
-  postId,
-  postUrl,
-  disabled = false,
-  isCommentsOpen,
-  onToggleComments,
-  hideCommentButton = false,
-  author,
-  currentUserId,
-}: PostActionsProps) => {
+  const postId = post._id
+  const author = post.author ?? undefined
+  const disabled = !canViewMedia
+  const hideCommentButton = isDetailView
+  const currentUserId = currentUser._id
   const [isLikePending, startLikeTransition] = useTransition()
   const [isBookmarkPending, startBookmarkTransition] = useTransition()
 
@@ -229,7 +221,7 @@ export const PostActions = ({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (!disabled) onToggleComments()
+                    if (!disabled) toggleComments()
                   }}
                   disabled={disabled}
                   className={cn(

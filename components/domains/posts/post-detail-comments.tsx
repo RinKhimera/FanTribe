@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import { logger } from "@/lib/config/logger"
+import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { premiumFeedItemVariants } from "@/lib/animations"
 
@@ -104,7 +105,7 @@ export const PostDetailComments = ({
       <div className="flex items-center gap-2 px-4 py-3 border-border/40 border-t">
         <MessageCircle className="size-4 text-muted-foreground" aria-hidden="true" />
         <span className="text-sm font-medium text-muted-foreground">
-          {totalComments} commentaire{totalComments !== 1 ? "s" : ""}
+          {totalComments} {pluralize(totalComments, "commentaire")}
         </span>
       </div>
 

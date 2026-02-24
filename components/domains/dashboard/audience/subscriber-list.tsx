@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { containerVariants, itemVariants } from "@/lib/animations"
-import { formatCustomTimeAgo } from "@/lib/formatters"
+import { formatCustomTimeAgo, pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { Doc } from "@/convex/_generated/dataModel"
 
@@ -53,7 +53,7 @@ export const SubscriberList = ({ subscribers, now }: SubscriberListProps) => {
             Liste des abonnés
           </CardTitle>
           <span className="text-muted-foreground text-sm">
-            {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
+            {filtered.length} {pluralize(filtered.length, "résultat")}
           </span>
         </div>
 
@@ -132,7 +132,7 @@ export const SubscriberList = ({ subscribers, now }: SubscriberListProps) => {
                         Depuis {formatCustomTimeAgo(sub._creationTime)}
                       </span>
                       {sub.renewalCount > 0 && (
-                        <span>• {sub.renewalCount} renouvellement{sub.renewalCount > 1 ? "s" : ""}</span>
+                        <span>• {sub.renewalCount} {pluralize(sub.renewalCount, "renouvellement")}</span>
                       )}
                     </div>
                   </div>

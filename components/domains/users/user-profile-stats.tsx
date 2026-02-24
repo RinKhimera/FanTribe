@@ -4,6 +4,7 @@ import { useQuery } from "convex/react"
 import { motion } from "motion/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { pluralize } from "@/lib/formatters"
 
 interface UserProfileStatsProps {
   userId: Id<"users">
@@ -42,14 +43,14 @@ export const UserProfileStats = ({ userId }: UserProfileStatsProps) => {
             <span className="text-foreground font-semibold tabular-nums">
               {formatNumber(stats.postsCount)}
             </span>{" "}
-            publication{stats.postsCount !== 1 ? "s" : ""}
+            {pluralize(stats.postsCount, "publication")}
           </span>
           <span className="text-muted-foreground/50">·</span>
           <span>
             <span className="text-foreground font-semibold tabular-nums">
               {formatNumber(stats.subscribersCount)}
             </span>{" "}
-            abonné{stats.subscribersCount !== 1 ? "s" : ""}
+            {pluralize(stats.subscribersCount, "abonné")}
           </span>
           <span className="text-muted-foreground/50">·</span>
           <span>
@@ -65,7 +66,7 @@ export const UserProfileStats = ({ userId }: UserProfileStatsProps) => {
             <span className="text-foreground font-semibold tabular-nums">
               {formatNumber(stats.subscriptionsCount)}
             </span>{" "}
-            abonnement{stats.subscriptionsCount !== 1 ? "s" : ""}
+            {pluralize(stats.subscriptionsCount, "abonnement")}
           </span>
           <span className="text-muted-foreground/50">·</span>
           <span>

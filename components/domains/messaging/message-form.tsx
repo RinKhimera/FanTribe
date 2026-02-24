@@ -40,7 +40,9 @@ export const MessageForm = ({
   const sendMessage = useMutation(api.messaging.sendMessage)
   const setTypingIndicator = useMutation(api.messaging.setTypingIndicator)
   const setTypingIndicatorRef = useRef(setTypingIndicator)
-  setTypingIndicatorRef.current = setTypingIndicator
+  useEffect(() => {
+    setTypingIndicatorRef.current = setTypingIndicator
+  }, [setTypingIndicator])
 
   // Extraire les permissions (fallback conservatif)
   // Note: isLocked indique l'état de la conversation, mais canSend détermine si l'utilisateur peut envoyer

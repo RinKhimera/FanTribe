@@ -2,6 +2,7 @@
 
 import { Lock, Sparkles, Image as ImageIcon, Film } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 interface LockedContentOverlayProps {
@@ -72,8 +73,7 @@ export const LockedContentOverlay = ({
                 <Film aria-hidden="true" className="size-3.5" />
               )}
               <span>
-                {mediaCount} {mediaCount === 1 ? "média" : "médias"} exclusif
-                {mediaCount > 1 ? "s" : ""}
+                {mediaCount} {pluralize(mediaCount, "média")} {pluralize(mediaCount, "exclusif")}
               </span>
             </div>
           )}

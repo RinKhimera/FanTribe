@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useAsyncHandler, useCurrentUser } from "@/hooks"
+import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 type BanFilter = "all" | "temporary" | "permanent"
@@ -161,8 +162,7 @@ export default function BansPage() {
               Gestion des bans
             </h1>
             <p className="text-sm text-muted-foreground">
-              {activeBansCount} ban{activeBansCount !== 1 ? "s" : ""} actif
-              {activeBansCount !== 1 ? "s" : ""}
+              {activeBansCount} {pluralize(activeBansCount, "ban actif", "bans actifs")}
             </p>
           </div>
         </div>

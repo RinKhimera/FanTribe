@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { pluralize } from "@/lib/formatters"
 import { type Currency, formatDualCurrency } from "@/lib/formatters/currency"
 
 interface Earner {
@@ -118,8 +119,7 @@ export function TopEarnersCard({
                     variant="outline"
                     className="hidden text-xs sm:inline-flex"
                   >
-                    {earner.transactionCount} transaction
-                    {earner.transactionCount > 1 ? "s" : ""}
+                    {earner.transactionCount} {pluralize(earner.transactionCount, "transaction")}
                   </Badge>
                 </div>
               </div>

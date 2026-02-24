@@ -54,6 +54,27 @@ export const MyProvider = ({ children }: { children: React.ReactNode }) => {
 // 3. Compose: <MyProvider><SubA /><SubB /></MyProvider>
 ```
 
+### Context Splitting (Large Providers)
+When a provider exceeds ~300 lines, split into focused sub-contexts. Keep a backward-compatible convenience hook:
+```typescript
+// 3 sub-contexts: Config (outer, stable) → Form → Media (inner, changes often)
+<ConfigContext.Provider value={config}>
+  <FormContext.Provider value={formValue}>
+    <MediaContext.Provider value={mediaValue}>
+      {children}
+    </MediaContext.Provider>
+  </FormContext.Provider>
+</ConfigContext.Provider>
+
+// Convenience hook assembles all 3 (100% backward compatible)
+export const useMyContext = () => {
+  const config = useConfig(); const form = useForm(); const media = useMedia()
+  return useMemo(() => ({ state: { ...form, ...media }, actions, config }), [config, form, media])
+}
+```
+**Nesting order**: least-changing context outermost → most-changing innermost (reduces re-renders).
+See `components/post-composer/` for real implementation with `usePostComposerForm`, `usePostComposerMedia`, `usePostComposerConfig`.
+
 ## State Machines (Explicit Modes)
 ```typescript
 // ❌ Boolean props create impossible states
@@ -62,6 +83,20 @@ export const MyProvider = ({ children }: { children: React.ReactNode }) => {
 // ✅ Explicit mode eliminates invalid states
 type DialogMode = "single" | "queue"
 <Dialog mode="queue" onSkip={...} />  // Only valid combinations
+```
+
+### Discriminated Union for Related State
+When 2-3 `useState` represent a single concept, use a discriminated union to eliminate impossible states:
+```typescript
+// ❌ 3 useState with implicit coupling
+const [selectedPreset, setSelectedPreset] = useState(1000)
+const [customInput, setCustomInput] = useState("")
+const [isCustom, setIsCustom] = useState(false)
+
+// ✅ Single discriminated union
+type Amount = { type: "preset"; value: number } | { type: "custom"; input: string }
+const [amount, setAmount] = useState<Amount>({ type: "preset", value: 1000 })
+const resolved = amount.type === "preset" ? amount.value : parseInt(amount.input, 10) || 0
 ```
 
 ## Forms (React Hook Form + Zod)
@@ -83,6 +118,15 @@ import { motion, AnimatePresence } from "motion/react"
 // Swap: <AnimatePresence mode="wait"><motion.div key={state} ...></AnimatePresence>
 // Duration: 150-300ms for UI transitions
 ```
+
+## Formatters (`lib/formatters/`)
+- **`formatCurrency(amount, currency)`** — XAF/USD formatting (see `lib/formatters/currency/`)
+- **`formatDate(date, format?)`** — French locale dates (see `lib/formatters/date/`)
+- **`pluralize(count, singular, plural?)`** — French pluralization. Auto-adds "s" or use explicit plural for irregulars:
+  ```typescript
+  pluralize(3, "abonné")                    // → "abonnés"
+  pluralize(1, "post exclusif", "posts exclusifs") // → "post exclusif"
+  ```
 
 ## Styling
 - `cn()` for conditional Tailwind classes: `cn("base", condition && "active")`
@@ -126,6 +170,19 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 // ❌ Don't use React.forwardRef() in React 19
 ```
 
+### React 19 Gotchas
+- **No ref mutation in render**: `ref.current = value` in the component body is a side effect. Wrap in `useEffect`:
+  ```typescript
+  const callbackRef = useRef(callback)
+  // ❌ callbackRef.current = callback  ← side effect in render
+  // ✅ useEffect(() => { callbackRef.current = callback }, [callback])
+  ```
+- **Hooks before early return**: All hooks must be called on every render. Use `"skip"` to disable queries instead of returning before hooks:
+  ```typescript
+  // ❌ if (!id) return null; const data = useQuery(api.foo, { id })
+  // ✅ const data = useQuery(api.foo, id ? { id } : "skip"); if (!id) return null
+  ```
+
 ## Hooks Reference
 
 | Hook | Purpose |
@@ -140,8 +197,12 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 | `useBunnyPlayerControl` | Bunny video player controls |
 | `useVideoMetadata` | Fetch Bunny video metadata |
 | `useKeyboardNavigation` | Keyboard nav in lists |
+| `useMessagesPagination` | Messages pagination + scroll (`{ conversationId }` → messages, hasMore, loadMore, scrollToBottom, refs) |
 | `useCinetpayPayment` | CinetPay payment processing |
 | `useSuperuserFilters` | Admin dashboard filter state |
+
+## PostCard Context
+`components/shared/post-card/` uses `PostCardContext` to eliminate prop drilling. Sub-components (`PostHeader`, `PostActions`) consume `usePostCard()`. `CommentSection` supports dual-mode: `useOptionalPostCard()` (returns null for standalone usage) + optional props fallback.
 
 ## Navigation Gotcha
 Nav link filters (`creatorOnlyLinks`, `superuserOnlyLinks`) exist in BOTH `components/layout/` AND `components/shared/` (left-sidebar, mobile-menu/mobile-navigation). Update **all 4 files** when changing nav links or visibility rules.

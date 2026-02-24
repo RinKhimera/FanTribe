@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { cardHoverVariants } from "@/lib/animations"
-import { formatCustomTimeAgo } from "@/lib/formatters"
+import { formatCustomTimeAgo, pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 type SubscriptionEntry = {
@@ -111,13 +111,13 @@ export const SubscriptionCard = ({
                 {renewalCount > 0 && (
                   <span className="flex items-center gap-1">
                     <RefreshCw className="size-3" aria-hidden="true" />
-                    {renewalCount} renouvellement{renewalCount > 1 ? "s" : ""}
+                    {renewalCount} {pluralize(renewalCount, "renouvellement")}
                   </span>
                 )}
                 {creatorExclusivePostCount > 0 && (
                   <span className="flex items-center gap-1">
                     <Lock className="size-3" aria-hidden="true" />
-                    {creatorExclusivePostCount} post{creatorExclusivePostCount > 1 ? "s" : ""} exclusif{creatorExclusivePostCount > 1 ? "s" : ""}
+                    {creatorExclusivePostCount} {pluralize(creatorExclusivePostCount, "post exclusif", "posts exclusifs")}
                   </span>
                 )}
               </div>
@@ -125,7 +125,7 @@ export const SubscriptionCard = ({
               {/* Expiry warning */}
               {isExpiringSoon && (
                 <p className="mt-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                  Expire dans {daysUntilExpiry} jour{daysUntilExpiry > 1 ? "s" : ""}
+                  Expire dans {daysUntilExpiry} {pluralize(daysUntilExpiry, "jour")}
                 </p>
               )}
 

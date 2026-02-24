@@ -1,5 +1,5 @@
-import { convexTest } from "convex-test"
 import { register as registerRateLimiter } from "@convex-dev/rate-limiter/test"
+import { convexTest } from "convex-test"
 import { describe, expect, it } from "vitest"
 import { api, internal } from "../../../convex/_generated/api"
 import schema from "../../../convex/schema"
@@ -243,7 +243,7 @@ describe("messaging", () => {
       const t = convexTest(schema)
       registerRateLimiter(t)
 
-      const { creatorId, conversationId } = await t.run(async (ctx) => {
+      const { conversationId } = await t.run(async (ctx) => {
         const creatorId = await insertCreator(ctx)
         const userId = await insertUser(ctx)
         await insertSubscription(ctx, {
@@ -698,7 +698,9 @@ describe("messaging", () => {
           )
           .collect()
       })
-      expect(messages.some((m) => m.systemMessageType === "conversation_locked")).toBe(true)
+      expect(
+        messages.some((m) => m.systemMessageType === "conversation_locked"),
+      ).toBe(true)
     })
 
     it("should unlock conversation on subscription renewal", async () => {
@@ -739,7 +741,9 @@ describe("messaging", () => {
           )
           .collect()
       })
-      expect(messages.some((m) => m.systemMessageType === "conversation_unlocked")).toBe(true)
+      expect(
+        messages.some((m) => m.systemMessageType === "conversation_unlocked"),
+      ).toBe(true)
     })
   })
 })

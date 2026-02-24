@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { containerVariants, itemVariants } from "@/lib/animations"
-import { formatCurrency } from "@/lib/formatters"
+import { formatCurrency, pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 type TopFan = {
@@ -103,8 +103,7 @@ export const TopFansList = ({ fans }: TopFansListProps) => {
                   </div>
 
                   <span className="text-muted-foreground shrink-0 text-xs">
-                    {fan.renewalCount} renouvellement
-                    {fan.renewalCount > 1 ? "s" : ""}
+                    {fan.renewalCount} {pluralize(fan.renewalCount, "renouvellement")}
                   </span>
                 </motion.div>
               )

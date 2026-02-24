@@ -10,6 +10,7 @@ import { RevenueTrendsChart } from "./revenue-trends-chart"
 import { CommissionInfo } from "./commission-info"
 import { containerVariants } from "@/lib/animations"
 import { api } from "@/convex/_generated/api"
+import { pluralize } from "@/lib/formatters"
 
 type RevenueContentProps = {
   preloadedEarnings: Preloaded<typeof api.transactions.getCreatorEarnings>
@@ -61,14 +62,14 @@ export const RevenueContent = ({
         <DashboardStatCard
           title="Total net gagné"
           value={`${formatAmount(earnings.totalNetEarned)} XAF`}
-          subtitle={`${earnings.transactionCount} transaction${earnings.transactionCount > 1 ? "s" : ""} au total`}
+          subtitle={`${earnings.transactionCount} ${pluralize(earnings.transactionCount, "transaction")} au total`}
           icon={Wallet}
           colorScheme="blue"
         />
         <DashboardStatCard
           title="Prochain paiement"
           value={`${formatAmount(earnings.nextPaymentNet)} XAF`}
-          subtitle={`${earnings.pendingTransactionCount} transaction${earnings.pendingTransactionCount > 1 ? "s" : ""} en attente`}
+          subtitle={`${earnings.pendingTransactionCount} ${pluralize(earnings.pendingTransactionCount, "transaction")} en attente`}
           icon={DollarSign}
           colorScheme="green"
         />
@@ -83,7 +84,7 @@ export const RevenueContent = ({
           <DashboardStatCard
             title="Pourboires reçus"
             value={`${formatAmount(tipEarnings.totalTipsNet)} XAF`}
-            subtitle={`${tipEarnings.tipCount} pourboire${tipEarnings.tipCount > 1 ? "s" : ""} (net)`}
+            subtitle={`${tipEarnings.tipCount} ${pluralize(tipEarnings.tipCount, "pourboire")} (net)`}
             icon={Coins}
             colorScheme="amber"
           />

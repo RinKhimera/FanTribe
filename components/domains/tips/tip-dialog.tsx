@@ -68,10 +68,18 @@ export const TipDialog = ({
   const isControlled = controlledIsOpen !== undefined
   const isOpen = isControlled ? controlledIsOpen : internalOpen
 
-  const [selectedAmount, setSelectedAmount] = useState<number>(1000)
-  const [customAmount, setCustomAmount] = useState("")
-  const [isCustom, setIsCustom] = useState(false)
+  type TipAmount =
+    | { type: "preset"; value: number }
+    | { type: "custom"; input: string }
+
+  const [amount, setAmount] = useState<TipAmount>({ type: "preset", value: 1000 })
   const [tipMessage, setTipMessage] = useState("")
+
+  const resolvedAmount = amount.type === "preset"
+    ? amount.value
+    : parseInt(amount.input, 10) || 0
+  const isCustom = amount.type === "custom"
+  const isValidAmount = resolvedAmount >= TIP_MIN && resolvedAmount <= TIP_MAX
 
   const { processPayment, isPending: isCinetpayPending } =
     useCinetpayPayment()
@@ -84,35 +92,17 @@ export const TipDialog = ({
       setInternalOpen(open)
     }
     if (!open) {
-      setSelectedAmount(1000)
-      setCustomAmount("")
-      setIsCustom(false)
+      setAmount({ type: "preset", value: 1000 })
       setTipMessage("")
     }
   }
 
-  const getAmount = (): number => {
-    if (isCustom) {
-      const parsed = parseInt(customAmount, 10)
-      return isNaN(parsed) ? 0 : parsed
-    }
-    return selectedAmount
-  }
-
-  const isValidAmount = (): boolean => {
-    const amount = getAmount()
-    return amount >= TIP_MIN && amount <= TIP_MAX
-  }
-
-  const handleSelectPreset = (amount: number) => {
-    setSelectedAmount(amount)
-    setIsCustom(false)
-    setCustomAmount("")
+  const handleSelectPreset = (preset: number) => {
+    setAmount({ type: "preset", value: preset })
   }
 
   const handleCinetPayTip = () => {
-    if (!currentUser || !creator || !isValidAmount()) return
-    const amount = getAmount()
+    if (!currentUser || !creator || !isValidAmount) return
 
     const username = creator.username || creator.name
 
@@ -120,8 +110,8 @@ export const TipDialog = ({
       creatorId: creator._id,
       subscriberId: currentUser._id,
       creatorUsername: username,
-      amount,
-      description: `Pourboire pour ${username} - ${amount} XAF`,
+      amount: resolvedAmount,
+      description: `Pourboire pour ${username} - ${resolvedAmount} XAF`,
       customFields: {
         type: "tip",
         senderId: currentUser._id,
@@ -134,8 +124,7 @@ export const TipDialog = ({
   }
 
   const handleStripeTip = () => {
-    if (!currentUser || !creator || !isValidAmount()) return
-    const amount = getAmount()
+    if (!currentUser || !creator || !isValidAmount) return
 
     startStripeTransition(async () => {
       try {
@@ -144,7 +133,7 @@ export const TipDialog = ({
           senderId: currentUser._id,
           creatorId: creator._id,
           creatorUsername: stripeUsername,
-          amount,
+          amount: resolvedAmount,
           tipMessage: tipMessage || undefined,
           context,
           postId,
@@ -162,7 +151,6 @@ export const TipDialog = ({
   }
 
   const isPending = isCinetpayPending || isStripePending
-  const amount = getAmount()
 
   const formatXAF = (n: number) =>
     new Intl.NumberFormat("fr-FR").format(n)
@@ -234,7 +222,7 @@ export const TipDialog = ({
                 onClick={() => handleSelectPreset(preset)}
                 className={cn(
                   "rounded-xl border p-2.5 text-center text-sm font-semibold transition-colors",
-                  !isCustom && selectedAmount === preset
+                  amount.type === "preset" && amount.value === preset
                     ? "border-amber-500/60 bg-amber-500/10 text-amber-500 shadow-sm shadow-amber-500/10"
                     : "border-white/10 bg-white/5 text-muted-foreground hover:border-amber-500/30 hover:text-foreground",
                 )}
@@ -245,7 +233,7 @@ export const TipDialog = ({
             <motion.button
               whileTap={{ scale: 0.95 }}
               type="button"
-              onClick={() => setIsCustom(true)}
+              onClick={() => setAmount({ type: "custom", input: "" })}
               className={cn(
                 "rounded-xl border p-2.5 text-center text-sm font-semibold transition-colors",
                 isCustom
@@ -270,8 +258,8 @@ export const TipDialog = ({
                   <Input
                     type="number"
                     placeholder={`Min. ${formatXAF(TIP_MIN)} XAF`}
-                    value={customAmount}
-                    onChange={(e) => setCustomAmount(e.target.value)}
+                    value={amount.type === "custom" ? amount.input : ""}
+                    onChange={(e) => setAmount({ type: "custom", input: e.target.value })}
                     min={TIP_MIN}
                     max={TIP_MAX}
                     className="pr-14 text-center text-lg font-semibold"
@@ -284,7 +272,7 @@ export const TipDialog = ({
                     XAF
                   </span>
                 </div>
-                {customAmount && parseInt(customAmount) < TIP_MIN && (
+                {amount.type === "custom" && amount.input && parseInt(amount.input) < TIP_MIN && (
                   <p className="text-destructive mt-1.5 text-xs">
                     Minimum {formatXAF(TIP_MIN)} XAF
                   </p>
@@ -316,16 +304,16 @@ export const TipDialog = ({
 
           {/* Amount display */}
           <AnimatePresence mode="wait">
-            {isValidAmount() && (
+            {isValidAmount && (
               <motion.div
-                key={amount}
+                key={resolvedAmount}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="text-center"
               >
                 <div className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-3xl font-bold text-transparent">
-                  {formatXAF(amount)} XAF
+                  {formatXAF(resolvedAmount)} XAF
                 </div>
               </motion.div>
             )}
@@ -344,7 +332,7 @@ export const TipDialog = ({
                   { "pointer-events-none opacity-70": isPending },
                 )}
                 onClick={handleCinetPayTip}
-                disabled={isPending || !isValidAmount()}
+                disabled={isPending || !isValidAmount}
                 size="lg"
               >
                 {isCinetpayPending ? (
@@ -373,7 +361,7 @@ export const TipDialog = ({
                   { "pointer-events-none opacity-70": isPending },
                 )}
                 onClick={handleStripeTip}
-                disabled={isPending || !isValidAmount()}
+                disabled={isPending || !isValidAmount}
                 size="lg"
               >
                 {isStripePending ? (

@@ -14,11 +14,12 @@ import { Doc, Id } from "@/convex/_generated/dataModel"
 import { commentSectionVariants, emojiPopVariants } from "@/lib/animations"
 import { logger } from "@/lib/config/logger"
 import { cn } from "@/lib/utils"
+import { useOptionalPostCard } from "./post-card/post-card-context"
 
 type CommentSectionProps = {
-  postId: Id<"posts">
-  currentUser: Doc<"users">
-  isOpen: boolean
+  postId?: Id<"posts">
+  currentUser?: Doc<"users">
+  isOpen?: boolean
   disabled?: boolean
   onClose?: () => void
 }
@@ -37,33 +38,40 @@ const EMOJIS = [
   "🥰",
 ]
 
-export const CommentSection = ({
-  postId,
-  currentUser,
-  isOpen,
-  disabled = false,
-  onClose,
-}: CommentSectionProps) => {
+export const CommentSection = (props: CommentSectionProps) => {
+  const cardContext = useOptionalPostCard()
+
+  const postId = props.postId ?? cardContext?.post._id
+  const currentUser = props.currentUser ?? cardContext?.currentUser
+  const isOpen = props.isOpen ?? cardContext?.isCommentsOpen ?? false
+  const disabled = props.disabled ?? (cardContext ? !cardContext.canViewMedia : false)
+  const onClose = props.onClose ?? cardContext?.toggleComments
+
   const [commentText, setCommentText] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAllComments, setShowAllComments] = useState(false)
 
   const addComment = useMutation(api.comments.addComment)
 
-  const recentComments = useQuery(api.comments.getRecentComments, {
-    postId,
-    limit: 3,
-  })
+  const recentComments = useQuery(
+    api.comments.getRecentComments,
+    postId ? { postId, limit: 3 } : "skip",
+  )
 
   const allComments = useQuery(
     api.comments.listPostComments,
-    showAllComments ? { postId } : "skip",
+    postId && showAllComments ? { postId } : "skip",
   )
 
-  const commentCount = useQuery(api.comments.countForPost, { postId })
+  const commentCount = useQuery(
+    api.comments.countForPost,
+    postId ? { postId } : "skip",
+  )
   const totalComments = commentCount?.count || 0
 
   const comments = showAllComments ? allComments : recentComments
+
+  if (!postId || !currentUser) return null
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -4,6 +4,7 @@ import { POST_CROP_PRESETS } from "@/components/shared/image-crop/aspect-ratio-p
 import { ImageCropDialog } from "@/components/shared/image-crop/image-crop-dialog"
 import { MediaPreviewGrid } from "@/components/new-post/components/media-preview-grid"
 import { UploadProgress } from "@/components/new-post/components/upload-progress"
+import { pluralize } from "@/lib/formatters"
 import { usePostComposer } from "./post-composer-context"
 
 export function PostComposerMedia() {
@@ -44,7 +45,7 @@ export function PostComposerMedia() {
           presets={POST_CROP_PRESETS}
           title={
             remainingCount > 1
-              ? `Recadrer l'image (${remainingCount} restante${remainingCount > 1 ? "s" : ""})`
+              ? `Recadrer l'image (${remainingCount} ${pluralize(remainingCount, "restante")})`
               : "Recadrer l'image"
           }
         />

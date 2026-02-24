@@ -112,3 +112,45 @@ export type PostComposerContextValue = {
   actions: PostComposerActions
   config: PostComposerConfig
 }
+
+// --- Sub-context types for split providers ---
+
+/**
+ * Form-specific context (content, visibility, submission)
+ */
+export type PostComposerFormContextValue = {
+  content: string
+  visibility: PostVisibility
+  isAdult: boolean
+  isPending: boolean
+  setContent: (content: string) => void
+  setVisibility: (visibility: PostVisibility) => void
+  setIsAdult: (isAdult: boolean) => void
+  submit: () => Promise<void>
+  reset: () => void
+}
+
+/**
+ * Media-specific context (medias, uploads, crop queue)
+ */
+export type PostComposerMediaContextValue = {
+  medias: MediaItem[]
+  mediaMode: MediaMode
+  canAddMedia: boolean
+  fileAccept: string
+  upload: UploadState
+  cropQueue: CropQueueState
+  addMedia: (media: MediaItem) => void
+  removeMedia: (index: number) => Promise<void>
+  reorderMedias: (medias: MediaItem[]) => void
+  startUpload: (fileKey: string) => void
+  updateUploadProgress: (fileKey: string, percent: number) => void
+  finishUpload: (fileKey: string) => void
+  startCropQueue: (files: File[]) => void
+  processNextInQueue: () => void
+  cancelCropQueue: () => void
+  handleCropConfirm: (croppedBlob: Blob) => Promise<void>
+  handleCropSkip: () => Promise<void>
+  handleCropCancel: () => void
+  handleFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
+}

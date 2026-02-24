@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useMutation } from "convex/react"
 import { toast } from "sonner"
 import { api } from "@/convex/_generated/api"
@@ -14,15 +14,62 @@ import type {
   MediaMode,
   CropQueueState,
 } from "./types"
+import {
+  PostComposerConfigContext,
+  PostComposerFormContext,
+  PostComposerMediaContext,
+  usePostComposerConfig,
+  usePostComposerForm,
+  usePostComposerMedia,
+} from "./contexts"
 
-const PostComposerContext = createContext<PostComposerContextValue | null>(null)
+/**
+ * Convenience hook — assembles all 3 sub-contexts into the original
+ * { state, actions, config } shape. 100% backward compatible.
+ */
+export const usePostComposer = (): PostComposerContextValue => {
+  const config = usePostComposerConfig()
+  const form = usePostComposerForm()
+  const media = usePostComposerMedia()
 
-export const usePostComposer = () => {
-  const context = use(PostComposerContext)
-  if (!context) {
-    throw new Error("usePostComposer must be used within PostComposerProvider")
-  }
-  return context
+  return useMemo(
+    (): PostComposerContextValue => ({
+      state: {
+        content: form.content,
+        medias: media.medias,
+        visibility: form.visibility,
+        isAdult: form.isAdult,
+        upload: media.upload,
+        cropQueue: media.cropQueue,
+        isPending: form.isPending,
+        mediaMode: media.mediaMode,
+        canAddMedia: media.canAddMedia,
+        fileAccept: media.fileAccept,
+      },
+      actions: {
+        setContent: form.setContent,
+        addMedia: media.addMedia,
+        removeMedia: media.removeMedia,
+        reorderMedias: media.reorderMedias,
+        setVisibility: form.setVisibility,
+        setIsAdult: form.setIsAdult,
+        startUpload: media.startUpload,
+        updateUploadProgress: media.updateUploadProgress,
+        finishUpload: media.finishUpload,
+        startCropQueue: media.startCropQueue,
+        processNextInQueue: media.processNextInQueue,
+        cancelCropQueue: media.cancelCropQueue,
+        handleCropConfirm: media.handleCropConfirm,
+        handleCropSkip: media.handleCropSkip,
+        handleCropCancel: media.handleCropCancel,
+        handleFileSelect: media.handleFileSelect,
+        submit: form.submit,
+        reset: form.reset,
+      },
+      config,
+    }),
+    [config, form, media],
+  )
 }
 
 type PostComposerProviderProps = {
@@ -367,58 +414,30 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
     isPostCreatedRef.current = false
   }, [])
 
-  // --- Context value ---
-  const value: PostComposerContextValue = useMemo(
+  // --- Sub-context values ---
+  const formValue = useMemo(
     () => ({
-      state: {
-        content,
-        medias,
-        visibility,
-        isAdult,
-        upload: {
-          isUploading,
-          progress: uploadProgress,
-        },
-        cropQueue,
-        isPending,
-        mediaMode,
-        canAddMedia,
-        fileAccept,
-      },
-      actions: {
-        setContent,
-        addMedia,
-        removeMedia,
-        reorderMedias,
-        setVisibility,
-        setIsAdult,
-        startUpload,
-        updateUploadProgress,
-        finishUpload,
-        startCropQueue,
-        processNextInQueue,
-        cancelCropQueue,
-        handleCropConfirm,
-        handleCropSkip,
-        handleCropCancel,
-        handleFileSelect,
-        submit,
-        reset,
-      },
-      config,
-    }),
-    [
       content,
-      medias,
       visibility,
       isAdult,
-      isUploading,
-      uploadProgress,
-      cropQueue,
       isPending,
+      setContent,
+      setVisibility,
+      setIsAdult,
+      submit,
+      reset,
+    }),
+    [content, visibility, isAdult, isPending, setContent, setVisibility, setIsAdult, submit, reset],
+  )
+
+  const mediaValue = useMemo(
+    () => ({
+      medias,
       mediaMode,
       canAddMedia,
       fileAccept,
+      upload: { isUploading, progress: uploadProgress },
+      cropQueue,
       addMedia,
       removeMedia,
       reorderMedias,
@@ -432,15 +451,38 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
       handleCropSkip,
       handleCropCancel,
       handleFileSelect,
-      submit,
-      reset,
-      config,
+    }),
+    [
+      medias,
+      mediaMode,
+      canAddMedia,
+      fileAccept,
+      isUploading,
+      uploadProgress,
+      cropQueue,
+      addMedia,
+      removeMedia,
+      reorderMedias,
+      startUpload,
+      updateUploadProgress,
+      finishUpload,
+      startCropQueue,
+      processNextInQueue,
+      cancelCropQueue,
+      handleCropConfirm,
+      handleCropSkip,
+      handleCropCancel,
+      handleFileSelect,
     ],
   )
 
   return (
-    <PostComposerContext.Provider value={value}>
-      {children}
-    </PostComposerContext.Provider>
+    <PostComposerConfigContext.Provider value={config}>
+      <PostComposerFormContext.Provider value={formValue}>
+        <PostComposerMediaContext.Provider value={mediaValue}>
+          {children}
+        </PostComposerMediaContext.Provider>
+      </PostComposerFormContext.Provider>
+    </PostComposerConfigContext.Provider>
   )
 }

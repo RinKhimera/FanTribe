@@ -155,9 +155,10 @@ describe("bookmarks", () => {
 
       expect(result.count).toBe(1)
       expect(result.posts).toHaveLength(1)
-      expect(result.posts[0].content).toBe("Bookmarked post")
-      expect(result.posts[0].author).toBeDefined()
-      expect(result.posts[0].author.name).toBe("Test Creator")
+      const post = result.posts[0]!
+      expect(post.content).toBe("Bookmarked post")
+      expect(post.author).toBeDefined()
+      expect(post.author!.name).toBe("Test Creator")
     })
 
     it("should filter out deleted posts", async () => {

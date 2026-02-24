@@ -1,5 +1,6 @@
 export * from "./date"
 export * from "./currency"
+export * from "./pluralize"
 export { formatDate, isSameDay, getRelativeDateTime } from "./date"
 export { formatPostDate } from "./date"
 export { formatCustomTimeAgo } from "./date"

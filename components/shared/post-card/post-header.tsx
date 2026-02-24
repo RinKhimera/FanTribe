@@ -12,33 +12,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Doc, Id } from "@/convex/_generated/dataModel"
 import { formatPostDate } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import { usePostCard } from "./post-card-context"
 
-type PostHeaderProps = {
-  author: Doc<"users"> | null | undefined
-  postId: Id<"posts">
-  createdAt: number
-  visibility: "public" | "subscribers_only"
-  currentUser: Doc<"users">
-  canViewMedia: boolean
-  onRequireSubscribe: () => void
-  isPinned?: boolean
-  isAdult?: boolean
-}
+export const PostHeader = () => {
+  const { post, currentUser, canViewMedia, openSubscriptionModal } = usePostCard()
 
-export const PostHeader = ({
-  author,
-  postId,
-  createdAt,
-  visibility,
-  currentUser,
-  canViewMedia,
-  onRequireSubscribe,
-  isPinned,
-  isAdult,
-}: PostHeaderProps) => {
+  const author = post.author
+  const postId = post._id
+  const createdAt = post._creationTime
+  const visibility = post.visibility || "public"
+  const isPinned = post.isPinned
+  const isAdult = post.isAdult
+
   const isOwnPost = currentUser._id === author?._id
   const isVerified =
     author?.accountType === "CREATOR" || author?.accountType === "SUPERUSER"
@@ -139,7 +126,7 @@ export const PostHeader = ({
                       e.stopPropagation()
                       if (!canViewMedia && author && !isOwnPost) {
                         e.preventDefault()
-                        onRequireSubscribe()
+                        openSubscriptionModal()
                       }
                     }}
                     className={cn(

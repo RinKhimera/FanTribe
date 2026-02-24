@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react"
 import { motion } from "motion/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { SubscriptionModal } from "@/components/domains/subscriptions"
 import { CommentSection } from "@/components/shared/comment-section"
 import { PostActions } from "@/components/shared/post-card/post-actions"
@@ -14,13 +14,7 @@ import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { premiumCardVariants } from "@/lib/animations"
 import { cn } from "@/lib/utils"
-
-type ExtendedPost = Omit<Doc<"posts">, "author"> & {
-  author: Doc<"users"> | null | undefined
-  isPinned?: boolean
-  isMediaLocked?: boolean
-  mediaCount?: number
-}
+import { type PostCardContextValue, PostCardContext, type ExtendedPost } from "./post-card-context"
 
 type PostCardProps = {
   post: ExtendedPost
@@ -72,10 +66,29 @@ export const PostCard = ({
     setIsCommentsOpen(!isCommentsOpen)
   }
 
+  const contextValue: PostCardContextValue = useMemo(
+    () => ({
+      post,
+      currentUser,
+      postUrl,
+      isOwnPost,
+      canViewMedia,
+      isSubscriber,
+      variant,
+      isDetailView,
+      isCommentsOpen,
+      toggleComments,
+      openSubscriptionModal: () => setIsSubscriptionModalOpen(true),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [post, currentUser, postUrl, isOwnPost, canViewMedia, isSubscriber, variant, isDetailView, isCommentsOpen],
+  )
+
   return (
     <>
       <TooltipProvider>
-        <motion.article
+        <PostCardContext.Provider value={contextValue}>
+          <motion.article
           variants={premiumCardVariants}
           initial="initial"
           animate="animate"
@@ -103,17 +116,7 @@ export const PostCard = ({
             )}
           >
             {/* Header: Avatar, Author info, Date, Actions */}
-            <PostHeader
-              author={post.author}
-              postId={post._id}
-              createdAt={post._creationTime}
-              visibility={post.visibility || "public"}
-              currentUser={currentUser}
-              canViewMedia={canViewMedia}
-              onRequireSubscribe={() => setIsSubscriptionModalOpen(true)}
-              isPinned={post.isPinned}
-              isAdult={post.isAdult}
-            />
+            <PostHeader />
 
             {/* Content: Post text */}
             {post.content && <PostContent content={post.content} />}
@@ -134,29 +137,13 @@ export const PostCard = ({
             )}
 
             {/* Actions: Like, Comment, Share, Tip, Bookmark */}
-            <PostActions
-              postId={post._id}
-              postUrl={postUrl}
-              disabled={!canViewMedia}
-              isCommentsOpen={isCommentsOpen}
-              onToggleComments={toggleComments}
-              hideCommentButton={isDetailView}
-              author={post.author ?? undefined}
-              currentUserId={currentUser._id}
-            />
+            <PostActions />
 
             {/* Comments section - hidden in detail view (handled externally) */}
-            {!isDetailView && (
-              <CommentSection
-                postId={post._id}
-                currentUser={currentUser}
-                isOpen={isCommentsOpen}
-                disabled={!canViewMedia}
-                onClose={toggleComments}
-              />
-            )}
+            {!isDetailView && <CommentSection />}
           </div>
-        </motion.article>
+          </motion.article>
+        </PostCardContext.Provider>
       </TooltipProvider>
 
       {/* Modale d'abonnement */}

@@ -22,7 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { deleteSwipeVariants, notificationVariants } from "@/lib/animations"
 import { logger } from "@/lib/config"
-import { formatCustomTimeAgo } from "@/lib/formatters"
+import { formatCustomTimeAgo, pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { EnrichedNotification } from "@/types"
 import NotificationEllipsis from "./notification-ellipsis"
@@ -123,9 +123,9 @@ export const NotificationItem = ({
 
     const othersCount = notification.actorCount - 1
     if (notification.actors.length >= 2) {
-      return `${primaryActor.name}, ${notification.actors[1].name}${othersCount > 1 ? ` et ${othersCount - 1} autre${othersCount > 2 ? "s" : ""}` : ""}`
+      return `${primaryActor.name}, ${notification.actors[1].name}${othersCount > 1 ? ` et ${othersCount - 1} ${pluralize(othersCount - 1, "autre")}` : ""}`
     }
-    return `${primaryActor.name} et ${othersCount} autre${othersCount > 1 ? "s" : ""}`
+    return `${primaryActor.name} et ${othersCount} ${pluralize(othersCount, "autre")}`
   }
 
   const getMessage = (): string => {

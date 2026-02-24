@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { containerVariants, itemVariants } from "@/lib/animations"
+import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 
 type AtRiskSubscriber = {
@@ -95,8 +96,7 @@ export const AtRiskSubscribersList = ({
                       isUrgent ? "text-red-500" : "text-amber-500",
                     )}
                   >
-                    Expire dans {sub.daysLeft} jour
-                    {sub.daysLeft > 1 ? "s" : ""}
+                    Expire dans {sub.daysLeft} {pluralize(sub.daysLeft, "jour")}
                   </span>
                 </motion.div>
               )
