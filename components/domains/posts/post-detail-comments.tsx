@@ -162,7 +162,7 @@ export const PostDetailComments = ({
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ajouter un commentaire\u2026"
+                    placeholder="Ajouter un commentaire…"
                     aria-label="Commentaire"
                     className={cn(
                       "w-full resize-none bg-transparent",
@@ -232,7 +232,7 @@ export const PostDetailComments = ({
           <div className="flex items-center justify-center py-12 gap-3">
             <Loader2 className="text-primary size-5 animate-spin" />
             <span className="text-sm text-muted-foreground">
-              Chargement des commentaires\u2026
+              Chargement des commentaires…
             </span>
           </div>
         ) : comments && comments.length > 0 ? (

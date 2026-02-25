@@ -122,7 +122,7 @@ export const CommentEllipsis = ({
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   className="min-h-[100px]"
-                  placeholder="\u00c9crivez votre commentaire\u2026"
+                  placeholder="Écrivez votre commentaire…"
                 />
                 <DialogFooter>
                   <Button

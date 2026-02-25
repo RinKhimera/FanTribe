@@ -77,7 +77,7 @@ export const SuggestionSearchResults = ({
             transition={{ delay: 0.2 }}
             className="text-sm text-muted-foreground mt-4 font-medium"
           >
-            Recherche en cours\u2026
+            Recherche en cours…
           </motion.p>
         </motion.div>
       ) : results.length === 0 ? (

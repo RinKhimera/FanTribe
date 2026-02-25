@@ -64,7 +64,7 @@ export const UserPosts = ({
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         <p className="text-muted-foreground mt-4 text-sm">
-          Chargement des posts\u2026
+          Chargement des posts…
         </p>
       </div>
     )
@@ -98,7 +98,7 @@ export const UserPosts = ({
         >
           <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
-            Chargement de plus de posts\u2026
+            Chargement de plus de posts…
           </p>
         </div>
       )}
@@ -108,7 +108,7 @@ export const UserPosts = ({
         <div className="flex flex-col items-center justify-center py-8">
           <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
-            Chargement de plus de posts\u2026
+            Chargement de plus de posts…
           </p>
         </div>
       )}

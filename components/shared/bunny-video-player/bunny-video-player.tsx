@@ -44,9 +44,10 @@ export const BunnyVideoPlayer: React.FC<BunnyVideoPlayerProps> = ({
   // Build iframe URL with required parameters
   const buildIframeSrc = () => {
     const url = new URL(src)
-    // preload=false for lazy loading
+    const hasAutoplay = url.searchParams.get("autoplay") === "true"
+    // preload=false for lazy loading (skip if autoplay — needs preload to start)
     if (!url.searchParams.has("preload")) {
-      url.searchParams.set("preload", "false")
+      url.searchParams.set("preload", hasAutoplay ? "true" : "false")
     }
     // responsive=true enables Player.js API
     if (!url.searchParams.has("responsive")) {
@@ -67,10 +68,10 @@ export const BunnyVideoPlayer: React.FC<BunnyVideoPlayerProps> = ({
         ref={iframeRef}
         src={iframeSrc}
         loading="lazy"
-        allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
         className="absolute inset-0 h-full w-full"
         allowFullScreen
-        title="Lecteur vid\u00e9o"
+        title="Lecteur vidéo"
       />
     </div>
   )

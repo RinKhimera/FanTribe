@@ -27,7 +27,7 @@ interface DatePickerProps {
 export function DatePicker({
   value,
   onChange,
-  placeholder = "Sélectionner une date\u2026",
+  placeholder = "Sélectionner une date…",
   disabled = false,
   fromYear = 1900,
   toYear = new Date().getFullYear(),

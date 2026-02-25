@@ -22,10 +22,8 @@ const MASONRY_HEIGHTS = ["h-48", "h-64", "h-56", "h-72", "h-52", "h-60"]
 
 const VideoThumbnail = ({
   thumbnailUrl,
-  isHovered,
 }: {
   thumbnailUrl?: string
-  isHovered: boolean
 }) => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -60,9 +58,8 @@ const VideoThumbnail = ({
         src={thumbnailUrl}
         alt="Aperçu vidéo"
         className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-[opacity,filter,transform] duration-500",
-          isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
-          isHovered && "scale-105",
+          "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+          isLoaded ? "opacity-100" : "opacity-0",
         )}
         onLoad={() => setIsLoaded(true)}
         onError={() => setHasError(true)}
@@ -114,12 +111,11 @@ const GalleryItem = ({
               <div className="relative h-full w-full">
                 <VideoThumbnail
                   thumbnailUrl={item.media.thumbnailUrl}
-                  isHovered={isHovered}
                 />
-                {/* Play button overlay */}
+                {/* Play button — matches Bunny Stream player style */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="flex size-14 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
-                    <Play className="ml-1 size-7 fill-white text-white" />
+                  <div className="flex size-12 items-center justify-center rounded-full bg-[#7C3AED] shadow-lg">
+                    <Play className="ml-0.5 size-5.5 fill-white text-white" />
                   </div>
                 </div>
               </div>
@@ -139,9 +135,8 @@ const GalleryItem = ({
                   alt="Media content"
                   fill
                   className={cn(
-                    "object-cover transition-[opacity,filter,transform] duration-500",
-                    isLoaded ? "blur-0 opacity-100" : "opacity-0 blur-sm",
-                    isHovered && "scale-105",
+                    "object-cover transition-opacity duration-500",
+                    isLoaded ? "opacity-100" : "opacity-0",
                   )}
                   sizes="(max-width: 640px) 50vw, 33vw"
                   onLoad={() => setIsLoaded(true)}
@@ -161,9 +156,9 @@ const GalleryItem = ({
         )}
       </div>
 
-      {/* Hover overlay with actions */}
+      {/* Hover overlay — images only (videos already have a permanent play button) */}
       <AnimatePresence>
-        {isHovered && canViewMedia && (
+        {isHovered && canViewMedia && !isVideo && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -172,11 +167,7 @@ const GalleryItem = ({
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
             <div className="glass-button flex size-12 items-center justify-center rounded-full">
-              {isVideo ? (
-                <Play className="text-primary ml-0.5 size-6" />
-              ) : (
-                <ImageIcon className="text-primary size-5" />
-              )}
+              <ImageIcon className="text-primary size-5" />
             </div>
           </motion.div>
         )}

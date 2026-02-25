@@ -51,7 +51,7 @@ export const CreatePost = ({
 
         <div className="flex-1">
           <TextareaAutosize
-            placeholder="Partager une publication\u2026"
+            placeholder="Partager une publication…"
             className={cn(
               "w-full cursor-pointer resize-none border-none bg-transparent",
               "text-lg placeholder:text-muted-foreground/50",

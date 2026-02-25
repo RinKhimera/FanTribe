@@ -337,7 +337,7 @@ export default function BansPage() {
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                     className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
                   />
-                  Traitement\u2026
+                  Traitement…
                 </>
               ) : (
                 <>

@@ -211,5 +211,8 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 ## PostCard Context
 `components/shared/post-card/` uses `PostCardContext` to eliminate prop drilling. Sub-components (`PostHeader`, `PostActions`) consume `usePostCard()`. `CommentSection` supports dual-mode: `useOptionalPostCard()` (returns null for standalone usage) + optional props fallback.
 
+## Unicode in JSX Gotcha
+- **Unicode escapes (`\u2026`, `\u00e9`, etc.) render literally in JSX text content** — they only work inside JS string literals (quotes/template literals), NOT in raw text between tags. Always use actual Unicode characters (`…`, `é`, `è`, `à`, `É`) in JSX text. Example: `<span>Chargement…</span>` not `<span>Chargement\u2026</span>`.
+
 ## Navigation Gotcha
 Nav link filters (`creatorOnlyLinks`, `superuserOnlyLinks`) exist in BOTH `components/layout/` AND `components/shared/` (left-sidebar, mobile-menu/mobile-navigation). Update **all 4 files** when changing nav links or visibility rules.

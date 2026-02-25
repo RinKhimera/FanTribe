@@ -338,7 +338,7 @@ export const TipDialog = ({
                 {isCinetpayPending ? (
                   <span className="flex items-center gap-2">
                     <LoaderCircle className="size-5 animate-spin" />
-                    Traitement\u2026
+                    Traitement…
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
@@ -367,7 +367,7 @@ export const TipDialog = ({
                 {isStripePending ? (
                   <span className="flex items-center gap-2">
                     <LoaderCircle className="size-5 animate-spin" />
-                    Redirection\u2026
+                    Redirection…
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">

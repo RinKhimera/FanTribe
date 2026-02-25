@@ -395,7 +395,7 @@ export const ReportDialog = ({
                 </Label>
                 <Textarea
                   id="description"
-                  placeholder="D\u00e9crivez le probl\u00e8me en d\u00e9tail pour nous aider \u00e0 mieux comprendre la situation\u2026"
+                  placeholder="Décrivez le problème en détail pour nous aider à mieux comprendre la situation…"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="mt-2 min-h-[100px] resize-none bg-muted/30 transition-colors focus:bg-muted/50"
@@ -427,7 +427,7 @@ export const ReportDialog = ({
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground"
                 />
-                Envoi\u2026
+                Envoi…
               </>
             ) : (
               <>

@@ -44,6 +44,10 @@ paths:
 - **Images only**: Always filter `media.type === "image"` before building slides — Bunny iframe video URLs break as `<img>` src
 - **Zoom + custom render.slide**: YARL's Zoom plugin silently disables if slides lack `width`/`height` when using custom `render.slide`. Prefer YARL's native rendering over custom `NextImageSlide`.
 
+## Bunny Stream Embeds
+- **Autoplay requires THREE params + iframe attribute**: `autoplay=true&muted=true&preload=true` in the embed URL AND `allow="autoplay"` on the `<iframe>`. Browsers block unmuted autoplay; `preload=false` prevents the video from loading in time for autoplay.
+- **No per-embed control hiding**: Player controls (play bar, volume, etc.) can only be toggled at the Bunny dashboard library level, not via query params. For feed/scroll UX, use a thumbnail + play button overlay that swaps to the iframe on click to avoid accidental control interactions.
+
 ## Navigation
 - URL reflects app state (filters, tabs, pagination)
 - Destructive actions require confirmation modal

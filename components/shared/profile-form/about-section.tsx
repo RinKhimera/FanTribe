@@ -37,7 +37,7 @@ export const AboutSection = ({ form }: AboutSectionProps) => {
             </FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Parlez de vous en quelques mots\u2026"
+                placeholder="Parlez de vous en quelques mots…"
                 className="glass-input min-h-24 resize-none rounded-xl border-0"
                 {...field}
               />

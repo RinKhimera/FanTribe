@@ -64,7 +64,7 @@ export const NewsFeed = ({
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         <p className="text-muted-foreground mt-4 text-sm">
-          Chargement du fil d&apos;actualit\u00e9\u2026
+          Chargement du fil d&apos;actualité…
         </p>
       </div>
     )
@@ -76,7 +76,7 @@ export const NewsFeed = ({
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
         <p className="text-muted-foreground mt-4 text-sm">
-          Chargement des publications\u2026
+          Chargement des publications…
         </p>
       </div>
     )
@@ -110,7 +110,7 @@ export const NewsFeed = ({
         >
           <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
-            Chargement de plus de publications\u2026
+            Chargement de plus de publications…
           </p>
         </div>
       )}
@@ -120,7 +120,7 @@ export const NewsFeed = ({
         <div className="flex flex-col items-center justify-center py-8">
           <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
           <p className="text-muted-foreground mt-2 text-sm">
-            Chargement de plus de publications\u2026
+            Chargement de plus de publications…
           </p>
         </div>
       )}

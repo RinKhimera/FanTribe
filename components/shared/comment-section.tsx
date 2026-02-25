@@ -129,7 +129,7 @@ export const CommentSection = (props: CommentSectionProps) => {
                   <div className="flex items-center justify-center py-8">
                     <div className="flex items-center gap-3">
                       <Loader2 className="text-primary h-5 w-5 animate-spin" />
-                      <span className="text-muted-foreground text-sm">Chargement\u2026</span>
+                      <span className="text-muted-foreground text-sm">Chargement…</span>
                     </div>
                   </div>
                 ) : (
@@ -214,7 +214,7 @@ export const CommentSection = (props: CommentSectionProps) => {
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
                           onClick={(e) => e.stopPropagation()}
-                          placeholder="Ajouter un commentaire\u2026"
+                          placeholder="Ajouter un commentaire…"
                           className={cn(
                             "min-h-10 resize-none text-sm py-2.5",
                             "placeholder:text-muted-foreground/60",

@@ -1,13 +1,9 @@
 "use client"
 
+import { Play, Video } from "lucide-react"
 import Image from "next/image"
 import React, { useState } from "react"
 import { MediaLightbox } from "@/components/shared/media-lightbox"
-import { useVideoMetadata } from "@/hooks"
-import {
-  getOptimalDisplayRatio,
-  getVideoDisplayInfo,
-} from "@/lib/calculators/video-display-info"
 import { cn } from "@/lib/utils"
 import type { PostMedia as PostMediaType } from "@/types"
 import { BunnyVideoPlayer } from "./bunny-video-player"
@@ -26,6 +22,14 @@ const GRID_RATIO = "16 / 9"
 // ============================================================================
 // Helpers
 // ============================================================================
+
+/** Build embed URL with autoplay + muted (browsers require muted for autoplay) */
+function buildAutoplayUrl(src: string): string {
+  const url = new URL(src)
+  url.searchParams.set("autoplay", "true")
+  url.searchParams.set("muted", "true")
+  return url.toString()
+}
 
 /** Clamp image aspect ratio between portrait (4:5) and landscape (1.91:1) */
 function getClampedAspectRatio(media: PostMediaType): number {
@@ -52,7 +56,7 @@ function GridCell({ media, index, onOpen, style, overlay }: GridCellProps) {
   return (
     <button
       type="button"
-      className="group relative cursor-pointer overflow-hidden focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      className="group focus-visible:ring-ring relative cursor-pointer overflow-hidden focus-visible:ring-1 focus-visible:outline-hidden"
       style={style}
       onClick={(e) => {
         e.stopPropagation()
@@ -100,7 +104,7 @@ function ImageGrid({
     return (
       <button
         type="button"
-        className="group relative w-full cursor-pointer overflow-hidden rounded-xl focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+        className="group focus-visible:ring-ring relative w-full cursor-pointer overflow-hidden rounded-xl focus-visible:ring-1 focus-visible:outline-hidden"
         style={{ aspectRatio: getClampedAspectRatio(images[0]) }}
         onClick={(e) => {
           e.stopPropagation()
@@ -135,7 +139,12 @@ function ImageGrid({
         }}
       >
         {images.map((media, i) => (
-          <GridCell key={media.mediaId} media={media} index={i} onOpen={onOpen} />
+          <GridCell
+            key={media.mediaId}
+            media={media}
+            index={i}
+            onOpen={onOpen}
+          />
         ))}
       </div>
     )
@@ -182,12 +191,72 @@ function ImageGrid({
           media={media}
           index={i}
           onOpen={onOpen}
-          overlay={
-            i === 3 && count > 4 ? `+${count - 3}` : undefined
-          }
+          overlay={i === 3 && count > 4 ? `+${count - 3}` : undefined}
         />
       ))}
     </div>
+  )
+}
+
+// ============================================================================
+// VideoThumbnailCell — shows thumbnail + play button, swaps to player on click
+// ============================================================================
+
+function VideoThumbnailCell({
+  media,
+  onPlay,
+}: {
+  media: PostMediaType
+  onPlay: () => void
+}) {
+  const [thumbLoaded, setThumbLoaded] = useState(false)
+  const [thumbError, setThumbError] = useState(false)
+  const hasThumbnail = media.thumbnailUrl && !thumbError
+
+  return (
+    <button
+      type="button"
+      className="group focus-visible:ring-ring relative w-full cursor-pointer overflow-hidden rounded-xl bg-black focus-visible:ring-1 focus-visible:outline-hidden"
+      style={{ aspectRatio: "16 / 9" }}
+      onClick={(e) => {
+        e.stopPropagation()
+        onPlay()
+      }}
+      aria-label="Lire la vidéo"
+    >
+      {/* Thumbnail image or fallback */}
+      {hasThumbnail ? (
+        <>
+          {!thumbLoaded && (
+            <div className="bg-muted absolute inset-0 flex items-center justify-center">
+              <Video className="text-muted-foreground size-10" />
+            </div>
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={media.thumbnailUrl}
+            alt="Aperçu vidéo"
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+              thumbLoaded ? "opacity-100" : "opacity-0",
+            )}
+            onLoad={() => setThumbLoaded(true)}
+            onError={() => setThumbError(true)}
+          />
+        </>
+      ) : (
+        <div className="bg-muted absolute inset-0 flex items-center justify-center">
+          <Video className="text-muted-foreground size-10" />
+        </div>
+      )}
+
+      {/* Play button — matches Bunny Stream player style */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-[#7C3AED] shadow-lg">
+          <Play className="ml-0.5 size-5.5 fill-white text-white" />
+        </div>
+      </div>
+    </button>
   )
 }
 
@@ -212,6 +281,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
 }) => {
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
+  const [activeVideoIds, setActiveVideoIds] = useState<Set<string>>(new Set())
 
   const videoMedias = medias.filter((m) => m.type === "video")
   const imageMedias = medias.filter((m) => m.type === "image")
@@ -220,12 +290,6 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     width: m.width,
     height: m.height,
   }))
-
-  // Video metadata hook — only when content is not locked and has videos
-  const { metadata: videoMetadata } = useVideoMetadata({
-    mediaUrls: videoMedias.map((m) => m.url),
-    enabled: !isMediaLocked && videoMedias.length > 0,
-  })
 
   // Locked content overlay
   if (isMediaLocked) {
@@ -245,28 +309,33 @@ export const PostMedia: React.FC<PostMediaProps> = ({
     setViewerOpen(true)
   }
 
-  // Compute video aspect ratio from metadata
-  const getVideoRatio = (media: PostMediaType): string => {
-    if (media.mediaId && videoMetadata[media.mediaId]) {
-      const videoData = videoMetadata[media.mediaId]
-      const videoInfo = getVideoDisplayInfo(videoData)
-      return getOptimalDisplayRatio(videoInfo)
-    }
-    return "16 / 9"
+  const activateVideo = (mediaId: string) => {
+    setActiveVideoIds((prev) => new Set(prev).add(mediaId))
   }
 
   return (
     <>
       {/* Videos first (legacy mixed posts, or single video posts) */}
-      {videoMedias.map((media) => (
-        <div key={media.url} onClick={(e) => e.stopPropagation()}>
-          <BunnyVideoPlayer
-            src={media.url}
-            aspectRatio={getVideoRatio(media)}
-            className="rounded-xl"
-          />
-        </div>
-      ))}
+      {videoMedias.map((media) => {
+        const isActive = activeVideoIds.has(media.mediaId)
+
+        return (
+          <div key={media.url} onClick={(e) => e.stopPropagation()}>
+            {isActive ? (
+              <BunnyVideoPlayer
+                src={buildAutoplayUrl(media.url)}
+                aspectRatio="16 / 9"
+                className="rounded-xl"
+              />
+            ) : (
+              <VideoThumbnailCell
+                media={media}
+                onPlay={() => activateVideo(media.mediaId)}
+              />
+            )}
+          </div>
+        )
+      })}
 
       {/* Image grid */}
       {imageMedias.length > 0 && (

@@ -50,7 +50,7 @@ export const SuggestionSearch = ({
           autoComplete="off"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Rechercher des cr\u00e9ateurs\u2026"
+          placeholder="Rechercher des créateurs…"
           className={cn(
             "w-full h-12 bg-transparent",
             "pl-11 pr-11 py-3",

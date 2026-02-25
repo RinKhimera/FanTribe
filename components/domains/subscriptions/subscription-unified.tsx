@@ -89,16 +89,12 @@ export const SubscriptionUnified = ({
     }
   }
 
-  const handleSubscribe = () => {
-    if (!currentUser || !creator) return
-
+  const checkCanSubscribe = (): boolean => {
     if (type === "subscribe" && !canSubscribe?.canSubscribe) {
       const reasonMap: Record<string, string> = {
         self: "Vous ne pouvez pas vous abonner à vous-même",
         already_active: "Abonnement déjà actif",
         pending: "Abonnement en attente de validation",
-        still_valid_until_expiry:
-          "Abonnement encore valide jusqu'à son expiration",
         not_authenticated: "Veuillez vous connecter pour vous abonner",
         not_creator: "Cet utilisateur n'est pas un créateur",
       }
@@ -107,8 +103,14 @@ export const SubscriptionUnified = ({
           "Impossible de s'abonner à cet utilisateur"
         : "Impossible de s'abonner à cet utilisateur"
       toast.error(msg)
-      return
+      return false
     }
+    return true
+  }
+
+  const handleSubscribe = () => {
+    if (!currentUser || !creator) return
+    if (!checkCanSubscribe()) return
 
     const actionText = type === "renew" ? "Renouvellement" : "Abonnement"
     processPayment({
@@ -126,6 +128,7 @@ export const SubscriptionUnified = ({
 
   const handleSubscribeStripe = async () => {
     if (!currentUser || !creator) return
+    if (!checkCanSubscribe()) return
     startStripeTransition(async () => {
       try {
         await startStripeCheckout({
@@ -367,7 +370,7 @@ export const SubscriptionUnified = ({
                 {isPending ? (
                   <div className="flex items-center gap-2">
                     <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
-                    Annulation\u2026
+                    Annulation…
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">Se désabonner</div>
@@ -389,7 +392,7 @@ export const SubscriptionUnified = ({
                     {isPaymentPending ? (
                       <div className="flex items-center gap-2">
                         <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
-                        Traitement\u2026
+                        Traitement…
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -415,7 +418,7 @@ export const SubscriptionUnified = ({
                     {isStripePending ? (
                       <div className="flex items-center gap-2">
                         <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
-                        Redirection\u2026
+                        Redirection…
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">

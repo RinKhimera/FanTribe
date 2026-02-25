@@ -10,7 +10,7 @@ type PostComposerInputProps = {
 }
 
 export function PostComposerInput({
-  placeholder = "Partagez quelque chose avec vos fans\u2026",
+  placeholder = "Partagez quelque chose avec vos fans…",
   maxLength = 400,
 }: PostComposerInputProps) {
   const { state, actions } = usePostComposer()

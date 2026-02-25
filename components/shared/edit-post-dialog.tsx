@@ -446,7 +446,7 @@ export const EditPostDialog = ({
             {isPending ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Enregistrement\u2026
+                Enregistrement…
               </>
             ) : (
               "Enregistrer"
