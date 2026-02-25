@@ -821,8 +821,9 @@ export const deleteMultipleBunnyAssets = action({
 })
 
 // ============================================================================
-// Migration: Backfill thumbnailUrl for existing video medias
-// Run once via Convex dashboard, then delete
+// Migration: Backfill thumbnailUrl for existing video medias (posts only)
+// Uses cursor-based pagination to handle large datasets.
+// Run once via Convex dashboard: backfillVideoThumbnails({})
 // ============================================================================
 
 export const backfillVideoThumbnailsBatch = internalMutation({
@@ -866,87 +867,113 @@ export const backfillVideoThumbnailsBatch = internalMutation({
   },
 })
 
-type PostWithVideoMedias = {
-  postId: Id<"posts">
-  videoMediaIds: string[]
-}
-
-export const backfillVideoThumbnails = internalAction({
-  args: {},
-  returns: v.object({
-    totalPosts: v.number(),
-    patchedPosts: v.number(),
-  }),
-  handler: async (ctx) => {
-    // 1. Collect all posts with video medias missing thumbnailUrl
-    const postsToFix: PostWithVideoMedias[] = await ctx.runQuery(
-      internal.internalActions.getPostsWithVideosMissingThumbnails,
-      {},
-    )
-
-    // 2. Generate signed URLs in the action runtime (has crypto access)
-    const BATCH_SIZE = 50
-    let totalPatched = 0
-
-    for (let i = 0; i < postsToFix.length; i += BATCH_SIZE) {
-      const batch = postsToFix.slice(i, i + BATCH_SIZE)
-
-      // Pre-compute signed thumbnail URLs for each post's video medias
-      const updates = await Promise.all(
-        batch.map(async ({ postId, videoMediaIds }) => ({
-          postId,
-          thumbnailsByMediaId: await Promise.all(
-            videoMediaIds.map(async (mediaId) => ({
-              mediaId,
-              thumbnailUrl: await getVideoThumbnailUrl(mediaId),
-            })),
-          ),
-        })),
-      )
-
-      const patched: number = await ctx.runMutation(
-        internal.internalActions.backfillVideoThumbnailsBatch,
-        { updates },
-      )
-      totalPatched += patched
-    }
-
-    console.log(
-      `Backfill complete: ${totalPatched}/${postsToFix.length} posts patched`,
-    )
-
-    return {
-      totalPosts: postsToFix.length,
-      patchedPosts: totalPatched,
-    }
+/** Paginated query: fetch next batch of posts with videos missing thumbnails */
+export const getVideosMissingThumbnailsPage = internalQuery({
+  args: {
+    cursor: v.union(v.string(), v.null()),
   },
-})
+  returns: v.object({
+    docs: v.array(
+      v.object({
+        postId: v.id("posts"),
+        videoMediaIds: v.array(v.string()),
+      }),
+    ),
+    continueCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const PAGE_SIZE = 200
+    const result = await ctx.db
+      .query("posts")
+      .paginate({ cursor: args.cursor ?? null, numItems: PAGE_SIZE })
 
-export const getPostsWithVideosMissingThumbnails = internalQuery({
-  args: {},
-  returns: v.array(
-    v.object({
-      postId: v.id("posts"),
-      videoMediaIds: v.array(v.string()),
-    }),
-  ),
-  handler: async (ctx) => {
-    const posts = await ctx.db.query("posts").collect()
-    return posts
-      .filter((p) =>
-        p.medias?.some(
+    const docs = result.page
+      .filter((post) =>
+        post.medias?.some(
           (m: { type: string; thumbnailUrl?: string }) =>
             m.type === "video" && !m.thumbnailUrl,
         ),
       )
-      .map((p) => ({
-        postId: p._id,
-        videoMediaIds: (p.medias ?? [])
+      .map((post) => ({
+        postId: post._id,
+        videoMediaIds: (post.medias ?? [])
           .filter(
             (m: { type: string; thumbnailUrl?: string }) =>
               m.type === "video" && !m.thumbnailUrl,
           )
           .map((m: { mediaId: string }) => m.mediaId),
       }))
+
+    return {
+      docs,
+      continueCursor:
+        result.continueCursor === null ? null : result.continueCursor,
+      isDone: result.isDone,
+    }
+  },
+})
+
+export const backfillVideoThumbnails = internalAction({
+  args: {},
+  returns: v.object({
+    totalFound: v.number(),
+    totalPatched: v.number(),
+  }),
+  handler: async (ctx) => {
+    let totalFound = 0
+    let totalPatched = 0
+    let cursor: string | null = null
+    let isDone = false
+
+    while (!isDone) {
+      // 1. Fetch next page of posts with missing thumbnails
+      const page: {
+        docs: { postId: Id<"posts">; videoMediaIds: string[] }[]
+        continueCursor: string | null
+        isDone: boolean
+      } = await ctx.runQuery(
+        internal.internalActions.getVideosMissingThumbnailsPage,
+        { cursor },
+      )
+      cursor = page.continueCursor
+      isDone = page.isDone
+
+      if (page.docs.length === 0) continue
+      totalFound += page.docs.length
+
+      // 2. Generate signed thumbnail URLs + patch in batches of 50
+      const MUTATION_BATCH = 50
+      for (let i = 0; i < page.docs.length; i += MUTATION_BATCH) {
+        const batch = page.docs.slice(i, i + MUTATION_BATCH)
+
+        const updates = await Promise.all(
+          batch.map(async ({ postId, videoMediaIds }) => ({
+            postId,
+            thumbnailsByMediaId: await Promise.all(
+              videoMediaIds.map(async (mediaId) => ({
+                mediaId,
+                thumbnailUrl: await getVideoThumbnailUrl(mediaId),
+              })),
+            ),
+          })),
+        )
+
+        const patched: number = await ctx.runMutation(
+          internal.internalActions.backfillVideoThumbnailsBatch,
+          { updates },
+        )
+        totalPatched += patched
+      }
+
+      console.log(
+        `[posts] Page processed: ${page.docs.length} found, ${totalPatched} patched so far`,
+      )
+    }
+
+    console.log(
+      `Backfill complete: ${totalPatched}/${totalFound} posts patched`,
+    )
+    return { totalFound, totalPatched }
   },
 })

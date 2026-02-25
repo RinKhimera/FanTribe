@@ -199,7 +199,7 @@ export const UserGallery = ({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null)
+  const [activeVideo, setActiveVideo] = useState<PostMedia | null>(null)
 
   // Extraire les données pour une référence stable dans useMemo
   const galleryLength = userGallery?.length ?? 0
@@ -223,8 +223,8 @@ export const UserGallery = ({
     [mediaSlides],
   )
 
-  const openVideoViewer = useCallback((videoUrl: string) => {
-    setActiveVideoUrl(videoUrl)
+  const openVideoViewer = useCallback((media: PostMedia) => {
+    setActiveVideo(media)
     setVideoDialogOpen(true)
   }, [])
 
@@ -297,7 +297,7 @@ export const UserGallery = ({
               isMediaProtected={item.visibility === "subscribers_only"}
               onOpen={() =>
                 item.media.type === "video"
-                  ? openVideoViewer(item.media.url)
+                  ? openVideoViewer(item.media)
                   : openViewerAt(item.media.url)
               }
             />
@@ -315,7 +315,7 @@ export const UserGallery = ({
               isMediaProtected={item.visibility === "subscribers_only"}
               onOpen={() =>
                 item.media.type === "video"
-                  ? openVideoViewer(item.media.url)
+                  ? openVideoViewer(item.media)
                   : openViewerAt(item.media.url)
               }
             />
@@ -333,7 +333,7 @@ export const UserGallery = ({
               isMediaProtected={item.visibility === "subscribers_only"}
               onOpen={() =>
                 item.media.type === "video"
-                  ? openVideoViewer(item.media.url)
+                  ? openVideoViewer(item.media)
                   : openViewerAt(item.media.url)
               }
             />
@@ -352,7 +352,10 @@ export const UserGallery = ({
       <VideoViewerDialog
         open={videoDialogOpen}
         onOpenChange={setVideoDialogOpen}
-        videoUrl={activeVideoUrl}
+        videoUrl={activeVideo?.url ?? null}
+        width={activeVideo?.width}
+        height={activeVideo?.height}
+        thumbnailUrl={activeVideo?.thumbnailUrl}
       />
     </>
   )
