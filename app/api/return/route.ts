@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     if (!transactionId) {
       console.error("Return API: Missing transaction ID")
       return Response.redirect(
-        new URL("/payment/cancelled?reason=missing_transaction", request.url),
+        new URL("/payment/result?status=failed&reason=missing_transaction", request.url),
       )
     }
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     // Si la transaction existe déjà, rediriger directement vers la page de succès
     if (transactionStatus.exists) {
       return Response.redirect(
-        new URL(`/payment/merci?transaction=${transactionId}`, request.url),
+        new URL(`/payment/result?status=success&transaction=${transactionId}`, request.url),
       )
     }
 
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     if (!apiKey || !siteId) {
       console.error("Return API: Missing API key or site ID")
       return Response.redirect(
-        new URL("/payment/cancelled?reason=configuration_error", request.url),
+        new URL("/payment/result?status=failed&reason=configuration_error", request.url),
       )
     }
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     if (!checkRes.ok) {
       console.error(`Return API: CinetPay API error: ${checkRes.status}`)
       return Response.redirect(
-        new URL("/payment/cancelled?reason=payment_check_failed", request.url),
+        new URL("/payment/result?status=failed&reason=payment_check_failed", request.url),
       )
     }
 
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
 
       // Rediriger vers la page de succès quoi qu'il arrive (le traitement est idempotent)
       return Response.redirect(
-        new URL(`/payment/merci?transaction=${transactionId}`, request.url),
+        new URL(`/payment/result?status=success&transaction=${transactionId}`, request.url),
       )
     } else {
       // Paiement refusé ou autre statut
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       )
       return Response.redirect(
         new URL(
-          `/payment/cancelled?reason=payment_failed&code=${checkData.code}`,
+          `/payment/result?status=failed&reason=payment_failed&code=${checkData.code}`,
           request.url,
         ),
       )
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
     // En cas d'erreur inattendue
     console.error("Return API error:", error)
     return Response.redirect(
-      new URL("/payment/cancelled?reason=unexpected_error", request.url),
+      new URL("/payment/result?status=failed&reason=unexpected_error", request.url),
     )
   }
 }

@@ -1,5 +1,6 @@
 import { paginationOptsValidator } from "convex/server"
 import { ConvexError, v } from "convex/values"
+import { Id } from "./_generated/dataModel"
 import {
   internalMutation,
   internalQuery,
@@ -9,6 +10,7 @@ import {
 import { getAuthenticatedUser } from "./lib/auth"
 import { createNotification } from "./lib/notifications"
 import { paginatedSubscriptionsValidator } from "./lib/validators"
+import { incrementUserStat } from "./userStats"
 
 // PUBLIC: obtenir la souscription entre deux utilisateurs (content_access par défaut)
 export const getFollowSubscription = query({
@@ -128,10 +130,19 @@ export const cancelSubscription = mutation({
     }
     if (sub.status === "canceled")
       return { canceled: false, reason: "Already canceled" }
+
+    const wasActive = sub.status === "active"
+
     await ctx.db.patch(sub._id, {
       status: "canceled",
       lastUpdateTime: Date.now(),
     })
+
+    // Decrement subscriber count if the subscription was active
+    if (wasActive) {
+      await incrementUserStat(ctx, sub.creator, { subscribersCount: -1 })
+    }
+
     return { canceled: true }
   },
 })
@@ -209,6 +220,15 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
         })
       ),
     ])
+
+    // Decrement subscribersCount per creator (grouped to avoid concurrent stat conflicts)
+    const expiredPerCreator = new Map<string, number>()
+    for (const s of expired) {
+      expiredPerCreator.set(s.creator, (expiredPerCreator.get(s.creator) ?? 0) + 1)
+    }
+    for (const [creatorId, count] of expiredPerCreator) {
+      await incrementUserStat(ctx, creatorId as Id<"users">, { subscribersCount: -count })
+    }
 
     return {
       scanned: active.length,
@@ -614,14 +634,8 @@ export const canUserSubscribe = query({
       } else if (existing.status === "pending") {
         canSubscribe = false
         reason = "pending"
-      } else if (
-        existing.status === "canceled" &&
-        existing.endDate > Date.now()
-      ) {
-        // période encore valable
-        canSubscribe = false
-        reason = "still_valid_until_expiry"
       }
+      // "canceled" → always allow re-subscription (access is already revoked)
     }
 
     return { canSubscribe, reason }

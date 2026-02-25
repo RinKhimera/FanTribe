@@ -5,13 +5,11 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { CinetPayResponse } from "@/types"
 
-// Schema de validation pour les metadata CinetPay
 const CinetPayMetadataSchema = z.object({
   creatorId: z.string().min(1, "creatorId is required"),
   subscriberId: z.string().min(1, "subscriberId is required"),
   type: z.string().optional(),
   action: z.string().optional(),
-  // Tip-specific fields
   senderId: z.string().optional(),
   tipMessage: z.string().optional(),
   tipContext: z.enum(["post", "profile", "message"]).optional(),
@@ -30,7 +28,6 @@ function verifyCinetPayHmac(
   const secretKey = process.env.CINETPAY_SECRET_KEY
   if (!secretKey || !xToken) return false
 
-  // Champs a concatener dans l'ordre exact selon la doc CinetPay
   const fields = [
     "cpm_site_id",
     "cpm_trans_id",
@@ -62,189 +59,61 @@ function verifyCinetPayHmac(
       Buffer.from(expectedToken),
     )
   } catch {
-    // Si les buffers ont des tailles differentes, timingSafeEqual throw
     return false
   }
 }
 
 export async function POST(request: Request) {
   try {
-    // Récupérer les données de la requête
-    let body
-    const contentType = request.headers.get("content-type") || ""
+    const textBody = await request.text()
+    const params = new URLSearchParams(textBody)
+    const body = Object.fromEntries(params.entries())
 
-    // Supporter les deux formats : form-data et JSON pour les tests Postman
-    if (contentType.includes("application/json")) {
-      body = await request.json()
-    } else {
-      // Format form-urlencoded
-      const textBody = await request.text()
-      const params = new URLSearchParams(textBody)
-      body = Object.fromEntries(params.entries())
+    const transactionId = body.cpm_trans_id
+    const siteId = body.cpm_site_id
+
+    if (!transactionId || !siteId) {
+      return Response.json(
+        { error: "Missing cpm_trans_id or cpm_site_id" },
+        { status: 400 },
+      )
     }
 
-    // Extraire les paramètres clés
-    const transactionId =
-      body.cpm_trans_id || body.transaction_id || `test-${Date.now()}`
-    const siteId =
-      body.cpm_site_id ||
-      body.site_id ||
-      process.env.NEXT_PUBLIC_CINETPAY_SITE_ID!
-
-    // MODE TEST: Ignorer la vérification HMAC et CinetPay
-    // En production, la verification est activee
-    // Pour tester en local, utiliser ngrok pour exposer le serveur
-    const testMode = process.env.NODE_ENV !== "production"
-
-    // Verification HMAC en production
-    if (!testMode) {
-      const xToken = request.headers.get("x-token")
-      if (!verifyCinetPayHmac(body, xToken)) {
-        console.error("CinetPay HMAC verification failed")
-        return Response.json(
-          { error: "Invalid HMAC signature" },
-          { status: 401 },
-        )
-      }
+    // Verify HMAC signature
+    const xToken = request.headers.get("x-token")
+    if (!verifyCinetPayHmac(body, xToken)) {
+      console.error("CinetPay HMAC verification failed")
+      return Response.json(
+        { error: "Invalid HMAC signature" },
+        { status: 401 },
+      )
     }
 
-    // Extraire et valider les métadonnées avec Zod
-    let creatorId: Id<"users">
-    let subscriberId: Id<"users">
-    let amountPaid: number | undefined
-
-    if (body.cpm_custom) {
-      // Production: metadata depuis cpm_custom
-      try {
-        const rawMetadata = JSON.parse(body.cpm_custom)
-        const parseResult = CinetPayMetadataSchema.safeParse(rawMetadata)
-
-        if (!parseResult.success) {
-          console.error("Invalid metadata format:", parseResult.error.flatten())
-          return Response.json(
-            {
-              error: "Invalid metadata format",
-              details: parseResult.error.flatten(),
-            },
-            { status: 400 },
-          )
-        }
-
-        creatorId = parseResult.data.creatorId as Id<"users">
-        subscriberId = parseResult.data.subscriberId as Id<"users">
-      } catch (e) {
-        console.error("Error parsing cpm_custom JSON:", e)
-        return Response.json(
-          { error: "Invalid cpm_custom JSON format" },
-          { status: 400 },
-        )
-      }
-    } else if (testMode) {
-      // Test mode: permettre les IDs directement dans le body
-      const parseResult = CinetPayMetadataSchema.safeParse({
-        creatorId: body.creatorId,
-        subscriberId: body.subscriberId,
-      })
-
-      if (!parseResult.success) {
-        return Response.json(
-          {
-            error: "Missing required parameters: creatorId and subscriberId",
-            details: parseResult.error.flatten(),
-          },
-          { status: 400 },
-        )
-      }
-
-      creatorId = parseResult.data.creatorId as Id<"users">
-      subscriberId = parseResult.data.subscriberId as Id<"users">
-      amountPaid = body.amountPaid ? Number(body.amountPaid) : 1000
-    } else {
-      // Production sans cpm_custom = erreur
+    // Parse metadata from cpm_custom
+    if (!body.cpm_custom) {
       return Response.json(
         { error: "Missing cpm_custom metadata" },
         { status: 400 },
       )
     }
 
-    if (testMode) {
-      // Simuler une réponse CinetPay réussie
-      const mockResponse: CinetPayResponse = {
-        code: "00",
-        message: "PAYMENT SUCCESSFUL (TEST MODE)",
-        data: {
-          amount: String(amountPaid || 1000),
-          currency: "XOF",
-          status: "ACCEPTED",
-          payment_method: "TEST",
-          description: "Abonnement test",
-          metadata: {
-            creatorId: creatorId,
-            subscriberId: subscriberId,
-          },
-          operator_id: null,
-          payment_date: new Date().toISOString(),
-          fund_availability_date: new Date().toISOString(),
-        },
-        api_response_id: `api-${Date.now()}`,
-      }
-
-      // Déterminer le type de paiement (tip ou subscription)
-      const metadata = body.cpm_custom
-        ? CinetPayMetadataSchema.parse(JSON.parse(body.cpm_custom))
-        : { type: body.type, senderId: body.senderId, tipMessage: body.tipMessage, tipContext: body.tipContext as "post" | "profile" | "message" | undefined, postId: body.postId, conversationId: body.conversationId, creatorId: body.creatorId, subscriberId: body.subscriberId }
-
-      if (metadata.type === "tip") {
-        const result = await fetchAction(api.internalActions.processTip, {
-          provider: "cinetpay",
-          providerTransactionId: transactionId,
-          senderId: (metadata.senderId || subscriberId) as Id<"users">,
-          creatorId,
-          amount: amountPaid || 500,
-          currency: mockResponse.data.currency,
-          message: metadata.tipMessage || undefined,
-          context: metadata.tipContext as "post" | "profile" | "message" | undefined,
-          postId: metadata.postId ? (metadata.postId as Id<"posts">) : undefined,
-          conversationId: metadata.conversationId ? (metadata.conversationId as Id<"conversations">) : undefined,
-        })
-
-        return Response.json({
-          message: result.alreadyProcessed
-            ? "Tip already processed (TEST MODE)"
-            : "Tip processed successfully (TEST MODE)",
-          result,
-        })
-      }
-
-      // Traiter le paiement d'abonnement simulé
-      const result = await fetchAction(api.internalActions.processPayment, {
-        provider: "cinetpay",
-        providerTransactionId: transactionId,
-        creatorId,
-        subscriberId,
-        amount: amountPaid || 1000,
-        currency: mockResponse.data.currency,
-        paymentMethod: mockResponse.data.payment_method || "TEST",
-        startedAt: new Date().toISOString(),
-      })
-
-      return Response.json({
-        message: result.alreadyProcessed
-          ? "Transaction already processed (TEST MODE)"
-          : "Transaction processed successfully (TEST MODE)",
-        result,
-        paymentDetails: {
-          amount: mockResponse.data.amount,
-          currency: mockResponse.data.currency,
-          paymentDate: mockResponse.data.payment_date,
-          status: mockResponse.code,
-        },
-      })
+    let metadata: z.infer<typeof CinetPayMetadataSchema>
+    try {
+      const rawMetadata = JSON.parse(body.cpm_custom)
+      metadata = CinetPayMetadataSchema.parse(rawMetadata)
+    } catch (e) {
+      console.error("Error parsing cpm_custom:", e)
+      return Response.json(
+        { error: "Invalid cpm_custom format" },
+        { status: 400 },
+      )
     }
 
-    // Si on n'est pas en mode test, continuer avec le processus normal
-    // Code CinetPay original (pour la production)
-    const apiKey = process.env.NEXT_PUBLIC_CINETPAY_API_KEY!
+    const creatorId = metadata.creatorId as Id<"users">
+    const subscriberId = metadata.subscriberId as Id<"users">
+
+    // Verify payment with CinetPay API
+    const apiKey = process.env.NEXT_PUBLIC_CINETPAY_API_KEY
     if (!apiKey) {
       return Response.json(
         { error: "CinetPay API key not configured" },
@@ -252,19 +121,16 @@ export async function POST(request: Request) {
       )
     }
 
-    const payload = {
-      apikey: apiKey,
-      site_id: siteId,
-      transaction_id: transactionId,
-    }
-
-    // Appel à l'API CinetPay pour vérifier le statut du paiement
     const checkRes = await fetch(
       "https://api-checkout.cinetpay.com/v2/payment/check",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          apikey: apiKey,
+          site_id: siteId,
+          transaction_id: transactionId,
+        }),
       },
     )
 
@@ -277,76 +143,68 @@ export async function POST(request: Request) {
 
     const checkData: CinetPayResponse = await checkRes.json()
 
-    // Vérification que le paiement est réussi
-    if (checkData.code === "00") {
-      // Extraire le montant du paiement
-      const cinetPayAmount = checkData.data.amount
-        ? Number(checkData.data.amount)
-        : undefined
-
-      // Déterminer le type de paiement depuis les metadata
-      let prodMetadata: z.infer<typeof CinetPayMetadataSchema> | undefined
-      if (body.cpm_custom) {
-        try {
-          prodMetadata = CinetPayMetadataSchema.parse(JSON.parse(body.cpm_custom))
-        } catch {
-          // Metadata parsing failed, treat as subscription
-        }
-      }
-
-      if (prodMetadata?.type === "tip") {
-        const tipResult = await fetchAction(api.internalActions.processTip, {
-          provider: "cinetpay",
-          providerTransactionId: transactionId,
-          senderId: (prodMetadata.senderId || subscriberId) as Id<"users">,
-          creatorId,
-          amount: cinetPayAmount || 0,
-          currency: checkData.data.currency || "XOF",
-          message: prodMetadata.tipMessage || undefined,
-          context: prodMetadata.tipContext as "post" | "profile" | "message" | undefined,
-          postId: prodMetadata.postId ? (prodMetadata.postId as Id<"posts">) : undefined,
-          conversationId: prodMetadata.conversationId ? (prodMetadata.conversationId as Id<"conversations">) : undefined,
-        })
-
-        return Response.json({
-          message: tipResult.alreadyProcessed
-            ? "Tip already processed"
-            : "Tip processed successfully",
-          result: tipResult,
-        })
-      }
-
-      // Traiter le paiement d'abonnement
-      const result = await fetchAction(api.internalActions.processPayment, {
-        provider: "cinetpay",
-        providerTransactionId: transactionId,
-        creatorId,
-        subscriberId,
-        amount: cinetPayAmount || 0,
-        currency: checkData.data.currency || "XOF",
-        paymentMethod: checkData.data.payment_method || undefined,
-        startedAt: new Date().toISOString(),
-      })
-
+    if (checkData.code !== "00") {
       return Response.json({
-        message: result.alreadyProcessed
-          ? "Transaction already processed"
-          : "Transaction processed successfully",
-        result,
-        paymentDetails: {
-          amount: checkData.data.amount,
-          currency: checkData.data.currency,
-          paymentDate: checkData.data.payment_date,
-          status: checkData.code,
-        },
+        message: "Payment verification failed",
+        code: checkData.code,
+        description: checkData.message || "Unknown status",
       })
     }
 
-    // Paiement refusé ou autre statut
+    const cinetPayAmount = checkData.data.amount
+      ? Number(checkData.data.amount)
+      : 0
+
+    // Route to tip or subscription processing
+    if (metadata.type === "tip") {
+      const tipResult = await fetchAction(api.internalActions.processTip, {
+        provider: "cinetpay",
+        providerTransactionId: transactionId,
+        senderId: (metadata.senderId || subscriberId) as Id<"users">,
+        creatorId,
+        amount: cinetPayAmount,
+        currency: checkData.data.currency || "XOF",
+        message: metadata.tipMessage || undefined,
+        context:
+          (metadata.tipContext as "post" | "profile" | "message") || undefined,
+        postId: metadata.postId
+          ? (metadata.postId as Id<"posts">)
+          : undefined,
+        conversationId: metadata.conversationId
+          ? (metadata.conversationId as Id<"conversations">)
+          : undefined,
+      })
+
+      return Response.json({
+        message: tipResult.alreadyProcessed
+          ? "Tip already processed"
+          : "Tip processed successfully",
+        result: tipResult,
+      })
+    }
+
+    const result = await fetchAction(api.internalActions.processPayment, {
+      provider: "cinetpay",
+      providerTransactionId: transactionId,
+      creatorId,
+      subscriberId,
+      amount: cinetPayAmount,
+      currency: checkData.data.currency || "XOF",
+      paymentMethod: checkData.data.payment_method || undefined,
+      startedAt: new Date().toISOString(),
+    })
+
     return Response.json({
-      message: "Payment verification failed",
-      code: checkData.code,
-      description: checkData.message || "Unknown status",
+      message: result.alreadyProcessed
+        ? "Transaction already processed"
+        : "Transaction processed successfully",
+      result,
+      paymentDetails: {
+        amount: checkData.data.amount,
+        currency: checkData.data.currency,
+        paymentDate: checkData.data.payment_date,
+        status: checkData.code,
+      },
     })
   } catch (error) {
     console.error("Webhook error:", error)

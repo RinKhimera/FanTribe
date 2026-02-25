@@ -34,6 +34,10 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_CINETPAY_API_KEY: z
     .string()
     .min(1, "NEXT_PUBLIC_CINETPAY_API_KEY is required"),
+
+  // Payment test mode
+  NEXT_PUBLIC_PAYMENT_TEST_MODE: z.string().default("false"),
+  NEXT_PUBLIC_PAYMENT_TEST_FORCE_FAIL: z.string().default("false"),
 })
 
 /**
@@ -50,6 +54,9 @@ export const clientEnv = clientEnvSchema.parse({
   NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
   NEXT_PUBLIC_CINETPAY_SITE_ID: process.env.NEXT_PUBLIC_CINETPAY_SITE_ID,
   NEXT_PUBLIC_CINETPAY_API_KEY: process.env.NEXT_PUBLIC_CINETPAY_API_KEY,
+  NEXT_PUBLIC_PAYMENT_TEST_MODE: process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE,
+  NEXT_PUBLIC_PAYMENT_TEST_FORCE_FAIL:
+    process.env.NEXT_PUBLIC_PAYMENT_TEST_FORCE_FAIL,
 })
 
 /**

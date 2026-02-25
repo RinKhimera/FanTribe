@@ -13,7 +13,7 @@ import { internalMutation, MutationCtx, query } from "./_generated/server"
  * Règles métier:
  * - postsCount: +1 à la création, -1 à la suppression
  * - totalLikes: +1 au like, -1 au unlike
- * - subscribersCount: +1 au nouvel abonnement actif (PAS de décrement à l'expiration)
+ * - subscribersCount: +1 au nouvel abonnement actif, -1 à l'annulation
  */
 export async function incrementUserStat(
   ctx: MutationCtx,

@@ -4,6 +4,7 @@ import "@/app/globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
 import { MotionConfig } from "motion/react"
+import { PaymentTestBanner } from "@/components/shared/payment-test-banner"
 import ConvexClientProvider from "@/providers/convex-client-provider"
 import { ServiceWorkerRegistration } from "@/components/shared/service-worker-registration"
 import { ThemeProvider } from "@/providers/theme-provider"
@@ -61,6 +62,7 @@ export default function RootLayout({
         >
           <MotionConfig reducedMotion="user">
             <ConvexClientProvider>
+              <PaymentTestBanner />
               {children}
             </ConvexClientProvider>
           </MotionConfig>

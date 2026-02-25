@@ -2,7 +2,12 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
+import { simulateTipPayment } from "@/actions/simulate-payment"
 import { env } from "@/lib/config/env"
+import {
+  isPaymentTestForceFail,
+  isPaymentTestMode,
+} from "@/lib/config/payment-test"
 import { stripe } from "@/lib/services/stripe"
 
 const baseUrl =
@@ -24,6 +29,29 @@ export async function startStripeTipCheckout(params: {
 
   if (!userId || !user) {
     return { error: "Unauthorized" }
+  }
+
+  // Test mode: simulate tip payment without calling Stripe
+  if (isPaymentTestMode()) {
+    if (isPaymentTestForceFail()) {
+      redirect(
+        `/payment/result?status=failed&type=tip&username=${params.creatorUsername}&reason=test_force_fail`,
+      )
+    }
+    const result = await simulateTipPayment({
+      senderId: params.senderId,
+      creatorId: params.creatorId,
+      creatorUsername: params.creatorUsername,
+      amount: params.amount,
+      tipMessage: params.tipMessage,
+      context: params.context,
+      postId: params.postId,
+      conversationId: params.conversationId,
+    })
+    redirect(
+      result.redirectUrl ||
+        `/payment/result?status=failed&type=tip&username=${params.creatorUsername}`,
+    )
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -53,8 +81,8 @@ export async function startStripeTipCheckout(params: {
       postId: params.postId || "",
       conversationId: params.conversationId || "",
     },
-    success_url: `${baseUrl}/payment/merci?provider=stripe&type=tip&session_id={CHECKOUT_SESSION_ID}&username=${params.creatorUsername}`,
-    cancel_url: `${baseUrl}/payment/cancelled?provider=stripe&type=tip&reason=cancelled&username=${params.creatorUsername}`,
+    success_url: `${baseUrl}/payment/result?status=success&provider=stripe&type=tip&session_id={CHECKOUT_SESSION_ID}&username=${params.creatorUsername}`,
+    cancel_url: `${baseUrl}/payment/result?status=failed&provider=stripe&type=tip&reason=cancelled&username=${params.creatorUsername}`,
   })
 
   if (session.url) {

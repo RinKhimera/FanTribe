@@ -2,7 +2,12 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
+import { simulateSubscriptionPayment } from "@/actions/simulate-payment"
 import { env } from "@/lib/config/env"
+import {
+  isPaymentTestForceFail,
+  isPaymentTestMode,
+} from "@/lib/config/payment-test"
 import { stripe } from "@/lib/services/stripe"
 
 const baseUrl =
@@ -22,6 +27,25 @@ export async function startStripeCheckout(params: {
     return { error: "Unauthorized" }
   }
 
+  // Test mode: simulate payment without calling Stripe
+  if (isPaymentTestMode()) {
+    if (isPaymentTestForceFail()) {
+      redirect(
+        `/payment/result?status=failed&username=${params.creatorUsername}&reason=test_force_fail`,
+      )
+    }
+    const result = await simulateSubscriptionPayment({
+      creatorId: params.creatorId,
+      subscriberId: params.subscriberId,
+      creatorUsername: params.creatorUsername,
+      action: params.action,
+    })
+    redirect(
+      result.redirectUrl ||
+        `/payment/result?status=failed&username=${params.creatorUsername}`,
+    )
+  }
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -39,8 +63,8 @@ export async function startStripeCheckout(params: {
       creatorUsername: params.creatorUsername,
       action: params.action,
     },
-    success_url: `${baseUrl}/payment/merci?provider=stripe&session_id={CHECKOUT_SESSION_ID}&username=${params.creatorUsername}`,
-    cancel_url: `${baseUrl}/payment/cancelled?provider=stripe&reason=cancelled&username=${params.creatorUsername}`,
+    success_url: `${baseUrl}/payment/result?status=success&provider=stripe&session_id={CHECKOUT_SESSION_ID}&username=${params.creatorUsername}`,
+    cancel_url: `${baseUrl}/payment/result?status=failed&provider=stripe&reason=cancelled&username=${params.creatorUsername}`,
   })
 
   if (session.url) {
