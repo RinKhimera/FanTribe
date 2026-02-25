@@ -65,6 +65,14 @@ export function MediaLightbox({
       on={{
         view: ({ index: i }) => onIndexChange?.(i),
       }}
+      render={
+        slides.length <= 1
+          ? {
+              buttonPrev: () => null,
+              buttonNext: () => null,
+            }
+          : undefined
+      }
       styles={{
         slide: { padding: 0 },
       }}

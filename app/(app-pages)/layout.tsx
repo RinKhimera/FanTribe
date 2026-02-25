@@ -1,7 +1,9 @@
 "use client"
 
 import { Loader2 } from "lucide-react"
+import { usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
+import { useEffect, useRef } from "react"
 import { AppLayout } from "@/components/layout"
 import { BannedUserScreen } from "@/components/shared/banned-user-screen"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -13,7 +15,18 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { currentUser, isLoading } = useCurrentUser()
+  const isFirstRender = useRef(true)
+
+  // Scroll to top on route change (shared layouts keep scroll position)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   // Start presence tracking (heartbeat every 2 minutes)
   usePresence()
