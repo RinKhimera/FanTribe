@@ -205,19 +205,30 @@ function ImageGrid({
 function VideoThumbnailCell({
   media,
   onPlay,
+  onRatioDetected,
 }: {
   media: PostMediaType
   onPlay: () => void
+  onRatioDetected?: (ratio: number) => void
 }) {
   const [thumbLoaded, setThumbLoaded] = useState(false)
   const [thumbError, setThumbError] = useState(false)
+  const [detectedRatio, setDetectedRatio] = useState<number | null>(null)
   const hasThumbnail = media.thumbnailUrl && !thumbError
+
+  // Priority: stored dimensions > detected from thumbnail > default
+  const ratio =
+    media.width && media.height
+      ? getClampedAspectRatio(media)
+      : detectedRatio
+        ? Math.min(Math.max(detectedRatio, RATIO_MIN), RATIO_MAX)
+        : RATIO_DEFAULT
 
   return (
     <button
       type="button"
       className="group focus-visible:ring-ring relative w-full cursor-pointer overflow-hidden rounded-xl bg-black focus-visible:ring-1 focus-visible:outline-hidden"
-      style={{ aspectRatio: "16 / 9" }}
+      style={{ aspectRatio: ratio }}
       onClick={(e) => {
         e.stopPropagation()
         onPlay()
@@ -240,7 +251,15 @@ function VideoThumbnailCell({
               "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
               thumbLoaded ? "opacity-100" : "opacity-0",
             )}
-            onLoad={() => setThumbLoaded(true)}
+            onLoad={(e) => {
+              setThumbLoaded(true)
+              const img = e.currentTarget
+              if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                const r = img.naturalWidth / img.naturalHeight
+                setDetectedRatio(r)
+                onRatioDetected?.(Math.min(Math.max(r, RATIO_MIN), RATIO_MAX))
+              }
+            }}
             onError={() => setThumbError(true)}
           />
         </>
@@ -282,6 +301,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [activeVideoIds, setActiveVideoIds] = useState<Set<string>>(new Set())
+  const [videoRatios, setVideoRatios] = useState<Record<string, number>>({})
 
   const videoMedias = medias.filter((m) => m.type === "video")
   const imageMedias = medias.filter((m) => m.type === "image")
@@ -318,19 +338,26 @@ export const PostMedia: React.FC<PostMediaProps> = ({
       {/* Videos first (legacy mixed posts, or single video posts) */}
       {videoMedias.map((media) => {
         const isActive = activeVideoIds.has(media.mediaId)
+        const playerRatio =
+          media.width && media.height
+            ? getClampedAspectRatio(media)
+            : videoRatios[media.mediaId] ?? RATIO_DEFAULT
 
         return (
           <div key={media.url} onClick={(e) => e.stopPropagation()}>
             {isActive ? (
               <BunnyVideoPlayer
                 src={buildAutoplayUrl(media.url)}
-                aspectRatio="16 / 9"
+                aspectRatio={`${playerRatio}`}
                 className="rounded-xl"
               />
             ) : (
               <VideoThumbnailCell
                 media={media}
                 onPlay={() => activateVideo(media.mediaId)}
+                onRatioDetected={(r) =>
+                  setVideoRatios((prev) => ({ ...prev, [media.mediaId]: r }))
+                }
               />
             )}
           </div>
