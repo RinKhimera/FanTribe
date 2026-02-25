@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     // Si la transaction existe déjà, rediriger directement vers la page de succès
     if (transactionStatus.exists) {
       return Response.redirect(
-        new URL(`/payment/result?status=success&transaction=${transactionId}`, request.url),
+        new URL(`/payment/result?status=success&transaction=${transactionId}&provider=cinetpay`, request.url),
       )
     }
 
@@ -71,11 +71,13 @@ export async function POST(request: Request) {
 
     // Vérification que le paiement est réussi
     if (checkData.code === "00") {
+      // Extraire metadata pour le redirect et le traitement
+      const metadata = (
+        checkData as { data?: { metadata?: Record<string, string> } }
+      )?.data?.metadata
+
       // Optionnel: tenter un traitement idempotent si le webhook n'a pas encore touché
       try {
-        const metadata = (
-          checkData as { data?: { metadata?: Record<string, string> } }
-        )?.data?.metadata
         await fetchAction(api.internalActions.processPayment, {
           provider: "cinetpay",
           providerTransactionId: transactionId,
@@ -91,8 +93,9 @@ export async function POST(request: Request) {
       }
 
       // Rediriger vers la page de succès quoi qu'il arrive (le traitement est idempotent)
+      const metaType = metadata?.type === "tip" ? "&type=tip" : ""
       return Response.redirect(
-        new URL(`/payment/result?status=success&transaction=${transactionId}`, request.url),
+        new URL(`/payment/result?status=success&transaction=${transactionId}&provider=cinetpay${metaType}`, request.url),
       )
     } else {
       // Paiement refusé ou autre statut
@@ -101,7 +104,7 @@ export async function POST(request: Request) {
       )
       return Response.redirect(
         new URL(
-          `/payment/result?status=failed&reason=payment_failed&code=${checkData.code}`,
+          `/payment/result?status=failed&reason=payment_failed&code=${checkData.code}&provider=cinetpay`,
           request.url,
         ),
       )

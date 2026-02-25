@@ -1,6 +1,6 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
-import { requireSuperuser, requireCreator } from "./lib/auth"
+import { getAuthenticatedUser, requireSuperuser, requireCreator } from "./lib/auth"
 import {
   SUBSCRIPTION_CREATOR_RATE,
   TIP_CREATOR_RATE,
@@ -732,5 +732,96 @@ export const getCreatorEarnings = query({
       totalTipsNet,
       tipCount: allTips.length,
     }
+  },
+})
+
+/**
+ * Récupère les détails d'un paiement par son identifiant de transaction provider.
+ * Cherche dans les tables `transactions` (abonnements) et `tips` (pourboires).
+ * Utilisé sur la page de résultat de paiement pour enrichir l'affichage.
+ */
+export const getPaymentDetails = query({
+  args: {
+    providerTransactionId: v.string(),
+  },
+  returns: v.union(
+    v.object({
+      found: v.literal(true),
+      type: v.union(v.literal("subscription"), v.literal("tip")),
+      amount: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      provider: v.string(),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("succeeded"),
+        v.literal("failed"),
+        v.literal("refunded"),
+      ),
+      createdAt: v.number(),
+      creator: v.union(
+        v.object({
+          name: v.string(),
+          username: v.optional(v.string()),
+          image: v.string(),
+        }),
+        v.null(),
+      ),
+    }),
+    v.object({
+      found: v.literal(false),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    await getAuthenticatedUser(ctx)
+
+    // 1. Chercher dans transactions (abonnements)
+    const tx = await ctx.db
+      .query("transactions")
+      .withIndex("by_providerTransactionId", (q) =>
+        q.eq("providerTransactionId", args.providerTransactionId),
+      )
+      .first()
+
+    if (tx) {
+      const creator = await ctx.db.get(tx.creatorId)
+      return {
+        found: true as const,
+        type: "subscription" as const,
+        amount: tx.amount,
+        currency: tx.currency,
+        provider: tx.provider,
+        status: tx.status,
+        createdAt: tx._creationTime,
+        creator: creator
+          ? { name: creator.name, username: creator.username, image: creator.image }
+          : null,
+      }
+    }
+
+    // 2. Chercher dans tips (pourboires)
+    const tip = await ctx.db
+      .query("tips")
+      .withIndex("by_providerTransactionId", (q) =>
+        q.eq("providerTransactionId", args.providerTransactionId),
+      )
+      .first()
+
+    if (tip) {
+      const creator = await ctx.db.get(tip.creatorId)
+      return {
+        found: true as const,
+        type: "tip" as const,
+        amount: tip.amount,
+        currency: tip.currency,
+        provider: tip.provider,
+        status: tip.status,
+        createdAt: tip._creationTime,
+        creator: creator
+          ? { name: creator.name, username: creator.username, image: creator.image }
+          : null,
+      }
+    }
+
+    return { found: false as const }
   },
 })
