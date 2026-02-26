@@ -111,6 +111,7 @@ export default defineSchema({
         }),
       ),
     ),
+    onboardingCompleted: v.optional(v.boolean()),
   })
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_username", ["username"])

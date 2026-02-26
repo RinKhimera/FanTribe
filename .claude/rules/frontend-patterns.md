@@ -15,6 +15,12 @@ const data = useQuery(api.posts.getPost, { postId })
 // Conditional query (skip when args unavailable)
 const sub = useQuery(api.subscriptions.get, userId ? { userId } : "skip")
 
+// ⚠️ Auth race condition: even on Clerk-protected pages, useQuery runs before
+// auth hydrates on first render → throws "Not authenticated" ConvexError
+// Always guard queries requiring auth:
+const { isAuthenticated } = useCurrentUser()
+const data = useQuery(api.users.getSomething, isAuthenticated ? { ... } : "skip")
+
 // Mutation with useTransition
 const [isPending, startTransition] = useTransition()
 const createPost = useMutation(api.posts.createPost)
@@ -108,6 +114,11 @@ const form = useForm<z.infer<typeof schema>>({
 // Submit: form.handleSubmit(onSubmit)
 // Reset: form.reset({ content: "" })
 // Field: <FormField control={form.control} name="content" render={...} />
+```
+**`form.watch()` ESLint**: triggers `react-hooks/incompatible-library` — suppress per call:
+```typescript
+// eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form's watch is intentional
+const value = form.watch("fieldName")
 ```
 
 ## Animations (motion/react)
@@ -213,6 +224,45 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 
 ## Unicode in JSX Gotcha
 - **Unicode escapes (`\u2026`, `\u00e9`, etc.) render literally in JSX text content** — they only work inside JS string literals (quotes/template literals), NOT in raw text between tags. Always use actual Unicode characters (`…`, `é`, `è`, `à`, `É`) in JSX text. Example: `<span>Chargement…</span>` not `<span>Chargement\u2026</span>`.
+
+## Clerk Webhook Race Condition (signup flow)
+After Clerk signup, `forceRedirectUrl` fires **before** the `user.created` webhook creates the Convex user doc.
+`useCurrentUser()` returns three distinct states:
+```typescript
+currentUser === undefined  // Convex query still in-flight (show spinner)
+currentUser === null       // Convex loaded but doc not yet created (webhook delay ~1-5s)
+currentUser instanceof Doc // Ready
+```
+The `null` state is not a loading state — it needs a dedicated timeout + retry UI:
+```typescript
+const WEBHOOK_TIMEOUT_MS = 15_000
+const webhookStartRef = useRef(Date.now())
+const [webhookTimedOut, setWebhookTimedOut] = useState(false)
+
+useEffect(() => {
+  if (!isAuthenticated || currentUser !== null) return
+  const remaining = WEBHOOK_TIMEOUT_MS - (Date.now() - webhookStartRef.current)
+  if (remaining <= 0) { setWebhookTimedOut(true); return }
+  const timer = setTimeout(() => setWebhookTimedOut(true), remaining)
+  return () => clearTimeout(timer)
+}, [isAuthenticated, currentUser])
+```
+
+## Multi-Step Wizard Pattern
+```typescript
+// Directional slide with AnimatePresence
+const [currentStep, setCurrentStep] = useState(1)
+const [[, direction], setPage] = useState([1, 0])
+
+const goToStep = (step: number) => {
+  setPage([step, step > currentStep ? 1 : -1])
+  setCurrentStep(step)
+  window.scrollTo({ top: 0, behavior: "smooth" })
+}
+
+// Render: AnimatePresence mode="wait" + custom={direction} + stepSlideVariants from lib/animations.ts
+// Stepper UI: components/shared/stepper.tsx — accepts steps: StepConfig[], currentStep: number (1-based)
+```
 
 ## Navigation Gotcha
 Nav link filters (`creatorOnlyLinks`, `superuserOnlyLinks`) exist in BOTH `components/layout/` AND `components/shared/` (left-sidebar, mobile-menu/mobile-navigation). Update **all 4 files** when changing nav links or visibility rules.

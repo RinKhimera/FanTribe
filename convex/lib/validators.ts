@@ -106,6 +106,7 @@ export const userDocValidator = v.object({
   banDetails: v.optional(banDetailsValidator),
   banHistory: v.optional(v.array(banHistoryEntryValidator)),
   badges: v.optional(v.array(badgeValidator)),
+  onboardingCompleted: v.optional(v.boolean()),
 })
 
 export const postMediaValidator = v.object({

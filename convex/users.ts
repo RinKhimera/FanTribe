@@ -144,6 +144,7 @@ export const getCurrentUser = query({
       banDetails: v.optional(banDetailsValidator),
       banHistory: v.optional(v.array(banHistoryEntryValidator)),
       badges: v.optional(v.array(badgeValidator)),
+      onboardingCompleted: v.optional(v.boolean()),
       banExpired: v.optional(v.boolean()),
       activeBan: v.optional(
         v.object({
@@ -456,6 +457,95 @@ export const getAvailableUsername = query({
       .unique()
 
     return !existingUsername
+  },
+})
+
+export const updateOnboardingProfile = mutation({
+  args: {
+    username: v.optional(v.string()),
+    displayName: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    location: v.optional(v.string()),
+    socialLinks: v.optional(v.array(socialLinkValidator)),
+    allowAdultContent: v.optional(v.boolean()),
+    onboardingCompleted: v.optional(v.boolean()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx)
+
+    // Validate username uniqueness if provided
+    if (args.username !== undefined) {
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_username", (q) => q.eq("username", args.username))
+        .unique()
+      if (existing && existing._id !== user._id) {
+        throw new ConvexError("Cet identifiant est déjà pris.")
+      }
+    }
+
+    const patch: Record<string, unknown> = {}
+    if (args.username !== undefined) patch.username = args.username
+    if (args.displayName !== undefined) patch.name = args.displayName
+    if (args.bio !== undefined) patch.bio = args.bio
+    if (args.location !== undefined) patch.location = args.location
+    if (args.socialLinks !== undefined) patch.socialLinks = args.socialLinks
+    if (args.allowAdultContent !== undefined) patch.allowAdultContent = args.allowAdultContent
+    if (args.onboardingCompleted !== undefined) patch.onboardingCompleted = args.onboardingCompleted
+
+    await ctx.db.patch(user._id, patch)
+    return null
+  },
+})
+
+export const suggestUsernames = query({
+  args: { baseName: v.string() },
+  returns: v.array(v.string()),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+
+    // Normalize base
+    const base = args.baseName
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "")
+      .slice(0, 20)
+
+    if (base.length < 3) return []
+
+    const paddedBase = base.length < 6 ? base + "_fan" : base
+
+    const candidates = [
+      paddedBase,
+      `${paddedBase}1`,
+      `${paddedBase}2`,
+      `${paddedBase.slice(0, 18)}07`,
+      `${paddedBase.slice(0, 18)}99`,
+      `${paddedBase.slice(0, 18)}vip`,
+    ]
+      .filter((c) => c.length >= 6 && c.length <= 24)
+      // Must not end with underscore or contain more than 1 underscore (matches Zod username validation)
+      .filter((c) => !c.endsWith("_") && (c.match(/_/g) || []).length <= 1)
+      // Deduplicate
+      .filter((c, i, arr) => arr.indexOf(c) === i)
+
+    const results: string[] = []
+    for (const candidate of candidates) {
+      if (results.length >= 4) break
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_username", (q) => q.eq("username", candidate))
+        .unique()
+      if (!existing) {
+        results.push(candidate)
+      }
+    }
+    return results
   },
 })
 

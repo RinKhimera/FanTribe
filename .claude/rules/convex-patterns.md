@@ -80,6 +80,16 @@ returns: v.object({ author: userDocValidator, ... })
 returns: v.object({ author: v.object({ name: v.string(), ... }), ... })
 ```
 
+## Server-Generated Values Must Mirror Client Zod Rules
+When a query generates suggestions or candidates (e.g., `suggestUsernames`), apply the **same constraints** as the client-side Zod schema before returning — otherwise suggestions pass server validation but fail Zod on click:
+```typescript
+// Zod schema rule: max 1 underscore, no trailing underscore
+// Mirror this in the Convex query:
+const candidates = rawCandidates
+  .filter(c => !c.endsWith("_") && (c.match(/_/g) || []).length <= 1)
+```
+If Zod rules change, update the Convex query filter too.
+
 ## Migration Scripts (Self-Scheduling Batch)
 For data backfill on existing documents, use `convex/migrations/`:
 1. `internalQuery` — paginated fetch of documents needing migration
