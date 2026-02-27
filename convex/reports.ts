@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values"
-import { api, internal } from "./_generated/api"
+import { internal } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"

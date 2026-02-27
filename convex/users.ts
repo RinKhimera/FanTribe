@@ -1,6 +1,6 @@
 import { UserJSON } from "@clerk/backend"
 import { ConvexError, Validator, v } from "convex/values"
-import { api, internal } from "./_generated/api"
+import { internal } from "./_generated/api"
 import {
   QueryCtx,
   internalMutation,

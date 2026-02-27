@@ -77,7 +77,7 @@ export function useBunnyUpload() {
       userId: string
       onProgress?: (percent: number) => void
     }): Promise<UploadMediaResult> => {
-      const { file, fileName, userId, onProgress } = options
+      const { file, fileName, onProgress } = options
 
       setIsUploading(true)
       const fileKey = `${file.name}_${Date.now()}`

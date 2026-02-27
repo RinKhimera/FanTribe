@@ -110,7 +110,6 @@ const OnboardingPage = () => {
           if (data._avatarUrl) {
             await updateProfileImage({
               imgUrl: data._avatarUrl,
-              tokenIdentifier: currentUser!.tokenIdentifier,
             })
           }
           await updateOnboarding({

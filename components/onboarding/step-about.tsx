@@ -225,7 +225,6 @@ interface SocialLinkRowProps {
 }
 
 const SocialLinkRow = ({ form, index, onRemove }: SocialLinkRowProps) => {
-  // eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form's watch is intentional
   const url = form.watch(`socialLinks.${index}.url`) ?? ""
   const hasUrl = url.trim().length > 0
   const isValid = hasUrl && isValidUrl(url)
