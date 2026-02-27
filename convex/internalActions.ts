@@ -1,6 +1,6 @@
 import { v } from "convex/values"
 import { internal } from "./_generated/api"
-import { Doc, Id } from "./_generated/dataModel"
+import { Id } from "./_generated/dataModel"
 import {
   action,
   internalAction,
@@ -29,20 +29,6 @@ type ProcessPaymentResult = {
   transactionId?: Id<"transactions">
   providerTransactionId?: string
   provider?: string
-}
-
-type CheckTransactionResult = {
-  exists: boolean
-  transactionId: string
-  subscriptionId?: Id<"subscriptions">
-  status?: string
-  details?: {
-    creator?: Id<"users">
-    subscriber?: Id<"users">
-    startDate?: number
-    endDate?: number
-    amountPaid?: number
-  }
 }
 
 // Internal query pour retrouver une transaction par providerTransactionId
@@ -480,15 +466,16 @@ export const processPaymentAtomic = internalMutation({
   },
 })
 
+// ============================================================================
+// Test-only Actions (guarded by PAYMENT_TEST_MODE env var)
+// ============================================================================
+
 /**
- * Action publique pour traiter un paiement.
- * Delegue le traitement a la mutation atomique processPaymentAtomic
- * pour eviter les race conditions.
- *
- * @deprecated Utiliser processPaymentAtomic directement depuis les fonctions Convex.
- * Cette action est conservee pour la compatibilite avec les webhooks externes.
+ * Public action for test/simulation mode ONLY.
+ * Guarded by PAYMENT_TEST_MODE env var — throws in production.
+ * Called by actions/simulate-payment.ts.
  */
-export const processPayment = action({
+export const simulatePayment = action({
   args: {
     provider: v.string(),
     providerTransactionId: v.string(),
@@ -496,7 +483,6 @@ export const processPayment = action({
     subscriberId: v.id("users"),
     amount: v.number(),
     currency: v.string(),
-    subscriptionType: v.optional(v.string()),
     paymentMethod: v.optional(v.string()),
     startedAt: v.optional(v.string()),
   },
@@ -522,7 +508,9 @@ export const processPayment = action({
     provider: v.optional(v.string()),
   }),
   handler: async (ctx, args): Promise<ProcessPaymentResult> => {
-    // Deleguer a la mutation atomique pour eviter les race conditions
+    if (process.env.PAYMENT_TEST_MODE !== "true") {
+      throw new Error("Test mode is not enabled")
+    }
     return await ctx.runMutation(
       internal.internalActions.processPaymentAtomic,
       {
@@ -539,11 +527,12 @@ export const processPayment = action({
   },
 })
 
-// ============================================================================
-// Tip Processing
-// ============================================================================
-
-export const processTip = action({
+/**
+ * Public action for test/simulation mode ONLY.
+ * Guarded by PAYMENT_TEST_MODE env var — throws in production.
+ * Called by actions/simulate-payment.ts.
+ */
+export const simulateTip = action({
   args: {
     provider: v.string(),
     providerTransactionId: v.string(),
@@ -569,6 +558,9 @@ export const processTip = action({
     alreadyProcessed: v.optional(v.boolean()),
   }),
   handler: async (ctx, args) => {
+    if (process.env.PAYMENT_TEST_MODE !== "true") {
+      throw new Error("Test mode is not enabled")
+    }
     const result: {
       success: boolean
       message: string
@@ -587,58 +579,6 @@ export const processTip = action({
       conversationId: args.conversationId,
     })
     return result
-  },
-})
-
-export const checkTransaction = action({
-  args: {
-    transactionId: v.string(),
-  },
-  returns: v.object({
-    exists: v.boolean(),
-    transactionId: v.string(),
-    subscriptionId: v.optional(v.id("subscriptions")),
-    status: v.optional(v.string()),
-    details: v.optional(
-      v.object({
-        creator: v.optional(v.id("users")),
-        subscriber: v.optional(v.id("users")),
-        startDate: v.optional(v.number()),
-        endDate: v.optional(v.number()),
-        amountPaid: v.optional(v.number()),
-      }),
-    ),
-  }),
-  handler: async (ctx, args): Promise<CheckTransactionResult> => {
-    // Vérifie si cette transaction existe
-    const subscription: Doc<"subscriptions"> | null = await ctx.runQuery(
-      internal.subscriptions.getSubscriptionByTransactionId,
-      {
-        transactionId: args.transactionId,
-      },
-    )
-
-    if (!subscription) {
-      return {
-        exists: false,
-        transactionId: args.transactionId,
-      }
-    }
-
-    // La transaction existe, retourne les détails pertinents
-    return {
-      exists: true,
-      transactionId: args.transactionId,
-      subscriptionId: subscription._id,
-      status: subscription.status,
-      details: {
-        creator: subscription.creator,
-        subscriber: subscription.subscriber,
-        startDate: subscription.startDate,
-        endDate: subscription.endDate,
-        amountPaid: subscription.amountPaid,
-      },
-    }
   },
 })
 

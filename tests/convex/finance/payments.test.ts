@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test"
 import { describe, expect, it } from "vitest"
-import { api } from "../../../convex/_generated/api"
+import { internal } from "../../../convex/_generated/api"
 import { Doc } from "../../../convex/_generated/dataModel"
 import schema from "../../../convex/schema"
 
@@ -32,14 +32,17 @@ describe("payments", () => {
       })
     })
 
-    const result = await t.action(api.internalActions.processPayment, {
-      provider: "cinetpay",
-      providerTransactionId: "tx_unique_123",
-      creatorId,
-      subscriberId,
-      amount: 1000,
-      currency: "XAF",
-    })
+    const result = await t.mutation(
+      internal.internalActions.processPaymentAtomic,
+      {
+        provider: "cinetpay",
+        providerTransactionId: "tx_unique_123",
+        creatorId,
+        subscriberId,
+        amount: 1000,
+        currency: "XAF",
+      },
+    )
 
     expect(result.success).toBe(true)
     expect(result.status).toBe("active")
@@ -88,24 +91,30 @@ describe("payments", () => {
     })
 
     // First call
-    const result1 = await t.action(api.internalActions.processPayment, {
-      provider: "cinetpay",
-      providerTransactionId: "tx_idempotent_123",
-      creatorId,
-      subscriberId,
-      amount: 1000,
-      currency: "XAF",
-    })
+    const result1 = await t.mutation(
+      internal.internalActions.processPaymentAtomic,
+      {
+        provider: "cinetpay",
+        providerTransactionId: "tx_idempotent_123",
+        creatorId,
+        subscriberId,
+        amount: 1000,
+        currency: "XAF",
+      },
+    )
 
     // Second call
-    const result2 = await t.action(api.internalActions.processPayment, {
-      provider: "cinetpay",
-      providerTransactionId: "tx_idempotent_123",
-      creatorId,
-      subscriberId,
-      amount: 1000,
-      currency: "XAF",
-    })
+    const result2 = await t.mutation(
+      internal.internalActions.processPaymentAtomic,
+      {
+        provider: "cinetpay",
+        providerTransactionId: "tx_idempotent_123",
+        creatorId,
+        subscriberId,
+        amount: 1000,
+        currency: "XAF",
+      },
+    )
 
     expect(result2.success).toBe(true)
     expect(result2.alreadyProcessed).toBe(true)

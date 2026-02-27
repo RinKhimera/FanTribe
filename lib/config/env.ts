@@ -6,8 +6,13 @@ import { z } from "zod"
  * - Server Actions ("use server")
  * - API Routes
  * - Server Components (sans "use client")
- * 
+ *
  * Pour du code client, utilisez lib/env.client.ts
+ *
+ * Note: CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET, CONVEX_DEPLOYMENT sont
+ * lus directement par leurs SDKs respectifs via process.env — pas besoin
+ * de les valider ici. Les secrets Bunny/CinetPay/Stripe webhook sont
+ * exclusivement dans le dashboard Convex.
  */
 const serverEnvSchema = z.object({
   // Node environment
@@ -15,24 +20,10 @@ const serverEnvSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
 
-  // Convex (Backend)
-  CONVEX_DEPLOYMENT: z.string().min(1, "CONVEX_DEPLOYMENT is required"),
-
-  // Clerk (Authentication) - Server only
-  CLERK_SECRET_KEY: z
-    .string()
-    .startsWith("sk_", "CLERK_SECRET_KEY must start with 'sk_'"),
-  CLERK_WEBHOOK_SECRET: z
-    .string()
-    .startsWith("whsec_", "CLERK_WEBHOOK_SECRET must start with 'whsec_'"),
-
   // Stripe (Card payments) - Server only
   STRIPE_SECRET_KEY: z
     .string()
     .startsWith("sk_", "STRIPE_SECRET_KEY must start with 'sk_'"),
-  STRIPE_WEBHOOK_SECRET: z
-    .string()
-    .startsWith("whsec_", "STRIPE_WEBHOOK_SECRET must start with 'whsec_'"),
   STRIPE_PRICE_ID: z
     .string()
     .startsWith("price_", "STRIPE_PRICE_ID must start with 'price_'"),
@@ -41,11 +32,6 @@ const serverEnvSchema = z.object({
   RESEND_API_KEY: z
     .string()
     .startsWith("re_", "RESEND_API_KEY must start with 're_'"),
-
-  // CinetPay (Mobile Money payments) - Server only
-  CINETPAY_SECRET_KEY: z
-    .string()
-    .min(1, "CINETPAY_SECRET_KEY is required for HMAC verification"),
 })
 
 /**
@@ -54,14 +40,9 @@ const serverEnvSchema = z.object({
  */
 export const env = serverEnvSchema.parse({
   NODE_ENV: process.env.NODE_ENV,
-  CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,
-  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-  CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
-  CINETPAY_SECRET_KEY: process.env.CINETPAY_SECRET_KEY,
 })
 
 /**

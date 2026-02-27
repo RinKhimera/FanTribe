@@ -165,10 +165,9 @@ NEXT_PUBLIC_CINETPAY_SITE_ID=
 NEXT_PUBLIC_CINETPAY_API_KEY=
 
 # Stripe (Cartes)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
 STRIPE_PRICE_ID=
+# Note: STRIPE_WEBHOOK_SECRET est dans le dashboard Convex uniquement
 
 # Email (Resend)
 RESEND_API_KEY=
@@ -547,8 +546,8 @@ git push origin main
    - Déployer
 
 3. **Configurer les Webhooks**
-   - CinetPay → `https://votredomaine.com/api/notification`
-   - Stripe → `https://votredomaine.com/api/stripe`
+   - Stripe → `https://<convex-deployment>.convex.site/stripe`
+   - CinetPay → URLs automatiques (dérivées de `NEXT_PUBLIC_CONVEX_URL` dans `lib/services/cinetpay.ts`)
 
 ### Variables d'Environnement Production
 

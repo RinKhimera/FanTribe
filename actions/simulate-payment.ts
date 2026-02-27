@@ -29,7 +29,7 @@ export async function simulateSubscriptionPayment(params: {
 
   const providerTransactionId = `test_sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  const result = await fetchAction(api.internalActions.processPayment, {
+  const result = await fetchAction(api.internalActions.simulatePayment, {
     provider: "test",
     providerTransactionId,
     creatorId: params.creatorId as Id<"users">,
@@ -70,7 +70,7 @@ export async function simulateTipPayment(params: {
 
   const providerTransactionId = `test_tip_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  const result = await fetchAction(api.internalActions.processTip, {
+  const result = await fetchAction(api.internalActions.simulateTip, {
     provider: "test",
     providerTransactionId,
     senderId: params.senderId as Id<"users">,

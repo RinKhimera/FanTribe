@@ -1,5 +1,3 @@
-"use server"
-
 import type { WebhookEvent } from "@clerk/backend"
 import { httpRouter } from "convex/server"
 import { Webhook } from "svix"
@@ -102,6 +100,95 @@ async function validateRequest(req: Request): Promise<WebhookEvent | null> {
     return null
   }
 }
+
+// ============================================================================
+// STRIPE WEBHOOK
+// ============================================================================
+
+http.route({
+  path: "/stripe",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const signature = request.headers.get("stripe-signature")
+    if (!signature) {
+      return new Response("Missing stripe-signature header", { status: 400 })
+    }
+
+    const body = await request.text()
+
+    try {
+      const result = await ctx.runAction(
+        internal.stripeWebhook.verifyAndProcess,
+        { body, signature },
+      )
+
+      if (!result.success) {
+        return new Response(result.message, { status: 400 })
+      }
+
+      return new Response("ok", { status: 200 })
+    } catch (error) {
+      console.error("Stripe webhook error:", error)
+      return new Response("Webhook error", { status: 500 })
+    }
+  }),
+})
+
+// ============================================================================
+// CINETPAY WEBHOOK
+// ============================================================================
+
+http.route({
+  path: "/cinetpay",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.text()
+    const xToken = request.headers.get("x-token")
+
+    try {
+      const result = await ctx.runAction(
+        internal.cinetpayWebhook.verifyAndProcessWebhook,
+        { body, xToken },
+      )
+
+      return new Response(JSON.stringify({ message: result.message }), {
+        status: result.status,
+        headers: { "Content-Type": "application/json" },
+      })
+    } catch (error) {
+      console.error("CinetPay webhook error:", error)
+      return new Response(
+        JSON.stringify({ error: "Webhook error" }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      )
+    }
+  }),
+})
+
+// ============================================================================
+// CINETPAY RETURN URL (user redirect after payment)
+// ============================================================================
+
+http.route({
+  path: "/cinetpay-return",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const appUrl = process.env.APP_URL || "https://fantribe.io"
+    const body = await request.text()
+
+    try {
+      const result = await ctx.runAction(
+        internal.cinetpayWebhook.verifyAndProcessReturn,
+        { body },
+      )
+
+      return Response.redirect(new URL(result.redirect, appUrl).toString())
+    } catch (error) {
+      console.error("CinetPay return error:", error)
+      return Response.redirect(`${appUrl}/payment/result?status=failed&reason=unexpected_error`)
+    }
+  }),
+})
 
 // ============================================================================
 // BUNNY CDN - CORS & Helpers

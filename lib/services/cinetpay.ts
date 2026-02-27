@@ -39,10 +39,10 @@ export const initializeCinetPayPayment = async (
       description: paymentData.description || "Abonnement mensuel",
       notify_url:
         process.env.NEXT_PUBLIC_CINETPAY_NOTIFY_URL ||
-        "https://fantribe.io/api/notification",
+        `${(process.env.NEXT_PUBLIC_CONVEX_URL || "").replace(".cloud", ".site")}/cinetpay`,
       return_url:
         process.env.NEXT_PUBLIC_CINETPAY_RETURN_URL ||
-        "https://fantribe.io/api/return",
+        `${(process.env.NEXT_PUBLIC_CONVEX_URL || "").replace(".cloud", ".site")}/cinetpay-return`,
       channels: "ALL",
       metadata: metadataString,
       lang: "FR",

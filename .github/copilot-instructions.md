@@ -6,7 +6,7 @@
 
 ### Key Architecture Patterns
 
-- **Convex Backend**: All database operations, real-time subscriptions, and server functions use Convex. Never write traditional API routes for data operations (exceptions: webhooks at `/api/notification`, `/api/stripe`).
+- **Convex Backend**: All database operations, real-time subscriptions, and server functions use Convex. Never write traditional API routes for data operations. Webhooks (Clerk, Stripe, CinetPay) are handled via Convex HTTP Actions in `convex/http.ts`.
 - **Route Groups**: App uses Next.js route groups: `(app-pages)` for authenticated content, `(auth)` for sign-in/up flows, `(superuser)` for admin functions
 - **Authentication Flow**: Clerk → Convex token exchange → user lookup via `tokenIdentifier` (see `convex/auth.config.ts`)
 - **French Localization**: All UI text and user-facing content MUST be in French
@@ -43,10 +43,9 @@ NEXT_PUBLIC_CINETPAY_SITE_ID=
 NEXT_PUBLIC_CINETPAY_API_KEY=
 
 # Stripe (card payments)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
 STRIPE_PRICE_ID=
+# Note: STRIPE_WEBHOOK_SECRET is in Convex dashboard only
 
 # Email
 RESEND_API_KEY=
@@ -191,12 +190,14 @@ Key tables in `convex/schema.ts`:
 ### Payment Integration
 
 - **CinetPay (Primary)**: African mobile money (Orange Money, MTN Mobile Money)
-  - Webhook: `/app/api/notification/route.ts` receives payment notifications
-  - Test Mode: Bypasses verification in development (`console.log("🧪 TEST MODE")`)
+  - Webhook: Convex HTTP Action at `/cinetpay` (in `convex/http.ts`) → `convex/cinetpayWebhook.ts` verifies HMAC + CinetPay API
+  - Return URL: Convex HTTP Action at `/cinetpay-return` → redirects user after payment
   - Transaction ID stored in `transactions` table with `providerTransactionId`
 - **Stripe (Secondary)**: Card payments for international users
-  - Webhook: `/app/api/stripe/route.ts` handles `checkout.session.completed`
-  - Both call `api.internalActions.processPayment` to activate subscriptions
+  - Webhook: Convex HTTP Action at `/stripe` (in `convex/http.ts`) → `convex/stripeWebhook.ts` verifies signature
+  - Both providers call `internal.internalActions.processPaymentAtomic` (internalMutation) to activate subscriptions
+- **Test Mode**: `NEXT_PUBLIC_PAYMENT_TEST_MODE=true` (Next.js) + `PAYMENT_TEST_MODE=true` (Convex dashboard) enables `simulatePayment`/`simulateTip` actions
+- **Security**: Payment processing functions are `internalMutation` — not callable from browser. Only webhook handlers (signature-verified) and test-guarded actions can trigger them.
 
 ### Cron Jobs (Convex Scheduled Tasks)
 

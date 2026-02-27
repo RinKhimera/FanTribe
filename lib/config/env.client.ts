@@ -2,8 +2,11 @@ import { z } from "zod"
 
 /**
  * ✅ VARIABLES CLIENT (NEXT_PUBLIC_*)
- * Ce fichier peut être importé partout (client et serveur)
- * Seules les variables commençant par NEXT_PUBLIC_ sont ici
+ * Ce fichier ne valide que les variables réellement importées via `clientEnv.XXX`.
+ *
+ * Les autres NEXT_PUBLIC_* (Clerk sign-in/sign-up URLs, CinetPay keys,
+ * payment test mode) sont lues directement via process.env par leurs
+ * modules respectifs — pas besoin de les valider ici.
  */
 const clientEnvSchema = z.object({
   // Convex
@@ -12,32 +15,12 @@ const clientEnvSchema = z.object({
     .url("NEXT_PUBLIC_CONVEX_URL must be a valid URL"),
 
   // Clerk (Authentication)
-  NEXT_PUBLIC_CLERK_FRONTEND_API_URL: z
-    .string()
-    .url("NEXT_PUBLIC_CLERK_FRONTEND_API_URL must be a valid URL"),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z
     .string()
     .startsWith(
       "pk_",
       "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY must start with 'pk_'",
     ),
-  NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().default("/auth/sign-in"),
-  NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().default("/auth/sign-up"),
-
-  // Bunny CDN — Keys are managed in Convex dashboard only
-  // No NEXT_PUBLIC_BUNNY_* secrets needed here
-
-  // CinetPay
-  NEXT_PUBLIC_CINETPAY_SITE_ID: z
-    .string()
-    .min(1, "NEXT_PUBLIC_CINETPAY_SITE_ID is required"),
-  NEXT_PUBLIC_CINETPAY_API_KEY: z
-    .string()
-    .min(1, "NEXT_PUBLIC_CINETPAY_API_KEY is required"),
-
-  // Payment test mode
-  NEXT_PUBLIC_PAYMENT_TEST_MODE: z.string().default("false"),
-  NEXT_PUBLIC_PAYMENT_TEST_FORCE_FAIL: z.string().default("false"),
 })
 
 /**
@@ -46,17 +29,8 @@ const clientEnvSchema = z.object({
  */
 export const clientEnv = clientEnvSchema.parse({
   NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
-  NEXT_PUBLIC_CLERK_FRONTEND_API_URL:
-    process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-  NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
-  NEXT_PUBLIC_CINETPAY_SITE_ID: process.env.NEXT_PUBLIC_CINETPAY_SITE_ID,
-  NEXT_PUBLIC_CINETPAY_API_KEY: process.env.NEXT_PUBLIC_CINETPAY_API_KEY,
-  NEXT_PUBLIC_PAYMENT_TEST_MODE: process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE,
-  NEXT_PUBLIC_PAYMENT_TEST_FORCE_FAIL:
-    process.env.NEXT_PUBLIC_PAYMENT_TEST_FORCE_FAIL,
 })
 
 /**
