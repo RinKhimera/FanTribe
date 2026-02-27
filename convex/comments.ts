@@ -5,6 +5,7 @@ import {
   createNotification,
   removeActorFromNotification,
 } from "./lib/notifications"
+import { hasActiveSubscription } from "./lib/subscriptions"
 import { rateLimiter } from "./lib/rateLimiter"
 import { postDocValidator, userDocValidator } from "./lib/validators"
 
@@ -19,14 +20,19 @@ export const addComment = mutation({
     await rateLimiter.limit(ctx, "addComment", { key: user._id, throws: true })
 
     if (!args.content.trim()) throw new ConvexError("Empty content")
+    if (args.content.length > 1000) throw new ConvexError("Commentaire trop long (max 1000 caractères)")
 
     const post = await ctx.db.get(args.postId)
     if (!post) throw new ConvexError("Post not found")
 
     // Vérifier accès si post subscribers_only
     if (post.visibility === "subscribers_only" && post.author !== user._id) {
-      // Option: vérifier abonnement actif si nécessaire (déjà géré ailleurs ?)
-      // Ici on ne duplique pas la logique pour rester léger.
+      if (user.accountType !== "SUPERUSER") {
+        const hasAccess = await hasActiveSubscription(ctx, user._id, post.author, "content_access")
+        if (!hasAccess) {
+          throw new ConvexError("Vous devez être abonné pour commenter ce contenu")
+        }
+      }
     }
 
     const commentId = await ctx.db.insert("comments", {
@@ -64,6 +70,7 @@ export const updateComment = mutation({
     }
 
     if (!args.content.trim()) throw new ConvexError("Empty content")
+    if (args.content.length > 1000) throw new ConvexError("Commentaire trop long (max 1000 caractères)")
 
     await ctx.db.patch(args.commentId, {
       content: args.content.trim(),
@@ -119,7 +126,7 @@ export const listPostComments = query({
       .query("comments")
       .withIndex("by_post", (q) => q.eq("post", args.postId))
       .order("desc")
-      .collect()
+      .take(200)
 
     // Batch auteurs
     const authorIds = [...new Set(comments.map((c) => c.author))]
@@ -165,7 +172,7 @@ export const countForPost = query({
     const list = await ctx.db
       .query("comments")
       .withIndex("by_post", (q) => q.eq("post", args.postId))
-      .collect()
+      .take(200)
     return { postId: args.postId, count: list.length }
   },
 })

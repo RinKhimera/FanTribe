@@ -29,6 +29,49 @@ const admin = await requireSuperuser(ctx)
 const creator = await requireCreator(ctx)
 ```
 
+**Never add `tokenIdentifier` to mutation/query args.** Identity is always derived server-side. Accepting it from the client creates a misleading security surface (`getAuthenticatedUser` is the source of truth regardless):
+```typescript
+// ❌ Anti-pattern — tokenIdentifier ignored, adds confusion
+export const updateProfile = mutation({
+  args: { name: v.string(), tokenIdentifier: v.string() },
+  ...
+})
+// ✅ Correct
+export const updateProfile = mutation({
+  args: { name: v.string() },
+  handler: async (ctx, args) => { const user = await getAuthenticatedUser(ctx) }
+})
+```
+
+## Security: `action` vs `internalAction`
+Functions called **only** via `ctx.scheduler.runAfter/runAt` or other Convex functions must be `internalAction`, not `action`. Public `action` is browser-callable.
+
+```typescript
+export const processQueue = internalAction({ ... })  // ✅ not exposed to clients
+```
+
+**Critical gotcha when converting `action` → `internalAction`**: update ALL scheduler references from `api.module.fn` → `internal.module.fn`. TypeScript does NOT catch this mismatch at compile time — it only fails at runtime.
+
+```typescript
+// ✅ After conversion
+await ctx.scheduler.runAfter(0, internal.myModule.processQueue, args)
+// ❌ Still compiles but wrong — api.* references a now-internal function
+await ctx.scheduler.runAfter(0, api.myModule.processQueue, args)
+```
+
+## Security: HTTP Actions — Server-Verified Identity Only
+In Convex HTTP Actions, always derive the user from the JWT — never from the request body:
+```typescript
+const identity = await ctx.auth.getUserIdentity()
+if (!identity) return jsonResponse({ error: "Non authentifie" }, 401, request)
+const userId = identity.subject  // ✅ JWT-verified Clerk user ID
+
+// ❌ Never: const { userId } = await request.json() — privilege escalation risk
+```
+
+## Payment Webhooks → Convex HTTP Actions
+Stripe and CinetPay webhooks are `internalAction` in `convex/stripeWebhook.ts` and `convex/cinetpayWebhook.ts`, routed via `http.route()` in `convex/http.ts`. Do NOT recreate them as Next.js API routes — they verify signatures server-side and call internal mutations directly.
+
 ## Error Handling
 ```typescript
 throw createAppError("POST_NOT_FOUND")
@@ -55,6 +98,11 @@ ctx.db.query("posts").order("desc").paginate(paginationOpts)
 ctx.db.query("users").withSearchIndex("search_users", q => q.search("name", term))
 
 // NEVER: unbounded .collect() — always .take(n) or .paginate()
+// Cron/internalMutation reference bounds:
+//   subscriptions active  → .take(5000)
+//   bans active           → .take(1000)
+//   creatorApplications   → .take(1000)
+//   notifications (per-user delete) → .take(10000)
 ```
 
 ## Rate Limiting

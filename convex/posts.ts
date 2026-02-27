@@ -4,7 +4,7 @@
  */
 import { paginationOptsValidator } from "convex/server"
 import { v } from "convex/values"
-import { api } from "./_generated/api"
+import { api, internal } from "./_generated/api"
 import { mutation, query } from "./_generated/server"
 import {
   createAppError,
@@ -41,6 +41,12 @@ export const createPost = mutation({
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
+
+    if (args.content.length > 5000) {
+      throw createAppError("INVALID_INPUT", {
+        userMessage: "Le contenu est trop long (max 5000 caractères)",
+      })
+    }
 
     // Validate media constraints: max 3 medias, no mix images/videos
     if (args.medias.length > 3) {
@@ -135,7 +141,7 @@ export const deletePost = mutation({
       const mediaUrls = post.medias.map((m) => m.url)
       const uniqueMedias = [...new Set(mediaUrls)]
       await ctx.scheduler
-        .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
+        .runAfter(0, internal.internalActions.deleteMultipleBunnyAssets, {
           mediaUrls: uniqueMedias,
         })
         .catch((error) => {
@@ -231,6 +237,12 @@ export const updatePost = mutation({
         await ctx.db.patch(args.postId, { isAdult: args.isAdult })
       }
       return { success: true }
+    }
+
+    if (args.content !== undefined && args.content.length > 5000) {
+      throw createAppError("INVALID_INPUT", {
+        userMessage: "Le contenu est trop long (max 5000 caractères)",
+      })
     }
 
     // Owner can modify everything

@@ -196,7 +196,7 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
     const active = await ctx.db
       .query("subscriptions")
       .withIndex("by_status_endDate", (q) => q.eq("status", "active"))
-      .collect()
+      .take(5000)
 
     // Filter expired subscriptions in memory
     const expired = active.filter((s) => s.endDate <= now)
@@ -796,6 +796,9 @@ export const getMessagingSubscription = query({
     v.null(),
   ),
   handler: async (ctx, args) => {
+    const currentUser = await getAuthenticatedUser(ctx, { optional: true })
+    if (!currentUser) return null
+
     const sub = await ctx.db
       .query("subscriptions")
       .withIndex("by_creator_subscriber", (q) =>
@@ -1027,7 +1030,7 @@ export const checkAndLockExpiredMessagingSubscriptions = internalMutation({
     const activeSubs = await ctx.db
       .query("subscriptions")
       .withIndex("by_status_endDate", (q) => q.eq("status", "active"))
-      .collect()
+      .take(5000)
 
     // Filtrer les abonnements messagerie expirés
     const expiredMessagingSubs = activeSubs.filter(

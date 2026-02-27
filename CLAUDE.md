@@ -42,7 +42,7 @@ Creator-focused social platform for the African market (French-speaking). Creato
 app/                      # Next.js App Router
 ├── (app-pages)/          # Main routes (dashboard layout, auth guards)
 ├── (auth)/               # Sign-in, sign-up
-├── api/                  # Webhooks only (stripe, cinetpay, clerk)
+├── api/                  # Clerk webhook only (Stripe + CinetPay → Convex HTTP Actions)
 components/
 ├── domains/              # Feature components (messaging, posts, users, subscriptions, notifications, tips)
 ├── shared/               # Cross-feature reusable components
@@ -72,7 +72,9 @@ tests/
 ## Key Files
 
 - `convex/schema.ts` — Data model (all tables, indexes, search indexes)
-- `convex/http.ts` — HTTP Actions (Bunny upload/delete, CORS, webhooks)
+- `convex/http.ts` — HTTP Actions (Bunny upload/delete, CORS, webhook routing)
+- `convex/stripeWebhook.ts` — Stripe webhook handler (`internalAction`, SDK signature verification)
+- `convex/cinetpayWebhook.ts` — CinetPay webhook handler (`internalAction`, HMAC-SHA256 + `crypto.timingSafeEqual`)
 - `convex/lib/auth.ts` — `getAuthenticatedUser()`, `requireSuperuser()`, `requireCreator()`
 - `convex/lib/errors.ts` — `createAppError(code, { userMessage })` bilingual errors
 - `convex/lib/validators.ts` — Shared validators (`postMediaValidator`, `userDocValidator`, `enrichedNotificationValidator`)

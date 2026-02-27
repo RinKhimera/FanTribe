@@ -396,7 +396,7 @@ export const liftExpiredBans = internalMutation({
     const bannedUsers = await ctx.db
       .query("users")
       .withIndex("by_isBanned", (q) => q.eq("isBanned", true))
-      .collect()
+      .take(1000)
 
     const expiredBans = bannedUsers.filter(
       (user) =>

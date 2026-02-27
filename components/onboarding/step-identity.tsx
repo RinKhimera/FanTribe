@@ -81,7 +81,6 @@ export const StepIdentity = ({
     debouncedUsername && debouncedUsername.length >= 6
       ? {
           username: debouncedUsername,
-          tokenIdentifier: currentUser.tokenIdentifier,
         }
       : "skip",
   )

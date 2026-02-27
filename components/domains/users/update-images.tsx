@@ -159,7 +159,6 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           }
           await updateProfileImage({
             imgUrl: result.url,
-            tokenIdentifier: currentUser.tokenIdentifier || "",
           })
           toast.success("Photo de profil mise à jour")
         } else {
@@ -183,7 +182,6 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           }
           await updateBannerImage({
             bannerUrl: result.url,
-            tokenIdentifier: currentUser.tokenIdentifier || "",
           })
           toast.success("Bannière mise à jour")
         }
@@ -212,7 +210,6 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
       try {
         await updateBannerImage({
           bannerUrl: "https://cdn.fantribe.io/fantribe/placeholder.jpg",
-          tokenIdentifier: currentUser?.tokenIdentifier || "",
         })
         toast.success("Votre photo de bannière a été supprimée")
       } catch (error) {

@@ -109,7 +109,7 @@ export function useBunnyUpload() {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ fileName, userId }),
+            body: JSON.stringify({ fileName }),
           })
 
           if (!tokenRes.ok) {

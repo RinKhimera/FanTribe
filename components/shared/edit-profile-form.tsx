@@ -57,7 +57,6 @@ export const EditProfileForm = ({
 
   const checkUsername = useQuery(api.users.getAvailableUsername, {
     username: watchUsername || "",
-    tokenIdentifier: currentUser?.tokenIdentifier || "",
   })
 
   const onSubmit = async (data: z.infer<typeof profileFormSchema>) => {
@@ -70,7 +69,6 @@ export const EditProfileForm = ({
             username: data.username,
             bio: data.bio,
             location: data.location,
-            tokenIdentifier: currentUser?.tokenIdentifier || "",
           })
 
           const socialLinks = fieldArray.fields

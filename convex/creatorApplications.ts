@@ -169,7 +169,7 @@ export const getAllApplications = query({
     const applications = await ctx.db
       .query("creatorApplications")
       .order("desc")
-      .collect()
+      .take(1000)
 
     if (applications.length === 0) return []
 

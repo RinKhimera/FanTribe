@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values"
-import { api } from "./_generated/api"
+import { api, internal } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
@@ -541,7 +541,7 @@ export const deleteReportedContentAndResolve = mutation({
         const mediaUrls = reportedPost.medias.map((m) => m.url)
         const uniqueMedias = [...new Set(mediaUrls)]
         await ctx.scheduler
-          .runAfter(0, api.internalActions.deleteMultipleBunnyAssets, {
+          .runAfter(0, internal.internalActions.deleteMultipleBunnyAssets, {
             mediaUrls: uniqueMedias,
           })
           .catch((error) => {

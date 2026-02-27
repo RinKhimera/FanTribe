@@ -1,12 +1,14 @@
 import { UserJSON } from "@clerk/backend"
 import { ConvexError, Validator, v } from "convex/values"
+import { api, internal } from "./_generated/api"
 import {
   QueryCtx,
   internalMutation,
   mutation,
   query,
 } from "./_generated/server"
-import { getAuthenticatedUser } from "./lib/auth"
+import { getAuthenticatedUser, requireSuperuser } from "./lib/auth"
+import { hasActiveSubscription } from "./lib/subscriptions"
 import {
   badgeValidator,
   banDetailsValidator,
@@ -56,14 +58,175 @@ export const deleteFromClerk = internalMutation({
   returns: v.null(),
   async handler(ctx, { clerkUserId }) {
     const user = await userByExternalId(ctx, clerkUserId)
-
-    if (user !== null) {
-      await ctx.db.delete(user._id)
-    } else {
+    if (user === null) {
       console.warn(
         `Can't delete user, there is none for Clerk user ID: ${clerkUserId}`,
       )
+      return null
     }
+
+    const userId = user._id
+
+    // ── Phase 1 fetch: all directly-indexed records in one parallel shot ───
+    const [
+      posts,
+      comments,
+      likes,
+      bookmarks,
+      notificationsAsRecipient,
+      blocksAsBlocker,
+      blocksAsBlocked,
+      conversationsAsCreator,
+      conversationsAsUser,
+      subscriptionsAsSubscriber,
+      subscriptionsAsCreator,
+      transactionsAsSubscriber,
+      transactionsAsCreator,
+      tipsAsSender,
+      tipsAsCreator,
+      reportsAsReporter,
+      reportsAsReported,
+      userStats,
+      assetsDraft,
+      validationDocs,
+      creatorApplications,
+    ] = await Promise.all([
+      ctx.db.query("posts").withIndex("by_author", (q) => q.eq("author", userId)).collect(),
+      ctx.db.query("comments").withIndex("by_author", (q) => q.eq("author", userId)).collect(),
+      ctx.db.query("likes").withIndex("by_user", (q) => q.eq("userId", userId)).collect(),
+      ctx.db.query("bookmarks").withIndex("by_user", (q) => q.eq("userId", userId)).collect(),
+      ctx.db.query("notifications").withIndex("by_recipient", (q) => q.eq("recipientId", userId)).take(10000),
+      ctx.db.query("blocks").withIndex("by_blocker", (q) => q.eq("blockerId", userId)).collect(),
+      ctx.db.query("blocks").withIndex("by_blocked", (q) => q.eq("blockedId", userId)).collect(),
+      ctx.db.query("conversations").withIndex("by_creatorId", (q) => q.eq("creatorId", userId)).collect(),
+      ctx.db.query("conversations").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
+      ctx.db.query("subscriptions").withIndex("by_subscriber", (q) => q.eq("subscriber", userId)).collect(),
+      ctx.db.query("subscriptions").withIndex("by_creator", (q) => q.eq("creator", userId)).collect(),
+      ctx.db.query("transactions").withIndex("by_subscriber", (q) => q.eq("subscriberId", userId)).collect(),
+      ctx.db.query("transactions").withIndex("by_creator", (q) => q.eq("creatorId", userId)).collect(),
+      ctx.db.query("tips").withIndex("by_sender", (q) => q.eq("senderId", userId)).collect(),
+      ctx.db.query("tips").withIndex("by_creator", (q) => q.eq("creatorId", userId)).collect(),
+      ctx.db.query("reports").withIndex("by_reporter", (q) => q.eq("reporterId", userId)).collect(),
+      ctx.db.query("reports").withIndex("by_reported_user", (q) => q.eq("reportedUserId", userId)).collect(),
+      ctx.db.query("userStats").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
+      ctx.db.query("assetsDraft").withIndex("by_author", (q) => q.eq("author", userId)).collect(),
+      ctx.db.query("validationDocumentsDraft").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
+      ctx.db.query("creatorApplications").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
+    ])
+
+    // Collect media URLs before any deletion
+    const mediaUrls: string[] = [
+      user.image,
+      ...(user.imageBanner ? [user.imageBanner] : []),
+      ...posts.flatMap((p) => p.medias.map((m) => m.url)),
+      ...assetsDraft.map((a) => a.mediaUrl),
+      ...validationDocs.map((d) => d.mediaUrl),
+      ...creatorApplications.flatMap((app) => app.identityDocuments.map((d) => d.url)),
+    ]
+
+    // Stash IDs for Phase 2 cascade queries
+    const postIds = posts.map((p) => p._id)
+    const allConversationIds = [
+      ...conversationsAsCreator.map((c) => c._id),
+      ...conversationsAsUser.map((c) => c._id),
+    ]
+
+    // Deduplicate reports: same doc can appear in both arrays if user self-reported
+    const uniqueReportIds = new Set([
+      ...reportsAsReporter.map((r) => r._id),
+      ...reportsAsReported.map((r) => r._id),
+    ])
+
+    // ── Phase 1 delete: all indexed records + posts + conversations ─────────
+    await Promise.all([
+      ...comments.map((r) => ctx.db.delete(r._id)),
+      ...likes.map((r) => ctx.db.delete(r._id)),
+      ...bookmarks.map((r) => ctx.db.delete(r._id)),
+      ...notificationsAsRecipient.map((r) => ctx.db.delete(r._id)),
+      ...blocksAsBlocker.map((r) => ctx.db.delete(r._id)),
+      ...blocksAsBlocked.map((r) => ctx.db.delete(r._id)),
+      ...conversationsAsCreator.map((r) => ctx.db.delete(r._id)),
+      ...conversationsAsUser.map((r) => ctx.db.delete(r._id)),
+      ...subscriptionsAsSubscriber.map((r) => ctx.db.delete(r._id)),
+      ...subscriptionsAsCreator.map((r) => ctx.db.delete(r._id)),
+      ...transactionsAsSubscriber.map((r) => ctx.db.delete(r._id)),
+      ...transactionsAsCreator.map((r) => ctx.db.delete(r._id)),
+      ...tipsAsSender.map((r) => ctx.db.delete(r._id)),
+      ...tipsAsCreator.map((r) => ctx.db.delete(r._id)),
+      ...[...uniqueReportIds].map((id) => ctx.db.delete(id)),
+      ...userStats.map((r) => ctx.db.delete(r._id)),
+      ...assetsDraft.map((r) => ctx.db.delete(r._id)),
+      ...validationDocs.map((r) => ctx.db.delete(r._id)),
+      ...creatorApplications.map((r) => ctx.db.delete(r._id)),
+      ...posts.map((r) => ctx.db.delete(r._id)),
+    ])
+
+    // ── Phase 2 fetch: cascade + full scans ────────────────────────────────
+    // Reads in this phase see Phase 1 deletions: user's own comments/likes/bookmarks
+    // are already gone, so by_post queries return only other users' interactions.
+    // Promise.all(emptyArray.map(...)) = Promise<[]> — no ternary needed.
+    const [postCascade, messages, allNotifs, pendingNotifs] = await Promise.all([
+      Promise.all(
+        postIds.map((postId) =>
+          Promise.all([
+            ctx.db.query("comments").withIndex("by_post", (q) => q.eq("post", postId)).collect(),
+            ctx.db.query("likes").withIndex("by_post", (q) => q.eq("postId", postId)).collect(),
+            ctx.db.query("bookmarks").withIndex("by_post", (q) => q.eq("postId", postId)).collect(),
+            ctx.db.query("notifications").withIndex("by_post", (q) => q.eq("postId", postId)).collect(),
+          ]),
+        ),
+      ),
+      Promise.all(
+        allConversationIds.map((convId) =>
+          ctx.db.query("messages").withIndex("by_conversation", (q) => q.eq("conversationId", convId)).collect(),
+        ),
+      ).then((r) => r.flat()),
+      // Full scan for notifications where user appears as actor.
+      // Recipient notifications were deleted in Phase 1 and are invisible here.
+      ctx.db.query("notifications").collect(),
+      // Filter scan for pending notifications triggered by this user.
+      ctx.db.query("pendingNotifications").filter((q) => q.eq(q.field("actorId"), userId)).collect(),
+    ])
+
+    // Collect message media URLs
+    for (const msg of messages) {
+      if (msg.medias) {
+        mediaUrls.push(...msg.medias.map((m) => m.url))
+      }
+    }
+
+    // Exclude by_post notifications from actor scan to avoid double-delete
+    const postNotifIds = new Set(
+      postCascade.flatMap(([, , , notifs]) => notifs.map((n) => n._id as string)),
+    )
+    const actorNotifications = allNotifs.filter(
+      (n) => n.actorIds.includes(userId) && !postNotifIds.has(n._id as string),
+    )
+
+    // ── Schedule Bunny CDN cleanup (fire-and-forget) ────────────────────────
+    if (mediaUrls.length > 0) {
+      await ctx.scheduler.runAfter(0, internal.internalActions.deleteMultipleBunnyAssets, {
+        mediaUrls,
+      })
+    }
+
+    // ── Phase 2 delete ─────────────────────────────────────────────────────
+    await Promise.all([
+      ...postCascade.flatMap(([c, l, b, n]) =>
+        [...c, ...l, ...b, ...n].map((r) => ctx.db.delete(r._id)),
+      ),
+      ...messages.map((r) => ctx.db.delete(r._id)),
+      ...pendingNotifs.map((r) => ctx.db.delete(r._id)),
+      ...actorNotifications.map((n) => {
+        const filtered = n.actorIds.filter((id) => id !== userId)
+        return filtered.length === 0
+          ? ctx.db.delete(n._id)
+          : ctx.db.patch(n._id, { actorIds: filtered, actorCount: filtered.length })
+      }),
+    ])
+
+    // Delete user document last
+    await ctx.db.delete(userId)
     return null
   },
 })
@@ -395,7 +558,6 @@ export const updateUserProfile = mutation({
     username: v.string(),
     bio: v.string(),
     location: v.string(),
-    tokenIdentifier: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -414,7 +576,6 @@ export const updateUserProfile = mutation({
 export const updateProfileImage = mutation({
   args: {
     imgUrl: v.string(),
-    tokenIdentifier: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -430,7 +591,6 @@ export const updateProfileImage = mutation({
 export const updateBannerImage = mutation({
   args: {
     bannerUrl: v.string(),
-    tokenIdentifier: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -446,14 +606,16 @@ export const updateBannerImage = mutation({
 export const getAvailableUsername = query({
   args: {
     username: v.string(),
-    tokenIdentifier: v.string(),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    const tokenIdentifier = identity?.tokenIdentifier
+
     const existingUsername = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))
-      .filter((q) => q.neq(q.field("tokenIdentifier"), args.tokenIdentifier))
+      .filter((q) => q.neq(q.field("tokenIdentifier"), tokenIdentifier ?? ""))
       .unique()
 
     return !existingUsername
@@ -682,24 +844,40 @@ export const getPinnedPosts = query({
       medias: v.array(postMediaValidator),
       visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
       isAdult: v.optional(v.boolean()),
+      isMediaLocked: v.boolean(),
+      mediaCount: v.number(),
     }),
   ),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId)
     if (!user || !user.pinnedPostIds?.length) return []
 
+    // Determine viewer access once
+    const currentUser = await getAuthenticatedUser(ctx, { optional: true })
+    const canViewSubscribersOnly = currentUser
+      ? currentUser._id === args.userId ||
+        currentUser.accountType === "SUPERUSER" ||
+        (await hasActiveSubscription(ctx, currentUser._id, args.userId, "content_access"))
+      : false
+
     const posts = await Promise.all(
       user.pinnedPostIds.map((id) => ctx.db.get(id))
     )
 
-    // Filter out deleted posts, normalize medias, enrich with author data
+    // Filter out deleted posts, apply media gating, enrich with author data
     return posts
       .filter((post): post is NonNullable<typeof post> => post !== null)
-      .map((post) => ({
-        ...post,
-        medias: post.medias || [],
-        author: user,
-      }))
+      .map((post) => {
+        const mediaCount = post.medias?.length || 0
+        const isLocked = post.visibility === "subscribers_only" && !canViewSubscribersOnly
+        return {
+          ...post,
+          medias: isLocked ? [] : post.medias || [],
+          isMediaLocked: isLocked && mediaCount > 0,
+          mediaCount,
+          author: user,
+        }
+      })
   },
 })
 
@@ -752,19 +930,7 @@ export const addBadge = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new ConvexError("Unauthorized - SUPERUSER required")
-    }
+    await requireSuperuser(ctx)
 
     const targetUser = await ctx.db.get(args.userId)
     if (!targetUser) throw new ConvexError("User not found")
@@ -799,19 +965,7 @@ export const removeBadge = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new ConvexError("Not authenticated")
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique()
-
-    if (!currentUser || currentUser.accountType !== "SUPERUSER") {
-      throw new ConvexError("Unauthorized - SUPERUSER required")
-    }
+    await requireSuperuser(ctx)
 
     const targetUser = await ctx.db.get(args.userId)
     if (!targetUser) throw new ConvexError("User not found")

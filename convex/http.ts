@@ -310,18 +310,14 @@ http.route({
 
     try {
       const body = await request.json()
-      const { fileName, userId } = body as {
-        fileName?: string
-        userId?: string
+      const { fileName } = body as { fileName?: string }
+
+      if (!fileName) {
+        return jsonResponse({ error: "fileName requis" }, 400, request)
       }
 
-      if (!fileName || !userId) {
-        return jsonResponse(
-          { error: "fileName et userId requis" },
-          400,
-          request,
-        )
-      }
+      // Use server-verified identity, never trust client-provided userId
+      const userId = identity.subject
 
       // Obtenir ou creer la collection utilisateur
       const collectionId = await getOrCreateUserCollection(userId)

@@ -582,7 +582,7 @@ export const simulateTip = action({
   },
 })
 
-export const fanoutNewPostNotifications = action({
+export const fanoutNewPostNotifications = internalAction({
   args: {
     authorId: v.id("users"),
     postId: v.id("posts"),
@@ -677,7 +677,7 @@ export const deleteSingleBunnyAsset = internalAction({
   },
 })
 
-export const deleteMultipleBunnyAssets = action({
+export const deleteMultipleBunnyAssets = internalAction({
   args: {
     mediaUrls: v.array(v.string()),
   },

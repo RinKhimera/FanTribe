@@ -176,7 +176,7 @@ export const cleanUpDraftAssets = internalMutation({
       try {
         await ctx.scheduler.runAfter(
           0,
-          api.internalActions.deleteMultipleBunnyAssets,
+          internal.internalActions.deleteMultipleBunnyAssets,
           {
             mediaUrls,
           },
