@@ -28,6 +28,15 @@ export default function DashboardLayout({
     window.scrollTo(0, 0)
   }, [pathname])
 
+  // Redirection vers l'onboarding si pas de username (profil incomplet)
+  // Must be in useEffect — calling router.push() during render triggers
+  // "Cannot update a component while rendering a different component"
+  useEffect(() => {
+    if (!isLoading && currentUser !== undefined && !currentUser?.username) {
+      router.push("/onboarding")
+    }
+  }, [isLoading, currentUser, router])
+
   // Start presence tracking (heartbeat every 2 minutes)
   usePresence()
 
@@ -45,9 +54,8 @@ export default function DashboardLayout({
     )
   }
 
-  // Redirection vers l'onboarding si pas de username (profil incomplet)
+  // Redirection en cours vers l'onboarding (username manquant)
   if (!currentUser?.username) {
-    router.push("/onboarding")
     return null
   }
 

@@ -1,10 +1,10 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { AnimatePresence, motion } from "motion/react"
 import { Globe, Loader2, Settings, User } from "lucide-react"
-import { useEffect, useRef, useState, useTransition } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 import {
   StepAbout,
@@ -12,20 +12,17 @@ import {
   StepPreferences,
 } from "@/components/onboarding"
 import { Step1Payload } from "@/components/onboarding/step-identity"
-import { Stepper, StepConfig } from "@/components/shared/stepper"
+import { StepConfig, Stepper } from "@/components/shared/stepper"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { stepSlideVariants } from "@/lib/animations"
-import {
-  OnboardingStep2Data,
-  OnboardingStep3Data,
-} from "@/schemas/profile"
 import {
   detectPlatform,
   extractUsername,
   isValidUrl,
   normalizeUrl,
 } from "@/lib/social-links"
+import { OnboardingStep2Data, OnboardingStep3Data } from "@/schemas/profile"
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -52,12 +49,19 @@ const OnboardingPage = () => {
   const webhookStartRef = useRef(Date.now())
   const [webhookTimedOut, setWebhookTimedOut] = useState(false)
 
+  // Prevents the resume-logic useEffect from redirecting to "/" while step 3 is
+  // finishing (Convex reactive update fires before router.push("/welcome") runs)
+  const isFinishingOnboarding = useRef(false)
+
   useEffect(() => {
     // Only run while authenticated but user doc not yet created
     if (!isAuthenticated || currentUser !== null) return
     const elapsed = Date.now() - webhookStartRef.current
     const remaining = WEBHOOK_TIMEOUT_MS - elapsed
-    if (remaining <= 0) { setWebhookTimedOut(true); return }
+    if (remaining <= 0) {
+      setWebhookTimedOut(true)
+      return
+    }
     const timer = setTimeout(() => setWebhookTimedOut(true), remaining)
     return () => clearTimeout(timer)
   }, [isAuthenticated, currentUser])
@@ -79,14 +83,22 @@ const OnboardingPage = () => {
   useEffect(() => {
     if (!currentUser) return
     if (currentUser.onboardingCompleted && currentUser.username) {
-      router.push("/")
+      // Skip redirect if we're in the middle of finishing onboarding —
+      // handleStep3 will navigate to /welcome itself
+      if (!isFinishingOnboarding.current) {
+        router.push("/")
+      }
       return
     }
-    if (currentUser.username && !currentUser.onboardingCompleted && currentStep === 1) {
+    if (
+      currentUser.username &&
+      !currentUser.onboardingCompleted &&
+      currentStep === 1
+    ) {
       setPage([2, 1])
       setCurrentStep(2)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.username, currentUser?.onboardingCompleted])
 
   // ── Step 1 handler ───────────────────────────────────────────────────────
@@ -164,6 +176,7 @@ const OnboardingPage = () => {
     new Promise<void>((resolve, reject) => {
       startTransition(async () => {
         try {
+          isFinishingOnboarding.current = true
           await updateOnboarding({
             allowAdultContent: data.allowAdultContent,
             onboardingCompleted: true,
@@ -184,6 +197,7 @@ const OnboardingPage = () => {
   const handleSkipStep3 = () => {
     startTransition(async () => {
       try {
+        isFinishingOnboarding.current = true
         await updateOnboarding({ onboardingCompleted: true })
       } finally {
         router.push("/welcome")
@@ -240,8 +254,7 @@ const OnboardingPage = () => {
           Finalisation de votre profil
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          {currentStep === 1 &&
-            "Choisissez votre identité sur la plateforme."}
+          {currentStep === 1 && "Choisissez votre identité sur la plateforme."}
           {currentStep === 2 &&
             "Parlez un peu de vous — modifiable à tout moment."}
           {currentStep === 3 &&

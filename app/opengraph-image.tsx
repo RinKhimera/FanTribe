@@ -29,31 +29,29 @@ export default function Image() {
   const svgDataUri = `data:image/svg+xml,${encodeURIComponent(logoSvg)}`
 
   return new ImageResponse(
-    (
-      <div
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#09090b",
+        gap: "32px",
+      }}
+    >
+      <img src={svgDataUri} alt="" width={400} height={66} />
+      <p
         style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#09090b",
-          gap: "32px",
+          fontSize: "32px",
+          color: "rgba(255, 255, 255, 0.7)",
+          margin: 0,
         }}
       >
-        <img src={svgDataUri} alt="" width={400} height={66} />
-        <p
-          style={{
-            fontSize: "32px",
-            color: "rgba(255, 255, 255, 0.7)",
-            margin: 0,
-          }}
-        >
-          Le réseau social des créateurs de contenus
-        </p>
-      </div>
-    ),
+        Le réseau social des créateurs de contenus
+      </p>
+    </div>,
     { ...size },
   )
 }

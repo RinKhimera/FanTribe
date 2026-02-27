@@ -341,7 +341,7 @@ export const PostMedia: React.FC<PostMediaProps> = ({
         const playerRatio =
           media.width && media.height
             ? getClampedAspectRatio(media)
-            : videoRatios[media.mediaId] ?? RATIO_DEFAULT
+            : (videoRatios[media.mediaId] ?? RATIO_DEFAULT)
 
         return (
           <div key={media.url} onClick={(e) => e.stopPropagation()}>
