@@ -108,7 +108,7 @@ ctx.db.query("users").withSearchIndex("search_users", q => q.search("name", term
 ## Rate Limiting
 ```typescript
 await rateLimiter.limit(ctx, "createPost", { key: user._id, throws: true })
-// Configured: sendMessage (10/min), createPost (5/hr), addComment (20/min), likePost (30/min), sendTip (3/min)
+// Configured: sendMessage (10/min), createPost (5/hr), addComment (20/min), likePost (30/min), sendTip (3/min), followUser (30/min)
 ```
 
 ## Batch Operations
@@ -137,6 +137,25 @@ const candidates = rawCandidates
   .filter(c => !c.endsWith("_") && (c.match(/_/g) || []).length <= 1)
 ```
 If Zod rules change, update the Convex query filter too.
+
+## Denormalized Stats — Always Pair Insert with Increment
+Tables with denormalized counters (e.g., `follows` → `followersCount` in `userStats`) require `incrementUserStat()` alongside every insert/delete — including in migration scripts. Forgetting this causes stat drift that only `updateAllCreatorStats` cron corrects.
+
+**`updateAllCreatorStats` must query both CREATOR and SUPERUSER** — if it only queries CREATOR, SUPERUSER accounts (e.g., FanTribe) never get stats recalculated.
+
+## Adding a New Notification Type — Checklist (~7+ locations)
+1. `convex/schema.ts` — `notifications.type` + `pendingNotifications.type` unions
+2. `convex/lib/validators.ts` — `notificationTypeValidator`
+3. `types/index.ts` — `NotificationType` union
+4. `convex/lib/notifications.ts` — `PREF_MAP` + `computeGroupKey` case
+5. `convex/notificationQueue.ts` — both inline type unions
+6. `convex/notifications.ts` — `notificationFilterValidator`
+7. `components/domains/notifications/notification-filter-tabs.tsx` — `NotificationFilterType` + `filterOptions`
+8. `components/domains/notifications/notification-layout.tsx` — `emptyStateConfig`
+9. `components/domains/notifications/notification-item.tsx` — `getIcon()`, `getMessage()`, `handleRoute()`
+10. `app/(app-pages)/account/notifications/page.tsx` — preferences toggle
+11. `convex/schema.ts` — `notificationPreferences` (if opt-in/out needed)
+12. `convex/users.ts` — inline `notificationPreferences` validators in `updateProfile` + `updateNotificationPreferences`
 
 ## Migration Scripts (Self-Scheduling Batch)
 For data backfill on existing documents, use `convex/migrations/`:

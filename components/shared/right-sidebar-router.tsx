@@ -70,6 +70,11 @@ export const RightSidebarRouter = () => {
   if (currentUser?.username === userProfile.username)
     return <SuggestionSidebar />
 
+  // Profil bloqué -> suggestions (pas d'actions possibles)
+  const blockStatus = userProfile.blockStatus
+  if (blockStatus?.iBlocked || blockStatus?.blockedMe)
+    return <SuggestionSidebar />
+
   // Non-créateur -> suggestions (pas de subscription possible)
   if (userProfile.accountType !== "CREATOR") return <SuggestionSidebar />
 

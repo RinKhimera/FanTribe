@@ -8,6 +8,7 @@ import {
   Mail,
   MessageCircle,
   Star,
+  UserPlus,
 } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -21,6 +22,7 @@ type NotificationKey =
   | "comments"
   | "newPosts"
   | "subscriptions"
+  | "follows"
   | "tips"
 
 export default function NotificationsPage() {
@@ -64,6 +66,13 @@ export default function NotificationsPage() {
       description: "Notifications sur vos abonnements",
       icon: Bell,
       iconColor: "text-primary",
+    },
+    {
+      key: "follows" as NotificationKey,
+      label: "Nouveaux suiveurs",
+      description: "Notifications quand quelqu'un vous suit",
+      icon: UserPlus,
+      iconColor: "text-violet-500",
     },
     {
       key: "tips" as NotificationKey,

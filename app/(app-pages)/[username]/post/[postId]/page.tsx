@@ -17,7 +17,7 @@ const PostDetailsPage = async (props: {
   if (!currentUser?.username) redirect("/onboarding")
 
   const [preloadedProfile, preloadedPost] = await Promise.all([
-    preloadQuery(api.users.getUserProfile, { username: params.username }),
+    preloadQuery(api.users.getUserProfile, { username: params.username }, { token }),
     preloadQuery(api.posts.getPost, { postId: params.postId }),
   ])
 

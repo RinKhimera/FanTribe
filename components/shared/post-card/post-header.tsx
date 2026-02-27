@@ -191,6 +191,7 @@ export const PostHeader = () => {
           postId={postId}
           currentUser={currentUser}
           postAuthorId={author?._id}
+          postAuthorAccountType={author?.accountType}
           visibility={visibility}
           postAuthorUsername={author?.username}
           isPinned={isPinned}

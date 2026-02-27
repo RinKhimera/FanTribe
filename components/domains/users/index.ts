@@ -1,4 +1,5 @@
 // Users domain exports
+export { FollowButton } from "./follow-button"
 export { EditProfileLayout } from "./edit-profile-layout"
 export { UpdateImages } from "./update-images"
 export { UserGallery } from "./user-gallery"

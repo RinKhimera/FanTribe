@@ -448,6 +448,22 @@ export const processPaymentAtomic = internalMutation({
         recipientId: subscriberId,
         actorId: creatorId,
       })
+
+      // Auto-follow creator on subscription (idempotent)
+      const existingFollow = await ctx.db
+        .query("follows")
+        .withIndex("by_follower_following", (q) =>
+          q.eq("followerId", subscriberId).eq("followingId", creatorId),
+        )
+        .unique()
+
+      if (!existingFollow) {
+        await ctx.db.insert("follows", {
+          followerId: subscriberId,
+          followingId: creatorId,
+        })
+        await incrementUserStat(ctx, creatorId, { followersCount: 1 })
+      }
     }
 
     return {

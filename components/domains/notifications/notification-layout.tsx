@@ -10,6 +10,7 @@ import {
   Loader2,
   MessageSquareText,
   Sparkles,
+  UserPlus,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useMemo, useState } from "react"
@@ -161,14 +162,22 @@ const emptyStateConfig: Record<
     iconColor: "text-emerald-500",
     accentGradient: "from-emerald-500/20 via-transparent to-transparent",
   },
+  follow: {
+    icon: UserPlus,
+    title: "Aucun suiveur",
+    description: "Les notifications de nouveaux suiveurs apparaîtront ici",
+    iconBg: "bg-violet-500/10",
+    iconColor: "text-violet-500",
+    accentGradient: "from-violet-500/20 via-transparent to-transparent",
+  },
   newPost: {
     icon: ImagePlus,
     title: "Aucune publication",
     description:
       "Les nouvelles publications de vos créateurs favoris apparaîtront ici",
-    iconBg: "bg-violet-500/10",
-    iconColor: "text-violet-500",
-    accentGradient: "from-violet-500/20 via-transparent to-transparent",
+    iconBg: "bg-indigo-500/10",
+    iconColor: "text-indigo-500",
+    accentGradient: "from-indigo-500/20 via-transparent to-transparent",
   },
   tip: {
     icon: Coins,

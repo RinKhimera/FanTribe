@@ -25,6 +25,7 @@ export type NotificationType =
   | "creatorApplicationApproved"
   | "creatorApplicationRejected"
   | "tip"
+  | "follow"
 
 export type ActorSummary = {
   _id: Id<"users">

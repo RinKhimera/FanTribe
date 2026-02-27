@@ -1,6 +1,7 @@
 import { UserJSON } from "@clerk/backend"
 import { ConvexError, Validator, v } from "convex/values"
 import { internal } from "./_generated/api"
+import { Id } from "./_generated/dataModel"
 import {
   QueryCtx,
   internalMutation,
@@ -9,6 +10,7 @@ import {
 } from "./_generated/server"
 import { getAuthenticatedUser, requireSuperuser } from "./lib/auth"
 import { hasActiveSubscription } from "./lib/subscriptions"
+import { incrementUserStat } from "./userStats"
 import {
   badgeValidator,
   banDetailsValidator,
@@ -17,6 +19,7 @@ import {
   postMediaValidator,
   socialLinkValidator,
   userDocValidator,
+  userProfileWithBlockStatusValidator,
 } from "./lib/validators"
 
 async function userByExternalId(ctx: QueryCtx, externalId: string) {
@@ -241,7 +244,7 @@ export const createUser = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.db.insert("users", {
+    const newUserId = await ctx.db.insert("users", {
       externalId: args.externalId,
       tokenIdentifier: args.tokenIdentifier,
       name: args.name,
@@ -252,6 +255,34 @@ export const createUser = internalMutation({
       imageBanner: "https://cdn.fantribe.io/fantribe/placeholder.jpg",
       accountType: "USER",
     })
+
+    // Auto-follow FanTribe official account
+    const fanTribeAccountId = process.env.FANTRIBE_ACCOUNT_ID as
+      | Id<"users">
+      | undefined
+    if (fanTribeAccountId) {
+      try {
+        const fanTribeUser = await ctx.db.get(fanTribeAccountId)
+        if (
+          fanTribeUser &&
+          (fanTribeUser.accountType === "CREATOR" ||
+            fanTribeUser.accountType === "SUPERUSER")
+        ) {
+          await ctx.db.insert("follows", {
+            followerId: newUserId,
+            followingId: fanTribeAccountId,
+          })
+          await incrementUserStat(ctx, fanTribeAccountId, { followersCount: 1 })
+        }
+      } catch {
+        // Non-critical: continue if FanTribe account not found
+        console.warn(
+          "Could not auto-follow FanTribe account:",
+          fanTribeAccountId,
+        )
+      }
+    }
+
     return null
   },
 })
@@ -289,6 +320,7 @@ export const getCurrentUser = query({
           comments: v.optional(v.boolean()),
           newPosts: v.optional(v.boolean()),
           subscriptions: v.optional(v.boolean()),
+          follows: v.optional(v.boolean()),
           messages: v.optional(v.boolean()),
           tips: v.optional(v.boolean()),
           emailNotifications: v.optional(v.boolean()),
@@ -541,14 +573,52 @@ export const markStaleUsersOffline = internalMutation({
 
 export const getUserProfile = query({
   args: { username: v.string() },
-  returns: v.union(userDocValidator, v.null()),
+  returns: v.union(userProfileWithBlockStatusValidator, v.null()),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))
       .unique()
 
-    return user
+    if (!user) return null
+
+    // Check block status if viewer is authenticated and not viewing own profile
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return { ...user, blockStatus: null }
+
+    const viewer = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!viewer || viewer._id === user._id) {
+      return { ...user, blockStatus: null }
+    }
+
+    const [iBlockedDoc, blockedMeDoc] = await Promise.all([
+      ctx.db
+        .query("blocks")
+        .withIndex("by_blocker_blocked", (q) =>
+          q.eq("blockerId", viewer._id).eq("blockedId", user._id),
+        )
+        .unique(),
+      ctx.db
+        .query("blocks")
+        .withIndex("by_blocker_blocked", (q) =>
+          q.eq("blockerId", user._id).eq("blockedId", viewer._id),
+        )
+        .unique(),
+    ])
+
+    return {
+      ...user,
+      blockStatus: {
+        iBlocked: !!iBlockedDoc,
+        blockedMe: !!blockedMeDoc,
+      },
+    }
   },
 })
 
@@ -1003,6 +1073,7 @@ export const updateNotificationPreferences = mutation({
     comments: v.optional(v.boolean()),
     newPosts: v.optional(v.boolean()),
     subscriptions: v.optional(v.boolean()),
+    follows: v.optional(v.boolean()),
     messages: v.optional(v.boolean()),
     tips: v.optional(v.boolean()),
     emailNotifications: v.optional(v.boolean()),

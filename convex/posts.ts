@@ -6,6 +6,7 @@ import { paginationOptsValidator } from "convex/server"
 import { v } from "convex/values"
 import { internal } from "./_generated/api"
 import { mutation, query } from "./_generated/server"
+import { getFollowedCreatorIds, getFollowerIds } from "./follows"
 import {
   createAppError,
   filterBlockedUsers,
@@ -13,7 +14,6 @@ import {
   getActiveSubscribedCreatorIds,
   getAuthenticatedUser,
   getBlockedUserIds,
-  getCreatorSubscribers,
   hasActiveSubscription,
   postMediaValidator,
   userDocValidator,
@@ -80,11 +80,8 @@ export const createPost = mutation({
     // Mise à jour incrémentale des stats du créateur
     await incrementUserStat(ctx, user._id, { postsCount: 1 })
 
-    // Récupération des abonnés (actifs + expirés pour les notifier)
-    const followerIds = await getCreatorSubscribers(ctx, user._id, [
-      "active",
-      "expired",
-    ])
+    // Récupération des followers pour les notifier
+    const followerIds = await getFollowerIds(ctx, user._id)
 
     if (followerIds.length === 0) {
       return { postId }
@@ -593,7 +590,10 @@ export const getHomePosts = query({
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx)
 
-    // Récupérer les créateurs auxquels l'utilisateur est abonné
+    // Récupérer les créateurs suivis par l'utilisateur
+    const followedCreatorIds = await getFollowedCreatorIds(ctx, currentUser._id)
+
+    // Récupérer les créateurs auxquels l'utilisateur est abonné (pour subscribers_only)
     const activeCreatorIds = await getActiveSubscribedCreatorIds(
       ctx,
       currentUser._id,
@@ -610,13 +610,16 @@ export const getHomePosts = query({
       .order("desc")
       .paginate(args.paginationOpts)
 
-    // Filtrage visibilité, blocage et contenu adulte
+    // Filtrage : follows, visibilité, blocage et contenu adulte
     const filtered = paginationResult.page.filter((post) => {
       // SUPERUSER voit tout
       if (currentUser.accountType === "SUPERUSER") return true
 
       // Filtrer les auteurs bloqués
       if (blockedUserIds.has(post.author)) return false
+
+      // Ne montrer que les posts des créateurs suivis (+ ses propres posts)
+      if (post.author !== currentUser._id && !followedCreatorIds.has(post.author)) return false
 
       const isPostAdult = post.isAdult ?? false
 
@@ -682,6 +685,9 @@ export const getHomePostsPaginated = query({
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx)
 
+    // Récupérer les créateurs suivis par l'utilisateur
+    const followedCreatorIds = await getFollowedCreatorIds(ctx, currentUser._id)
+
     const activeCreatorIds = await getActiveSubscribedCreatorIds(
       ctx,
       currentUser._id,
@@ -702,6 +708,9 @@ export const getHomePostsPaginated = query({
 
       // Filtrer les auteurs bloqués
       if (blockedUserIds.has(post.author)) return false
+
+      // Ne montrer que les posts des créateurs suivis (+ ses propres posts)
+      if (post.author !== currentUser._id && !followedCreatorIds.has(post.author)) return false
 
       const isPostAdult = post.isAdult ?? false
 

@@ -102,6 +102,16 @@ export const RightSidebar = () => {
     )
   }
 
+  // Profil bloqué → suggestions (pas d'actions possibles)
+  const blockStatus = userProfile.blockStatus
+  if (blockStatus?.iBlocked || blockStatus?.blockedMe) {
+    return (
+      <aside className={sidebarWrapperClasses}>
+        <SuggestionSidebar />
+      </aside>
+    )
+  }
+
   // Profil d'un autre créateur → widget d'abonnement si applicable
   const canSubscribe = !!canSubscribeCheck?.canSubscribe
   if (canSubscribe) {

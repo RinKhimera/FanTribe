@@ -22,6 +22,7 @@ export type NotificationType =
   | "creatorApplicationApproved"
   | "creatorApplicationRejected"
   | "tip"
+  | "follow"
 
 export interface CreateNotificationParams {
   type: NotificationType
@@ -60,6 +61,7 @@ const PREF_MAP: Record<NotificationType, keyof NotificationPreferences | null> =
   creatorApplicationApproved: null,
   creatorApplicationRejected: null,
   tip: "tips",
+  follow: "follows",
 }
 
 // Types that can be throttled when too many unread
@@ -156,6 +158,10 @@ function computeGroupKey(
       return `appRejected:${ts}`
     case "tip":
       return `tip:${params.tipId ?? ts}`
+
+    // Grouped by day
+    case "follow":
+      return `follow:${day}`
   }
 }
 

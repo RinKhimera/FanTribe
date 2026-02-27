@@ -19,8 +19,18 @@
 - Idempotent processing via `providerTransactionId` unique index
 - TipDialog component: `components/domains/tips/tip-dialog.tsx`
 
+## Follows (Free)
+- Separate from paid subscriptions — free follow to see public posts in feed
+- Only CREATOR and SUPERUSER can be followed
+- Auto-follow creator on paid subscription (`processPaymentAtomic` in `internalActions.ts`)
+- Auto-follow FanTribe account on signup (env var `FANTRIBE_ACCOUNT_ID` in Convex dashboard)
+- Block removes follows bidirectionally (`removeFollowsBetweenUsers` in `follows.ts`)
+- Follow persists after subscription expiration
+- Feed (`getHomePosts*`) filters by followed creators (own posts + SUPERUSER bypass always pass)
+- `newPost` notifications sent to followers (not subscribers)
+
 ## Notifications
-- **10 types** (camelCase): `like`, `comment`, `newPost`, `newSubscription`, `renewSubscription`, `subscriptionExpired`, `subscriptionConfirmed`, `creatorApplicationApproved`, `creatorApplicationRejected`, `tip`
+- **11 types** (camelCase): `like`, `comment`, `newPost`, `newSubscription`, `renewSubscription`, `subscriptionExpired`, `subscriptionConfirmed`, `creatorApplicationApproved`, `creatorApplicationRejected`, `tip`, `follow`
 - **Write-time grouping**: 1 DB row per group (`groupKey`), `actorIds[]` (last 3) + `actorCount`
 - **Central service**: All creation via `createNotification()` in `convex/lib/notifications.ts` — never insert directly
 - **Preference enforcement**: `shouldNotify()` checks `notificationPreferences` before creating (opt-out model)

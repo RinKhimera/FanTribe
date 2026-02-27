@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useCallback, useState } from "react"
 import { SubscriptionButton } from "@/components/domains/subscriptions"
 import { TipDialog } from "@/components/domains/tips"
+import { FollowButton } from "./follow-button"
 import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -193,6 +194,13 @@ export const UserProfileHero = ({
         >
           <UserSocialLinks socialLinks={userProfile.socialLinks} />
         </motion.div>
+
+        {/* Follow button */}
+        {!isOwnProfile && isCreator && (
+          <div className="mb-3">
+            <FollowButton targetUserId={userProfile._id} />
+          </div>
+        )}
 
         {/* Subscription section */}
         {!isOwnProfile && userProfile.accountType === "CREATOR" && (

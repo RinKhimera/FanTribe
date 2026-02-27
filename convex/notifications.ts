@@ -26,6 +26,7 @@ const notificationFilterValidator = v.union(
   v.literal("comment"),
   v.literal("newPost"),
   v.literal("subscriptions"),
+  v.literal("follow"),
   v.literal("tip"),
 )
 

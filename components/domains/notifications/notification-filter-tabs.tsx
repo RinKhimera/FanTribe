@@ -9,6 +9,7 @@ import {
   ImagePlus,
   LayoutGrid,
   MessageSquareText,
+  UserPlus,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -19,6 +20,7 @@ export type NotificationFilterType =
   | "like"
   | "comment"
   | "subscriptions"
+  | "follow"
   | "newPost"
   | "tip"
 
@@ -58,6 +60,13 @@ const filterOptions: FilterOption[] = [
     shortLabel: "Abonnements",
     icon: CreditCard,
     color: "text-emerald-500",
+  },
+  {
+    id: "follow",
+    label: "Nouveaux suiveurs",
+    shortLabel: "Suiveurs",
+    icon: UserPlus,
+    color: "text-violet-500",
   },
   {
     id: "newPost",

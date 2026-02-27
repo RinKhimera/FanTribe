@@ -1,6 +1,7 @@
 import { paginationOptsValidator } from "convex/server"
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { removeFollowsBetweenUsers } from "./follows"
 import { getAuthenticatedUser } from "./lib/auth"
 import { paginatedBlockedUsersValidator } from "./lib/validators"
 
@@ -28,6 +29,10 @@ export const blockUser = mutation({
       blockerId: me._id,
       blockedId: args.targetUserId,
     })
+
+    // Remove follows between the two users
+    await removeFollowsBetweenUsers(ctx, me._id, args.targetUserId)
+
     return { blocked: true, blockId }
   },
 })

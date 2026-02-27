@@ -5,6 +5,7 @@ import { ArrowRight, Loader2, Lock, Rss, Star } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { FollowButton } from "@/components/domains/users/follow-button"
 import { SuggestionCard } from "@/components/shared/suggestions/suggestion-card"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -157,12 +158,19 @@ const WelcomePage = () => {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <AnimatePresence mode="popLayout">
                 {suggestedCreators.slice(0, 6).map((creator, index) => (
-                  <SuggestionCard
-                    key={creator._id}
-                    user={creator}
-                    variant="default"
-                    index={index}
-                  />
+                  <div key={creator._id} className="relative">
+                    <SuggestionCard
+                      user={creator}
+                      variant="default"
+                      index={index}
+                    />
+                    <div className="absolute right-3 bottom-3 z-10">
+                      <FollowButton
+                        targetUserId={creator._id}
+                        variant="compact"
+                      />
+                    </div>
+                  </div>
                 ))}
               </AnimatePresence>
             </div>

@@ -21,6 +21,7 @@ export async function incrementUserStat(
   updates: {
     postsCount?: number
     subscribersCount?: number
+    followersCount?: number
     totalLikes?: number
   },
 ): Promise<void> {
@@ -36,6 +37,10 @@ export async function incrementUserStat(
         0,
         existing.subscribersCount + (updates.subscribersCount ?? 0),
       ),
+      followersCount: Math.max(
+        0,
+        (existing.followersCount ?? 0) + (updates.followersCount ?? 0),
+      ),
       totalLikes: Math.max(0, existing.totalLikes + (updates.totalLikes ?? 0)),
       lastUpdated: Date.now(),
     })
@@ -45,6 +50,7 @@ export async function incrementUserStat(
       userId,
       postsCount: Math.max(0, updates.postsCount ?? 0),
       subscribersCount: Math.max(0, updates.subscribersCount ?? 0),
+      followersCount: Math.max(0, updates.followersCount ?? 0),
       totalLikes: Math.max(0, updates.totalLikes ?? 0),
       lastUpdated: Date.now(),
     })
@@ -59,6 +65,7 @@ export const getUserProfileStats = query({
       kind: v.literal("creator"),
       postsCount: v.number(),
       subscribersCount: v.number(),
+      followersCount: v.number(),
       totalLikes: v.number(),
     }),
     v.object({
@@ -85,6 +92,7 @@ export const getUserProfileStats = query({
             kind: "creator" as const,
             postsCount: cachedStats.postsCount,
             subscribersCount: cachedStats.subscribersCount,
+            followersCount: cachedStats.followersCount ?? 0,
             totalLikes: cachedStats.totalLikes,
           }
         }
@@ -103,6 +111,12 @@ export const getUserProfileStats = query({
         .collect()
       const subscribersCount = subscriptions.length
 
+      const followers = await ctx.db
+        .query("follows")
+        .withIndex("by_following", (q) => q.eq("followingId", args.userId))
+        .collect()
+      const followersCount = followers.length
+
       let totalLikes = 0
       for (const post of posts) {
         const likes = await ctx.db
@@ -112,7 +126,7 @@ export const getUserProfileStats = query({
         totalLikes += likes.length
       }
 
-      return { kind: "creator" as const, postsCount, subscribersCount, totalLikes }
+      return { kind: "creator" as const, postsCount, subscribersCount, followersCount, totalLikes }
     }
 
     // USER stats — count all content_access subscriptions (active + expired)
@@ -222,6 +236,13 @@ export const updateUserStats = internalMutation({
       .collect()
     const subscribersCount = subscriptions.length
 
+    // Count followers
+    const followers = await ctx.db
+      .query("follows")
+      .withIndex("by_following", (q) => q.eq("followingId", args.userId))
+      .collect()
+    const followersCount = followers.length
+
     // Count total likes
     let totalLikes = 0
     for (const post of posts) {
@@ -242,6 +263,7 @@ export const updateUserStats = internalMutation({
       await ctx.db.patch(existingStats._id, {
         postsCount,
         subscribersCount,
+        followersCount,
         totalLikes,
         lastUpdated: Date.now(),
       })
@@ -250,6 +272,7 @@ export const updateUserStats = internalMutation({
         userId: args.userId,
         postsCount,
         subscribersCount,
+        followersCount,
         totalLikes,
         lastUpdated: Date.now(),
       })
@@ -263,12 +286,19 @@ export const updateAllCreatorStats = internalMutation({
   args: {},
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx) => {
-    const creators = await ctx.db
-      .query("users")
-      .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
-      .collect()
+    const [creators, superusers] = await Promise.all([
+      ctx.db
+        .query("users")
+        .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
+        .collect(),
+      ctx.db
+        .query("users")
+        .withIndex("by_accountType", (q) => q.eq("accountType", "SUPERUSER"))
+        .collect(),
+    ])
+    const allCreators = [...creators, ...superusers]
 
-    for (const creator of creators) {
+    for (const creator of allCreators) {
       // Count posts
       const posts = await ctx.db
         .query("posts")
@@ -283,6 +313,13 @@ export const updateAllCreatorStats = internalMutation({
         .filter((q) => q.eq(q.field("status"), "active"))
         .collect()
       const subscribersCount = subscriptions.length
+
+      // Count followers
+      const followers = await ctx.db
+        .query("follows")
+        .withIndex("by_following", (q) => q.eq("followingId", creator._id))
+        .collect()
+      const followersCount = followers.length
 
       // Count total likes
       let totalLikes = 0
@@ -304,6 +341,7 @@ export const updateAllCreatorStats = internalMutation({
         await ctx.db.patch(existingStats._id, {
           postsCount,
           subscribersCount,
+          followersCount,
           totalLikes,
           lastUpdated: Date.now(),
         })
@@ -312,12 +350,13 @@ export const updateAllCreatorStats = internalMutation({
           userId: creator._id,
           postsCount,
           subscribersCount,
+          followersCount,
           totalLikes,
           lastUpdated: Date.now(),
         })
       }
     }
 
-    return { updatedCount: creators.length }
+    return { updatedCount: allCreators.length }
   },
 })

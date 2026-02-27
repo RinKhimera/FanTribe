@@ -40,6 +40,14 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     capacity: 10,
   },
 
+  // Follows : 30/min par user
+  followUser: {
+    kind: "token bucket",
+    rate: 30,
+    period: MINUTE,
+    capacity: 10,
+  },
+
   // Réactions messages : 20/min par user
   toggleReaction: {
     kind: "token bucket",

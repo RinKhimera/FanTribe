@@ -18,7 +18,7 @@ describe("visibility", () => {
       })
     })
 
-    await t.run(async (ctx) => {
+    const viewerId = await t.run(async (ctx) => {
       return await ctx.db.insert("users", {
         name: "Viewer",
         tokenIdentifier: "viewer_id",
@@ -29,7 +29,7 @@ describe("visibility", () => {
       })
     })
 
-    // Create a public post and a subscribers_only post
+    // Create a public post, a subscribers_only post, and a follow
     await t.run(async (ctx) => {
       await ctx.db.insert("posts", {
         author: creatorId,
@@ -42,6 +42,10 @@ describe("visibility", () => {
         content: "Private Post",
         visibility: "subscribers_only",
         medias: [],
+      })
+      await ctx.db.insert("follows", {
+        followerId: viewerId,
+        followingId: creatorId,
       })
     })
 
@@ -79,7 +83,7 @@ describe("visibility", () => {
       })
     })
 
-    // Create active subscription
+    // Create active subscription + follow
     await t.run(async (ctx) => {
       await ctx.db.insert("subscriptions", {
         creator: creatorId,
@@ -92,6 +96,10 @@ describe("visibility", () => {
         currency: "XAF",
         renewalCount: 0,
         lastUpdateTime: Date.now(),
+      })
+      await ctx.db.insert("follows", {
+        followerId: subscriberId,
+        followingId: creatorId,
       })
 
       await ctx.db.insert("posts", {

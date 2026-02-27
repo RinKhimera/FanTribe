@@ -58,6 +58,7 @@ export default defineSchema({
         comments: v.optional(v.boolean()),
         newPosts: v.optional(v.boolean()),
         subscriptions: v.optional(v.boolean()),
+        follows: v.optional(v.boolean()),
         messages: v.optional(v.boolean()),
         tips: v.optional(v.boolean()),
         emailNotifications: v.optional(v.boolean()),
@@ -443,6 +444,7 @@ export default defineSchema({
       v.literal("creatorApplicationApproved"),
       v.literal("creatorApplicationRejected"),
       v.literal("tip"),
+      v.literal("follow"),
     ),
     recipientId: v.id("users"),
 
@@ -472,6 +474,7 @@ export default defineSchema({
     userId: v.id("users"),
     postsCount: v.number(),
     subscribersCount: v.number(),
+    followersCount: v.optional(v.number()),
     totalLikes: v.number(),
     tipsReceived: v.optional(v.number()),
     totalTipsAmount: v.optional(v.number()),
@@ -485,6 +488,14 @@ export default defineSchema({
     .index("by_blocker", ["blockerId"])
     .index("by_blocked", ["blockedId"])
     .index("by_blocker_blocked", ["blockerId", "blockedId"]),
+
+  follows: defineTable({
+    followerId: v.id("users"),
+    followingId: v.id("users"),
+  })
+    .index("by_follower", ["followerId"])
+    .index("by_following", ["followingId"])
+    .index("by_follower_following", ["followerId", "followingId"]),
 
   reports: defineTable({
     reporterId: v.id("users"),
@@ -563,6 +574,7 @@ export default defineSchema({
       v.literal("creatorApplicationApproved"),
       v.literal("creatorApplicationRejected"),
       v.literal("tip"),
+      v.literal("follow"),
     ),
     actorId: v.id("users"),
     recipientIds: v.array(v.id("users")),

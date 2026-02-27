@@ -111,6 +111,12 @@ export const NotificationItem = ({
             <Coins className={cn(iconClasses, "text-amber-500")} />
           </div>
         )
+      case "follow":
+        return (
+          <div className="flex size-12 items-center justify-center rounded-xl bg-violet-500/10">
+            <UserRoundPlus className={cn(iconClasses, "text-violet-500")} />
+          </div>
+        )
       default:
         return null
     }
@@ -161,6 +167,10 @@ export const NotificationItem = ({
         return notification.tipAmount
           ? `vous a envoyé un pourboire de ${new Intl.NumberFormat("fr-FR").format(notification.tipAmount)} ${notification.tipCurrency ?? "XAF"}`
           : "vous a envoyé un pourboire"
+      case "follow":
+        return plural
+          ? "ont commencé à vous suivre"
+          : "a commencé à vous suivre"
       default:
         return ""
     }
@@ -211,6 +221,7 @@ export const NotificationItem = ({
             break
           case "newSubscription":
           case "renewSubscription":
+          case "follow":
             if (primaryActor?.username) {
               router.push(`/${primaryActor.username}`)
             }

@@ -1,7 +1,8 @@
 "use client"
 
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import {
+  Ban,
   CheckCircle,
   Ellipsis,
   Flag,
@@ -9,8 +10,11 @@ import {
   Pencil,
   Pin,
   Share2,
+  ShieldOff,
   Sparkles,
   Trash2,
+  UserCheck,
+  UserPlus,
 } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -43,6 +47,7 @@ type PostEllipsisProps = {
   postId: Id<"posts">
   currentUser: Doc<"users">
   postAuthorId?: Id<"users">
+  postAuthorAccountType?: "USER" | "CREATOR" | "SUPERUSER"
   visibility?: "public" | "subscribers_only"
   isAdult?: boolean
   postAuthorUsername?: string
@@ -53,6 +58,7 @@ export const PostEllipsis = ({
   postId,
   currentUser,
   postAuthorId,
+  postAuthorAccountType,
   visibility = "public",
   isAdult,
   postAuthorUsername,
@@ -65,14 +71,36 @@ export const PostEllipsis = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
 
+  const [isFollowLoading, setIsFollowLoading] = useState(false)
+  const [isBlockLoading, setIsBlockLoading] = useState(false)
+  const [showBlockDialog, setShowBlockDialog] = useState(false)
+
   // Déterminer si l'utilisateur courant est l'auteur du post
   const isAuthor = postAuthorId === currentUser._id
   const isAdmin = currentUser.accountType === "SUPERUSER"
   const canDelete = isAuthor || isAdmin
   const canEdit = isAuthor || isAdmin
+  const isFollowable =
+    !isAuthor &&
+    postAuthorAccountType &&
+    (postAuthorAccountType === "CREATOR" || postAuthorAccountType === "SUPERUSER")
 
   const deletePost = useMutation(api.posts.deletePost)
   const togglePinnedPost = useMutation(api.users.togglePinnedPost)
+  const followMutation = useMutation(api.follows.followUser)
+  const unfollowMutation = useMutation(api.follows.unfollowUser)
+  const blockMutation = useMutation(api.blocks.blockUser)
+  const unblockMutation = useMutation(api.blocks.unblockUser)
+
+  // Queries for follow/block state (skip if own post)
+  const isFollowing = useQuery(
+    api.follows.isFollowing,
+    postAuthorId && !isAuthor ? { targetUserId: postAuthorId } : "skip",
+  )
+  const blockStatus = useQuery(
+    api.blocks.isBlocked,
+    postAuthorId && !isAuthor ? { targetUserId: postAuthorId } : "skip",
+  )
 
   // Construction de l'URL complète du post pour le partage
   const host = typeof window !== "undefined" ? window.location.origin : ""
@@ -122,6 +150,53 @@ export const PostEllipsis = ({
         icon: <CheckCircle className="size-4" />,
       })
     })
+  }
+
+  const handleFollowToggle = async () => {
+    if (!postAuthorId) return
+    setIsFollowLoading(true)
+    try {
+      if (isFollowing) {
+        await unfollowMutation({ targetUserId: postAuthorId })
+        toast.success("Vous ne suivez plus ce créateur")
+      } else {
+        await followMutation({ targetUserId: postAuthorId })
+        toast.success("Vous suivez maintenant ce créateur")
+      }
+    } catch {
+      toast.error("Une erreur s'est produite")
+    } finally {
+      setIsFollowLoading(false)
+    }
+  }
+
+  const handleBlock = async () => {
+    if (!postAuthorId) return
+    setIsBlockLoading(true)
+    try {
+      await blockMutation({ targetUserId: postAuthorId })
+      toast.success("Utilisateur bloqué", {
+        description: "Vous ne verrez plus ses publications",
+      })
+    } catch {
+      toast.error("Une erreur s'est produite")
+    } finally {
+      setIsBlockLoading(false)
+      setShowBlockDialog(false)
+    }
+  }
+
+  const handleUnblock = async () => {
+    if (!postAuthorId) return
+    setIsBlockLoading(true)
+    try {
+      await unblockMutation({ targetUserId: postAuthorId })
+      toast.success("Utilisateur débloqué")
+    } catch {
+      toast.error("Une erreur s'est produite")
+    } finally {
+      setIsBlockLoading(false)
+    }
   }
 
   const handlePinToggle = async (replaceOldest = false) => {
@@ -176,6 +251,50 @@ export const PostEllipsis = ({
           <Share2 className="mr-2 size-4" aria-hidden="true" />
           Partager la publication
         </DropdownMenuItem>
+
+        {/* Follow/Unfollow + Block/Unblock - non-auteurs seulement */}
+        {!isAuthor && postAuthorId && (
+          <>
+            <DropdownMenuSeparator />
+            {/* Follow/Unfollow - créateurs uniquement */}
+            {isFollowable && isFollowing !== undefined && (
+              <DropdownMenuItem
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+              >
+                {isFollowing ? (
+                  <UserCheck className="mr-2 size-4" aria-hidden="true" />
+                ) : (
+                  <UserPlus className="mr-2 size-4" aria-hidden="true" />
+                )}
+                {isFollowing ? "Ne plus suivre" : "Suivre"}
+              </DropdownMenuItem>
+            )}
+
+            {/* Block/Unblock */}
+            {blockStatus && (
+              <>
+                {blockStatus.iBlocked ? (
+                  <DropdownMenuItem
+                    onClick={handleUnblock}
+                    disabled={isBlockLoading}
+                  >
+                    <ShieldOff className="mr-2 size-4" aria-hidden="true" />
+                    Débloquer
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => setShowBlockDialog(true)}
+                  >
+                    <Ban className="mr-2 size-4" aria-hidden="true" />
+                    Bloquer
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
+          </>
+        )}
 
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -297,6 +416,30 @@ export const PostEllipsis = ({
           onClose={() => setShowReportDialog(false)}
         />
       )}
+
+      {/* Dialogue de confirmation de blocage */}
+      <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bloquer cet utilisateur ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cet utilisateur ne pourra plus voir votre profil ni vos
+              publications. Vous ne verrez plus les siennes non plus. Les
+              abonnements mutuels seront maintenus.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBlock} disabled={isBlockLoading}>
+              {isBlockLoading ? (
+                <LoaderCircle className="animate-spin" aria-hidden="true" />
+              ) : (
+                "Bloquer"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DropdownMenu>
   )
 }

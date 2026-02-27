@@ -33,7 +33,7 @@ describe("posts", () => {
       })
     })
 
-    // Create active subscription
+    // Create active subscription + follow
     await t.run(async (ctx) => {
       await ctx.db.insert("subscriptions", {
         creator: authorId,
@@ -46,6 +46,10 @@ describe("posts", () => {
         currency: "XAF",
         renewalCount: 0,
         lastUpdateTime: Date.now(),
+      })
+      await ctx.db.insert("follows", {
+        followerId: subId,
+        followingId: authorId,
       })
     })
 
@@ -97,7 +101,7 @@ describe("posts", () => {
       })
     })
 
-    // Create active subscription
+    // Create active subscription + follow + block
     await t.run(async (ctx) => {
       await ctx.db.insert("subscriptions", {
         creator: authorId,
@@ -110,6 +114,10 @@ describe("posts", () => {
         currency: "XAF",
         renewalCount: 0,
         lastUpdateTime: Date.now(),
+      })
+      await ctx.db.insert("follows", {
+        followerId: subId,
+        followingId: authorId,
       })
 
       // Author blocks subscriber
@@ -163,7 +171,7 @@ describe("posts", () => {
       })
     })
 
-    // Create posts
+    // Create posts + follow (so posts appear in feed)
     await t.run(async (ctx) => {
       await ctx.db.insert("posts", {
         author: authorId,
@@ -177,11 +185,15 @@ describe("posts", () => {
         medias: [],
         visibility: "subscribers_only",
       })
+      await ctx.db.insert("follows", {
+        followerId: viewerId,
+        followingId: authorId,
+      })
     })
 
     const viewer = t.withIdentity({ tokenIdentifier: "viewer_id" })
 
-    // Without subscription
+    // Without subscription (follow exists, but no sub → only public posts visible)
     const result1 = await viewer.query(api.posts.getHomePosts, {
       paginationOpts: { numItems: 20, cursor: null },
     })

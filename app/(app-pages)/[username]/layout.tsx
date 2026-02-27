@@ -14,7 +14,7 @@ export default async function UserProfileLayout({
   const token = await getAuthToken()
 
   const [preloadedProfile, preloadedCurrentUser] = await Promise.all([
-    preloadQuery(api.users.getUserProfile, { username }),
+    preloadQuery(api.users.getUserProfile, { username }, { token }),
     preloadQuery(api.users.getCurrentUser, undefined, { token }),
   ])
 

@@ -63,6 +63,7 @@ export const notificationPreferencesValidator = v.object({
   comments: v.optional(v.boolean()),
   newPosts: v.optional(v.boolean()),
   subscriptions: v.optional(v.boolean()),
+  follows: v.optional(v.boolean()),
   messages: v.optional(v.boolean()),
   tips: v.optional(v.boolean()),
   emailNotifications: v.optional(v.boolean()),
@@ -107,6 +108,16 @@ export const userDocValidator = v.object({
   banHistory: v.optional(v.array(banHistoryEntryValidator)),
   badges: v.optional(v.array(badgeValidator)),
   onboardingCompleted: v.optional(v.boolean()),
+})
+
+export const blockStatusValidator = v.object({
+  iBlocked: v.boolean(),
+  blockedMe: v.boolean(),
+})
+
+export const userProfileWithBlockStatusValidator = v.object({
+  ...userDocValidator.fields,
+  blockStatus: v.union(blockStatusValidator, v.null()),
 })
 
 export const postMediaValidator = v.object({
@@ -334,6 +345,7 @@ export const notificationTypeValidator = v.union(
   v.literal("creatorApplicationApproved"),
   v.literal("creatorApplicationRejected"),
   v.literal("tip"),
+  v.literal("follow"),
 )
 
 export const actorSummaryValidator = v.object({
