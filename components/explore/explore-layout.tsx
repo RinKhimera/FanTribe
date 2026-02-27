@@ -1,50 +1,82 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { v4 as uuidv4 } from "uuid"
+import { AnimatePresence, motion } from "motion/react"
+import { Compass } from "lucide-react"
+import { SuggestionSearchResults } from "@/components/shared/suggestions/suggestion-search-results"
 import { PageContainer } from "@/components/layout"
-import { Button } from "@/components/ui/button"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { ExploreFeed } from "./explore-feed"
+import { ExploreHeader } from "./explore-header"
+import { ExploreSuggestions } from "./explore-suggestions"
+import { useExplore } from "./use-explore"
 
 export const ExploreLayout = () => {
-  const router = useRouter()
-
-  const apiURL =
-    process.env.NODE_ENV === "production"
-      ? "https://fantribe.io/api/deposits"
-      : "http://localhost:3000/api/deposits"
-
-  const handleClick = async () => {
-    try {
-      const depositId = uuidv4()
-
-      const resp = await fetch(apiURL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          depositId: depositId,
-          returnUrl: "https://fantribe.io/notifications",
-          statementDescription: "Note of 4 to 22 chars",
-          amount: "500",
-          // msisdn: "233593456789",
-          country: "CMR",
-          reason: "Abonnement mensuel Fantribe",
-        }),
-      })
-
-      const data = await resp.json()
-      console.log(data, depositId)
-
-      router.push(data.data.redirectUrl)
-    } catch (error) {
-      console.error(error)
-    }
-  }
+  const { currentUser } = useCurrentUser()
+  const user = currentUser ?? undefined
+  const {
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    clearSearch,
+    isSearching,
+    isSearchLoading,
+    searchResults,
+    suggestedCreators,
+    isSuggestionsLoading,
+    sortBy,
+    setSortBy,
+    refresh,
+  } = useExplore()
 
   return (
-    <PageContainer title="Explorer">
-      <Button onClick={handleClick}>Payer</Button>
+    <PageContainer
+      title="Explorer"
+      headerIcon={Compass}
+      secondaryBar={
+        <ExploreHeader
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onSearchClear={clearSearch}
+          isSearchLoading={isSearchLoading}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
+      }
+    >
+      <AnimatePresence mode="wait">
+        {isSearching ? (
+          <motion.div
+            key="search-results"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="px-4 py-3"
+          >
+            <SuggestionSearchResults
+              results={searchResults}
+              searchTerm={debouncedSearchTerm}
+              isLoading={isSearchLoading}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="explore-content"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ExploreSuggestions
+              creators={suggestedCreators}
+              isLoading={isSuggestionsLoading}
+              onRefresh={refresh}
+            />
+
+            <ExploreFeed currentUser={user} sortBy={sortBy} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageContainer>
   )
 }

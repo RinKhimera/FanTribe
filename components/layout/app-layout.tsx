@@ -75,7 +75,7 @@ export const AppLayout = ({
         <main
           id="main-content"
           className={cn(
-            "flex min-h-screen flex-1 flex-col",
+            "flex min-h-screen min-w-0 flex-1 flex-col",
             // Sur mobile, prend toute la largeur
             "max-[500px]:w-full max-[500px]:pb-(--mobile-nav-height)",
           )}

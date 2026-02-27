@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react"
 import { usePathname } from "next/navigation"
 import { SubscriptionSidebar } from "@/components/domains/subscriptions"
+import { ExploreSidebar } from "@/components/explore/explore-sidebar"
 import { SuggestionSidebar } from "@/components/shared/suggestions"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -74,6 +75,15 @@ export const RightSidebar = () => {
   if (hiddenRoutes.has(first)) return null
   // Masquer pour toutes les pages superuser
   if (first === "superuser") return null
+
+  // Page explore → sidebar dédiée avec créateurs populaires
+  if (first === "explore") {
+    return (
+      <aside className={sidebarWrapperClasses}>
+        <ExploreSidebar />
+      </aside>
+    )
+  }
 
   // Pas sur un profil → suggestions
   if (!maybeUsername) {

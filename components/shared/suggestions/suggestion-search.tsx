@@ -9,6 +9,7 @@ interface SuggestionSearchProps {
   onChange: (value: string) => void
   onClear: () => void
   isLoading?: boolean
+  placeholder?: string
 }
 
 export const SuggestionSearch = ({
@@ -16,6 +17,7 @@ export const SuggestionSearch = ({
   onChange,
   onClear,
   isLoading,
+  placeholder = "Rechercher des créateurs…",
 }: SuggestionSearchProps) => {
   return (
     <div className="relative group">
@@ -50,7 +52,7 @@ export const SuggestionSearch = ({
           autoComplete="off"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Rechercher des créateurs…"
+          placeholder={placeholder}
           className={cn(
             "w-full h-12 bg-transparent",
             "pl-11 pr-11 py-3",

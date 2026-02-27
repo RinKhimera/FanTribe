@@ -8,6 +8,7 @@ import {
   mutation,
   query,
 } from "./_generated/server"
+import { getFollowedCreatorIds } from "./follows"
 import { getAuthenticatedUser, requireSuperuser } from "./lib/auth"
 import { hasActiveSubscription } from "./lib/subscriptions"
 import { incrementUserStat } from "./userStats"
@@ -452,6 +453,90 @@ export const getSuggestedCreators = query({
     // Mélanger avec Fisher-Yates (distribution uniforme) et prendre les 48 premiers
     const shuffled = fisherYatesShuffle(filtered)
     return shuffled.slice(0, 48)
+  },
+})
+
+/**
+ * getPopularCreators — Top créateurs par popularité (follower count)
+ * Utilisé dans le sidebar de la page /explore
+ */
+export const getPopularCreators = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      user: userDocValidator,
+      followersCount: v.number(),
+      postsCount: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Not authenticated")
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique()
+
+    if (!currentUser) throw new ConvexError("User not found")
+
+    // Récupérer les créateurs
+    const creators = await ctx.db
+      .query("users")
+      .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
+      .take(100)
+
+    // Exclure l'utilisateur courant
+    const filtered = creators.filter((c) => c._id !== currentUser._id)
+
+    // Récupérer les stats pour chaque créateur
+    const creatorsWithStats = await Promise.all(
+      filtered.map(async (creator) => {
+        const stats = await ctx.db
+          .query("userStats")
+          .withIndex("by_userId", (q) => q.eq("userId", creator._id))
+          .unique()
+        return {
+          user: creator,
+          followersCount: stats?.followersCount ?? 0,
+          postsCount: stats?.postsCount ?? 0,
+        }
+      }),
+    )
+
+    // Trier par followers (desc) et prendre les top 5
+    return creatorsWithStats
+      .sort((a, b) => b.followersCount - a.followersCount)
+      .slice(0, 5)
+  },
+})
+
+/**
+ * getSuggestedCreatorsForExplore — Variante qui exclut les créateurs déjà suivis
+ * Utilisé sur la page /explore pour montrer de vrais nouveaux créateurs
+ */
+export const getSuggestedCreatorsForExplore = query({
+  args: { refreshKey: v.optional(v.number()) },
+  returns: v.array(userDocValidator),
+  handler: async (ctx) => {
+    const currentUser = await getAuthenticatedUser(ctx)
+
+    const creators = await ctx.db
+      .query("users")
+      .withIndex("by_accountType", (q) => q.eq("accountType", "CREATOR"))
+      .take(200)
+
+    // Exclure l'utilisateur courant ET les créateurs déjà suivis
+    const followedIds = await getFollowedCreatorIds(ctx, currentUser._id)
+
+    const filtered = creators.filter(
+      (c) => c._id !== currentUser._id && !followedIds.has(c._id),
+    )
+
+    const shuffled = fisherYatesShuffle(filtered)
+    return shuffled.slice(0, 12)
   },
 })
 

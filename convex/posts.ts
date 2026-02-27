@@ -755,3 +755,112 @@ export const getHomePostsPaginated = query({
     }
   },
 })
+
+// ============================================
+// EXPLORE FEED
+// ============================================
+
+/**
+ * getExplorePostsPaginated — Feed de découverte
+ * Retourne TOUS les posts publics de la plateforme (pas de filtre follow)
+ * Supporte le tri par "recent" (défaut) ou "trending" (engagement)
+ */
+export const getExplorePostsPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    sortBy: v.optional(
+      v.union(v.literal("recent"), v.literal("trending")),
+    ),
+  },
+  returns: v.object({
+    page: v.array(v.any()),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(
+      v.union(
+        v.literal("SplitRecommended"),
+        v.literal("SplitRequired"),
+        v.null(),
+      ),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const currentUser = await getAuthenticatedUser(ctx)
+
+    const blockedUserIds = await getBlockedUserIds(ctx, currentUser._id)
+    const allowAdultContent = currentUser.allowAdultContent ?? false
+
+    // Utiliser l'index by_visibility pour ne récupérer que les posts publics
+    const paginationResult = await ctx.db
+      .query("posts")
+      .withIndex("by_visibility", (q) => q.eq("visibility", "public"))
+      .order("desc")
+      .paginate(args.paginationOpts)
+
+    const filtered = paginationResult.page.filter((post) => {
+      // SUPERUSER voit tout
+      if (currentUser.accountType === "SUPERUSER") return true
+
+      // Filtrer les auteurs bloqués
+      if (blockedUserIds.has(post.author)) return false
+
+      // Filtrage du contenu adulte
+      const isPostAdult = post.isAdult ?? false
+      if (isPostAdult) {
+        if (post.author === currentUser._id) return true
+        return allowAdultContent
+      }
+
+      return true
+    })
+
+    // Enrichissement auteurs par batch
+    const authorIds = [...new Set(filtered.map((p) => p.author))]
+    const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
+    const authorsMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
+
+    let enrichedPage = filtered.map((p) => ({
+      ...p,
+      medias: p.medias || [],
+      author: authorsMap.get(p.author),
+    }))
+
+    // Trending : calculer l'engagement et re-trier la page
+    if (args.sortBy === "trending") {
+      const postIds = filtered.map((p) => p._id)
+      const [likeCounts, commentCounts] = await Promise.all([
+        Promise.all(
+          postIds.map((id) =>
+            ctx.db
+              .query("likes")
+              .withIndex("by_post", (q) => q.eq("postId", id))
+              .collect()
+              .then((likes) => likes.length),
+          ),
+        ),
+        Promise.all(
+          postIds.map((id) =>
+            ctx.db
+              .query("comments")
+              .withIndex("by_post", (q) => q.eq("post", id))
+              .collect()
+              .then((comments) => comments.length),
+          ),
+        ),
+      ])
+
+      const scores = enrichedPage.map(
+        (_, i) => likeCounts[i] + commentCounts[i] * 2,
+      )
+      const indexed = enrichedPage.map((post, i) => ({ post, score: scores[i] }))
+      indexed.sort((a, b) => b.score - a.score)
+      enrichedPage = indexed.map(({ post }) => post)
+    }
+
+    return {
+      ...paginationResult,
+      page: enrichedPage,
+    }
+  },
+})

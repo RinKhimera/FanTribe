@@ -2,6 +2,7 @@ import {
   Bell,
   Bookmark,
   CircleUserRound,
+  Compass,
   Home,
   LayoutDashboard,
   Mail,
@@ -34,6 +35,12 @@ export const navigationLinks: NavLink[] = [
     href: "/",
     icon: Home,
     mobileQuickAccess: true,
+  },
+  {
+    id: "explore",
+    title: "Explorer",
+    href: "/explore",
+    icon: Compass,
   },
   {
     id: "notifications",
