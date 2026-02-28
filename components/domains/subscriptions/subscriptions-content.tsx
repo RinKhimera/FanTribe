@@ -82,30 +82,16 @@ export const SubscriptionsContent = () => {
       title="Mes abonnements"
     >
       <div className="px-4 py-4 space-y-4">
-        {/* Search bar — hidden when on blocked tab (it has its own) */}
-        {!isBlockedTab && (
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
-            <Input
-              type="text"
-              placeholder="Rechercher un créateur…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-              aria-label="Rechercher un créateur"
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </div>
-        )}
-
         {/* Filter tabs */}
         <div className="flex gap-2">
           {filterTabs.map((tab) => (
             <button
               key={tab.value}
               type="button"
-              onClick={() => setActiveFilter(tab.value)}
+              onClick={() => {
+                setActiveFilter(tab.value)
+                setSearch("")
+              }}
               className={cn(
                 "cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
                 activeFilter === tab.value
@@ -119,9 +105,24 @@ export const SubscriptionsContent = () => {
           ))}
         </div>
 
+        {/* Search bar */}
+        <div className="relative">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
+          <Input
+            type="text"
+            placeholder={isBlockedTab ? "Rechercher un utilisateur bloqué…" : "Rechercher un créateur…"}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+            aria-label={isBlockedTab ? "Rechercher un utilisateur bloqué" : "Rechercher un créateur"}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+
         {/* Blocked users tab content */}
         {isBlockedTab ? (
-          <BlockedUsersSection />
+          <BlockedUsersSection search={debouncedSearch} />
         ) : (
           <>
             {/* Subscriptions content */}
@@ -184,16 +185,14 @@ type BlockedEntry = {
   }
 }
 
-const BlockedUsersSection = () => {
+const BlockedUsersSection = ({ search }: { search: string }) => {
   const { isAuthenticated } = useConvexAuth()
-  const [search, setSearch] = useState("")
-  const debouncedSearch = useDebounce(search, 300)
   const [unblockingUserId, setUnblockingUserId] = useState<string | null>(null)
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.blocks.getBlockedUsersPaginated,
     isAuthenticated
-      ? { search: debouncedSearch || undefined }
+      ? { search: search || undefined }
       : "skip",
     { initialNumItems: INITIAL_ITEMS },
   )
@@ -227,23 +226,6 @@ const BlockedUsersSection = () => {
 
   return (
     <div className="space-y-4">
-      {/* Search within blocked users */}
-      <div className="relative">
-        <Search
-          className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2"
-          aria-hidden="true"
-        />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher un utilisateur bloqué…"
-          className="pl-10"
-          aria-label="Rechercher un utilisateur bloqué"
-          spellCheck={false}
-          autoComplete="off"
-        />
-      </div>
-
       {/* Loading state */}
       {isLoading && <BlockedSkeleton />}
 
@@ -284,7 +266,7 @@ const BlockedUsersSection = () => {
               transition={{ delay: 0.25, duration: 0.4 }}
               className="mb-2 text-center text-lg font-semibold tracking-tight"
             >
-              {debouncedSearch
+              {search
                 ? "Aucun résultat"
                 : "Aucun utilisateur bloqué"}
             </motion.h3>
@@ -295,7 +277,7 @@ const BlockedUsersSection = () => {
               transition={{ delay: 0.35, duration: 0.4 }}
               className="text-muted-foreground max-w-xs text-center text-sm leading-relaxed"
             >
-              {debouncedSearch
+              {search
                 ? "Aucun utilisateur bloqué ne correspond à votre recherche."
                 : "Vous n\u2019avez bloqué personne pour le moment."}
             </motion.p>

@@ -50,14 +50,7 @@ export const UserProfileStats = ({ userId }: UserProfileStatsProps) => {
             <span className="text-foreground font-semibold tabular-nums">
               {formatNumber(stats.followersCount)}
             </span>{" "}
-            {pluralize(stats.followersCount, "suiveur")}
-          </span>
-          <span className="text-muted-foreground/50">·</span>
-          <span>
-            <span className="text-foreground font-semibold tabular-nums">
-              {formatNumber(stats.subscribersCount)}
-            </span>{" "}
-            {pluralize(stats.subscribersCount, "abonné")}
+            {pluralize(stats.followersCount, "follower")}
           </span>
           <span className="text-muted-foreground/50">·</span>
           <span>

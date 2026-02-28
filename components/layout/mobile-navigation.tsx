@@ -74,10 +74,10 @@ export const MobileNavigation = () => {
     return true
   })
 
-  // Liens d'accès rapide (max 3 pour la bottom bar)
+  // Liens d'accès rapide (max 4 pour la bottom bar)
   const quickAccessLinks = filteredNavigationLinks
     .filter((link) => link.mobileQuickAccess)
-    .slice(0, 3)
+    .slice(0, 4)
 
   // Résoudre les hrefs dynamiques
   const getHref = (link: NavLink) => {
@@ -115,7 +115,7 @@ export const MobileNavigation = () => {
         "min-[500px]:hidden",
       )}
     >
-      <div className="flex h-full items-center justify-around px-1 touch-manipulation">
+      <div className="flex h-full touch-manipulation items-center justify-around px-1">
         {/* Liens d'accès rapide */}
         {quickAccessLinks.map((link) => {
           const IconComponent = link.icon
@@ -156,14 +156,14 @@ export const MobileNavigation = () => {
         {/* Bouton Menu - ouvre le Sheet */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button
-              variant="ghost"
+            <button
+              type="button"
               className="text-muted-foreground hover:text-foreground flex h-full flex-1 flex-col items-center justify-center rounded-lg p-1"
               aria-label="Ouvrir le menu"
             >
               <MenuIcon className="size-6" />
-              <span className="mt-0.5 text-[10px]">Menu</span>
-            </Button>
+              <span className="mt-0.5 truncate text-[10px] leading-tight">Menu</span>
+            </button>
           </SheetTrigger>
 
           <SheetContent

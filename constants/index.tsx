@@ -41,6 +41,7 @@ export const navigationLinks: NavLink[] = [
     title: "Explorer",
     href: "/explore",
     icon: Compass,
+    mobileQuickAccess: true,
   },
   {
     id: "notifications",

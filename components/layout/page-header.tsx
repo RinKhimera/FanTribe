@@ -109,7 +109,7 @@ export const PageHeader = ({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2, delay: 0.1 }}
           className={cn(
-            "sticky top-[var(--header-height)] z-10",
+            "sticky top-[var(--header-height)] z-20",
             "border-b border-white/[0.08]",
             "frosted",
             secondaryBarClassName,

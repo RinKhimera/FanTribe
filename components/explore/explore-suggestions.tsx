@@ -102,7 +102,7 @@ export const ExploreSuggestions = ({
               >
                 <SuggestionCard user={creator} variant="compact" />
                 <div className="absolute right-2 bottom-2 z-10">
-                  <FollowButton targetUserId={creator._id} variant="compact" />
+                  <FollowButton targetUserId={creator._id} variant="icon" />
                 </div>
               </motion.div>
             ))}

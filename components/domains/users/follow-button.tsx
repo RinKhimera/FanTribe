@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 interface FollowButtonProps {
   targetUserId: Id<"users">
   className?: string
-  variant?: "default" | "compact"
+  variant?: "default" | "compact" | "icon"
 }
 
 export const FollowButton = ({
@@ -55,6 +55,29 @@ export const FollowButton = ({
       >
         <Loader2 className="size-4 animate-spin" />
       </Button>
+    )
+  }
+
+  if (variant === "icon") {
+    return (
+      <motion.div whileTap={{ scale: 0.9 }}>
+        <Button
+          variant={isFollowing ? "outline" : "default"}
+          size="icon"
+          onClick={handleToggle}
+          disabled={isLoading}
+          className={cn("size-7 rounded-full", className)}
+          aria-label={isFollowing ? "Ne plus suivre" : "Suivre"}
+        >
+          {isLoading ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : isFollowing ? (
+            <UserCheck className="size-3.5" />
+          ) : (
+            <UserPlus className="size-3.5" />
+          )}
+        </Button>
+      </motion.div>
     )
   }
 

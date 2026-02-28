@@ -2,9 +2,10 @@
 
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { BadgeCheck, Flame, Lock, Pin } from "lucide-react"
+import { Flame, Lock, Pin } from "lucide-react"
 import Link from "next/link"
 import { PostEllipsis } from "@/components/domains/posts"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Tooltip,
@@ -27,8 +28,6 @@ export const PostHeader = () => {
   const isAdult = post.isAdult
 
   const isOwnPost = currentUser._id === author?._id
-  const isVerified =
-    author?.accountType === "CREATOR" || author?.accountType === "SUPERUSER"
 
   return (
     <div className="flex items-start justify-between gap-3 px-4">
@@ -88,18 +87,7 @@ export const PostHeader = () => {
             ) : (
               <span className="text-muted-foreground">Utilisateur</span>
             )}
-            {isVerified && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="flex items-center justify-center size-[18px] rounded-full bg-primary shrink-0">
-                    <BadgeCheck aria-hidden="true" className="size-3 text-primary-foreground" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={4}>
-                  <p className="text-xs">Créateur vérifié</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
+            <UserProfileBadgeInline badges={author?.badges} accountType={author?.accountType} />
           </div>
 
           {/* Username + date */}

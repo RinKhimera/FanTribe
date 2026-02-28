@@ -18,8 +18,8 @@ import {
   UserProfileBadgeInline,
   UserProfileBadges,
 } from "./user-profile-badges"
+import { UserProfileActions } from "./user-profile-actions"
 import { UserProfileStats } from "./user-profile-stats"
-import { UserReportButton } from "./user-report-button"
 import { UserSocialLinks } from "./user-social-links"
 
 type FollowSubscriptionStatus = {
@@ -97,30 +97,17 @@ export const UserProfileHero = ({
             </Avatar>
           </motion.button>
 
-          {/* Action button */}
+          {/* Action menu */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="pb-1"
           >
-            {isOwnProfile ? (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="rounded-full px-4"
-              >
-                <Link href={`/${currentUser?.username}/edit`}>
-                  Modifier le profil
-                </Link>
-              </Button>
-            ) : (
-              <UserReportButton
-                userId={userProfile._id}
-                username={userProfile.username}
-              />
-            )}
+            <UserProfileActions
+              currentUser={currentUser}
+              userProfile={userProfile}
+            />
           </motion.div>
         </div>
 
@@ -133,7 +120,7 @@ export const UserProfileHero = ({
         >
           <div className="flex items-center gap-1.5">
             <h2 className="text-xl font-bold">{userProfile?.name}</h2>
-            <UserProfileBadgeInline badges={userProfile.badges} />
+            <UserProfileBadgeInline badges={userProfile.badges} accountType={userProfile.accountType} />
           </div>
           <p className="text-muted-foreground text-sm">@{userProfile?.username}</p>
         </motion.div>

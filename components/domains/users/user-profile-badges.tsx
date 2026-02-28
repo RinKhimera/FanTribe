@@ -1,13 +1,7 @@
 "use client"
 
+import { BadgeCheck, Crown, Flame, Rocket, Sparkles } from "lucide-react"
 import { motion } from "motion/react"
-import {
-  BadgeCheck,
-  Crown,
-  Flame,
-  Rocket,
-  Sparkles,
-} from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -124,7 +118,7 @@ export const UserProfileBadges = ({
                   className={cn(
                     "flex cursor-pointer items-center justify-center rounded-xl transition-shadow hover:shadow-lg",
                     config.bgClassName,
-                    containerSizeClasses[size]
+                    containerSizeClasses[size],
                   )}
                 >
                   <Icon className={cn(config.className, sizeClasses[size])} />
@@ -152,17 +146,18 @@ export const UserProfileBadges = ({
   )
 }
 
-// Inline badge for displaying next to name
+// Inline badge for displaying next to name (profile + post cards)
 export const UserProfileBadgeInline = ({
-  badges,
+  accountType,
 }: {
   badges?: Badge[]
+  accountType?: "USER" | "CREATOR" | "SUPERUSER"
 }) => {
-  if (!badges || badges.length === 0) return null
+  const isSuperuser = accountType === "SUPERUSER"
+  const isCreator = accountType === "CREATOR"
 
-  // Only show verified badge inline
-  const verifiedBadge = badges.find((b) => b.type === "verified")
-  if (!verifiedBadge) return null
+  // Badge for creators and superusers only
+  if (!isSuperuser && !isCreator) return null
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -172,13 +167,27 @@ export const UserProfileBadgeInline = ({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 400 }}
-            className="ml-1.5 inline-flex"
+            className="inline-flex"
           >
-            <BadgeCheck className="size-5 fill-blue-500 text-white" />
+            <BadgeCheck
+              className={cn(
+                "size-4 text-white",
+                isSuperuser ? "fill-amber-500" : "fill-primary",
+              )}
+            />
           </motion.span>
         </TooltipTrigger>
-        <TooltipContent side="top" className="glass-card border-0">
-          <p className="text-sm font-medium">Compte vérifié</p>
+        <TooltipContent side="top" sideOffset={4}>
+          {isSuperuser ? (
+            <div className="text-center">
+              <p className="font-medium">Équipe FanTribe</p>
+              <p className="text-background/70 text-xs">
+                Compte officiel de la plateforme
+              </p>
+            </div>
+          ) : (
+            <p>Créateur vérifié</p>
+          )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
