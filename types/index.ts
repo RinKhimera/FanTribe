@@ -32,6 +32,7 @@ export type ActorSummary = {
   name: string
   username?: string
   image: string
+  accountType: "USER" | "CREATOR" | "SUPERUSER"
 }
 
 export type EnrichedNotification = {

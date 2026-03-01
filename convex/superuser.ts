@@ -73,6 +73,7 @@ export const globalSearch = query({
           username: v.string(),
           email: v.optional(v.string()),
           imageUrl: v.optional(v.string()),
+          accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
         }),
       ),
       applications: v.array(
@@ -124,6 +125,7 @@ export const globalSearch = query({
         username: string
         email?: string
         imageUrl?: string
+        accountType: "USER" | "CREATOR" | "SUPERUSER"
       }>
       applications: Array<{
         _id: string
@@ -162,6 +164,7 @@ export const globalSearch = query({
           username: user.username ?? "",
           email: user.email,
           imageUrl: user.image,
+          accountType: user.accountType,
         }))
     }
 

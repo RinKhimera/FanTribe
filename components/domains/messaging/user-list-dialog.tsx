@@ -5,6 +5,7 @@ import { Loader2, MailPlus, MessageSquare } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -233,7 +234,10 @@ export const UserListDialog = () => {
                 </div>
 
                 <div className="flex-1 overflow-hidden">
-                  <p className="truncate font-medium">{contact.name}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="truncate font-medium">{contact.name}</p>
+                    <UserProfileBadgeInline accountType={contact.accountType} />
+                  </div>
                   {contact.username && (
                     <p className="truncate text-sm text-muted-foreground">
                       @{contact.username}

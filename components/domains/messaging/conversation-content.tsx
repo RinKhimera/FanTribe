@@ -17,6 +17,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { toast } from "sonner"
 import { TipDialog } from "@/components/domains/tips"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -193,6 +194,7 @@ export const ConversationContent = () => {
                 >
                   {otherParticipant?.name ?? "Utilisateur"}
                 </Link>
+                <UserProfileBadgeInline accountType={otherParticipant?.accountType} />
 
                 {conversation.isPinned && (
                   <Pin size={12} className="text-amber-500" />

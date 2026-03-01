@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +38,7 @@ type BlockedEntry = {
     name: string
     username?: string
     image: string
+    accountType: "USER" | "CREATOR" | "SUPERUSER"
   }
 }
 
@@ -175,10 +177,11 @@ export const BlockedUsersContent = () => {
                   </Avatar>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span className="truncate text-sm font-medium">
                         {entry.user.name}
                       </span>
+                      <UserProfileBadgeInline accountType={entry.user.accountType} />
                       {entry.user.username && (
                         <span className="text-muted-foreground truncate text-xs">
                           @{entry.user.username}

@@ -403,12 +403,19 @@ export const getMySubscriptionsPaginated = query({
         )
         .filter((q) => q.eq(q.field("type"), "content_access"))
     } else if (filter === "expired") {
+      // Include both "expired" (natural) and "canceled" (manual) subscriptions
       queryBuilder = ctx.db
         .query("subscriptions")
-        .withIndex("by_subscriber_status", (q) =>
-          q.eq("subscriber", user._id).eq("status", "expired"),
+        .withIndex("by_subscriber", (q) => q.eq("subscriber", user._id))
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("type"), "content_access"),
+            q.or(
+              q.eq(q.field("status"), "expired"),
+              q.eq(q.field("status"), "canceled"),
+            ),
+          ),
         )
-        .filter((q) => q.eq(q.field("type"), "content_access"))
     } else {
       queryBuilder = ctx.db
         .query("subscriptions")
@@ -496,6 +503,7 @@ export const getMySubscriptionsPaginated = query({
             image: creator.image,
             imageBanner: creator.imageBanner,
             isOnline: creator.isOnline,
+            accountType: creator.accountType,
           },
           daysUntilExpiry,
           subscribedDurationMonths,
@@ -539,6 +547,7 @@ export const getPublicSubscriptionsPaginated = query({
           username: v.optional(v.string()),
           image: v.string(),
           isOnline: v.boolean(),
+          accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
         }),
       }),
     ),
@@ -583,6 +592,7 @@ export const getPublicSubscriptionsPaginated = query({
             username: creator.username,
             image: creator.image,
             isOnline: creator.isOnline,
+            accountType: creator.accountType,
           },
         }
       })

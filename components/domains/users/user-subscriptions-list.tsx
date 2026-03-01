@@ -5,6 +5,7 @@ import { Loader2, Users } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
 import { EmptyState } from "@/components/shared/empty-state"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -101,7 +102,10 @@ export const UserSubscriptionsList = ({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold">{sub.creator.name}</p>
+            <div className="flex items-center gap-1">
+              <p className="truncate font-semibold">{sub.creator.name}</p>
+              <UserProfileBadgeInline accountType={sub.creator.accountType} />
+            </div>
             <p className="text-muted-foreground truncate text-sm">
               @{sub.creator.username}
             </p>

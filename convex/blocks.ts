@@ -118,6 +118,7 @@ export const getBlockedUsersPaginated = query({
             name: user.name,
             username: user.username,
             image: user.image,
+            accountType: user.accountType,
           },
         }
       })

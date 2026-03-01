@@ -18,6 +18,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { deleteSwipeVariants, notificationVariants } from "@/lib/animations"
@@ -401,8 +402,9 @@ export const NotificationItem = ({
                       <p className="text-sm leading-snug">
                         {!isSystemNotification && primaryActor ? (
                           <>
-                            <span className="font-semibold">
+                            <span className="inline-flex items-center gap-1 font-semibold">
                               {getActorNames()}
+                              {!isGrouped && <UserProfileBadgeInline accountType={primaryActor.accountType} />}
                             </span>{" "}
                             <span className="text-muted-foreground">
                               {getMessage()}

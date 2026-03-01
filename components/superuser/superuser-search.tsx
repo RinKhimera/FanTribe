@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation"
 import { useCallback, useMemo, useRef, useState, useEffect } from "react"
 import { ResultItem, ResultSection } from "./components"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { api } from "@/convex/_generated/api"
@@ -287,9 +288,12 @@ export function SuperuserSearch() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {user.name}
-                        </p>
+                        <div className="flex items-center gap-1">
+                          <p className="truncate text-sm font-medium">
+                            {user.name}
+                          </p>
+                          <UserProfileBadgeInline accountType={user.accountType} />
+                        </div>
                         <p className="text-muted-foreground truncate text-xs">
                           @{user.username}
                         </p>

@@ -1,6 +1,7 @@
 import { SignOutButton } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import {
+  ChevronsUpDown,
   CircleUserRound,
   LogOut,
   Settings,
@@ -77,31 +78,41 @@ export const UserInfoPopover = ({
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
-                // Base styles
-                "flex cursor-pointer items-center transition-colors duration-200",
+                // Layout
+                "group flex cursor-pointer items-center",
                 "rounded-xl",
-                "hover:bg-foreground/10",
-                "data-[state=open]:bg-foreground/10",
-                // Mode compact : bouton carré aligné à droite
+                // Glass surface — frosted interactive card
+                "glass-button",
+                // Accessible focus ring
+                "focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-2",
+                // Open state — subtle gold border accent
+                "data-[state=open]:border-(--gold-400)/40",
+                // Mobile touch target
+                "touch-manipulation",
+                // Mode compact : bouton carré aligné à droite sur tablet
                 compact && [
-                  "max-xl:h-12 max-xl:w-12 max-xl:justify-center max-xl:p-0",
-                  "xl:w-full xl:justify-between xl:p-3",
+                  "max-xl:size-12 max-xl:justify-center max-xl:p-0",
+                  "xl:w-full xl:justify-between xl:gap-3 xl:p-2.5",
                 ],
                 // Mode normal : toujours full width
-                !compact && "w-full justify-between p-3",
+                !compact && "w-full justify-between gap-3 p-2.5",
               )}
             >
               {/* Avatar + Info */}
               <div
                 className={cn(
-                  "flex items-center gap-3",
+                  "flex min-w-0 items-center gap-3",
                   compact && "max-xl:gap-0",
                 )}
               >
                 <Avatar
                   className={cn(
-                    "shrink-0 rounded-lg transition-transform duration-200",
-                    "group-hover:scale-105",
+                    "shrink-0 rounded-lg",
+                    // Subtle ring at rest, gold glow on hover/open
+                    "ring-1 ring-white/10",
+                    "transition-[transform,box-shadow] duration-200",
+                    "group-hover:scale-105 group-hover:ring-(--gold-400)/30",
+                    "group-data-[state=open]:ring-(--gold-400)/40",
                     compact ? "size-8 max-xl:size-10" : "size-10",
                   )}
                 >
@@ -120,7 +131,7 @@ export const UserInfoPopover = ({
                 {/* Nom et username (cachés en mode compact sur tablet) */}
                 <div
                   className={cn(
-                    "grid flex-1 text-left text-sm leading-tight",
+                    "grid min-w-0 flex-1 text-left text-sm leading-tight",
                     compact && "max-xl:hidden",
                   )}
                 >
@@ -132,6 +143,17 @@ export const UserInfoPopover = ({
                   </span>
                 </div>
               </div>
+
+              {/* Chevron indicator — hidden in compact tablet */}
+              <ChevronsUpDown
+                className={cn(
+                  "text-muted-foreground/60 size-4 shrink-0",
+                  "transition-colors duration-200",
+                  "group-hover:text-foreground/80",
+                  compact && "max-xl:hidden",
+                )}
+                aria-hidden="true"
+              />
             </button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
@@ -147,11 +169,14 @@ export const UserInfoPopover = ({
       </Tooltip>
 
       <DropdownMenuContent
-        className="border-border/50 bg-popover/95 min-w-60 rounded-xl backdrop-blur-sm"
+        className="min-w-60"
         align={compact ? "center" : "end"}
         side="top"
         sideOffset={8}
       >
+        {/* Premium accent line */}
+        <div className="h-px bg-linear-to-r from-transparent via-(--gold-400)/30 to-transparent" />
+
         {/* Header avec avatar et stats */}
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-3 px-3 py-3">
@@ -186,7 +211,10 @@ export const UserInfoPopover = ({
                     {mySubscribersStats?.subscribersCount || 0}
                   </span>
                   <span className="text-muted-foreground">
-                    {pluralize(mySubscribersStats?.subscribersCount || 0, "fan")}
+                    {pluralize(
+                      mySubscribersStats?.subscribersCount || 0,
+                      "fan",
+                    )}
                   </span>
                 </div>
                 <div className="bg-border/50 h-4 w-px" />
@@ -229,11 +257,13 @@ export const UserInfoPopover = ({
 
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  className="focus:bg-primary/10 cursor-pointer rounded-lg px-3 py-2.5"
+                  className="cursor-pointer rounded-lg px-3 py-2.5 focus:bg-(--gold-400)/10"
                   onClick={() => handleNavigation("/be-creator")}
                 >
-                  <Sparkles className="text-primary mr-3 size-4" />
-                  <span>Passer au compte Créateur</span>
+                  <Sparkles className="mr-3 size-4 text-(--gold-400)" />
+                  <span className="text-gold-gradient font-medium">
+                    Passer au compte Créateur
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </>

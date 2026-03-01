@@ -3,7 +3,7 @@
 import { Clock, Lock, RefreshCw } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
-
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -25,6 +25,7 @@ type SubscriptionEntry = {
     image: string
     imageBanner?: string
     isOnline: boolean
+    accountType: "USER" | "CREATOR" | "SUPERUSER"
   }
   daysUntilExpiry: number
   subscribedDurationMonths: number
@@ -37,8 +38,17 @@ export const SubscriptionCard = ({
 }: {
   subscription: SubscriptionEntry
 }) => {
-  const { creator, status, renewalCount, daysUntilExpiry, subscribedDurationMonths, creatorLastPostDate, creatorExclusivePostCount } = subscription
+  const {
+    creator,
+    status,
+    renewalCount,
+    daysUntilExpiry,
+    subscribedDurationMonths,
+    creatorLastPostDate,
+    creatorExclusivePostCount,
+  } = subscription
   const isActive = status === "active"
+  const isCanceled = status === "canceled"
   const isExpiringSoon = isActive && daysUntilExpiry <= 7
 
   const profileHref = `/${creator.username || creator._id}`
@@ -76,22 +86,24 @@ export const SubscriptionCard = ({
             {/* Info */}
             <div className="min-w-0 flex-1">
               {/* Name + badge row */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Link
                   href={profileHref}
                   className="truncate font-semibold hover:underline"
                 >
                   {creator.name}
                 </Link>
+                <UserProfileBadgeInline accountType={creator.accountType} />
                 <Badge
                   variant={isActive ? "default" : "outline"}
                   className={cn(
                     "shrink-0",
-                    isActive && "bg-emerald-500/15 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/15 dark:text-emerald-400",
+                    isActive &&
+                      "border-emerald-500/20 bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/15 dark:text-emerald-400",
                     !isActive && "text-muted-foreground",
                   )}
                 >
-                  {isActive ? "Actif" : "Expiré"}
+                  {isActive ? "Actif" : isCanceled ? "Annulé" : "Expiré"}
                 </Badge>
               </div>
 
@@ -117,7 +129,12 @@ export const SubscriptionCard = ({
                 {creatorExclusivePostCount > 0 && (
                   <span className="flex items-center gap-1">
                     <Lock className="size-3" aria-hidden="true" />
-                    {creatorExclusivePostCount} {pluralize(creatorExclusivePostCount, "post exclusif", "posts exclusifs")}
+                    {creatorExclusivePostCount}{" "}
+                    {pluralize(
+                      creatorExclusivePostCount,
+                      "post exclusif",
+                      "posts exclusifs",
+                    )}
                   </span>
                 )}
               </div>
@@ -125,7 +142,8 @@ export const SubscriptionCard = ({
               {/* Expiry warning */}
               {isExpiringSoon && (
                 <p className="mt-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                  Expire dans {daysUntilExpiry} {pluralize(daysUntilExpiry, "jour")}
+                  Expire dans {daysUntilExpiry}{" "}
+                  {pluralize(daysUntilExpiry, "jour")}
                 </p>
               )}
 

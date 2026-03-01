@@ -11,6 +11,7 @@ import {
   Heart,
 } from "lucide-react"
 import Link from "next/link"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FollowButton } from "@/components/domains/users/follow-button"
 import { api } from "@/convex/_generated/api"
@@ -154,9 +155,12 @@ export const ExploreSidebar = () => {
                           </Avatar>
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold leading-tight group-hover:text-primary">
-                              {user.name || "Créateur"}
-                            </p>
+                            <div className="flex items-center gap-1">
+                              <p className="truncate text-sm font-semibold leading-tight group-hover:text-primary">
+                                {user.name || "Créateur"}
+                              </p>
+                              <UserProfileBadgeInline accountType={user.accountType} />
+                            </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <span className="flex items-center gap-0.5">
                                 <Users className="size-3" />

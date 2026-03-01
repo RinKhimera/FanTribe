@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { PageContainer } from "@/components/layout"
@@ -182,6 +183,7 @@ type BlockedEntry = {
     name: string
     username?: string
     image: string
+    accountType: "USER" | "CREATOR" | "SUPERUSER"
   }
 }
 
@@ -338,6 +340,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
                       >
                         {entry.user.name}
                       </Link>
+                      <UserProfileBadgeInline accountType={entry.user.accountType} />
                       {entry.user.username && (
                         <span className="text-muted-foreground truncate text-xs">
                           @{entry.user.username}

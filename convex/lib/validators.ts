@@ -259,6 +259,7 @@ export const enrichedSubscriptionEntryValidator = v.object({
     image: v.string(),
     imageBanner: v.optional(v.string()),
     isOnline: v.boolean(),
+    accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
   }),
   daysUntilExpiry: v.number(),
   subscribedDurationMonths: v.number(),
@@ -274,6 +275,7 @@ export const enrichedBlockedUserValidator = v.object({
     name: v.string(),
     username: v.optional(v.string()),
     image: v.string(),
+    accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
   }),
 })
 
@@ -353,6 +355,7 @@ export const actorSummaryValidator = v.object({
   name: v.string(),
   username: v.optional(v.string()),
   image: v.string(),
+  accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
 })
 
 export const enrichedNotificationValidator = v.object({

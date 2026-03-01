@@ -225,12 +225,10 @@ export const MobileNavigation = () => {
                   <PenLine className="mr-2 size-5" />
                   Publier
                 </Button>
-                <div className="flex justify-center">
-                  <UserInfoPopover
-                    currentUser={currentUser}
-                    onNavigate={() => setIsOpen(false)}
-                  />
-                </div>
+                <UserInfoPopover
+                  currentUser={currentUser}
+                  onNavigate={() => setIsOpen(false)}
+                />
               </div>
             )}
           </SheetContent>

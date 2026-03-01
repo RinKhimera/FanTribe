@@ -99,6 +99,7 @@ async function enrichNotifications(
         name: a!.name,
         username: a!.username,
         image: a!.image,
+        accountType: a!.accountType,
       }))
 
     const post = n.postId ? postMap.get(n.postId) : undefined

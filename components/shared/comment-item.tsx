@@ -1,9 +1,9 @@
 "use client"
 
-import { BadgeCheck } from "lucide-react"
 import Link from "next/link"
 import React from "react"
 import { CommentEllipsis } from "@/components/domains/posts"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Doc } from "@/convex/_generated/dataModel"
 import { formatPostDate } from "@/lib/formatters"
@@ -19,10 +19,6 @@ type CommentItemProps = {
 }
 
 export const CommentItem = ({ comment }: CommentItemProps) => {
-  const isVerified =
-    comment.author?.accountType === "CREATOR" ||
-    comment.author?.accountType === "SUPERUSER"
-
   return (
     <div
       className={cn(
@@ -55,11 +51,7 @@ export const CommentItem = ({ comment }: CommentItemProps) => {
               >
                 {comment.author?.name}
               </Link>
-              {isVerified && (
-                <span className="flex items-center justify-center size-4 rounded-full bg-primary shrink-0">
-                  <BadgeCheck aria-hidden="true" className="size-2.5 text-primary-foreground" />
-                </span>
-              )}
+              <UserProfileBadgeInline accountType={comment.author?.accountType} />
               <span className="text-muted-foreground/60 text-xs">
                 {formatPostDate(comment._creationTime)}
               </span>

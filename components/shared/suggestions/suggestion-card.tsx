@@ -4,6 +4,7 @@ import { motion } from "motion/react"
 import Image from "next/image"
 import Link from "next/link"
 import { useMemo } from "react"
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
@@ -132,9 +133,12 @@ export const SuggestionCard = ({
           className={cn("absolute inset-0 flex items-end p-4", contentOffset)}
         >
           <div className="flex min-w-0 flex-col justify-end space-y-0.5">
-            <h4 className="truncate text-[15px] leading-tight font-semibold text-white drop-shadow-md">
-              {highlightText(user.name || "Utilisateur")}
-            </h4>
+            <div className="flex items-center gap-1">
+              <h4 className="truncate text-[15px] leading-tight font-semibold text-white drop-shadow-md">
+                {highlightText(user.name || "Utilisateur")}
+              </h4>
+              <UserProfileBadgeInline accountType={user.accountType} />
+            </div>
             <p className="truncate text-sm font-medium text-white/60">
               @{highlightText(user.username || "")}
             </p>
