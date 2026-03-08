@@ -1,126 +1,151 @@
 <div align="center">
   <img src="public/images/logo.png" alt="FanTribe Logo" width="120" height="120">
-  
-  # FanTribe
-  
-  ### Plateforme Sociale pour Créateurs de Contenu
-  
-  Une plateforme française dédiée aux créateurs et créatrices permettant de monétiser leur contenu via des abonnements, avec support de paiement mobile money africain.
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+# FanTribe
+
+### Plateforme Sociale pour Créateurs de Contenu
+
+Une plateforme francophone dédiée aux créateurs et créatrices du marché africain, permettant de monétiser leur contenu via des abonnements et pourboires, avec support natif du paiement mobile money.
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Convex](https://img.shields.io/badge/Convex-Realtime-orange?style=for-the-badge)](https://convex.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-[Demo](#) · [Documentation](docs/) · [Signaler un Bug](https://github.com/RinKhimera/fantribe/issues) · [Demander une Fonctionnalité](https://github.com/RinKhimera/fantribe/issues)
+[Demo](#) · [Signaler un Bug](https://github.com/RinKhimera/fantribe/issues) · [Demander une Fonctionnalité](https://github.com/RinKhimera/fantribe/issues)
 
 </div>
 
 ---
 
-## 📋 Table des Matières
+## Table des Matières
 
-- [✨ Fonctionnalités](#-fonctionnalités)
-- [🎯 Pour Qui ?](#-pour-qui-)
-- [🚀 Démarrage Rapide](#-démarrage-rapide)
-- [🏗️ Architecture](#️-architecture)
-- [💳 Paiements](#-paiements)
-- [📱 Captures d'Écran](#-captures-décran)
-- [🛠️ Stack Technique](#️-stack-technique)
-- [📂 Structure du Projet](#-structure-du-projet)
-- [🔐 Authentification & Sécurité](#-authentification--sécurité)
-- [🎨 Design System](#-design-system)
-- [📊 Dashboard Admin](#-dashboard-admin)
-- [🧪 Mode Test](#-mode-test)
-- [🌍 Déploiement](#-déploiement)
-- [🤝 Contributing](#-contributing)
-- [📝 License](#-license)
-- [👨‍💻 Auteur](#-auteur)
+- [Fonctionnalités](#fonctionnalités)
+- [Pour Qui ?](#pour-qui-)
+- [Stack Technique](#stack-technique)
+- [Démarrage Rapide](#démarrage-rapide)
+- [Architecture](#architecture)
+- [Structure du Projet](#structure-du-projet)
+- [Paiements](#paiements)
+- [Authentification & Sécurité](#authentification--sécurité)
+- [Tests](#tests)
+- [Commandes](#commandes)
+- [Déploiement](#déploiement)
+- [Contributing](#contributing)
+- [License](#license)
+- [Auteur](#auteur)
 
 ---
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
-### 🎨 Pour les Créateurs
+### Pour les Créateurs
 
 - **Gestion de Contenu**
-  - 📝 Publication de posts (texte, images, vidéos)
-  - 🔒 Contenu public ou réservé aux abonnés
-  - 💬 Système de commentaires et likes
-  - 🔖 Collections personnalisées
-  - 📊 Statistiques de performance
+  - Publication de posts (texte, images, vidéos) — max 3 images ou 1 vidéo par post
+  - Contenu public ou réservé aux abonnés (blur overlay sur le contenu verrouillé)
+  - Contenu adulte avec gating (`isAdult` + préférence utilisateur)
+  - Système de commentaires et likes
+  - Collections personnalisées avec drag & drop
 
 - **Monétisation**
-  - 💰 Abonnements mensuels (1000 XAF/mois)
-  - 📱 Paiement Mobile Money (Orange Money, MTN)
-  - 💳 Paiement par carte (Stripe)
-  - 📈 Suivi des revenus en temps réel
-  - 🏆 Dashboard de performance
+  - Abonnements mensuels (1000 XAF/mois)
+  - Pourboires (tips) avec montants prédéfinis (500–10 000 XAF) ou personnalisés
+  - Paiement Mobile Money (Orange Money, MTN) via CinetPay
+  - Paiement par carte (Visa/Mastercard, Apple Pay, Google Pay) via Stripe
+  - Commission : 70% créateur / 30% plateforme
+  - Dashboard de performance avec statistiques
 
 - **Vérification Créateur**
-  - ✅ Processus de validation d'identité
-  - 📄 Upload de documents officiels
-  - 🔐 Sécurisation du compte
-  - 🎖️ Badge de créateur vérifié
+  - Processus de candidature en plusieurs étapes
+  - Upload de documents d'identité
+  - Validation par l'administration
+  - Badge vérifié affiché partout
 
-### 👥 Pour les Abonnés
+### Pour les Abonnés
 
 - **Expérience Sociale**
-  - 🏠 Fil d'actualité personnalisé
-  - 🔍 Découverte de créateurs
-  - ❤️ Interactions (likes, commentaires)
-  - 💌 Messagerie privée avec créateurs
-  - 🔔 Notifications en temps réel
+  - Fil d'actualité personnalisé (filtré par créateurs suivis)
+  - Page Explore pour découvrir des créateurs et posts publics
+  - Système de follow gratuit (séparé des abonnements payants)
+  - Interactions (likes, commentaires)
+  - Messagerie privée avec créateurs abonnés
+  - Notifications en temps réel (11 types, groupées)
 
-- **Abonnements**
-  - 📺 Accès au contenu exclusif
-  - 💬 Messagerie directe avec créateurs
-  - ⏰ Renouvellement automatique
-  - 📊 Historique des abonnements
+- **Abonnements & Tips**
+  - Accès au contenu exclusif + messagerie directe
+  - Pourboires depuis un post, un profil ou une conversation
+  - Historique des abonnements et transactions
 
-### 🛡️ Pour les Administrateurs
+### Pour les Administrateurs (Superuser)
 
-- **Dashboard Superuser**
-  - 📊 Statistiques globales
-  - 👤 Gestion des utilisateurs
-  - 🎯 Modération de contenu
-  - 💰 Suivi des transactions
-  - 📈 Analyses de performance
-
-- **Modération**
-  - 🚨 Système de signalement
-  - 👮 Validation des créateurs
-  - 🔨 Actions de modération
-  - 📧 Notifications automatiques
+- **Dashboard** (`/superuser`)
+  - Statistiques globales (utilisateurs, posts, candidatures)
+  - Gestion et recherche d'utilisateurs
+  - Dashboard transactions avec filtres (période, créateur, provider)
+  - Top/Low 5 earners, montant moyen, revenus par période
+  - Modération : signalements, validation créateurs, actions de modération
 
 ---
 
-## 🎯 Pour Qui ?
+## Pour Qui ?
 
-### Créatrices & Créateurs
+**Créatrices & Créateurs** — Artistes, influenceurs, coachs, éducateurs souhaitant monétiser leur contenu et bâtir une communauté engagée.
 
-Artistes, influenceurs, coachs, éducateurs qui souhaitent monétiser leur contenu et construire une communauté engagée.
+**Fans & Abonnés** — Personnes souhaitant soutenir leurs créateurs favoris et accéder à du contenu exclusif.
 
-### Fans & Abonnés
-
-Personnes souhaitant soutenir leurs créateurs favoris et accéder à du contenu exclusif.
-
-### Marché Cible
-
-Initialement conçu pour le marché francophone africain avec support natif du mobile money (Orange Money, MTN Mobile Money).
+**Marché Cible** — Marché francophone africain (Cameroun principalement) avec support natif du mobile money (Orange Money, MTN Mobile Money).
 
 ---
 
-## 🚀 Démarrage Rapide
+## Stack Technique
+
+### Frontend
+
+| Technologie         | Usage                                   | Version |
+| ------------------- | --------------------------------------- | ------- |
+| **Next.js**         | Framework React (App Router, Turbopack) | 16.x    |
+| **React**           | Bibliothèque UI                         | 19.x    |
+| **TypeScript**      | Typage statique (mode strict)           | 5.x     |
+| **Tailwind CSS**    | Styling (OKLCH colors)                  | 4.x     |
+| **shadcn/ui**       | Composants UI (CVA + Radix)             | Latest  |
+| **Motion**          | Animations                              | 12.x    |
+| **React Hook Form** | Gestion des formulaires                 | 7.x     |
+| **Zod**             | Validation côté client                  | 3.x     |
+| **Recharts**        | Graphiques (dashboard)                  | 3.x     |
+| **Lucide React**    | Icônes                                  | Latest  |
+
+### Backend & Services
+
+| Service       | Usage                                                                  |
+| ------------- | ---------------------------------------------------------------------- |
+| **Convex**    | Backend real-time (queries, mutations, actions, HTTP endpoints, crons) |
+| **Clerk**     | Authentification (OAuth, Email/Password, JWT tokens)                   |
+| **Bunny CDN** | Stockage images (HTTP Actions) + streaming vidéo (XHR direct)          |
+| **CinetPay**  | Paiements mobile money africains (webhooks via Convex HTTP Actions)    |
+| **Stripe**    | Paiements carte bancaire (webhooks via Convex HTTP Actions)            |
+| **Sentry**    | Monitoring et tracking d'erreurs                                       |
+| **Resend**    | Envoi d'emails transactionnels                                         |
+
+### DevOps & Qualité
+
+| Outil        | Usage                                         |
+| ------------ | --------------------------------------------- |
+| **Vercel**   | Hosting & déploiement continu                 |
+| **Vitest**   | Tests unitaires (happy-dom + convex-test)     |
+| **ESLint**   | Linting (zero warnings policy)                |
+| **Prettier** | Formatage (sans semi-colons, tri des imports) |
+
+---
+
+## Démarrage Rapide
 
 ### Prérequis
 
-Assurez-vous d'avoir installé :
-
-- [Node.js](https://nodejs.org/en) (v18 ou supérieur)
+- [Node.js](https://nodejs.org/) (v18+)
 - [Git](https://git-scm.com/)
-- [npm](https://www.npmjs.com/) ou [bun](https://bun.sh/)
 - Un compte [Convex](https://convex.dev/)
 - Un compte [Clerk](https://clerk.com/)
 
@@ -137,8 +162,6 @@ cd fantribe
 
 ```bash
 npm install
-# ou
-bun install
 ```
 
 3. **Configuration de l'environnement**
@@ -156,21 +179,20 @@ CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/auth/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/auth/sign-up
 
-# Bunny CDN — Secrets gérés dans le dashboard Convex uniquement
-# Variables Convex: BUNNY_STORAGE_ZONE, BUNNY_STORAGE_PASSWORD,
-# BUNNY_CDN_HOSTNAME, BUNNY_STREAM_LIBRARY_ID, BUNNY_STREAM_API_KEY, BUNNY_URL_TOKEN_KEY
-
 # CinetPay (Mobile Money)
 NEXT_PUBLIC_CINETPAY_SITE_ID=
 NEXT_PUBLIC_CINETPAY_API_KEY=
 
-# Stripe (Cartes)
+# Stripe (Cartes) — STRIPE_WEBHOOK_SECRET dans le dashboard Convex
 STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
-# Note: STRIPE_WEBHOOK_SECRET est dans le dashboard Convex uniquement
 
-# Email (Resend)
+# Email
 RESEND_API_KEY=
+
+# Bunny CDN — Tous les secrets dans le dashboard Convex uniquement :
+# BUNNY_STORAGE_ZONE, BUNNY_STORAGE_PASSWORD, BUNNY_CDN_HOSTNAME,
+# BUNNY_STREAM_LIBRARY_ID, BUNNY_STREAM_API_KEY, BUNNY_URL_TOKEN_KEY
 ```
 
 4. **Initialiser Convex**
@@ -183,209 +205,211 @@ npx convex dev
 
 ```bash
 npm run dev
-# ou
-bun run dev
 ```
 
-6. **Ouvrir l'application**
-
-Naviguez vers [http://localhost:3000](http://localhost:3000)
+6. **Ouvrir** [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🏗️ Architecture
-
-### Pattern MVC Moderne
+## Architecture
 
 ```
-├── Frontend (Next.js 15)
-│   ├── App Router (RSC)
-│   ├── Client Components
-│   └── Server Actions
-│
-├── Backend (Convex)
-│   ├── Real-time Database
-│   ├── Queries & Mutations
-│   ├── Scheduled Jobs (Crons)
-│   └── Webhooks
-│
-└── Services Externes
-    ├── Clerk (Auth)
-    ├── Bunny CDN (Média)
-    ├── CinetPay (Mobile Money)
-    ├── Stripe (Cartes)
-    └── Resend (Email)
-```
-
-### Flux de Données
-
-```mermaid
-graph LR
-    A[Client] --> B[Next.js]
-    B --> C[Convex Backend]
-    C --> D[Database]
-    C --> E[External APIs]
-    E --> F[CinetPay/Stripe]
-    E --> G[Bunny CDN]
-    E --> H[Clerk Auth]
+┌─────────────────────────────────────────────────────┐
+│  Client (Next.js 16 App Router + React 19)          │
+│  ├── Turbopack (dev)                                │
+│  ├── proxy.ts (middleware Next.js 16)                │
+│  └── Clerk (auth côté client)                       │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│  Convex Backend (real-time)                         │
+│  ├── Queries (lectures réactives)                   │
+│  ├── Mutations (écritures transactionnelles)        │
+│  ├── Actions (appels externes)                      │
+│  ├── HTTP Actions (webhooks Stripe/CinetPay/Bunny)  │
+│  ├── Crons (expiration abonnements, queue notifs)   │
+│  └── Rate Limiter                                   │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│  Services Externes                                  │
+│  ├── Clerk (Auth, webhooks)                         │
+│  ├── Bunny CDN (images + vidéo streaming)           │
+│  ├── CinetPay (mobile money OM/MOMO)                │
+│  ├── Stripe (cartes, Apple/Google Pay)              │
+│  ├── Sentry (monitoring)                            │
+│  └── Resend (emails)                                │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 💳 Paiements
+## Structure du Projet
+
+```
+fantribe/
+├── app/                              # Next.js App Router
+│   ├── (app-pages)/                  # Routes authentifiées (dashboard layout)
+│   │   ├── (superuser)/superuser/    # Admin (stats, modération, transactions)
+│   │   ├── [username]/               # Profil utilisateur dynamique
+│   │   ├── account/                  # Paramètres du compte
+│   │   ├── be-creator/               # Candidature créateur
+│   │   ├── collections/              # Collections de posts
+│   │   ├── dashboard/                # Dashboard créateur
+│   │   ├── explore/                  # Découverte de créateurs
+│   │   ├── messages/                 # Messagerie
+│   │   ├── new-post/                 # Création de post
+│   │   ├── notifications/            # Centre de notifications
+│   │   ├── payment/                  # Pages de paiement
+│   │   └── subscriptions/            # Gestion abonnements
+│   ├── (auth)/                       # Sign-in, Sign-up (Clerk)
+│   ├── (legal)/                      # Pages légales
+│   ├── api/bunny/                    # Route API Bunny uniquement
+│   ├── onboarding/                   # Onboarding 3 étapes
+│   └── welcome/                      # Page de bienvenue post-onboarding
+│
+├── components/
+│   ├── domains/                      # Composants par domaine métier
+│   │   ├── account/                  # Paramètres compte
+│   │   ├── creators/                 # Créateurs
+│   │   ├── dashboard/                # Dashboard stats
+│   │   ├── messaging/                # Chat & conversations
+│   │   ├── notifications/            # Notifications
+│   │   ├── payment/                  # Flux de paiement
+│   │   ├── posts/                    # Posts & interactions
+│   │   ├── subscriptions/            # Abonnements
+│   │   ├── tips/                     # Pourboires
+│   │   └── users/                    # Profils, follow button
+│   ├── post-composer/                # Compound components (Provider + Frame + Input + Media + Actions + Submit)
+│   ├── new-post/                     # Flux de création de post
+│   ├── home/                         # Fil d'actualité
+│   ├── explore/                      # Page explore
+│   ├── be-creator/                   # Candidature créateur
+│   ├── superuser/                    # Panel admin
+│   ├── onboarding/                   # Étapes d'onboarding
+│   ├── collections/                  # Collections
+│   ├── layout/                       # App shell, sidebar, nav
+│   ├── legal/                        # Pages légales
+│   ├── shared/                       # Composants partagés (stepper, post-media, etc.)
+│   └── ui/                           # shadcn/ui (CVA + Radix primitives)
+│
+├── convex/                           # Backend Convex
+│   ├── schema.ts                     # Modèle de données complet
+│   ├── http.ts                       # HTTP Actions (Bunny, CORS, webhooks)
+│   ├── stripeWebhook.ts             # Webhook Stripe (signature SDK)
+│   ├── cinetpayWebhook.ts           # Webhook CinetPay (HMAC-SHA256)
+│   ├── internalActions.ts           # Actions internes (processPaymentAtomic, etc.)
+│   ├── users.ts                      # Utilisateurs & onboarding
+│   ├── posts.ts                      # Publications & feed
+│   ├── subscriptions.ts             # Abonnements
+│   ├── transactions.ts              # Paiements
+│   ├── tips.ts                       # Pourboires
+│   ├── follows.ts                    # Système de follow
+│   ├── messaging.ts                  # Messagerie
+│   ├── notifications.ts             # Notifications
+│   ├── notificationQueue.ts         # Fan-out notifications (batch)
+│   ├── comments.ts                   # Commentaires
+│   ├── likes.ts                      # Likes
+│   ├── blocks.ts                     # Blocage utilisateurs
+│   ├── bans.ts                       # Bannissements
+│   ├── reports.ts                    # Signalements
+│   ├── bookmarks.ts                  # Favoris
+│   ├── creatorApplications.ts       # Candidatures créateur
+│   ├── dashboard.ts                  # Stats dashboard
+│   ├── superuser.ts                  # Fonctions admin
+│   ├── userStats.ts                  # Statistiques utilisateur
+│   ├── crons.ts                      # Tâches planifiées
+│   ├── files.ts                      # Gestion fichiers
+│   ├── validationDocuments.ts       # Documents de validation
+│   ├── assetsDraft.ts               # Brouillons médias
+│   └── lib/                          # Modules partagés
+│       ├── auth.ts                   # getAuthenticatedUser(), requireCreator(), requireSuperuser()
+│       ├── errors.ts                 # createAppError() — erreurs bilingues
+│       ├── validators.ts            # Validators partagés
+│       ├── notifications.ts         # Service central de notifications
+│       ├── constants.ts             # Constantes métier (commissions, limites)
+│       ├── subscriptions.ts         # canViewSubscribersOnlyContent()
+│       ├── rateLimiter.ts           # Rate limiting
+│       ├── bunny.ts                  # Intégration Bunny CDN
+│       ├── signedUrls.ts            # URLs signées
+│       ├── blocks.ts                 # Helpers blocage
+│       ├── batch.ts                  # Batch processing
+│       └── messaging.ts             # Helpers messagerie
+│
+├── hooks/                            # 13 custom React hooks
+│   ├── useCurrentUser.ts            # Utilisateur courant
+│   ├── useBunnyUpload.ts            # Upload média Bunny CDN
+│   ├── useCinetpayPayment.ts        # Paiement CinetPay
+│   ├── useDebounce.ts               # Debounce pour recherche
+│   ├── useDialogState.ts            # État des dialogs
+│   ├── useInfiniteScroll.ts         # Scroll infini
+│   ├── useMessagesPagination.ts     # Pagination messages
+│   ├── usePresence.ts               # Présence en ligne
+│   ├── useSuperuserFilters.ts       # Filtres admin
+│   └── ...
+│
+├── lib/
+│   ├── config/                       # env.client.ts, env.ts, logger.ts
+│   ├── formatters/                   # date/ (locale FR) + currency/ (XAF/USD)
+│   ├── services/                     # stripe.ts, cinetpay.ts
+│   ├── animations.ts                # Variants Motion
+│   ├── constants.ts                  # Constantes frontend
+│   └── utils.ts                      # cn() utility
+│
+├── schemas/                          # Schémas Zod (validation formulaires)
+├── types/                            # Types TS partagés (PostMedia, MessageProps, TipContext, etc.)
+└── tests/
+    ├── frontend/                     # Vitest + happy-dom + @testing-library
+    ├── convex/                       # Vitest + convex-test (node env)
+    └── helpers/                      # Utilitaires de test
+```
+
+---
+
+## Paiements
 
 ### Providers Supportés
 
-#### 🇫🇷 CinetPay (Primaire)
+#### CinetPay (Primaire — Mobile Money)
 
-- Orange Money
-- MTN Mobile Money
-- Moov Money
-- Wave
-- Paiement carte local
+- Orange Money, MTN Mobile Money, Moov Money, Wave
+- Webhook traité via Convex HTTP Actions (`cinetpayWebhook.ts`) avec HMAC-SHA256 + `crypto.timingSafeEqual`
 
-**Flux de paiement** :
+#### Stripe (Secondaire — Cartes)
 
-1. Utilisateur sélectionne CinetPay
-2. Redirection vers interface CinetPay
-3. Choix du moyen de paiement
-4. Confirmation mobile
-5. Webhook de confirmation
-6. Activation instantanée de l'abonnement
+- Visa/Mastercard, Apple Pay, Google Pay
+- Webhook traité via Convex HTTP Actions (`stripeWebhook.ts`) avec signature SDK
+- Tips dynamiques via `price_data` (pas de `STRIPE_PRICE_ID` fixe)
 
-#### 💳 Stripe (Secondaire)
+### Tarification
 
-- Cartes Visa/Mastercard
-- Apple Pay / Google Pay
-- Pour utilisateurs internationaux
-
-**Montant** : 1000 XAF/mois (~1.50€)
+- **Abonnement** : 1 000 XAF/mois (~1.50 €)
+- **Tips** : min 500 XAF, presets 500 / 1 000 / 2 500 / 5 000 / 10 000 XAF + montant libre
+- **Commission** : 70% créateur / 30% plateforme
 
 ### Gestion des Abonnements
 
 - **Durée** : 30 jours
 - **Renouvellement** : Manuel (pas d'auto-renewal pour mobile money)
-- **Types** :
-  - `content_access` : Accès au contenu exclusif
-  - `messaging_access` : Messagerie avec créateur
-- **Statuts** :
-  - `pending` : En attente de paiement
-  - `active` : Actif
-  - `expired` : Expiré (après 30 jours)
-  - `canceled` : Annulé par l'utilisateur
+- **Types** : `content_access` (contenu exclusif) + `messaging_access` (DMs)
+- **Statuts** : `pending` → `active` → `expired` / `canceled`
+- **Traitement idempotent** via `providerTransactionId` (index unique)
+
+### Devise
+
+- **Primaire** : XAF (zero-decimal) — `1 000 XAF`
+- **Secondaire** : USD (Stripe) — taux de conversion : 1 USD = 562.2 XAF
 
 ---
 
-## 📱 Captures d'Écran
-
-<div align="center">
-  <img src="docs/screenshots/home.png" alt="Page d'accueil" width="45%">
-  <img src="docs/screenshots/profile.png" alt="Profil créateur" width="45%">
-  <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="45%">
-  <img src="docs/screenshots/messages.png" alt="Messagerie" width="45%">
-</div>
-
----
-
-## 🛠️ Stack Technique
-
-### Frontend
-
-| Technologie         | Usage                   | Version |
-| ------------------- | ----------------------- | ------- |
-| **Next.js**         | Framework React         | 15.x    |
-| **TypeScript**      | Typage statique         | 5.x     |
-| **Tailwind CSS**    | Styling                 | 3.x     |
-| **shadcn/ui**       | Composants UI           | Latest  |
-| **Lucide React**    | Icônes                  | Latest  |
-| **React Hook Form** | Gestion des formulaires | Latest  |
-| **Zod**             | Validation              | Latest  |
-| **date-fns**        | Manipulation dates      | Latest  |
-
-### Backend & Services
-
-| Service       | Usage                                    |
-| ------------- | ---------------------------------------- |
-| **Convex**    | Backend real-time, Database NoSQL        |
-| **Clerk**     | Authentification (OAuth, Email/Password) |
-| **Bunny CDN** | Stockage et streaming vidéo              |
-| **CinetPay**  | Paiements mobile money africains         |
-| **Stripe**    | Paiements par carte bancaire             |
-| **Resend**    | Envoi d'emails transactionnels           |
-
-### DevOps
-
-- **Vercel** : Hosting & déploiement continu
-- **GitHub Actions** : CI/CD (optionnel)
-- **ESLint & Prettier** : Qualité du code
-
----
-
-## 📂 Structure du Projet
-
-```
-fantribe/
-├── app/                          # Next.js App Router
-│   ├── (app-pages)/             # Pages authentifiées
-│   │   ├── (superuser)/        # Routes admin
-│   │   │   └── superuser/
-│   │   │       ├── transactions/    # Dashboard transactions
-│   │   │       ├── creator-applications/
-│   │   │       └── reports/
-│   │   ├── [username]/         # Profil utilisateur dynamique
-│   │   ├── messages/           # Messagerie
-│   │   ├── explore/            # Découverte
-│   │   └── notifications/
-│   ├── (auth)/                 # Authentification
-│   └── api/                    # API Routes (webhooks)
-│       ├── stripe/
-│       ├── notification/       # CinetPay webhook
-│       └── bunny/
-│
-├── components/                  # Composants React
-│   ├── ui/                     # shadcn/ui components
-│   ├── shared/                 # Composants partagés
-│   ├── home/                   # Feed principal
-│   ├── profile/                # Profil & abonnements
-│   └── messages/               # Chat
-│
-├── convex/                     # Backend Convex
-│   ├── schema.ts              # Schéma de la base de données
-│   ├── users.ts               # Gestion utilisateurs
-│   ├── posts.ts               # Publications
-│   ├── subscriptions.ts       # Abonnements
-│   ├── transactions.ts        # Paiements
-│   ├── messages.ts            # Messagerie
-│   ├── notifications.ts       # Notifications
-│   ├── crons.ts               # Tâches planifiées
-│   └── internalActions.ts     # Actions internes
-│
-├── hooks/                      # Custom React Hooks
-├── lib/                        # Utilitaires
-│   ├── bunny.ts               # SDK Bunny CDN
-│   ├── logger.ts              # Logger structuré
-│   └── utils.ts
-│
-├── schemas/                    # Schémas Zod
-├── types/                      # Types TypeScript
-├── actions/                    # Server Actions
-└── docs/                       # Documentation
-    ├── TRANSACTIONS_DASHBOARD_GUIDE.md
-    ├── TEST_MODE_TRANSACTIONS.md
-    ├── LOGGER_GUIDE.md
-    └── ENV_GUIDE.md
-```
-
----
-
-## 🔐 Authentification & Sécurité
+## Authentification & Sécurité
 
 ### Clerk Authentication
 
 - **Méthodes** : Email/Mot de passe, OAuth (Google, Facebook)
 - **Localisation** : Interface en français (`frFR`)
-- **Onboarding** : Flow de complétion de profil
-- **Token Exchange** : Convex ↔ Clerk via `tokenIdentifier`
+- **Onboarding** : Flow 3 étapes (Identité → À propos → Préférences)
+- **Token Exchange** : Convex ↔ Clerk via JWT (`template: "convex"`)
 
 ### Types d'Utilisateurs
 
@@ -393,170 +417,71 @@ fantribe/
 accountType: "USER" | "CREATOR" | "SUPERUSER"
 ```
 
-- **USER** : Utilisateur standard (peut s'abonner)
-- **CREATOR** : Créateur vérifié (peut recevoir des abonnements)
-- **SUPERUSER** : Administrateur (accès dashboard admin)
+- **USER** : Utilisateur standard (peut s'abonner, suivre, donner des tips)
+- **CREATOR** : Créateur vérifié (reçoit abonnements et tips, badge vérifié)
+- **SUPERUSER** : Administrateur (dashboard admin, modération)
 
-### Sécurité des Données
+### Mesures de Sécurité
 
-- ✅ Validation Zod côté client & serveur
-- ✅ Authentification requise pour toutes les mutations
-- ✅ Vérification des permissions (accountType)
-- ✅ Filtrage des utilisateurs bloqués
-- ✅ Sanitization des inputs utilisateur
-- ✅ Rate limiting (Convex)
-- ✅ HTTPS obligatoire en production
+- Validation Zod côté client + Convex validators côté backend
+- Authentification requise pour toutes les mutations (`getAuthenticatedUser()`)
+- Vérification des permissions par accountType (`requireCreator()`, `requireSuperuser()`)
+- Rate limiting via `@convex-dev/rate-limiter`
+- Filtrage des utilisateurs bloqués
+- Erreurs bilingues (`createAppError()` — interne en anglais, `userMessage` en français)
+- Webhooks sécurisés (Stripe SDK verification, CinetPay HMAC-SHA256 + timing-safe compare)
 
 ---
 
-## 🎨 Design System
+## Tests
 
-### Thème
+```bash
+# Tous les tests
+npm test
 
-- **Mode** : Light / Dark (système)
-- **Couleurs** : Personnalisables via CSS variables
-- **Font** : System fonts (optimisé performance)
+# Watch mode
+npm run test:watch
 
-### Composants UI
+# Tests Convex uniquement
+npm run test:convex
 
-Basés sur [shadcn/ui](https://ui.shadcn.com/) :
-
-- Button, Card, Dialog, Dropdown
-- Form, Input, Select, Textarea
-- Avatar, Badge, Separator
-- Toast, Alert, Skeleton
-- Table, Tabs, Tooltip
-
-### Responsive Design
-
-- **Mobile First** : Design pensé mobile d'abord
-- **Breakpoints** :
-  - `sm`: 640px
-  - `md`: 768px
-  - `lg`: 1024px
-  - `xl`: 1280px
-
-### Layout Pattern
-
-```tsx
-<ResponsiveLayout>
-  <LeftSidebar /> {/* Navigation */}
-  <MainContent /> {/* Feed, profil, etc. */}
-  <RightSidebar /> {/* Suggestions, abonnement */}
-</ResponsiveLayout>
+# Couverture
+npm run test:coverage
 ```
 
----
-
-## 📊 Dashboard Admin
-
-### Accès
-
-**URL** : `/superuser`  
-**Permissions** : `accountType === "SUPERUSER"`
-
-### Fonctionnalités
-
-#### 📈 Statistiques Globales
-
-- Nombre total d'utilisateurs
-- Posts publiés
-- Candidatures créateurs
-- Taux d'approbation
-
-#### 💰 Dashboard Transactions (`/superuser/transactions`)
-
-**Filtres** :
-
-- Période (2 semaines, 1 mois, 3 mois, 6 mois, 1 an)
-- Créatrice spécifique
-- Moyen de paiement (Stripe/CinetPay)
-
-**Statistiques Affichées** :
-
-- Revenu total de la période
-- Nombre de transactions
-- Créatrices actives
-- Montant moyen par transaction
-- Top 5 earners
-- Low 5 earners
-
-**Tableau Détaillé** :
-
-- Date et heure
-- Créatrice (avatar, nom, username)
-- Abonné (avatar, nom, username)
-- Moyen de paiement (badge)
-- Devise
-- Montant formaté
-
-**Actions** :
-
-- Export CSV (à venir)
-- Filtrage avancé
-- Tri des données
-
-#### 🎯 Modération
-
-- Validation des créateurs
-- Signalements (posts, utilisateurs, commentaires)
-- Actions de modération
+- **Frontend** : Vitest + happy-dom + `@testing-library/react`
+- **Backend** : Vitest + `convex-test` (environnement node)
 
 ---
 
-Pour tester le dashboard sans données réelles :
+## Commandes
 
-**Fichier** : `app/(app-pages)/(superuser)/superuser/transactions/page.tsx`
-
-```typescript
-const USE_TEST_DATA = true // Mode test
-```
-
-**Données générées** :
-
-- 30 transactions sur 2 semaines
-- 5 créatrices fictives
-- 6 abonnés fictifs
-- Montants : 1000 XAF/transaction
-- Providers : 70% CinetPay, 30% Stripe
-
-**Désactivation** :
-
-```typescript
-const USE_TEST_DATA = false // Production
-```
-
-📖 **Guide complet** : [`docs/TEST_MODE_TRANSACTIONS.md`](docs/TEST_MODE_TRANSACTIONS.md)
+| Commande                | Description                          |
+| ----------------------- | ------------------------------------ |
+| `npm run dev`           | Serveur de développement (Turbopack) |
+| `npm run build`         | Build de production                  |
+| `npm run build-check`   | TypeScript + ESLint (zero warnings)  |
+| `npm run lint`          | ESLint (lecture seule)               |
+| `npm run fix-lint`      | ESLint auto-fix                      |
+| `npm test`              | Tous les tests (frontend + convex)   |
+| `npm run test:watch`    | Tests en mode watch                  |
+| `npm run test:convex`   | Tests Convex uniquement              |
+| `npm run test:coverage` | Rapports de couverture               |
+| `npx convex dev`        | Convex dev + régénération des types  |
+| `npx convex deploy`     | Déploiement Convex en production     |
 
 ---
 
-## 🌍 Déploiement
+## Déploiement
 
 ### Vercel (Recommandé)
 
-1. **Push sur GitHub**
-
-```bash
-git push origin main
-```
-
-2. **Importer dans Vercel**
-   - Connecter le repository
-   - Configurer les variables d'environnement
-   - Déployer
-
-3. **Configurer les Webhooks**
-   - Stripe → `https://<convex-deployment>.convex.site/stripe`
-   - CinetPay → URLs automatiques (dérivées de `NEXT_PUBLIC_CONVEX_URL` dans `lib/services/cinetpay.ts`)
-
-### Variables d'Environnement Production
-
-⚠️ **IMPORTANT** : Désactiver le mode test avant le déploiement !
-
-```typescript
-// Dans transactions/page.tsx
-const USE_TEST_DATA = false // ✅ PRODUCTION
-```
+1. Push sur GitHub
+2. Importer dans Vercel, configurer les variables d'environnement
+3. Configurer les webhooks :
+   - **Stripe** → `https://<convex-deployment>.convex.site/stripe`
+   - **CinetPay** → URLs dérivées automatiquement de `NEXT_PUBLIC_CONVEX_URL`
+   - **Clerk** → Route API Next.js standard
 
 ### Convex Production
 
@@ -564,124 +489,56 @@ const USE_TEST_DATA = false // ✅ PRODUCTION
 npx convex deploy
 ```
 
-Configurez `CONVEX_DEPLOYMENT` avec l'URL de production.
+Configurer toutes les variables d'environnement dans le dashboard Convex (Bunny CDN, Stripe webhook secret, etc.).
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Les contributions sont les bienvenues ! Voici comment contribuer :
+Les contributions sont les bienvenues !
 
-### 1. Fork le Projet
+1. **Fork** le projet
+2. **Créer** une branche : `git checkout -b feature/MaFonctionnalité`
+3. **Commit** : `git commit -m 'Add: description de la fonctionnalité'`
+4. **Push** : `git push origin feature/MaFonctionnalité`
+5. **Ouvrir** une Pull Request
 
-```bash
-git clone https://github.com/votre-username/fantribe.git
-```
+### Conventions
 
-### 2. Créer une Branche
-
-```bash
-git checkout -b feature/AmazingFeature
-```
-
-### 3. Commit vos Changements
-
-```bash
-git commit -m 'Add: Nouvelle fonctionnalité incroyable'
-```
-
-Utilisez les préfixes conventionnels :
-
-- `Add:` Nouvelle fonctionnalité
-- `Fix:` Correction de bug
-- `Update:` Mise à jour
-- `Refactor:` Refactorisation
-- `Docs:` Documentation
-
-### 4. Push vers la Branche
-
-```bash
-git push origin feature/AmazingFeature
-```
-
-### 5. Ouvrir une Pull Request
-
-Décrivez clairement :
-
-- Le problème résolu
-- Les changements apportés
-- Les tests effectués
-- Les captures d'écran (si UI)
-
-### Guidelines
-
-- ✅ Code en TypeScript
-- ✅ Suivre les conventions du projet
-- ✅ Commenter le code complexe
-- ✅ Tester localement avant PR
-- ✅ UI en français
-- ✅ Responsive design obligatoire
+- Code en TypeScript strict
+- UI en français
+- Pas de semi-colons (Prettier)
+- Responsive design obligatoire
+- Tester localement avant PR (`npm run build-check && npm test`)
 
 ---
 
-## 📝 License
+## License
 
 Ce projet est sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
-```
-MIT License
-
-Copyright (c) 2025 Samuel Pokam
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files...
-```
-
 ---
 
-## 👨‍💻 Auteur
+## Auteur
 
 <div align="center">
   <img src="https://github.com/RinKhimera.png" width="100" style="border-radius: 50%">
-  
-  **Samuel Pokam**
-  
-  Développeur Full Stack | Next.js & React Enthusiast
-  
-  [![GitHub](https://img.shields.io/badge/GitHub-RinKhimera-181717?style=for-the-badge&logo=github)](https://github.com/RinKhimera)
-  [![LinkedIn](https://img.shields.io/badge/LinkedIn-Samuel_Pokam-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/samuel-pokam)
-  [![Twitter](https://img.shields.io/badge/Twitter-@RinKhimera-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/RinKhimera)
-  [![Portfolio](https://img.shields.io/badge/Portfolio-samuelpokam.dev-FF5722?style=for-the-badge&logo=google-chrome)](https://samuelpokam.com)
+
+**Samuel Pokam**
+
+Développeur Full Stack
+
+[![GitHub](https://img.shields.io/badge/GitHub-RinKhimera-181717?style=for-the-badge&logo=github)](https://github.com/RinKhimera)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Samuel_Pokam-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/samuel-pokam)
+[![Twitter](https://img.shields.io/badge/Twitter-@RinKhimera-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/RinKhimera)
+[![Portfolio](https://img.shields.io/badge/Portfolio-samuelpokam.dev-FF5722?style=for-the-badge&logo=google-chrome)](https://samuelpokam.com)
+
 </div>
 
 ---
 
-## 🙏 Remerciements
-
-- [Next.js](https://nextjs.org/) - Framework React
-- [Convex](https://convex.dev/) - Backend real-time
-- [Clerk](https://clerk.com/) - Authentification
-- [shadcn/ui](https://ui.shadcn.com/) - Composants UI
-- [Bunny CDN](https://bunny.net/) - Stockage média
-- [CinetPay](https://cinetpay.com/) - Paiements mobiles
-- [Stripe](https://stripe.com/) - Paiements cartes
-
----
-
-## 📞 Support
-
-- 📧 Email : [dixiades@gmail.com](mailto:dixiades@gmail.com)
-- 🐛 Issues : [GitHub Issues](https://github.com/RinKhimera/fantribe/issues)
-- 💬 Discussions : [GitHub Discussions](https://github.com/RinKhimera/fantribe/discussions)
-
----
-
 <div align="center">
-  
-  ### ⭐ Si vous aimez ce projet, donnez-lui une étoile !
-  
-  **FanTribe** - Construire une communauté, monétiser sa passion
-  
-  Made with ❤️
-  
+
+**FanTribe** — Construire une communauté, monétiser sa passion.
+
 </div>
