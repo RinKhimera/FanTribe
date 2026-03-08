@@ -23,18 +23,15 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
+      - uses: oven-sh/setup-bun@v2
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
       - name: Type check
-        run: npm run type-check
+        run: bun run type-check
 
       - name: Lint
-        run: npm run lint-check
+        run: bun run lint
 
   test:
     name: Tests
@@ -45,12 +42,9 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
+      - uses: oven-sh/setup-bun@v2
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
       - name: Unit tests
-        run: npm run test
+        run: bun run test

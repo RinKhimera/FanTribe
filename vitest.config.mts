@@ -10,7 +10,7 @@ export default defineConfig({
     globals: true,
     setupFiles: "./vitest.setup.ts",
     include: ["tests/frontend/**/*.test.{ts,tsx}"],
-    exclude: ["**/node_modules/**", "**/dist/**"],
+    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
     coverage: {
       include: [
         "lib/**/*.ts",

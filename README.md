@@ -161,7 +161,7 @@ cd fantribe
 2. **Installer les dépendances**
 
 ```bash
-npm install
+bun install
 ```
 
 3. **Configuration de l'environnement**
@@ -198,13 +198,13 @@ RESEND_API_KEY=
 4. **Initialiser Convex**
 
 ```bash
-npx convex dev
+bunx convex dev
 ```
 
 5. **Lancer le serveur de développement**
 
 ```bash
-npm run dev
+bun dev
 ```
 
 6. **Ouvrir** [http://localhost:3000](http://localhost:3000)
@@ -437,16 +437,19 @@ accountType: "USER" | "CREATOR" | "SUPERUSER"
 
 ```bash
 # Tous les tests
-npm test
+bun run test
 
 # Watch mode
-npm run test:watch
+bun run test:watch
 
 # Tests Convex uniquement
-npm run test:convex
+bun run test:convex
 
 # Couverture
-npm run test:coverage
+bun run test:coverage
+
+# Tests E2E (Playwright)
+bun run test:e2e
 ```
 
 - **Frontend** : Vitest + happy-dom + `@testing-library/react`
@@ -458,17 +461,20 @@ npm run test:coverage
 
 | Commande                | Description                          |
 | ----------------------- | ------------------------------------ |
-| `npm run dev`           | Serveur de développement (Turbopack) |
-| `npm run build`         | Build de production                  |
-| `npm run build-check`   | TypeScript + ESLint (zero warnings)  |
-| `npm run lint`          | ESLint (lecture seule)               |
-| `npm run fix-lint`      | ESLint auto-fix                      |
-| `npm test`              | Tous les tests (frontend + convex)   |
-| `npm run test:watch`    | Tests en mode watch                  |
-| `npm run test:convex`   | Tests Convex uniquement              |
-| `npm run test:coverage` | Rapports de couverture               |
-| `npx convex dev`        | Convex dev + régénération des types  |
-| `npx convex deploy`     | Déploiement Convex en production     |
+| `bun dev`               | Serveur de développement (Turbopack) |
+| `bun run build`         | Build de production                  |
+| `bun run check`         | TypeScript + ESLint (zero warnings)  |
+| `bun run lint`          | ESLint (zero warnings)               |
+| `bun run lint:fix`      | ESLint auto-fix                      |
+| `bun run format`        | Prettier format all                  |
+| `bun run format:check`  | Prettier check formatting            |
+| `bun run test`          | Tous les tests (frontend + convex)   |
+| `bun run test:watch`    | Tests en mode watch                  |
+| `bun run test:convex`   | Tests Convex uniquement              |
+| `bun run test:coverage` | Rapports de couverture               |
+| `bun run test:e2e`      | Tests E2E (Playwright)               |
+| `bunx convex dev`       | Convex dev + régénération des types  |
+| `bunx convex deploy`    | Déploiement Convex en production     |
 
 ---
 
@@ -486,7 +492,7 @@ npm run test:coverage
 ### Convex Production
 
 ```bash
-npx convex deploy
+bunx convex deploy
 ```
 
 Configurer toutes les variables d'environnement dans le dashboard Convex (Bunny CDN, Stripe webhook secret, etc.).
@@ -509,7 +515,7 @@ Les contributions sont les bienvenues !
 - UI en français
 - Pas de semi-colons (Prettier)
 - Responsive design obligatoire
-- Tester localement avant PR (`npm run build-check && npm test`)
+- Tester localement avant PR (`bun run check && bun run test`)
 
 ---
 

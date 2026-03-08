@@ -25,16 +25,19 @@ Creator-focused social platform for the African market (French-speaking). Creato
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run build-check` | TypeScript + ESLint check (zero warnings) |
-| `npm run lint` | ESLint read-only check |
-| `npm run fix-lint` | ESLint auto-fix |
-| `npm test` | All tests (frontend + convex) |
-| `npm run test:watch` | Watch mode |
-| `npm run test:convex` | Convex tests only |
-| `npm run test:coverage` | Coverage reports |
-| `npx convex dev` | Start Convex dev + regenerate types |
+| `bun dev` | Start dev server (Turbopack) |
+| `bun run build` | Production build |
+| `bun run check` | TypeScript + ESLint check (zero warnings) |
+| `bun run lint` | ESLint (zero warnings) |
+| `bun run lint:fix` | ESLint auto-fix |
+| `bun run format` | Prettier format all files |
+| `bun run format:check` | Prettier check formatting |
+| `bun test` | All tests (frontend + convex) |
+| `bun run test:watch` | Watch mode |
+| `bun run test:convex` | Convex tests only |
+| `bun run test:coverage` | Coverage reports |
+| `bun run test:e2e` | Playwright E2E tests |
+| `bunx convex dev` | Start Convex dev + regenerate types |
 
 ## Architecture
 
@@ -96,7 +99,7 @@ tests/
 ## Gotchas
 
 - **`.next/dev/types` cache**: Stale after deleting API routes — delete `.next/dev/types` to clear
-- **`convex/_generated`**: Committed to git — run `npx convex dev` to regenerate after schema changes, then commit the updated files
+- **`convex/_generated`**: Committed to git — run `bunx convex dev` to regenerate after schema changes, then commit the updated files
 - **Bunny secrets**: All in Convex dashboard env vars, NOT in Next.js/Vercel env
 - **Convex site URL**: `NEXT_PUBLIC_CONVEX_URL.replace(".cloud", ".site")` for HTTP Actions
 - **Auth tokens for HTTP Actions**: `useAuth().getToken({ template: "convex" })` → `Authorization: Bearer ${token}`

@@ -1,4 +1,18 @@
 {
-  "typescript.tsdk": "node_modules\\typescript\\lib",
-  "postman.settings.dotenv-detection-notification-visibility": false
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cn\\(([^)]*)\\)", "'([^']*)'"],
+    ["cn\\(([^)]*)\\)", "\"([^\"]*)\""],
+    ["cva\\(([^)]*)\\)", "'([^']*)'"],
+    ["cva\\(([^)]*)\\)", "\"([^\"]*)\""]
+  ],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

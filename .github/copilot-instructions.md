@@ -16,9 +16,9 @@
 ### Running the Project
 
 ```bash
-npm run dev          # Start with Turbopack (default)
-npm run build-check  # Type check + lint before build
-npm run fix-lint     # Auto-fix ESLint issues
+bun dev              # Start with Turbopack (default)
+bun run check        # Type check + lint before build
+bun run lint:fix     # Auto-fix ESLint issues
 ```
 
 ### Environment Variables Required
