@@ -40,35 +40,38 @@ export default function SuperuserLayout({
   }, [currentUser, isLoading, router])
 
   // Build navigation items with dynamic badges
-  const navItems = useMemo(() => [
-    {
-      href: "/superuser",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      href: "/superuser/creator-applications",
-      label: "Candidatures",
-      icon: UserPlus,
-      badge: pendingApplications,
-    },
-    {
-      href: "/superuser/reports",
-      label: "Signalements",
-      icon: AlertTriangle,
-      badge: pendingReports,
-    },
-    {
-      href: "/superuser/bans",
-      label: "Bans",
-      icon: Ban,
-    },
-    {
-      href: "/superuser/transactions",
-      label: "Transactions",
-      icon: Receipt,
-    },
-  ], [pendingApplications, pendingReports])
+  const navItems = useMemo(
+    () => [
+      {
+        href: "/superuser",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        href: "/superuser/creator-applications",
+        label: "Candidatures",
+        icon: UserPlus,
+        badge: pendingApplications,
+      },
+      {
+        href: "/superuser/reports",
+        label: "Signalements",
+        icon: AlertTriangle,
+        badge: pendingReports,
+      },
+      {
+        href: "/superuser/bans",
+        label: "Bans",
+        icon: Ban,
+      },
+      {
+        href: "/superuser/transactions",
+        label: "Transactions",
+        icon: Receipt,
+      },
+    ],
+    [pendingApplications, pendingReports],
+  )
 
   // État de chargement
   if (isLoading || currentUser === undefined) {

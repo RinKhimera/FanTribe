@@ -157,10 +157,10 @@ http.route({
       })
     } catch (error) {
       console.error("CinetPay webhook error:", error)
-      return new Response(
-        JSON.stringify({ error: "Webhook error" }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
-      )
+      return new Response(JSON.stringify({ error: "Webhook error" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      })
     }
   }),
 })
@@ -185,7 +185,9 @@ http.route({
       return Response.redirect(new URL(result.redirect, appUrl).toString())
     } catch (error) {
       console.error("CinetPay return error:", error)
-      return Response.redirect(`${appUrl}/payment/result?status=failed&reason=unexpected_error`)
+      return Response.redirect(
+        `${appUrl}/payment/result?status=failed&reason=unexpected_error`,
+      )
     }
   }),
 })

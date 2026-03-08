@@ -29,10 +29,7 @@ export default defineConfig({
         "convex/lib/rateLimiter.ts",
         "convex/lib/validators.ts",
       ],
-      exclude: [
-        "**/*.test.ts",
-        "convex/_generated/**",
-      ],
+      exclude: ["**/*.test.ts", "convex/_generated/**"],
       thresholds: {
         lines: 65,
         branches: 50,

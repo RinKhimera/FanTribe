@@ -1,9 +1,9 @@
 "use client"
 
 import { Heart, Lock, MessageSquareText } from "lucide-react"
+import { motion } from "motion/react"
 import Image from "next/image"
 import Link from "next/link"
-import { motion } from "motion/react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -93,7 +93,10 @@ export const TopPostsList = ({ posts }: TopPostsListProps) => {
                       {post.likeCount}
                     </span>
                     <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                      <MessageSquareText aria-hidden="true" className="h-3 w-3" />
+                      <MessageSquareText
+                        aria-hidden="true"
+                        className="h-3 w-3"
+                      />
                       {post.commentCount}
                     </span>
                     {post.visibility === "subscribers_only" && (

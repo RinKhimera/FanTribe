@@ -1,18 +1,18 @@
 "use client"
 
 import {
-  closestCenter,
   DndContext,
   type DragEndEvent,
   PointerSensor,
   TouchSensor,
+  closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
 import {
+  SortableContext,
   arrayMove,
   rectSortingStrategy,
-  SortableContext,
   useSortable,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -63,7 +63,11 @@ function getGridLayout(count: number, isVideo: boolean): string {
   }
 }
 
-function getItemClasses(count: number, index: number, isVideo: boolean): string {
+function getItemClasses(
+  count: number,
+  index: number,
+  isVideo: boolean,
+): string {
   if (isVideo) return ""
   switch (count) {
     case 1:
@@ -126,7 +130,7 @@ function SortableMediaItem({
       className={cn(
         "group relative overflow-hidden",
         getItemClasses(count, index, isVideo),
-        isDragging && "z-10 ring-2 ring-primary/50 shadow-2xl scale-[1.02]",
+        isDragging && "ring-primary/50 z-10 scale-[1.02] shadow-2xl ring-2",
       )}
     >
       {/* Drag handle — bottom left, images only, 2+ items */}
@@ -161,7 +165,7 @@ function SortableMediaItem({
           "flex size-7 items-center justify-center rounded-full",
           "bg-black/60 text-white",
           "opacity-0 transition-opacity duration-200",
-          "hover:bg-red-500 group-hover:opacity-100",
+          "group-hover:opacity-100 hover:bg-red-500",
           "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/50",
         )}
         onClick={() => onRemove(index)}
@@ -170,7 +174,7 @@ function SortableMediaItem({
       </button>
 
       {media.type === "video" ? (
-        <div className="aspect-video w-full overflow-hidden bg-muted">
+        <div className="bg-muted aspect-video w-full overflow-hidden">
           <iframe
             src={media.url}
             loading="lazy"
@@ -182,10 +186,7 @@ function SortableMediaItem({
         </div>
       ) : (
         <div
-          className={cn(
-            "relative cursor-pointer",
-            !isSingleImage && "h-full",
-          )}
+          className={cn("relative cursor-pointer", !isSingleImage && "h-full")}
           onClick={() => onPreview(media.url)}
           role="button"
           tabIndex={0}
@@ -222,7 +223,7 @@ function SortableMediaItem({
           {/* Zoom hint — bottom right badge */}
           <div
             className={cn(
-              "absolute bottom-1.5 right-1.5 z-10",
+              "absolute right-1.5 bottom-1.5 z-10",
               "flex size-7 items-center justify-center rounded-full",
               "bg-black/40 opacity-0 group-hover:opacity-100",
               "transition-opacity duration-200",

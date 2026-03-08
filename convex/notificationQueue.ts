@@ -15,7 +15,7 @@ import {
   internalMutation,
   internalQuery,
 } from "./_generated/server"
-import { createNotification, NotificationType } from "./lib/notifications"
+import { NotificationType, createNotification } from "./lib/notifications"
 
 // Configuration
 const BATCH_SIZE = 50 // Notifications par batch dans la queue

@@ -1,16 +1,21 @@
+import { Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Info } from "lucide-react"
 
 export const ImageUploadInfo = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size={"icon"} variant="ghost" className="rounded-full" aria-label="Informations">
+        <Button
+          size={"icon"}
+          variant="ghost"
+          className="rounded-full"
+          aria-label="Informations"
+        >
           <Info size={20} />
         </Button>
       </PopoverTrigger>

@@ -12,9 +12,7 @@ type EditProfileLayoutProps = {
   subStatus: Doc<"subscriptions"> | null
 }
 
-export const EditProfileLayout = ({
-  currentUser,
-}: EditProfileLayoutProps) => {
+export const EditProfileLayout = ({ currentUser }: EditProfileLayoutProps) => {
   return (
     <motion.div
       variants={pageVariants}

@@ -1,12 +1,12 @@
+import { MotionConfig } from "motion/react"
 import type { Metadata, Viewport } from "next"
 import { Open_Sans as FontSans } from "next/font/google"
 import "@/app/globals.css"
+import { PaymentTestBanner } from "@/components/shared/payment-test-banner"
+import { ServiceWorkerRegistration } from "@/components/shared/service-worker-registration"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
-import { MotionConfig } from "motion/react"
-import { PaymentTestBanner } from "@/components/shared/payment-test-banner"
 import ConvexClientProvider from "@/providers/convex-client-provider"
-import { ServiceWorkerRegistration } from "@/components/shared/service-worker-registration"
 import { ThemeProvider } from "@/providers/theme-provider"
 
 const fontSans = FontSans({
@@ -50,7 +50,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen overflow-y-scroll bg-background font-sans antialiased",
+          "bg-background min-h-screen overflow-y-scroll font-sans antialiased",
           fontSans.variable,
         )}
       >

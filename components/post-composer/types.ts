@@ -1,6 +1,6 @@
-import { Id } from "@/convex/_generated/dataModel"
 import { MediaItem } from "@/components/new-post/components/media-preview-grid"
 import { PostVisibility } from "@/components/new-post/components/visibility-selector"
+import { Id } from "@/convex/_generated/dataModel"
 
 /**
  * Configuration initiale du PostComposer (props du Provider)
@@ -97,7 +97,9 @@ export type PostComposerActions = {
   handleCropCancel: () => void
 
   // File selection
-  handleFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
+  handleFileSelect: (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => Promise<void>
 
   // Submit
   submit: () => Promise<void>
@@ -152,5 +154,7 @@ export type PostComposerMediaContextValue = {
   handleCropConfirm: (croppedBlob: Blob) => Promise<void>
   handleCropSkip: () => Promise<void>
   handleCropCancel: () => void
-  handleFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
+  handleFileSelect: (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => Promise<void>
 }

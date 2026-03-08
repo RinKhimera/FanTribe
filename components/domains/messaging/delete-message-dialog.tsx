@@ -1,8 +1,8 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion } from "motion/react"
 import { AlertTriangle, Trash2 } from "lucide-react"
+import { motion } from "motion/react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -52,8 +52,12 @@ export const DeleteMessageDialog = ({
       <DialogContent className="border-white/10 bg-black/95 backdrop-blur-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-destructive/20">
-              <Trash2 size={16} className="text-destructive" aria-hidden="true" />
+            <div className="bg-destructive/20 flex size-8 items-center justify-center rounded-full">
+              <Trash2
+                size={16}
+                className="text-destructive"
+                aria-hidden="true"
+              />
             </div>
             Supprimer le message
           </DialogTitle>
@@ -68,9 +72,10 @@ export const DeleteMessageDialog = ({
                 <span className="block font-medium text-amber-500">
                   Cette action est irréversible
                 </span>
-                <span className="block text-muted-foreground">
+                <span className="text-muted-foreground block">
                   Le message sera supprimé pour vous et pour l&apos;autre
-                  participant. Un placeholder &quot;Message supprimé&quot; sera visible.
+                  participant. Un placeholder &quot;Message supprimé&quot; sera
+                  visible.
                 </span>
               </div>
             </div>

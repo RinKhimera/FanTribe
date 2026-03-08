@@ -219,7 +219,9 @@ export const createVideoRecord = async (
 
   if (!response.ok) {
     const text = await response.text()
-    throw new Error(`Bunny Stream create video failed (${response.status}): ${text}`)
+    throw new Error(
+      `Bunny Stream create video failed (${response.status}): ${text}`,
+    )
   }
 
   const data = await response.json()
@@ -278,7 +280,8 @@ export const getVideo = async (
 
   if (!response.ok) {
     if (response.status === 404) throw new Error(`Video not found: ${videoId}`)
-    if (response.status === 401) throw new Error("Unauthorized: Invalid access key")
+    if (response.status === 401)
+      throw new Error("Unauthorized: Invalid access key")
     throw new Error(`Failed to fetch video metadata: ${response.status}`)
   }
 
@@ -427,7 +430,9 @@ const signBunnyCdnUrl = async (
  * Construit l'URL thumbnail pour une video Bunny Stream.
  * Si BUNNY_URL_TOKEN_KEY est configure, genere une URL signee (expiry 10 ans).
  */
-export const getVideoThumbnailUrl = async (videoId: string): Promise<string> => {
+export const getVideoThumbnailUrl = async (
+  videoId: string,
+): Promise<string> => {
   const config = getStreamConfig()
   const baseUrl = `https://${config.cdnHostname}/${videoId}/thumbnail.jpg`
 
@@ -486,7 +491,12 @@ export const getExtensionFromMimeType = (mimeType: string): string => {
 // VALIDATION
 // ============================================================================
 
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"]
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_VIDEO_SIZE = 300 * 1024 * 1024 // 300MB

@@ -1,20 +1,20 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
-import { motion, AnimatePresence } from "motion/react"
-import { Loader2, Send, MessageCircle, Lock } from "lucide-react"
-import { useState, useRef } from "react"
-import { toast } from "sonner"
+import { Loader2, Lock, MessageCircle, Send } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { useRef, useState } from "react"
 import TextareaAutosize from "react-textarea-autosize"
+import { toast } from "sonner"
 import { CommentItem } from "@/components/shared/comment-item"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
+import { premiumFeedItemVariants } from "@/lib/animations"
 import { logger } from "@/lib/config/logger"
 import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { premiumFeedItemVariants } from "@/lib/animations"
 
 type ExtendedPost = Omit<Doc<"posts">, "author"> & {
   author: Doc<"users"> | null | undefined
@@ -102,18 +102,21 @@ export const PostDetailComments = ({
       className="flex flex-col"
     >
       {/* Comments Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-border/40 border-t">
-        <MessageCircle className="size-4 text-muted-foreground" aria-hidden="true" />
-        <span className="text-sm font-medium text-muted-foreground">
+      <div className="border-border/40 flex items-center gap-2 border-t px-4 py-3">
+        <MessageCircle
+          className="text-muted-foreground size-4"
+          aria-hidden="true"
+        />
+        <span className="text-muted-foreground text-sm font-medium">
           {totalComments} {pluralize(totalComments, "commentaire")}
         </span>
       </div>
 
       {/* Comment Input Area */}
       {canComment ? (
-        <div className="px-4 py-4 border-border/40 border-t bg-muted/30">
+        <div className="border-border/40 bg-muted/30 border-t px-4 py-4">
           {/* Quick Emoji Bar */}
-          <div className="flex gap-1 mb-3 overflow-x-auto pb-1 scrollbar-none -mx-1">
+          <div className="scrollbar-none -mx-1 mb-3 flex gap-1 overflow-x-auto pb-1">
             {QUICK_EMOJIS.map((emoji, index) => (
               <motion.button
                 key={emoji}
@@ -125,7 +128,7 @@ export const PostDetailComments = ({
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.9 }}
                 className={cn(
-                  "text-lg px-2 py-1 rounded-lg shrink-0",
+                  "shrink-0 rounded-lg px-2 py-1 text-lg",
                   "hover:bg-muted transition-colors duration-150",
                 )}
               >
@@ -136,8 +139,8 @@ export const PostDetailComments = ({
 
           {/* Input Form */}
           <form onSubmit={handleSubmitComment}>
-            <div className="flex gap-3 items-start">
-              <Avatar className="size-10 shrink-0 ring-2 ring-background">
+            <div className="flex items-start gap-3">
+              <Avatar className="ring-background size-10 shrink-0 ring-2">
                 <AvatarImage
                   src={currentUser.image}
                   alt={currentUser.username || "Profile"}
@@ -148,12 +151,12 @@ export const PostDetailComments = ({
                 </AvatarFallback>
               </Avatar>
 
-              <div className="flex-1 flex flex-col gap-2">
+              <div className="flex flex-1 flex-col gap-2">
                 <div
                   className={cn(
-                    "relative rounded-2xl overflow-hidden",
-                    "bg-background border border-border/60",
-                    "focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10",
+                    "relative overflow-hidden rounded-2xl",
+                    "bg-background border-border/60 border",
+                    "focus-within:border-primary/50 focus-within:ring-primary/10 focus-within:ring-2",
                     "transition-[border-color,box-shadow] duration-200",
                   )}
                 >
@@ -168,7 +171,7 @@ export const PostDetailComments = ({
                       "w-full resize-none bg-transparent",
                       "px-4 py-3 text-sm leading-relaxed",
                       "placeholder:text-muted-foreground/50",
-                      "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
+                      "focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-hidden",
                     )}
                     disabled={isSubmitting}
                     minRows={1}
@@ -176,8 +179,8 @@ export const PostDetailComments = ({
                   />
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground/60 text-xs">
                     Entrée pour envoyer, Shift+Entrée pour nouvelle ligne
                   </span>
                   <Button
@@ -185,7 +188,7 @@ export const PostDetailComments = ({
                     size="sm"
                     disabled={!commentText.trim() || isSubmitting}
                     className={cn(
-                      "rounded-full px-4 h-8 gap-2",
+                      "h-8 gap-2 rounded-full px-4",
                       "disabled:opacity-40",
                     )}
                   >
@@ -205,20 +208,20 @@ export const PostDetailComments = ({
         </div>
       ) : (
         /* Subscription required message */
-        <div className="px-4 py-6 border-border/40 border-t">
+        <div className="border-border/40 border-t px-4 py-6">
           <div
             className={cn(
               "flex items-center justify-center gap-3",
-              "px-6 py-4 rounded-2xl",
-              "bg-muted/50 border border-border/40",
+              "rounded-2xl px-6 py-4",
+              "bg-muted/50 border-border/40 border",
             )}
           >
-            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Lock className="size-4 text-primary" aria-hidden="true" />
+            <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+              <Lock className="text-primary size-4" aria-hidden="true" />
             </div>
             <div className="text-center">
               <p className="text-sm font-medium">Contenu réservé aux abonnés</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 Abonnez-vous pour commenter cette publication
               </p>
             </div>
@@ -229,9 +232,9 @@ export const PostDetailComments = ({
       {/* Comments List */}
       <div className="flex flex-col">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 gap-3">
+          <div className="flex items-center justify-center gap-3 py-12">
             <Loader2 className="text-primary size-5 animate-spin" />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               Chargement des commentaires…
             </span>
           </div>
@@ -258,14 +261,17 @@ export const PostDetailComments = ({
           </AnimatePresence>
         ) : (
           /* Empty state */
-          <div className="flex flex-col items-center justify-center py-16 px-6">
-            <div className="size-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-              <MessageCircle className="size-7 text-muted-foreground/50" aria-hidden="true" />
+          <div className="flex flex-col items-center justify-center px-6 py-16">
+            <div className="bg-muted/50 mb-4 flex size-16 items-center justify-center rounded-full">
+              <MessageCircle
+                className="text-muted-foreground/50 size-7"
+                aria-hidden="true"
+              />
             </div>
-            <p className="text-muted-foreground text-sm text-center font-medium">
+            <p className="text-muted-foreground text-center text-sm font-medium">
               Aucun commentaire
             </p>
-            <p className="text-muted-foreground/60 text-xs text-center mt-1">
+            <p className="text-muted-foreground/60 mt-1 text-center text-xs">
               Soyez le premier à commenter cette publication
             </p>
           </div>

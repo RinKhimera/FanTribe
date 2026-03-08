@@ -162,7 +162,9 @@ export const MobileNavigation = () => {
               aria-label="Ouvrir le menu"
             >
               <MenuIcon className="size-6" />
-              <span className="mt-0.5 truncate text-[10px] leading-tight">Menu</span>
+              <span className="mt-0.5 truncate text-[10px] leading-tight">
+                Menu
+              </span>
             </button>
           </SheetTrigger>
 

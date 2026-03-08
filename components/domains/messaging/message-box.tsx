@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "motion/react"
 import {
   EyeOff,
   FileText,
@@ -14,6 +13,7 @@ import {
   Trash2,
   Unlock,
 } from "lucide-react"
+import { motion } from "motion/react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
@@ -92,7 +92,11 @@ export const MessageBox = ({
         <div className="group flex max-w-[85%] gap-2 sm:max-w-[75%]">
           {/* Avatar */}
           <Avatar className="size-8 shrink-0 ring-1 ring-white/10">
-            <AvatarImage src={message.sender?.image} alt="" className="object-cover" />
+            <AvatarImage
+              src={message.sender?.image}
+              alt=""
+              className="object-cover"
+            />
             <AvatarFallback className="bg-linear-to-br from-amber-500/20 to-orange-500/20 text-xs">
               {message.sender?.name?.charAt(0) ?? "?"}
             </AvatarFallback>
@@ -169,10 +173,7 @@ export const MessageBox = ({
           currentUserReactions={currentUserReactions}
         >
           <div className="relative cursor-default rounded-2xl rounded-tr-sm bg-linear-to-br from-amber-500/20 to-orange-500/15 px-3 py-2 shadow-sm transition-colors hover:from-amber-500/25 hover:to-orange-500/20">
-            <MessageContent
-              message={message}
-              onImageClick={handleImageClick}
-            />
+            <MessageContent message={message} onImageClick={handleImageClick} />
             <MessageFooter
               time={time}
               isEdited={message.isEdited}
@@ -230,7 +231,7 @@ const MessageContent = ({
               ? "grid-cols-1"
               : message.medias!.length === 2
                 ? "grid-cols-2"
-                : "grid-cols-2"
+                : "grid-cols-2",
           )}
         >
           {message.medias!.map((media, index) => (
@@ -259,7 +260,7 @@ const TextContent = ({ content }: { content: string }) => {
         href={content}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-amber-400 underline decoration-amber-400/30 underline-offset-2 transition-colors hover:text-amber-300 hover:decoration-amber-300/50 break-all"
+        className="break-all text-amber-400 underline decoration-amber-400/30 underline-offset-2 transition-colors hover:text-amber-300 hover:decoration-amber-300/50"
       >
         {content}
       </Link>
@@ -267,7 +268,7 @@ const TextContent = ({ content }: { content: string }) => {
   }
 
   return (
-    <p className="whitespace-pre-wrap text-sm leading-relaxed break-words">
+    <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
       {content}
     </p>
   )
@@ -296,7 +297,7 @@ const MediaItem = ({
           height={isGrid ? 200 : 300}
           className={cn(
             "cursor-pointer object-cover transition-opacity",
-            isGrid ? "aspect-square" : "max-h-80 w-auto"
+            isGrid ? "aspect-square" : "max-h-80 w-auto",
           )}
           onClick={onClick}
         />
@@ -314,7 +315,12 @@ const MediaItem = ({
           className="max-h-80 w-full rounded-lg"
         />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity">
-          <Play size={48} className="text-white" fill="white" aria-hidden="true" />
+          <Play
+            size={48}
+            className="text-white"
+            fill="white"
+            aria-hidden="true"
+          />
         </div>
       </div>
     )
@@ -355,12 +361,12 @@ const ReplyPreview = ({
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "flex items-center gap-1.5 rounded-lg border-l-2 border-amber-500/50 bg-white/5 px-2.5 py-1.5 text-xs text-muted-foreground",
-        alignRight && "ml-auto"
+        "text-muted-foreground flex items-center gap-1.5 rounded-lg border-l-2 border-amber-500/50 bg-white/5 px-2.5 py-1.5 text-xs",
+        alignRight && "ml-auto",
       )}
     >
       <Reply size={12} className="shrink-0 text-amber-500" aria-hidden="true" />
-      <span className="truncate max-w-[200px]">
+      <span className="max-w-[200px] truncate">
         {reply.content || "[Message supprimé]"}
       </span>
     </motion.div>
@@ -381,8 +387,8 @@ const MessageFooter = ({
   return (
     <div
       className={cn(
-        "mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground/70",
-        isFromCurrentUser && "justify-end"
+        "text-muted-foreground/70 mt-0.5 flex items-center gap-1.5 text-[10px]",
+        isFromCurrentUser && "justify-end",
       )}
     >
       {/* Indicateur: message envoyé pendant que la conversation était verrouillée */}
@@ -475,7 +481,7 @@ const SystemMessage = ({ message }: { message: MessageProps }) => {
       <div
         className={cn(
           "flex items-center gap-2 rounded-full px-4 py-1.5 text-xs",
-          config.bg
+          config.bg,
         )}
       >
         <Icon size={12} className={config.color} />
@@ -496,15 +502,15 @@ const DeletedMessage = ({
       animate={{ opacity: 1 }}
       className={cn(
         "flex max-w-[85%] sm:max-w-[75%]",
-        isFromCurrentUser ? "ml-auto justify-end" : "justify-start"
+        isFromCurrentUser ? "ml-auto justify-end" : "justify-start",
       )}
     >
       <div
         className={cn(
           "flex items-center gap-2 rounded-2xl border border-dashed px-3 py-2 text-sm italic",
           isFromCurrentUser
-            ? "rounded-tr-sm border-amber-500/20 text-muted-foreground/50"
-            : "rounded-tl-sm border-white/10 text-muted-foreground/50"
+            ? "text-muted-foreground/50 rounded-tr-sm border-amber-500/20"
+            : "text-muted-foreground/50 rounded-tl-sm border-white/10",
         )}
       >
         <Trash2 size={14} aria-hidden="true" />

@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils"
 import { usePostCard } from "./post-card-context"
 
 export const PostHeader = () => {
-  const { post, currentUser, canViewMedia, openSubscriptionModal } = usePostCard()
+  const { post, currentUser, canViewMedia, openSubscriptionModal } =
+    usePostCard()
 
   const author = post.author
   const postId = post._id
@@ -76,6 +77,7 @@ export const PostHeader = () => {
             {author ? (
               <Link
                 href={`/${author.username}`}
+                data-testid="post-author"
                 className={cn(
                   "focus-visible:ring-primary truncate font-semibold tracking-tight",
                   "hover:text-primary focus-visible:ring-2 focus-visible:outline-none",
@@ -87,7 +89,10 @@ export const PostHeader = () => {
             ) : (
               <span className="text-muted-foreground">Utilisateur</span>
             )}
-            <UserProfileBadgeInline badges={author?.badges} accountType={author?.accountType} />
+            <UserProfileBadgeInline
+              badges={author?.badges}
+              accountType={author?.accountType}
+            />
           </div>
 
           {/* Username + date */}
@@ -142,7 +147,7 @@ export const PostHeader = () => {
         {isAdult && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex size-8 items-center justify-center rounded-full hover:bg-orange-500/10 transition-colors">
+              <div className="flex size-8 items-center justify-center rounded-full transition-colors hover:bg-orange-500/10">
                 <Flame className="size-3.5 text-orange-500" />
               </div>
             </TooltipTrigger>
@@ -154,8 +159,8 @@ export const PostHeader = () => {
         {isPinned && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex size-8 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
-                <Pin className="size-3.5 text-primary" />
+              <div className="hover:bg-primary/10 flex size-8 items-center justify-center rounded-full transition-colors">
+                <Pin className="text-primary size-3.5" />
               </div>
             </TooltipTrigger>
             <TooltipContent side="top" sideOffset={4}>
@@ -166,8 +171,8 @@ export const PostHeader = () => {
         {visibility === "subscribers_only" && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex size-8 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
-                <Lock className="size-3.5 text-primary" />
+              <div className="hover:bg-primary/10 flex size-8 items-center justify-center rounded-full transition-colors">
+                <Lock className="text-primary size-3.5" />
               </div>
             </TooltipTrigger>
             <TooltipContent side="top" sideOffset={4}>

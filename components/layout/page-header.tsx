@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
 import type { LucideIcon } from "lucide-react"
+import { motion } from "motion/react"
 import React from "react"
 import { cn } from "@/lib/utils"
 
@@ -78,7 +78,7 @@ export const PageHeader = ({
           "sticky top-0 z-20",
           "flex items-center justify-between",
           "min-h-[var(--header-height)]",
-          !hideBottomBorder && "border-b border-border",
+          !hideBottomBorder && "border-border border-b",
           "px-[var(--header-padding)] py-3",
           "frosted",
           className,
@@ -88,7 +88,7 @@ export const PageHeader = ({
         <div className="flex flex-1 items-center gap-2.5">
           {leftAction}
           {Icon && (
-            <Icon className="size-5 text-muted-foreground" strokeWidth={1.5} />
+            <Icon className="text-muted-foreground size-5" strokeWidth={1.5} />
           )}
           {children ??
             (title && (

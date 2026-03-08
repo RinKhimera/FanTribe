@@ -14,7 +14,11 @@ import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { premiumCardVariants } from "@/lib/animations"
 import { cn } from "@/lib/utils"
-import { type PostCardContextValue, PostCardContext, type ExtendedPost } from "./post-card-context"
+import {
+  type ExtendedPost,
+  PostCardContext,
+  type PostCardContextValue,
+} from "./post-card-context"
 
 type PostCardProps = {
   post: ExtendedPost
@@ -81,7 +85,17 @@ export const PostCard = ({
       openSubscriptionModal: () => setIsSubscriptionModalOpen(true),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [post, currentUser, postUrl, isOwnPost, canViewMedia, isSubscriber, variant, isDetailView, isCommentsOpen],
+    [
+      post,
+      currentUser,
+      postUrl,
+      isOwnPost,
+      canViewMedia,
+      isSubscriber,
+      variant,
+      isDetailView,
+      isCommentsOpen,
+    ],
   )
 
   return (
@@ -89,59 +103,62 @@ export const PostCard = ({
       <TooltipProvider>
         <PostCardContext.Provider value={contextValue}>
           <motion.article
-          variants={premiumCardVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          className={cn(
-            // Base styles - Premium glass styling
-            "group relative",
-            "glass-post-card",
-            // Variants
-            variant === "featured" && [
-              "border-primary/20 rounded-2xl border",
-              "from-primary/5 bg-linear-to-b to-transparent",
-              "shadow-[0_4px_24px_color-mix(in_oklch,var(--primary)_15%,transparent)]",
-            ],
-            variant === "compact" && "py-1",
-          )}
-        >
-          {/* Main content wrapper */}
-          <div
+            data-testid="post-card"
+            variants={premiumCardVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             className={cn(
-              "flex flex-col gap-2.5",
-              variant === "default" && "py-4",
-              variant === "compact" && "py-2",
-              variant === "featured" && "py-5",
+              // Base styles - Premium glass styling
+              "group relative",
+              "glass-post-card",
+              // Variants
+              variant === "featured" && [
+                "border-primary/20 rounded-2xl border",
+                "from-primary/5 bg-linear-to-b to-transparent",
+                "shadow-[0_4px_24px_color-mix(in_oklch,var(--primary)_15%,transparent)]",
+              ],
+              variant === "compact" && "py-1",
             )}
           >
-            {/* Header: Avatar, Author info, Date, Actions */}
-            <PostHeader />
+            {/* Main content wrapper */}
+            <div
+              className={cn(
+                "flex flex-col gap-2.5",
+                variant === "default" && "py-4",
+                variant === "compact" && "py-2",
+                variant === "featured" && "py-5",
+              )}
+            >
+              {/* Header: Avatar, Author info, Date, Actions */}
+              <PostHeader />
 
-            {/* Content: Post text */}
-            {post.content && <PostContent content={post.content} />}
+              {/* Content: Post text */}
+              {post.content && <PostContent content={post.content} />}
 
-            {/* Media: Images/Videos - SECURITE: Utiliser isMediaLocked du backend */}
-            {(hasMedia || post.isMediaLocked) && (
-              <div className="px-4">
-                <div className="overflow-hidden rounded-xl">
-                  <PostMedia
-                    medias={post.medias ?? []}
-                    isMediaLocked={post.isMediaLocked}
-                    mediaCount={post.mediaCount}
-                    authorUsername={post.author?.username}
-                    onRequireSubscribe={() => setIsSubscriptionModalOpen(true)}
-                  />
+              {/* Media: Images/Videos - SECURITE: Utiliser isMediaLocked du backend */}
+              {(hasMedia || post.isMediaLocked) && (
+                <div className="px-4">
+                  <div className="overflow-hidden rounded-xl">
+                    <PostMedia
+                      medias={post.medias ?? []}
+                      isMediaLocked={post.isMediaLocked}
+                      mediaCount={post.mediaCount}
+                      authorUsername={post.author?.username}
+                      onRequireSubscribe={() =>
+                        setIsSubscriptionModalOpen(true)
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Actions: Like, Comment, Share, Tip, Bookmark */}
-            <PostActions />
+              {/* Actions: Like, Comment, Share, Tip, Bookmark */}
+              <PostActions />
 
-            {/* Comments section - hidden in detail view (handled externally) */}
-            {!isDetailView && <CommentSection />}
-          </div>
+              {/* Comments section - hidden in detail view (handled externally) */}
+              {!isDetailView && <CommentSection />}
+            </div>
           </motion.article>
         </PostCardContext.Provider>
       </TooltipProvider>

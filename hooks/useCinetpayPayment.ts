@@ -43,9 +43,8 @@ export const useCinetpayPayment = () => {
                 creatorUsername: paymentData.creatorUsername || "",
                 amount: paymentData.amount,
                 action:
-                  (paymentData.customFields?.action as
-                    | "subscribe"
-                    | "renew") || "subscribe",
+                  (paymentData.customFields?.action as "subscribe" | "renew") ||
+                  "subscribe",
               })
 
           if (result.redirectUrl) {

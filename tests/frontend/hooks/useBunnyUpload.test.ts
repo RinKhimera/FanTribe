@@ -1,5 +1,7 @@
-import { renderHook, act } from "@testing-library/react"
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest"
+import { act, renderHook } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+// Must be imported AFTER vi.mock
+import { useBunnyUpload } from "@/hooks/useBunnyUpload"
 
 // ============================================================================
 // Mocks
@@ -21,18 +23,11 @@ vi.mock("@clerk/nextjs", () => ({
 
 vi.mock("@/lib/config/env.client", () => mockEnv)
 
-// Must be imported AFTER vi.mock
-import { useBunnyUpload } from "@/hooks/useBunnyUpload"
-
 // ============================================================================
 // Helpers
 // ============================================================================
 
-function createMockFile(
-  name: string,
-  type: string,
-  size = 1024,
-): File {
+function createMockFile(name: string, type: string, size = 1024): File {
   const content = new Uint8Array(size)
   return new File([content], name, { type })
 }
@@ -250,10 +245,13 @@ describe("useBunnyUpload", () => {
       vi.stubGlobal("XMLHttpRequest", MockXHR)
 
       // Mock AbortController
-      vi.stubGlobal("AbortController", class {
-        signal = { addEventListener: vi.fn() }
-        abort = vi.fn()
-      })
+      vi.stubGlobal(
+        "AbortController",
+        class {
+          signal = { addEventListener: vi.fn() }
+          abort = vi.fn()
+        },
+      )
 
       const { result } = renderHook(() => useBunnyUpload())
 
@@ -282,10 +280,7 @@ describe("useBunnyUpload", () => {
         "PUT",
         "https://video.bunnycdn.com/library/lib_1/videos/vid_123",
       )
-      expect(xhr.setRequestHeader).toHaveBeenCalledWith(
-        "AccessKey",
-        "ak_test",
-      )
+      expect(xhr.setRequestHeader).toHaveBeenCalledWith("AccessKey", "ak_test")
 
       // Restore fake timers for subsequent tests
       vi.useFakeTimers()

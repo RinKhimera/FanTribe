@@ -256,9 +256,7 @@ describe("bans", () => {
           banType: "temporary",
           reason: "Temp ban without duration",
         }),
-      ).rejects.toThrow(
-        "La durée est requise pour un bannissement temporaire",
-      )
+      ).rejects.toThrow("La durée est requise pour un bannissement temporaire")
     })
 
     it("should reject unauthenticated ban attempt", async () => {
@@ -512,9 +510,9 @@ describe("bans", () => {
         })
       })
 
-      await expect(
-        t.mutation(api.bans.unbanUser, { userId }),
-      ).rejects.toThrow("Non autorisé")
+      await expect(t.mutation(api.bans.unbanUser, { userId })).rejects.toThrow(
+        "Non autorisé",
+      )
     })
   })
 

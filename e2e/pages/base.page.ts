@@ -13,15 +13,14 @@ export class BasePage {
     await this.page.goto(path)
   }
 
-  /** Navigate via sidebar link (French text) */
-  async navigateVia(linkText: string) {
-    await this.sidebar.getByRole("link", { name: linkText }).click()
-    await this.page.waitForLoadState("domcontentloaded")
+  /** Get all post cards on the page */
+  getPostCards() {
+    return this.page.locator("[data-testid='post-card']")
   }
 
-  /** Wait for Convex data — use a visible element selector, NOT networkidle */
-  async waitForData(selector: string, timeout = 15_000) {
-    await this.page.waitForSelector(selector, { timeout })
+  /** Get the nth post card */
+  getPostCard(index: number) {
+    return this.getPostCards().nth(index)
   }
 
   /** Assert a toast (sonner) is visible */
@@ -29,5 +28,15 @@ export class BasePage {
     await expect(
       this.page.locator("[data-sonner-toast]").filter({ hasText: message }),
     ).toBeVisible({ timeout: 5_000 })
+  }
+
+  /** Close any open dialog by pressing Escape */
+  async closeAllDialogs() {
+    await this.page.keyboard.press("Escape")
+  }
+
+  /** Scope selectors to main content area (avoids sidebar matches) */
+  get main() {
+    return this.page.locator("#main-content")
   }
 }

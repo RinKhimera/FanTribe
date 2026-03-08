@@ -1,5 +1,5 @@
-import { convexTest } from "convex-test"
 import { register as registerRateLimiter } from "@convex-dev/rate-limiter/test"
+import { convexTest } from "convex-test"
 import { describe, expect, it } from "vitest"
 import { api } from "../../../convex/_generated/api"
 import schema from "../../../convex/schema"
@@ -88,9 +88,7 @@ describe("likes", () => {
         return { postId }
       })
 
-      await expect(
-        t.mutation(api.likes.likePost, { postId }),
-      ).rejects.toThrow()
+      await expect(t.mutation(api.likes.likePost, { postId })).rejects.toThrow()
     })
   })
 

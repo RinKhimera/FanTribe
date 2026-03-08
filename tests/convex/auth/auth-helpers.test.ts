@@ -1,5 +1,5 @@
-import { convexTest } from "convex-test"
 import { register as registerRateLimiter } from "@convex-dev/rate-limiter/test"
+import { convexTest } from "convex-test"
 import { describe, expect, it } from "vitest"
 import { api } from "../../../convex/_generated/api"
 import schema from "../../../convex/schema"
@@ -168,7 +168,10 @@ describe("auth helpers", () => {
       })
 
       const creator = t.withIdentity({ tokenIdentifier: "creator_id" })
-      const result = await creator.query(api.transactions.getCreatorEarnings, {})
+      const result = await creator.query(
+        api.transactions.getCreatorEarnings,
+        {},
+      )
 
       expect(result).toBeDefined()
       expect(result.totalNetEarned).toBeDefined()

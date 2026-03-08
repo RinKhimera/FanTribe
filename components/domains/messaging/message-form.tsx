@@ -57,12 +57,14 @@ export const MessageForm = ({
     if (!currentUser || showLockedUI) return
 
     // Envoyer l'indicateur de frappe
-    setTypingIndicatorRef.current({
-      conversationId,
-      isTyping: true,
-    }).catch(() => {
-      // Ignorer silencieusement les erreurs de typing
-    })
+    setTypingIndicatorRef
+      .current({
+        conversationId,
+        isTyping: true,
+      })
+      .catch(() => {
+        // Ignorer silencieusement les erreurs de typing
+      })
 
     // Réinitialiser le timeout
     if (typingTimeoutRef.current) {
@@ -71,10 +73,12 @@ export const MessageForm = ({
 
     // Arrêter l'indicateur après 3 secondes d'inactivité
     typingTimeoutRef.current = setTimeout(() => {
-      setTypingIndicatorRef.current({
-        conversationId,
-        isTyping: false,
-      }).catch(() => {})
+      setTypingIndicatorRef
+        .current({
+          conversationId,
+          isTyping: false,
+        })
+        .catch(() => {})
     }, 3000)
   }, [currentUser, conversationId, showLockedUI])
 
@@ -221,6 +225,7 @@ export const MessageForm = ({
           <div className="relative flex-1">
             <Input
               ref={inputRef}
+              data-testid="message-input"
               type="text"
               aria-label="Message"
               name="message"
@@ -249,6 +254,7 @@ export const MessageForm = ({
                 <Button
                   type="submit"
                   size="icon"
+                  data-testid="send-message-button"
                   aria-label="Envoyer"
                   disabled={!canSend || isSending}
                   className="size-10 rounded-full bg-linear-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/25 transition-[background,box-shadow,opacity] hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/40 disabled:opacity-50"

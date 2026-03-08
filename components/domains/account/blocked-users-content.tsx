@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
-
 import { useConvexAuth, useMutation, usePaginatedQuery } from "convex/react"
 import { Loader2, Search, Shield, UserX } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
+import { useState } from "react"
 import { toast } from "sonner"
-
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +17,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -53,9 +51,7 @@ export const BlockedUsersContent = () => {
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.blocks.getBlockedUsersPaginated,
-    isAuthenticated
-      ? { search: debouncedSearch || undefined }
-      : "skip",
+    isAuthenticated ? { search: debouncedSearch || undefined } : "skip",
     { initialNumItems: INITIAL_ITEMS },
   )
 
@@ -98,7 +94,10 @@ export const BlockedUsersContent = () => {
 
       {/* Search */}
       <div className="relative">
-        <Search aria-hidden="true" className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+        <Search
+          aria-hidden="true"
+          className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2"
+        />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -134,7 +133,10 @@ export const BlockedUsersContent = () => {
       {!isLoading && blockedUsers.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="bg-muted mb-4 rounded-full p-4">
-            <Shield aria-hidden="true" className="text-muted-foreground size-8" />
+            <Shield
+              aria-hidden="true"
+              className="text-muted-foreground size-8"
+            />
           </div>
           <p className="font-medium">Aucun utilisateur bloqué</p>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -163,7 +165,7 @@ export const BlockedUsersContent = () => {
                   layout
                   className={cn(
                     "flex items-center gap-3 rounded-lg border p-3",
-                    "transition-colors hover:bg-muted/50",
+                    "hover:bg-muted/50 transition-colors",
                   )}
                 >
                   <Avatar className="h-10 w-10 shrink-0">
@@ -181,7 +183,9 @@ export const BlockedUsersContent = () => {
                       <span className="truncate text-sm font-medium">
                         {entry.user.name}
                       </span>
-                      <UserProfileBadgeInline accountType={entry.user.accountType} />
+                      <UserProfileBadgeInline
+                        accountType={entry.user.accountType}
+                      />
                       {entry.user.username && (
                         <span className="text-muted-foreground truncate text-xs">
                           @{entry.user.username}
@@ -202,9 +206,15 @@ export const BlockedUsersContent = () => {
                         className="shrink-0"
                       >
                         {isUnblocking ? (
-                          <Loader2 aria-hidden="true" className="mr-1.5 size-3.5 animate-spin" />
+                          <Loader2
+                            aria-hidden="true"
+                            className="mr-1.5 size-3.5 animate-spin"
+                          />
                         ) : (
-                          <UserX aria-hidden="true" className="mr-1.5 size-3.5" />
+                          <UserX
+                            aria-hidden="true"
+                            className="mr-1.5 size-3.5"
+                          />
                         )}
                         Débloquer
                       </Button>
@@ -221,9 +231,7 @@ export const BlockedUsersContent = () => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleUnblock(entry)}
-                        >
+                        <AlertDialogAction onClick={() => handleUnblock(entry)}>
                           Débloquer
                         </AlertDialogAction>
                       </AlertDialogFooter>

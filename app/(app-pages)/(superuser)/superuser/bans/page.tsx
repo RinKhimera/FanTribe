@@ -2,11 +2,11 @@
 
 import { useMutation, useQuery } from "convex/react"
 import {
+  Infinity as InfinityIcon,
   Ban,
   Calendar,
   Clock,
   History,
-  Infinity as InfinityIcon,
   Shield,
   ShieldOff,
   User,
@@ -69,12 +69,12 @@ export default function BansPage() {
 
   const bannedUsers = useQuery(
     api.bans.getAllBannedUsers,
-    currentUser?.accountType === "SUPERUSER" ? {} : "skip"
+    currentUser?.accountType === "SUPERUSER" ? {} : "skip",
   )
 
   const banHistory = useQuery(
     api.bans.getBanHistory,
-    currentUser?.accountType === "SUPERUSER" ? {} : "skip"
+    currentUser?.accountType === "SUPERUSER" ? {} : "skip",
   )
 
   const unbanUser = useMutation(api.bans.unbanUser)
@@ -87,8 +87,12 @@ export default function BansPage() {
   })
 
   // Create stable keys for useMemo dependencies
-  const bannedUsersKey = bannedUsers?.map((u) => `${u._id}-${u.banType}`).join(",") ?? ""
-  const banHistoryKey = banHistory?.map((h) => `${h.userId}-${h.bannedAt}-${h.liftedAt}`).join(",") ?? ""
+  const bannedUsersKey =
+    bannedUsers?.map((u) => `${u._id}-${u.banType}`).join(",") ?? ""
+  const banHistoryKey =
+    banHistory
+      ?.map((h) => `${h.userId}-${h.bannedAt}-${h.liftedAt}`)
+      .join(",") ?? ""
 
   const filteredBannedUsers = useMemo(() => {
     if (!bannedUsers) return []
@@ -161,8 +165,9 @@ export default function BansPage() {
             <h1 className="text-lg font-semibold tracking-tight">
               Gestion des bans
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {activeBansCount} {pluralize(activeBansCount, "ban actif", "bans actifs")}
+            <p className="text-muted-foreground text-sm">
+              {activeBansCount}{" "}
+              {pluralize(activeBansCount, "ban actif", "bans actifs")}
             </p>
           </div>
         </div>
@@ -207,10 +212,10 @@ export default function BansPage() {
                   key={option.value}
                   onClick={() => setFilter(option.value)}
                   className={cn(
-                    "rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    "focus-visible:ring-ring rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                     filter === option.value
                       ? "bg-foreground text-background"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
                   {option.label}
@@ -304,12 +309,15 @@ export default function BansPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShieldOff aria-hidden="true" className="h-5 w-5 text-emerald-500" />
+              <ShieldOff
+                aria-hidden="true"
+                className="h-5 w-5 text-emerald-500"
+              />
               Lever le ban
             </DialogTitle>
             <DialogDescription>
               Êtes-vous sûr de vouloir lever le ban de{" "}
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 {userToUnban?.username
                   ? `@${userToUnban.username}`
                   : userToUnban?.name}
@@ -334,7 +342,11 @@ export default function BansPage() {
                 <>
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                     className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
                   />
                   Traitement…
@@ -363,7 +375,9 @@ function BannedUserCard({
   getRemainingTime,
   onUnban,
 }: {
-  user: NonNullable<ReturnType<typeof useQuery<typeof api.bans.getAllBannedUsers>>>[number]
+  user: NonNullable<
+    ReturnType<typeof useQuery<typeof api.bans.getAllBannedUsers>>
+  >[number]
   formatDate: (ts: number) => string
   getRemainingTime: (ts: number) => string
   onUnban: () => void
@@ -384,7 +398,7 @@ function BannedUserCard({
             {/* User Info */}
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
+                <Avatar className="border-background h-12 w-12 border-2 shadow-sm">
                   <AvatarImage src={user.image} />
                   <AvatarFallback className="bg-muted text-sm font-medium">
                     {user.name?.[0] || "?"}
@@ -393,21 +407,24 @@ function BannedUserCard({
                 {/* Status dot */}
                 <div
                   className={cn(
-                    "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background",
-                    config?.dotColor || "bg-red-500"
+                    "border-background absolute -right-0.5 -bottom-0.5 h-3.5 w-3.5 rounded-full border-2",
+                    config?.dotColor || "bg-red-500",
                   )}
                 />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate font-medium">{user.name}</p>
-                  <Badge variant="outline" className={cn("shrink-0", config?.className)}>
+                  <Badge
+                    variant="outline"
+                    className={cn("shrink-0", config?.className)}
+                  >
                     <TypeIcon aria-hidden="true" className="mr-1 h-3 w-3" />
                     {config?.label}
                   </Badge>
                 </div>
                 {user.username && (
-                  <p className="truncate text-sm text-muted-foreground">
+                  <p className="text-muted-foreground truncate text-sm">
                     @{user.username}
                   </p>
                 )}
@@ -416,7 +433,7 @@ function BannedUserCard({
 
             {/* Ban Details */}
             <div className="flex flex-col gap-1 text-sm sm:items-end">
-              <div className="flex items-center gap-1.5 text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-1.5">
                 <Calendar aria-hidden="true" className="h-3.5 w-3.5" />
                 <span>Banni le {formatDate(user.bannedAt || 0)}</span>
               </div>
@@ -426,15 +443,15 @@ function BannedUserCard({
                   <span>{getRemainingTime(user.banExpiresAt)}</span>
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Par {user.bannedByName}
               </p>
             </div>
           </div>
 
           {/* Reason */}
-          <div className="mt-3 rounded-lg bg-muted/30 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="bg-muted/30 mt-3 rounded-lg p-3">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Raison
             </p>
             <p className="mt-1 text-sm">{user.banReason}</p>
@@ -462,7 +479,9 @@ function HistoryCard({
   entry,
   formatDateTime,
 }: {
-  entry: NonNullable<ReturnType<typeof useQuery<typeof api.bans.getBanHistory>>>[number]
+  entry: NonNullable<
+    ReturnType<typeof useQuery<typeof api.bans.getBanHistory>>
+  >[number]
   formatDateTime: (ts: number) => string
 }) {
   const config = banTypeConfig[entry.banType as keyof typeof banTypeConfig]
@@ -496,7 +515,7 @@ function HistoryCard({
                   </Badge>
                 </div>
                 {entry.username && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     @{entry.username}
                   </p>
                 )}
@@ -505,7 +524,7 @@ function HistoryCard({
 
             {/* Timeline */}
             <div className="space-y-1 text-sm sm:text-right">
-              <div className="flex items-center gap-1.5 text-muted-foreground sm:justify-end">
+              <div className="text-muted-foreground flex items-center gap-1.5 sm:justify-end">
                 <UserX aria-hidden="true" className="h-3.5 w-3.5" />
                 <span>Banni: {formatDateTime(entry.bannedAt)}</span>
               </div>
@@ -517,12 +536,12 @@ function HistoryCard({
           </div>
 
           {/* Reason & Admins */}
-          <div className="mt-3 flex flex-col gap-2 rounded-lg bg-muted/30 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="bg-muted/30 mt-3 flex flex-col gap-2 rounded-lg p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
               <span className="text-muted-foreground">Raison: </span>
               <span>{entry.reason}</span>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               Banni par {entry.bannedByName} • Levé par {entry.liftedByName}
             </div>
           </div>
@@ -547,11 +566,11 @@ function EmptyState({
       animate={{ opacity: 1, scale: 1 }}
       className="flex flex-col items-center justify-center py-16"
     >
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
-        <Icon aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
+      <div className="bg-muted/50 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+        <Icon aria-hidden="true" className="text-muted-foreground h-8 w-8" />
       </div>
       <h3 className="mb-1 text-lg font-medium">{title}</h3>
-      <p className="text-center text-sm text-muted-foreground">{description}</p>
+      <p className="text-muted-foreground text-center text-sm">{description}</p>
     </motion.div>
   )
 }

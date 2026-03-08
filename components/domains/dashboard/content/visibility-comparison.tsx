@@ -35,9 +35,7 @@ const CustomTooltip = ({
 
   return (
     <div className="bg-popover border-border rounded-lg border p-3 shadow-lg">
-      <p className="text-muted-foreground mb-2 text-xs font-medium">
-        {label}
-      </p>
+      <p className="text-muted-foreground mb-2 text-xs font-medium">{label}</p>
       {payload.map((entry) => (
         <div
           key={entry.dataKey}

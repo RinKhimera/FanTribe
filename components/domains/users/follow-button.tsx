@@ -113,6 +113,7 @@ export const FollowButton = ({
   return (
     <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
       <Button
+        data-testid="follow-button"
         variant={isFollowing ? "outline" : "default"}
         onClick={handleToggle}
         disabled={isLoading}
@@ -120,7 +121,7 @@ export const FollowButton = ({
           "w-full rounded-2xl py-5 text-base font-semibold",
           isFollowing
             ? "border-primary/30 bg-primary/5"
-            : "bg-primary shadow-lg shadow-primary/20",
+            : "bg-primary shadow-primary/20 shadow-lg",
           className,
         )}
         aria-label={isFollowing ? "Ne plus suivre" : "Suivre"}

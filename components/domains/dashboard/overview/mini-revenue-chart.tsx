@@ -81,9 +81,7 @@ const CustomTooltip = ({
                 : "Pourboires"}
             </span>
           </div>
-          <span className="font-semibold">
-            {formatAmount(entry.value)} XAF
-          </span>
+          <span className="font-semibold">{formatAmount(entry.value)} XAF</span>
         </div>
       ))}
     </div>

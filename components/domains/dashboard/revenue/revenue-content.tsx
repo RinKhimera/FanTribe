@@ -4,13 +4,13 @@ import { Preloaded, usePreloadedQuery } from "convex/react"
 import { Calendar, Coins, DollarSign, Wallet } from "lucide-react"
 import { motion } from "motion/react"
 import { DashboardStatCard } from "@/components/domains/dashboard/shared/dashboard-stat-card"
+import { api } from "@/convex/_generated/api"
+import { containerVariants } from "@/lib/animations"
+import { pluralize } from "@/lib/formatters"
+import { CommissionInfo } from "./commission-info"
 import { RecentTipsList } from "./recent-tips-list"
 import { RevenueBreakdown } from "./revenue-breakdown"
 import { RevenueTrendsChart } from "./revenue-trends-chart"
-import { CommissionInfo } from "./commission-info"
-import { containerVariants } from "@/lib/animations"
-import { api } from "@/convex/_generated/api"
-import { pluralize } from "@/lib/formatters"
 
 type RevenueContentProps = {
   preloadedEarnings: Preloaded<typeof api.transactions.getCreatorEarnings>

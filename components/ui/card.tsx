@@ -1,5 +1,4 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -10,8 +9,8 @@ const Card = ({ className, ref, ...props }: CardProps) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-xs",
-      className
+      "bg-card text-card-foreground rounded-lg border shadow-xs",
+      className,
     )}
     {...props}
   />
@@ -37,8 +36,8 @@ const CardTitle = ({ className, ref, ...props }: CardTitleProps) => (
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
-      className
+      "text-2xl leading-none font-semibold tracking-tight",
+      className,
     )}
     {...props}
   />
@@ -48,10 +47,14 @@ interface CardDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement
   ref?: React.Ref<HTMLParagraphElement>
 }
 
-const CardDescription = ({ className, ref, ...props }: CardDescriptionProps) => (
+const CardDescription = ({
+  className,
+  ref,
+  ...props
+}: CardDescriptionProps) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-muted-foreground text-sm", className)}
     {...props}
   />
 )

@@ -1,8 +1,8 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion } from "motion/react"
 import { Camera, Loader2, Trash2, Upload } from "lucide-react"
+import { motion } from "motion/react"
 import Image from "next/image"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -14,9 +14,9 @@ import { ImageCropDialog } from "@/components/shared/image-crop/image-crop-dialo
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
+import { useBunnyUpload } from "@/hooks"
 import { imageLoadVariants } from "@/lib/animations"
 import { logger } from "@/lib/config/logger"
-import { useBunnyUpload } from "@/hooks"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
 
@@ -71,7 +71,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
     try {
       const urlParts = url.split("/")
       const domainIndex = urlParts.findIndex((part) =>
-        part.includes("cdn.fantribe.io")
+        part.includes("cdn.fantribe.io"),
       )
       if (domainIndex !== -1 && urlParts.length > domainIndex + 1) {
         const mediaIdParts = urlParts.slice(domainIndex + 1)
@@ -85,7 +85,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
 
   const handleFileSelect = (
     event: React.ChangeEvent<HTMLInputElement>,
-    context: "avatar" | "banner"
+    context: "avatar" | "banner",
   ) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -152,7 +152,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
               } catch (error) {
                 logger.warn(
                   "Impossible de supprimer l'ancienne image de profil",
-                  { error, oldMediaId }
+                  { error, oldMediaId },
                 )
               }
             }
@@ -312,8 +312,8 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           type="button"
           onClick={() => !isPending && bannerInputRef.current?.click()}
           className={cn(
-            "absolute bottom-2 right-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white backdrop-blur-sm transition-opacity hover:bg-black/80 group-hover:opacity-0",
-            { "opacity-0": isPending }
+            "absolute right-2 bottom-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white backdrop-blur-sm transition-opacity group-hover:opacity-0 hover:bg-black/80",
+            { "opacity-0": isPending },
           )}
         >
           <Camera className="size-3.5" />
@@ -333,7 +333,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           <Avatar
             className={cn(
               "ring-background size-28 cursor-pointer ring-4 transition-shadow hover:shadow-xl sm:size-32",
-              { "pointer-events-none opacity-50": isPending }
+              { "pointer-events-none opacity-50": isPending },
             )}
             onClick={() => !isPending && avatarInputRef.current?.click()}
           >
@@ -370,8 +370,8 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           {/* Always-visible camera badge */}
           <div
             className={cn(
-              "absolute bottom-1 right-1 flex size-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-opacity group-hover:opacity-0 sm:size-9",
-              { "opacity-0": isPending }
+              "absolute right-1 bottom-1 flex size-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-opacity group-hover:opacity-0 sm:size-9",
+              { "opacity-0": isPending },
             )}
           >
             <Camera className="size-4" />
@@ -391,9 +391,7 @@ export const UpdateImages = ({ currentUser }: { currentUser: UserProps }) => {
           onCancel={handleCropCancel}
           cropShape={cropDialogState.context === "avatar" ? "round" : "rect"}
           aspectRatio={
-            cropDialogState.context === "avatar"
-              ? AVATAR_ASPECT
-              : BANNER_ASPECT
+            cropDialogState.context === "avatar" ? AVATAR_ASPECT : BANNER_ASPECT
           }
           title={
             cropDialogState.context === "avatar"

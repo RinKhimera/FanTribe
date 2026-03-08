@@ -5,10 +5,10 @@ import { Heart, MessageSquareText, Zap } from "lucide-react"
 import { motion } from "motion/react"
 import { DashboardStatCard } from "@/components/domains/dashboard/shared/dashboard-stat-card"
 import { EmptyDashboard } from "@/components/domains/dashboard/shared/empty-dashboard"
+import { api } from "@/convex/_generated/api"
+import { containerVariants } from "@/lib/animations"
 import { TopPostsList } from "./top-posts-list"
 import { VisibilityComparison } from "./visibility-comparison"
-import { containerVariants } from "@/lib/animations"
-import { api } from "@/convex/_generated/api"
 
 type ContentPerformanceProps = {
   preloadedTopPosts: Preloaded<typeof api.dashboard.getTopPosts>
@@ -75,9 +75,7 @@ export const ContentPerformance = ({
         <div>
           <VisibilityComparison
             publicPerformance={engagement.publicPerformance}
-            subscribersOnlyPerformance={
-              engagement.subscribersOnlyPerformance
-            }
+            subscribersOnlyPerformance={engagement.subscribersOnlyPerformance}
           />
         </div>
       </div>

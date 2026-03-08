@@ -72,10 +72,7 @@ export const checkMessagingPermission = async (
   }
 
   // Créateur ne peut PAS envoyer de messages à un autre créateur
-  if (
-    sender.accountType === "CREATOR" &&
-    recipient.accountType === "CREATOR"
-  ) {
+  if (sender.accountType === "CREATOR" && recipient.accountType === "CREATOR") {
     return {
       canSend: false,
       canRead: false,
@@ -288,10 +285,12 @@ export const checkConversationPermissions = async (
       canRead: false,
       canSendMedia: false,
       isLocked: true,
-      reason: conversation.lockedReason === "subscription_expired"
-        ? "no_messaging_subscription"
-        : "admin_blocked",
-      requiresSubscription: conversation.lockedReason === "subscription_expired",
+      reason:
+        conversation.lockedReason === "subscription_expired"
+          ? "no_messaging_subscription"
+          : "admin_blocked",
+      requiresSubscription:
+        conversation.lockedReason === "subscription_expired",
     }
   }
 

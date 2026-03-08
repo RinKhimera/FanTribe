@@ -1,7 +1,6 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
-import { motion, AnimatePresence } from "motion/react"
 import {
   Bookmark,
   CheckCircle,
@@ -10,7 +9,8 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react"
-import { useTransition, useState, useCallback } from "react"
+import { AnimatePresence, motion } from "motion/react"
+import { useCallback, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { TipDialog } from "@/components/domains/tips"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { api } from "@/convex/_generated/api"
-import { heartPulseVariants, bookmarkVariants } from "@/lib/animations"
+import { bookmarkVariants, heartPulseVariants } from "@/lib/animations"
 import { logger } from "@/lib/config"
 import { cn } from "@/lib/utils"
 import { usePostCard } from "./post-card-context"
@@ -154,7 +154,7 @@ export const PostActions = () => {
   return (
     <div className="px-4">
       {/* Subtle divider */}
-      <div className="h-px bg-border mb-3" />
+      <div className="bg-border mb-3 h-px" />
 
       <div className="flex items-center justify-between">
         {/* Left actions group */}
@@ -163,6 +163,7 @@ export const PostActions = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                data-testid="like-button"
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
@@ -185,7 +186,8 @@ export const PostActions = () => {
                   <Heart
                     className={cn(
                       "size-5 transition-[color,fill,filter] duration-300",
-                      isLiked && "fill-current drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]",
+                      isLiked &&
+                        "fill-current drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]",
                     )}
                   />
                 </motion.div>
@@ -217,6 +219,7 @@ export const PostActions = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  data-testid="comment-button"
                   variant="ghost"
                   size="sm"
                   onClick={(e) => {
@@ -240,10 +243,12 @@ export const PostActions = () => {
                     )}
                   />
                   {commentCount > 0 && (
-                    <span className={cn(
-                      "text-sm font-semibold tabular-nums",
-                      isCommentsOpen && "text-primary",
-                    )}>
+                    <span
+                      className={cn(
+                        "text-sm font-semibold tabular-nums",
+                        isCommentsOpen && "text-primary",
+                      )}
+                    >
                       {formatCount(commentCount)}
                     </span>
                   )}
@@ -279,32 +284,35 @@ export const PostActions = () => {
           </Tooltip>
 
           {/* Tip button — visible on other creators' posts only */}
-          {author && author.accountType === "CREATOR" && currentUserId && currentUserId !== author._id && (
-            <TipDialog
-              creator={author}
-              context="post"
-              postId={postId}
-              trigger={
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "group h-10 rounded-full px-4 transition-colors duration-300",
-                        "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500",
-                      )}
-                    >
-                      <Coins className="size-5 transition-transform duration-300 group-hover:scale-110" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" sideOffset={4}>
-                    Envoyer un pourboire
-                  </TooltipContent>
-                </Tooltip>
-              }
-            />
-          )}
+          {author &&
+            author.accountType === "CREATOR" &&
+            currentUserId &&
+            currentUserId !== author._id && (
+              <TipDialog
+                creator={author}
+                context="post"
+                postId={postId}
+                trigger={
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "group h-10 rounded-full px-4 transition-colors duration-300",
+                          "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500",
+                        )}
+                      >
+                        <Coins className="size-5 transition-transform duration-300 group-hover:scale-110" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" sideOffset={4}>
+                      Envoyer un pourboire
+                    </TooltipContent>
+                  </Tooltip>
+                }
+              />
+            )}
         </div>
 
         {/* Right actions group */}
@@ -313,6 +321,7 @@ export const PostActions = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                data-testid="bookmark-button"
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {

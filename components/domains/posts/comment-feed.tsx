@@ -34,7 +34,9 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-left max-sm:text-sm">
-                    <div className="font-bold truncate">{comment.author?.name}</div>
+                    <div className="truncate font-bold">
+                      {comment.author?.name}
+                    </div>
                     <div className="text-muted-foreground truncate">
                       @{comment.author?.username}
                     </div>

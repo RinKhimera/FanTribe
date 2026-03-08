@@ -1,9 +1,9 @@
 "use client"
 
-import { motion } from "motion/react"
 import { AlertCircle, ChevronRight, Clock } from "lucide-react"
+import { motion } from "motion/react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 type SubscriptionExpiredBannerProps = {
@@ -22,7 +22,9 @@ export const SubscriptionExpiredBanner = ({
   const isWarning = variant === "warning"
 
   // Helper function to calculate time remaining
-  const calculateTimeRemaining = (expiry: number | undefined): string | null => {
+  const calculateTimeRemaining = (
+    expiry: number | undefined,
+  ): string | null => {
     if (!expiry) return null
     const now = Date.now()
     const diff = expiry - now
@@ -37,7 +39,7 @@ export const SubscriptionExpiredBanner = ({
   }
 
   const [timeRemaining, setTimeRemaining] = useState<string | null>(() =>
-    calculateTimeRemaining(expiresAt)
+    calculateTimeRemaining(expiresAt),
   )
 
   // Update time remaining periodically
@@ -54,29 +56,30 @@ export const SubscriptionExpiredBanner = ({
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
-      className={cn(
-        "overflow-hidden",
-        className
-      )}
+      className={cn("overflow-hidden", className)}
     >
       <div
         className={cn(
           "flex items-center gap-3 px-4 py-3 text-sm",
           isWarning
-            ? "bg-amber-500/10 border-b border-amber-500/20"
-            : "bg-destructive/10 border-b border-destructive/20"
+            ? "border-b border-amber-500/20 bg-amber-500/10"
+            : "bg-destructive/10 border-destructive/20 border-b",
         )}
       >
         <div
           className={cn(
             "flex size-8 shrink-0 items-center justify-center rounded-full",
-            isWarning ? "bg-amber-500/20" : "bg-destructive/20"
+            isWarning ? "bg-amber-500/20" : "bg-destructive/20",
           )}
         >
           {isWarning ? (
             <Clock size={16} className="text-amber-500" aria-hidden="true" />
           ) : (
-            <AlertCircle size={16} className="text-destructive" aria-hidden="true" />
+            <AlertCircle
+              size={16}
+              className="text-destructive"
+              aria-hidden="true"
+            />
           )}
         </div>
 
@@ -84,14 +87,14 @@ export const SubscriptionExpiredBanner = ({
           <p
             className={cn(
               "font-medium",
-              isWarning ? "text-amber-500" : "text-destructive"
+              isWarning ? "text-amber-500" : "text-destructive",
             )}
           >
             {isWarning
               ? "Abonnement bientôt expiré"
               : "Abonnement messagerie expiré"}
           </p>
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="text-muted-foreground truncate text-xs">
             {isWarning && timeRemaining
               ? `Expire dans ${timeRemaining}${creatorName ? ` - ${creatorName}` : ""}`
               : creatorName
@@ -103,10 +106,10 @@ export const SubscriptionExpiredBanner = ({
         <Link
           href="/settings/subscriptions"
           className={cn(
-            "flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+            "flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
             isWarning
               ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30"
-              : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+              : "bg-destructive/20 text-destructive hover:bg-destructive/30",
           )}
         >
           Renouveler
@@ -122,14 +125,16 @@ type CompactExpiredBadgeProps = {
   className?: string
 }
 
-export const CompactExpiredBadge = ({ className }: CompactExpiredBadgeProps) => {
+export const CompactExpiredBadge = ({
+  className,
+}: CompactExpiredBadgeProps) => {
   return (
     <motion.span
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-destructive/20 px-2 py-0.5 text-xs text-destructive",
-        className
+        "bg-destructive/20 text-destructive inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs",
+        className,
       )}
     >
       <AlertCircle size={10} />

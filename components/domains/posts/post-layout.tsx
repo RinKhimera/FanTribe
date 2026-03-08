@@ -1,11 +1,11 @@
 "use client"
 
 import { Preloaded, usePreloadedQuery } from "convex/react"
-import { motion } from "motion/react"
 import { ArrowLeft } from "lucide-react"
+import { motion } from "motion/react"
 import { notFound, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { PostCard } from "@/components/shared/post-card"
+import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
@@ -43,12 +43,12 @@ export const PostLayout = ({
           "bg-background/80 backdrop-blur-xl backdrop-saturate-150",
         )}
       >
-        <div className="flex items-center gap-4 px-4 h-14">
+        <div className="flex h-14 items-center gap-4 px-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => router.back()}
-            className="size-9 rounded-full hover:bg-muted/80 transition-colors -ml-1"
+            className="hover:bg-muted/80 -ml-1 size-9 rounded-full transition-colors"
             aria-label="Retour"
           >
             <ArrowLeft className="size-5" aria-hidden="true" />
@@ -63,11 +63,7 @@ export const PostLayout = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
       >
-        <PostCard
-          post={post}
-          currentUser={currentUser}
-          isDetailView={true}
-        />
+        <PostCard post={post} currentUser={currentUser} isDetailView={true} />
       </motion.div>
 
       {/* Comments Section */}

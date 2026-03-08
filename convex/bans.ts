@@ -18,7 +18,7 @@ export const banUser = mutation({
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
@@ -49,7 +49,9 @@ export const banUser = mutation({
 
     // For temporary bans, durationDays is required
     if (args.banType === "temporary" && !args.durationDays) {
-      throw new ConvexError("La durée est requise pour un bannissement temporaire")
+      throw new ConvexError(
+        "La durée est requise pour un bannissement temporaire",
+      )
     }
 
     const now = Date.now()
@@ -83,7 +85,10 @@ export const banUser = mutation({
     // If a report was provided, resolve it with "banned" action
     if (args.reportId) {
       const report = await ctx.db.get(args.reportId)
-      if (report && (report.status === "pending" || report.status === "reviewing")) {
+      if (
+        report &&
+        (report.status === "pending" || report.status === "reviewing")
+      ) {
         await ctx.db.patch(args.reportId, {
           status: "resolved",
           resolutionAction: "banned",
@@ -112,7 +117,7 @@ export const unbanUser = mutation({
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
@@ -130,17 +135,19 @@ export const unbanUser = mutation({
     }
 
     // Update ban history with lift info
-    const updatedBanHistory = userToUnban.banHistory?.map((entry, index, arr) => {
-      // Update the last entry (the current ban)
-      if (index === arr.length - 1 && !entry.liftedAt) {
-        return {
-          ...entry,
-          liftedAt: Date.now(),
-          liftedBy: currentUser._id,
+    const updatedBanHistory = userToUnban.banHistory?.map(
+      (entry, index, arr) => {
+        // Update the last entry (the current ban)
+        if (index === arr.length - 1 && !entry.liftedAt) {
+          return {
+            ...entry,
+            liftedAt: Date.now(),
+            liftedBy: currentUser._id,
+          }
         }
-      }
-      return entry
-    })
+        return entry
+      },
+    )
 
     // Clear ban fields
     await ctx.db.patch(args.userId, {
@@ -182,7 +189,7 @@ export const getAllBannedUsers = query({
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
@@ -215,11 +222,13 @@ export const getAllBannedUsers = query({
           banExpiresAt: user.banDetails?.expiresAt,
           bannedByName: bannedByUser?.name || "Admin inconnu",
         }
-      })
+      }),
     )
 
     // Sort by bannedAt desc (most recent first)
-    return enrichedBannedUsers.sort((a, b) => (b.bannedAt || 0) - (a.bannedAt || 0))
+    return enrichedBannedUsers.sort(
+      (a, b) => (b.bannedAt || 0) - (a.bannedAt || 0),
+    )
   },
 })
 
@@ -250,7 +259,7 @@ export const getBanHistory = query({
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
@@ -261,12 +270,12 @@ export const getBanHistory = query({
     // Get all users with ban history (use .take() to bound the scan)
     const allUsers = await ctx.db.query("users").take(1000)
     const usersWithHistory = allUsers.filter(
-      (u) => u.banHistory && u.banHistory.length > 0
+      (u) => u.banHistory && u.banHistory.length > 0,
     )
 
     // Flatten and enrich all lifted bans
     const liftedBans: {
-      userId: typeof usersWithHistory[0]["_id"]
+      userId: (typeof usersWithHistory)[0]["_id"]
       userName: string
       username: string | undefined
       userImage: string | undefined
@@ -345,7 +354,7 @@ export const getUserBanInfo = query({
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique()
 
@@ -369,7 +378,7 @@ export const getUserBanInfo = query({
           bannedByName: bannedByUser?.name || "Admin inconnu",
           liftedByName: liftedByUser?.name || null,
         }
-      })
+      }),
     )
 
     return {

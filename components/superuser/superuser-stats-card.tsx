@@ -1,6 +1,6 @@
 "use client"
 
-import { type LucideIcon, TrendingUp, TrendingDown } from "lucide-react"
+import { type LucideIcon, TrendingDown, TrendingUp } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -106,9 +106,9 @@ export function SuperuserStatsCard({
       className={cn(
         "group relative overflow-hidden border-l-4 p-5",
         "transition-[box-shadow,transform] duration-300 ease-out",
-        "hover:shadow-lg hover:-translate-y-0.5",
+        "hover:-translate-y-0.5 hover:shadow-lg",
         scheme.accentBorder,
-        className
+        className,
       )}
     >
       {/* Gradient background overlay */}
@@ -116,7 +116,7 @@ export function SuperuserStatsCard({
         className={cn(
           "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-60",
           "transition-opacity duration-300 group-hover:opacity-100",
-          scheme.gradient
+          scheme.gradient,
         )}
       />
 
@@ -141,7 +141,9 @@ export function SuperuserStatsCard({
                 className={cn(
                   "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold",
                   "animate-in fade-in slide-in-from-left-2 duration-300",
-                  trend.isPositive ? scheme.trendPositive : scheme.trendNegative
+                  trend.isPositive
+                    ? scheme.trendPositive
+                    : scheme.trendNegative,
                 )}
               >
                 {trend.isPositive ? (
@@ -168,7 +170,7 @@ export function SuperuserStatsCard({
             "shadow-lg transition-transform duration-300",
             "group-hover:scale-110 group-hover:rotate-3",
             scheme.iconBg,
-            scheme.iconColor
+            scheme.iconColor,
           )}
         >
           <Icon className="h-6 w-6" strokeWidth={2} />
@@ -178,9 +180,9 @@ export function SuperuserStatsCard({
       {/* Decorative corner accent */}
       <div
         className={cn(
-          "absolute -bottom-8 -right-8 h-24 w-24 rounded-full opacity-10",
+          "absolute -right-8 -bottom-8 h-24 w-24 rounded-full opacity-10",
           "transition-transform duration-500 group-hover:scale-150",
-          scheme.iconBg
+          scheme.iconBg,
         )}
       />
     </Card>

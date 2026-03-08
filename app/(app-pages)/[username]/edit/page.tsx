@@ -13,7 +13,11 @@ const EditProfile = async (props: {
   // Parallel fetch: getCurrentUser and getUserProfile are independent
   const [currentUser, userProfile] = await Promise.all([
     fetchQuery(api.users.getCurrentUser, undefined, { token }),
-    fetchQuery(api.users.getUserProfile, { username: params.username }, { token }),
+    fetchQuery(
+      api.users.getUserProfile,
+      { username: params.username },
+      { token },
+    ),
   ])
 
   if (!currentUser?.username) redirect("/onboarding")

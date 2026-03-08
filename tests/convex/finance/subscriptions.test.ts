@@ -234,9 +234,12 @@ describe("subscriptions", () => {
       })
 
       const subscriber = t.withIdentity({ tokenIdentifier: "subscriber_id" })
-      const result = await subscriber.query(api.subscriptions.canUserSubscribe, {
-        creatorId: regularUserId,
-      })
+      const result = await subscriber.query(
+        api.subscriptions.canUserSubscribe,
+        {
+          creatorId: regularUserId,
+        },
+      )
 
       expect(result.canSubscribe).toBe(false)
       expect(result.reason).toBe("not_creator")
@@ -283,9 +286,12 @@ describe("subscriptions", () => {
       })
 
       const subscriber = t.withIdentity({ tokenIdentifier: "subscriber_id" })
-      const result = await subscriber.query(api.subscriptions.canUserSubscribe, {
-        creatorId,
-      })
+      const result = await subscriber.query(
+        api.subscriptions.canUserSubscribe,
+        {
+          creatorId,
+        },
+      )
 
       expect(result.canSubscribe).toBe(false)
       expect(result.reason).toBe("already_active")
@@ -317,9 +323,12 @@ describe("subscriptions", () => {
       })
 
       const subscriber = t.withIdentity({ tokenIdentifier: "subscriber_id" })
-      const result = await subscriber.query(api.subscriptions.canUserSubscribe, {
-        creatorId,
-      })
+      const result = await subscriber.query(
+        api.subscriptions.canUserSubscribe,
+        {
+          creatorId,
+        },
+      )
 
       expect(result.canSubscribe).toBe(true)
       expect(result.reason).toBeNull()
@@ -368,7 +377,7 @@ describe("subscriptions", () => {
       })
 
       const result = await t.mutation(
-        internal.subscriptions.checkAndUpdateExpiredSubscriptions
+        internal.subscriptions.checkAndUpdateExpiredSubscriptions,
       )
 
       expect(result.expiredUpdated).toBe(1)
@@ -383,7 +392,9 @@ describe("subscriptions", () => {
           .withIndex("by_recipient", (q) => q.eq("recipientId", subscriberId))
           .collect()
       })
-      expect(notifications.some((n) => n.type === "subscriptionExpired")).toBe(true)
+      expect(notifications.some((n) => n.type === "subscriptionExpired")).toBe(
+        true,
+      )
     })
 
     it("should not affect non-expired subscriptions", async () => {
@@ -427,7 +438,7 @@ describe("subscriptions", () => {
       })
 
       const result = await t.mutation(
-        internal.subscriptions.checkAndUpdateExpiredSubscriptions
+        internal.subscriptions.checkAndUpdateExpiredSubscriptions,
       )
 
       expect(result.expiredUpdated).toBe(0)
@@ -495,7 +506,7 @@ describe("subscriptions", () => {
 
       const subscriber = t.withIdentity({ tokenIdentifier: "subscriber_id" })
       const stats = await subscriber.query(
-        api.subscriptions.getMyContentAccessSubscriptionsStats
+        api.subscriptions.getMyContentAccessSubscriptionsStats,
       )
 
       expect(stats.creatorsCount).toBe(1)

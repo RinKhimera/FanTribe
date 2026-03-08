@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import { api } from "@/convex/_generated/api"
 import { useDebounce } from "@/hooks/useDebounce"
 
@@ -20,7 +20,7 @@ export function useSuggestions() {
     api.users.searchUsers,
     debouncedSearchTerm.trim()
       ? { searchTerm: debouncedSearchTerm.trim() }
-      : "skip"
+      : "skip",
   )
 
   // Refresh suggestions

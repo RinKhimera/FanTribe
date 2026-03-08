@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import {
-  formatLastSeen,
-  formatLastSeenShort,
-} from "@/lib/formatters/date"
+import { formatLastSeen, formatLastSeenShort } from "@/lib/formatters/date"
 
 const NOW = new Date("2026-02-10T12:00:00Z").getTime()
 

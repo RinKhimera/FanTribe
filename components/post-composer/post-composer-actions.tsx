@@ -1,9 +1,9 @@
 "use client"
 
 import { useRef } from "react"
+import { AdultContentToggle } from "@/components/new-post/components/adult-content-toggle"
 import { MediaUploadButton } from "@/components/new-post/components/media-upload-button"
 import { VisibilitySelector } from "@/components/new-post/components/visibility-selector"
-import { AdultContentToggle } from "@/components/new-post/components/adult-content-toggle"
 import { usePostComposer } from "./post-composer-context"
 
 export function PostComposerActions() {

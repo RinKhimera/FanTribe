@@ -54,8 +54,8 @@ export const CommissionInfo = () => {
               </li>
               <li>• Les paiements sont automatiques et sécurisés</li>
               <li>
-                • Le prochain paiement inclut toutes les transactions depuis
-                le dernier paiement mensuel
+                • Le prochain paiement inclut toutes les transactions depuis le
+                dernier paiement mensuel
               </li>
             </ul>
           </div>

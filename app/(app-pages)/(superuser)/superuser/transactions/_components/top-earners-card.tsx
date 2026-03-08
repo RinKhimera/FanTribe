@@ -119,7 +119,8 @@ export function TopEarnersCard({
                     variant="outline"
                     className="hidden text-xs sm:inline-flex"
                   >
-                    {earner.transactionCount} {pluralize(earner.transactionCount, "transaction")}
+                    {earner.transactionCount}{" "}
+                    {pluralize(earner.transactionCount, "transaction")}
                   </Badge>
                 </div>
               </div>

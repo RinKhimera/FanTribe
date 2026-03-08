@@ -147,9 +147,7 @@ export const NotificationItem = ({
           ? "ont commenté votre publication"
           : "a commenté votre publication"
       case "newSubscription":
-        return plural
-          ? "se sont abonnés à vous"
-          : "s'est abonné à vous"
+        return plural ? "se sont abonnés à vous" : "s'est abonné à vous"
       case "renewSubscription":
         return plural
           ? "ont renouvelé leur abonnement"
@@ -273,6 +271,7 @@ export const NotificationItem = ({
     <AnimatePresence mode="popLayout">
       {!isDeleting && (
         <motion.div
+          data-testid="notification-item"
           variants={deleteSwipeVariants}
           initial="initial"
           animate="initial"
@@ -363,7 +362,7 @@ export const NotificationItem = ({
                             </Link>
                             {/* Badge count */}
                             {notification.actorCount > 2 && (
-                              <span className="bg-primary text-primary-foreground absolute -right-1 -top-1 z-20 flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
+                              <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 z-20 flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
                                 +{notification.actorCount - 2}
                               </span>
                             )}
@@ -404,7 +403,11 @@ export const NotificationItem = ({
                           <>
                             <span className="inline-flex items-center gap-1 font-semibold">
                               {getActorNames()}
-                              {!isGrouped && <UserProfileBadgeInline accountType={primaryActor.accountType} />}
+                              {!isGrouped && (
+                                <UserProfileBadgeInline
+                                  accountType={primaryActor.accountType}
+                                />
+                              )}
                             </span>{" "}
                             <span className="text-muted-foreground">
                               {getMessage()}

@@ -558,11 +558,7 @@ export const simulateTip = action({
     currency: v.string(),
     message: v.optional(v.string()),
     context: v.optional(
-      v.union(
-        v.literal("post"),
-        v.literal("profile"),
-        v.literal("message"),
-      ),
+      v.union(v.literal("post"), v.literal("profile"), v.literal("message")),
     ),
     postId: v.optional(v.id("posts")),
     conversationId: v.optional(v.id("conversations")),

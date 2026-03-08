@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { socialLinkVariants } from "@/lib/animations"
-import { extractUsername, type SocialPlatform } from "@/lib/social-links"
+import { type SocialPlatform, extractUsername } from "@/lib/social-links"
 import { PLATFORM_CONFIG } from "@/lib/social-links/platform-config"
 import { cn } from "@/lib/utils"
 
@@ -33,7 +33,9 @@ export const UserSocialLinks = ({ socialLinks }: UserSocialLinksProps) => {
           const config = PLATFORM_CONFIG[link.platform]
           const Icon = config.icon
           const displayName =
-            link.username || extractUsername(link.url, link.platform) || config.label
+            link.username ||
+            extractUsername(link.url, link.platform) ||
+            config.label
 
           return (
             <Tooltip key={`${link.platform}-${index}`}>
@@ -50,7 +52,7 @@ export const UserSocialLinks = ({ socialLinks }: UserSocialLinksProps) => {
                     rel="noopener noreferrer"
                     className={cn(
                       "flex items-center gap-2 rounded-full px-4 py-2 transition-colors",
-                      config.bgColor
+                      config.bgColor,
                     )}
                   >
                     <Icon className={cn("size-4", config.color)} />
@@ -70,7 +72,9 @@ export const UserSocialLinks = ({ socialLinks }: UserSocialLinksProps) => {
 }
 
 // Compact version for smaller spaces (icon-only)
-export const UserSocialLinksCompact = ({ socialLinks }: UserSocialLinksProps) => {
+export const UserSocialLinksCompact = ({
+  socialLinks,
+}: UserSocialLinksProps) => {
   if (!socialLinks || socialLinks.length === 0) return null
 
   return (
@@ -93,7 +97,7 @@ export const UserSocialLinksCompact = ({ socialLinks }: UserSocialLinksProps) =>
                     rel="noopener noreferrer"
                     className={cn(
                       "flex size-9 items-center justify-center rounded-lg transition-colors",
-                      config.bgColor
+                      config.bgColor,
                     )}
                   >
                     <Icon className={cn("size-4", config.color)} />

@@ -448,4 +448,3 @@ export enum BunnyVideoStatus {
   FINISHED = 4,
   ERROR = 5,
 }
-

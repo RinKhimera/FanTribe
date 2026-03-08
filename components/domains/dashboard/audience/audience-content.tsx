@@ -12,13 +12,13 @@ import {
 import { motion } from "motion/react"
 import { DashboardStatCard } from "@/components/domains/dashboard/shared/dashboard-stat-card"
 import { EmptyDashboard } from "@/components/domains/dashboard/shared/empty-dashboard"
+import { api } from "@/convex/_generated/api"
+import { containerVariants } from "@/lib/animations"
+import { formatCurrency } from "@/lib/formatters"
 import { AtRiskSubscribersList } from "./at-risk-subscribers-list"
 import { SubscriberGrowthChart } from "./subscriber-growth-chart"
 import { SubscriberList } from "./subscriber-list"
 import { TopFansList } from "./top-fans-list"
-import { containerVariants } from "@/lib/animations"
-import { formatCurrency } from "@/lib/formatters"
-import { api } from "@/convex/_generated/api"
 
 type AudienceContentProps = {
   preloadedGrowth: Preloaded<typeof api.dashboard.getSubscriberGrowth>
@@ -41,15 +41,9 @@ export const AudienceContent = ({
 
   const rawSubscribers = subscribersData?.subscribers ?? []
   // Filter out subscribers with missing user data
-  const subscribers = rawSubscribers.filter(
-    (s) => s.subscriberUser != null,
-  )
-  const activeCount = subscribers.filter(
-    (s) => s.status === "active",
-  ).length
-  const expiredCount = subscribers.filter(
-    (s) => s.status === "expired",
-  ).length
+  const subscribers = rawSubscribers.filter((s) => s.subscriberUser != null)
+  const activeCount = subscribers.filter((s) => s.status === "active").length
+  const expiredCount = subscribers.filter((s) => s.status === "expired").length
 
   if (subscribers.length === 0) {
     return (

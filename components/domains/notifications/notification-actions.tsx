@@ -1,8 +1,8 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion } from "motion/react"
 import { CheckCheck, Loader2 } from "lucide-react"
+import { motion } from "motion/react"
 import { useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -44,7 +44,7 @@ export const NotificationActions = ({
           animate={{ opacity: 1, scale: 1 }}
           className="flex items-center gap-1.5"
         >
-          <span className="flex size-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+          <span className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-xs font-semibold">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         </motion.div>

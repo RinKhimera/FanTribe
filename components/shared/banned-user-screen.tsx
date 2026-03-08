@@ -24,12 +24,12 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
   const expiresDate = banInfo.expiresAt ? formatDate(banInfo.expiresAt) : null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
+    <div className="bg-background fixed inset-0 z-[100] flex items-center justify-center">
       {/* Background pattern */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-destructive/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-destructive/5 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-destructive/3 blur-3xl" />
+        <div className="bg-destructive/5 absolute -top-40 -right-40 h-80 w-80 rounded-full blur-3xl" />
+        <div className="bg-destructive/5 absolute -bottom-40 -left-40 h-80 w-80 rounded-full blur-3xl" />
+        <div className="bg-destructive/3 absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-md px-6 text-center">
@@ -43,9 +43,9 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
             damping: 20,
             delay: 0.1,
           }}
-          className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10 ring-4 ring-destructive/20"
+          className="bg-destructive/10 ring-destructive/20 mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full ring-4"
         >
-          <ShieldX className="h-12 w-12 text-destructive" />
+          <ShieldX className="text-destructive h-12 w-12" />
         </motion.div>
 
         {/* Title */}
@@ -53,7 +53,7 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-3 text-2xl font-bold tracking-tight text-foreground"
+          className="text-foreground mb-3 text-2xl font-bold tracking-tight"
         >
           Compte suspendu
         </motion.h1>
@@ -63,7 +63,7 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mb-8 text-muted-foreground"
+          className="text-muted-foreground mb-8"
         >
           {isTemporary
             ? "Votre compte a été temporairement suspendu."
@@ -75,31 +75,31 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mb-8 rounded-2xl border border-border/50 bg-card/50 p-6 text-left backdrop-blur-sm"
+          className="border-border/50 bg-card/50 mb-8 rounded-2xl border p-6 text-left backdrop-blur-sm"
         >
           {/* Ban type */}
           <div className="mb-4 flex items-center gap-3">
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-lg",
-                isTemporary ? "bg-amber-500/10" : "bg-destructive/10"
+                isTemporary ? "bg-amber-500/10" : "bg-destructive/10",
               )}
             >
               <Ban
                 className={cn(
                   "h-5 w-5",
-                  isTemporary ? "text-amber-500" : "text-destructive"
+                  isTemporary ? "text-amber-500" : "text-destructive",
                 )}
               />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-foreground text-sm font-medium">
                 Type de suspension
               </p>
               <p
                 className={cn(
                   "text-sm",
-                  isTemporary ? "text-amber-500" : "text-destructive"
+                  isTemporary ? "text-amber-500" : "text-destructive",
                 )}
               >
                 {isTemporary ? "Temporaire" : "Permanente"}
@@ -109,22 +109,22 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
 
           {/* Reason */}
           {banInfo.reason && (
-            <div className="mb-4 border-t border-border/50 pt-4">
-              <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="border-border/50 mb-4 border-t pt-4">
+              <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wider uppercase">
                 Motif
               </p>
-              <p className="text-sm text-foreground">{banInfo.reason}</p>
+              <p className="text-foreground text-sm">{banInfo.reason}</p>
             </div>
           )}
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-4 border-t border-border/50 pt-4">
+          <div className="border-border/50 grid grid-cols-2 gap-4 border-t pt-4">
             {bannedDate && (
               <div className="flex items-start gap-2">
-                <Calendar className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                <Calendar className="text-muted-foreground mt-0.5 h-4 w-4" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Suspendu le</p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-muted-foreground text-xs">Suspendu le</p>
+                  <p className="text-foreground text-sm font-medium">
                     {bannedDate}
                   </p>
                 </div>
@@ -132,10 +132,10 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
             )}
             {isTemporary && expiresDate && (
               <div className="flex items-start gap-2">
-                <Clock className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                <Clock className="text-muted-foreground mt-0.5 h-4 w-4" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Expire le</p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-muted-foreground text-xs">Expire le</p>
+                  <p className="text-foreground text-sm font-medium">
                     {expiresDate}
                   </p>
                 </div>
@@ -161,7 +161,7 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
           </Button>
           <Button
             variant="ghost"
-            className="w-full gap-2 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground w-full gap-2"
             onClick={() => signOut({ redirectUrl: "/" })}
           >
             <LogOut className="h-4 w-4" />
@@ -174,10 +174,10 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 text-xs text-muted-foreground"
+          className="text-muted-foreground mt-8 text-xs"
         >
-          Si vous pensez qu&apos;il s&apos;agit d&apos;une erreur, contactez notre équipe de
-          support.
+          Si vous pensez qu&apos;il s&apos;agit d&apos;une erreur, contactez
+          notre équipe de support.
         </motion.p>
       </div>
     </div>

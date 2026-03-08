@@ -12,11 +12,9 @@ export default async function AccountLayout({
   const token = await getAuthToken()
 
   // Auth guard - redirect to sign-in if not authenticated
-  const currentUser = await fetchQuery(
-    api.users.getCurrentUser,
-    undefined,
-    { token },
-  )
+  const currentUser = await fetchQuery(api.users.getCurrentUser, undefined, {
+    token,
+  })
 
   if (!currentUser) {
     redirect("/sign-in")
@@ -29,7 +27,5 @@ export default async function AccountLayout({
     { token },
   )
 
-  return (
-    <AccountShell preloadedUser={preloadedUser}>{children}</AccountShell>
-  )
+  return <AccountShell preloadedUser={preloadedUser}>{children}</AccountShell>
 }

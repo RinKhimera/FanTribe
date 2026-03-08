@@ -15,8 +15,8 @@ import {
   X,
 } from "lucide-react"
 import { motion } from "motion/react"
-import Image from "next/image"
 import { isRedirectError } from "next/dist/client/components/redirect-error"
+import Image from "next/image"
 import { useTransition } from "react"
 import { toast } from "sonner"
 import { startStripeCheckout } from "@/actions/stripe/checkout"
@@ -198,7 +198,10 @@ export const MessagingSubscriptionModal = ({
           features: [
             { icon: Star, text: "Contenu exclusif (1 mois)" },
             { icon: MessageCircle, text: "Messagerie directe (1 mois)" },
-            { icon: Gift, text: `Économie de ${formatCurrency(prices.bundleSavings, "XAF")}` },
+            {
+              icon: Gift,
+              text: `Économie de ${formatCurrency(prices.bundleSavings, "XAF")}`,
+            },
           ],
           isBundle: true,
         }
@@ -215,7 +218,7 @@ export const MessagingSubscriptionModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-sm overflow-hidden border-primary/10 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
+      <DialogContent className="border-primary/10 bg-background/95 max-w-sm overflow-hidden p-0 shadow-2xl backdrop-blur-xl">
         {/* Header avec image de fond */}
         <div className="relative">
           <div className="h-32 overflow-hidden">
@@ -229,7 +232,7 @@ export const MessagingSubscriptionModal = ({
               width={400}
               height={128}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-primary/10" />
+            <div className="from-background via-background/60 to-primary/10 absolute inset-0 bg-gradient-to-t" />
           </div>
 
           {/* Bouton fermer */}
@@ -238,7 +241,7 @@ export const MessagingSubscriptionModal = ({
             size="icon"
             aria-label="Fermer"
             onClick={onClose}
-            className="absolute right-2 top-2 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40"
+            className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -251,16 +254,20 @@ export const MessagingSubscriptionModal = ({
             transition={{ delay: 0.1, duration: 0.3 }}
           >
             <div className="relative">
-              <div className="absolute inset-0 scale-110 rounded-full bg-primary/20 blur-xl" />
-              <Avatar className="relative h-24 w-24 ring-4 ring-primary/40 ring-offset-2 ring-offset-background shadow-xl">
-                <AvatarImage src={creator.image} alt="" className="object-cover" />
+              <div className="bg-primary/20 absolute inset-0 scale-110 rounded-full blur-xl" />
+              <Avatar className="ring-primary/40 ring-offset-background relative h-24 w-24 shadow-xl ring-4 ring-offset-2">
+                <AvatarImage
+                  src={creator.image}
+                  alt=""
+                  className="object-cover"
+                />
                 <AvatarFallback className="bg-muted text-xl">
                   {creator.name?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
               {content.isBundle && (
                 <motion.div
-                  className="absolute -bottom-1 -right-1 rounded-full bg-green-500 p-1.5 shadow-lg"
+                  className="absolute -right-1 -bottom-1 rounded-full bg-green-500 p-1.5 shadow-lg"
                   animate={{ scale: [1, 1.15, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
@@ -272,7 +279,7 @@ export const MessagingSubscriptionModal = ({
         </div>
 
         {/* Contenu principal */}
-        <div className="px-6 pb-6 pt-16">
+        <div className="px-6 pt-16 pb-6">
           <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 10 }}
@@ -282,7 +289,7 @@ export const MessagingSubscriptionModal = ({
             <DialogTitle className="text-lg font-bold">
               {content.title}
             </DialogTitle>
-            <DialogDescription className="mt-2 text-sm text-muted-foreground">
+            <DialogDescription className="text-muted-foreground mt-2 text-sm">
               {content.description}
             </DialogDescription>
           </motion.div>
@@ -317,8 +324,11 @@ export const MessagingSubscriptionModal = ({
                 key={index}
                 className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/5 p-2.5 backdrop-blur-sm"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
-                  <feature.icon className="h-4 w-4 text-white" aria-hidden="true" />
+                <div className="from-primary to-primary/60 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br">
+                  <feature.icon
+                    className="h-4 w-4 text-white"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="text-sm font-medium">{feature.text}</div>
               </div>
@@ -327,7 +337,7 @@ export const MessagingSubscriptionModal = ({
 
           {/* Note supplémentaire */}
           {"note" in content && content.note && (
-            <p className="mt-3 text-center text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-3 text-center text-xs">
               {content.note}
             </p>
           )}
@@ -340,20 +350,23 @@ export const MessagingSubscriptionModal = ({
             transition={{ delay: 0.25 }}
           >
             <div className="mb-4 text-center">
-              <div className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-3xl font-bold text-transparent">
+              <div className="from-primary to-primary/70 bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent">
                 {formatCurrency(content.price, "XAF")}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 {content.duration}
               </div>
             </div>
 
             <div className="space-y-2">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <Button
                   className={cn(
-                    "w-full rounded-xl bg-gradient-to-r from-primary via-primary/95 to-primary/85 font-semibold",
-                    "shadow-lg shadow-primary/25 transition-shadow hover:shadow-xl hover:shadow-primary/35",
+                    "from-primary via-primary/95 to-primary/85 w-full rounded-xl bg-gradient-to-r font-semibold",
+                    "shadow-primary/25 hover:shadow-primary/35 shadow-lg transition-shadow hover:shadow-xl",
                     { "pointer-events-none opacity-70": isPending },
                   )}
                   onClick={() => handleCinetPayPayment(content.paymentType)}
@@ -374,12 +387,15 @@ export const MessagingSubscriptionModal = ({
                 </Button>
               </motion.div>
 
-              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full rounded-xl border-primary/30 font-semibold backdrop-blur-sm",
-                    "transition-colors hover:border-primary/50 hover:bg-primary/5",
+                    "border-primary/30 w-full rounded-xl font-semibold backdrop-blur-sm",
+                    "hover:border-primary/50 hover:bg-primary/5 transition-colors",
                     { "pointer-events-none opacity-70": isPending },
                   )}
                   onClick={() => handleStripePayment(content.paymentType)}
@@ -406,7 +422,7 @@ export const MessagingSubscriptionModal = ({
               <Button
                 variant="link"
                 onClick={onClose}
-                className="mt-2 w-full text-xs text-muted-foreground"
+                className="text-muted-foreground mt-2 w-full text-xs"
                 disabled={isPending}
               >
                 Ou souscrire séparément
@@ -422,7 +438,7 @@ export const MessagingSubscriptionModal = ({
               Peut-être plus tard
             </Button>
 
-            <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <div className="text-muted-foreground mt-3 flex items-center justify-center gap-2 text-xs">
               <Shield className="h-3.5 w-3.5" />
               <span>Paiement sécurisé</span>
               <span>•</span>

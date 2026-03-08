@@ -13,8 +13,8 @@ import {
   X,
 } from "lucide-react"
 import { motion } from "motion/react"
-import Image from "next/image"
 import { isRedirectError } from "next/dist/client/components/redirect-error"
+import Image from "next/image"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { startStripeCheckout } from "@/actions/stripe/checkout"
@@ -224,7 +224,7 @@ export const SubscriptionUnified = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-sm overflow-hidden border-primary/10 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
+      <DialogContent className="border-primary/10 bg-background/95 max-w-sm overflow-hidden p-0 shadow-2xl backdrop-blur-xl">
         {/* Header avec image de fond */}
         <div className="relative">
           <div className="h-36 overflow-hidden">
@@ -238,7 +238,7 @@ export const SubscriptionUnified = ({
               width={400}
               height={144}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-primary/10" />
+            <div className="from-background via-background/60 to-primary/10 absolute inset-0 bg-gradient-to-t" />
           </div>
 
           {/* Bouton fermer (seulement en mode controlled) */}
@@ -263,20 +263,27 @@ export const SubscriptionUnified = ({
           >
             <div className="relative">
               {/* Glow effect */}
-              <div className="absolute inset-0 scale-110 rounded-full bg-primary/20 blur-xl" />
-              <Avatar className="ring-primary/40 ring-offset-background relative h-28 w-28 ring-4 ring-offset-2 shadow-xl">
-                <AvatarImage src={creator?.image} className="object-cover" alt="" />
+              <div className="bg-primary/20 absolute inset-0 scale-110 rounded-full blur-xl" />
+              <Avatar className="ring-primary/40 ring-offset-background relative h-28 w-28 shadow-xl ring-4 ring-offset-2">
+                <AvatarImage
+                  src={creator?.image}
+                  className="object-cover"
+                  alt=""
+                />
                 <AvatarFallback className="bg-muted text-2xl">
                   {creator?.name?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
               {type !== "unsubscribe" && (
                 <motion.div
-                  className="absolute -right-1 -bottom-1 rounded-full bg-primary p-1.5 shadow-lg"
+                  className="bg-primary absolute -right-1 -bottom-1 rounded-full p-1.5 shadow-lg"
                   animate={{ scale: [1, 1.15, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Crown className="h-4 w-4 text-primary-foreground" aria-hidden="true" />
+                  <Crown
+                    className="text-primary-foreground h-4 w-4"
+                    aria-hidden="true"
+                  />
                 </motion.div>
               )}
             </div>
@@ -310,7 +317,7 @@ export const SubscriptionUnified = ({
               transition={{ delay: 0.2 }}
             >
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
+                <div className="from-primary to-primary/60 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br">
                   <Star className="h-4 w-4 text-white" aria-hidden="true" />
                 </div>
                 <div className="text-sm font-medium">
@@ -321,8 +328,11 @@ export const SubscriptionUnified = ({
               </div>
 
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
-                  <MessageCircle className="h-4 w-4 text-white" aria-hidden="true" />
+                <div className="from-primary to-primary/60 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br">
+                  <MessageCircle
+                    className="h-4 w-4 text-white"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="text-sm font-medium">
                   {type === "subscribe"
@@ -332,7 +342,7 @@ export const SubscriptionUnified = ({
               </div>
 
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60">
+                <div className="from-primary to-primary/60 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br">
                   <Check className="h-4 w-4 text-white" aria-hidden="true" />
                 </div>
                 <div className="text-sm font-medium">Sans engagement</div>
@@ -349,7 +359,7 @@ export const SubscriptionUnified = ({
           >
             {type !== "unsubscribe" && (
               <div className="mb-5 text-center">
-                <div className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-4xl font-bold text-transparent">
+                <div className="from-primary to-primary/70 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent">
                   1000 XAF
                 </div>
                 <div className="text-muted-foreground text-sm">par mois</div>
@@ -369,7 +379,10 @@ export const SubscriptionUnified = ({
               >
                 {isPending ? (
                   <div className="flex items-center gap-2">
-                    <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                    <LoaderCircle
+                      className="h-5 w-5 animate-spin"
+                      aria-hidden="true"
+                    />
                     Annulation…
                   </div>
                 ) : (
@@ -378,11 +391,14 @@ export const SubscriptionUnified = ({
               </Button>
             ) : (
               <div className="space-y-3">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button
                     className={cn(
-                      "w-full rounded-xl bg-gradient-to-r from-primary via-primary/95 to-primary/85 text-lg font-semibold",
-                      "shadow-lg shadow-primary/25 transition-shadow hover:shadow-xl hover:shadow-primary/35",
+                      "from-primary via-primary/95 to-primary/85 w-full rounded-xl bg-gradient-to-r text-lg font-semibold",
+                      "shadow-primary/25 hover:shadow-primary/35 shadow-lg transition-shadow hover:shadow-xl",
                       { "pointer-events-none opacity-70": isPending },
                     )}
                     onClick={handleSubscribe}
@@ -391,7 +407,10 @@ export const SubscriptionUnified = ({
                   >
                     {isPaymentPending ? (
                       <div className="flex items-center gap-2">
-                        <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                        <LoaderCircle
+                          className="h-5 w-5 animate-spin"
+                          aria-hidden="true"
+                        />
                         Traitement…
                       </div>
                     ) : (
@@ -403,12 +422,15 @@ export const SubscriptionUnified = ({
                   </Button>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <motion.div
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full rounded-xl border-primary/30 text-lg font-semibold backdrop-blur-sm",
-                      "transition-colors hover:border-primary/50 hover:bg-primary/5",
+                      "border-primary/30 w-full rounded-xl text-lg font-semibold backdrop-blur-sm",
+                      "hover:border-primary/50 hover:bg-primary/5 transition-colors",
                       { "pointer-events-none opacity-70": isPending },
                     )}
                     onClick={handleSubscribeStripe}
@@ -417,7 +439,10 @@ export const SubscriptionUnified = ({
                   >
                     {isStripePending ? (
                       <div className="flex items-center gap-2">
-                        <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                        <LoaderCircle
+                          className="h-5 w-5 animate-spin"
+                          aria-hidden="true"
+                        />
                         Redirection…
                       </div>
                     ) : (

@@ -2,12 +2,12 @@ import { v } from "convex/values"
 import { Id } from "./_generated/dataModel"
 import { internalMutation, query } from "./_generated/server"
 import { requireCreator } from "./lib/auth"
-import { createNotification } from "./lib/notifications"
 import {
   TIP_CREATOR_RATE,
   TIP_MESSAGE_MAX_LENGTH,
   USD_TO_XAF_RATE,
 } from "./lib/constants"
+import { createNotification } from "./lib/notifications"
 
 // ============================================================================
 // Types
@@ -45,11 +45,7 @@ export const processTipAtomic = internalMutation({
     currency: v.string(),
     message: v.optional(v.string()),
     context: v.optional(
-      v.union(
-        v.literal("post"),
-        v.literal("profile"),
-        v.literal("message"),
-      ),
+      v.union(v.literal("post"), v.literal("profile"), v.literal("message")),
     ),
     postId: v.optional(v.id("posts")),
     conversationId: v.optional(v.id("conversations")),
@@ -232,9 +228,7 @@ export const getCreatorTipEarnings = query({
     // Batch fetch senders (pattern N+1 prevention)
     const senderIds = [...new Set(recentTipDocs.map((t) => t.senderId))]
     const senders = await Promise.all(senderIds.map((id) => ctx.db.get(id)))
-    const senderMap = new Map(
-      senders.filter(Boolean).map((s) => [s!._id, s!]),
-    )
+    const senderMap = new Map(senders.filter(Boolean).map((s) => [s!._id, s!]))
 
     const recentTips = recentTipDocs.map((tip) => {
       const sender = senderMap.get(tip.senderId)

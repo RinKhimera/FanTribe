@@ -41,7 +41,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="text-primary break-all hover:text-primary/80 hover:underline transition-colors"
+                className="text-primary hover:text-primary/80 break-all transition-colors hover:underline"
               >
                 {part}
               </a>
@@ -58,7 +58,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
                   key={`${partIndex}-${mentionIndex}`}
                   href={`/${username}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="text-primary hover:text-primary/80 hover:underline transition-colors font-medium"
+                  className="text-primary hover:text-primary/80 font-medium transition-colors hover:underline"
                 >
                   {mentionPart}
                 </Link>
@@ -72,7 +72,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
                 return (
                   <span
                     key={`${partIndex}-${mentionIndex}-${hashtagIndex}`}
-                    className="text-primary cursor-pointer hover:text-primary/80 transition-colors"
+                    className="text-primary hover:text-primary/80 cursor-pointer transition-colors"
                   >
                     {hashtagPart}
                   </span>
@@ -92,7 +92,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
       <div
         className={cn(
           "text-foreground text-[15px] leading-[1.65] whitespace-pre-wrap",
-          "wrap-break-word tracking-[0.01em]",
+          "tracking-[0.01em] wrap-break-word",
         )}
       >
         {displayedLines.map((line, index) => formatLine(line, index))}
@@ -105,7 +105,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
                 e.stopPropagation()
                 setIsExpanded(true)
               }}
-              className="ml-1.5 font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="text-primary hover:text-primary/80 ml-1.5 font-semibold transition-colors"
             >
               Voir plus
             </button>
@@ -118,7 +118,7 @@ export const PostContent = ({ content, maxLines = 6 }: PostContentProps) => {
               e.stopPropagation()
               setIsExpanded(false)
             }}
-            className="text-muted-foreground/70 ml-1.5 text-sm hover:text-primary transition-colors"
+            className="text-muted-foreground/70 hover:text-primary ml-1.5 text-sm transition-colors"
           >
             Réduire
           </button>

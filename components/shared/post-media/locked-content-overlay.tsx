@@ -1,6 +1,6 @@
 "use client"
 
-import { Lock, Sparkles, Image as ImageIcon, Film } from "lucide-react"
+import { Film, Image as ImageIcon, Lock, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
@@ -18,13 +18,14 @@ export const LockedContentOverlay = ({
 }: LockedContentOverlayProps) => {
   return (
     <div
+      data-testid="locked-media-overlay"
       className={cn(
         "relative mt-3 w-full overflow-hidden rounded-2xl",
         "aspect-video",
       )}
     >
       {/* SECURITE: Gradient placeholder uniquement - pas d'image réelle */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/30 to-primary/40" />
+      <div className="from-primary/20 via-primary/30 to-primary/40 absolute inset-0 bg-gradient-to-br" />
 
       {/* Premium overlay gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
@@ -41,7 +42,7 @@ export const LockedContentOverlay = ({
 
       {/* Content card */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
-        <div className="glass-premium p-8 text-center max-w-sm">
+        <div className="glass-premium max-w-sm p-8 text-center">
           {/* Lock icon */}
           <div
             className={cn(
@@ -49,31 +50,35 @@ export const LockedContentOverlay = ({
               "bg-primary",
             )}
           >
-            <Lock aria-hidden="true" className="size-7 text-primary-foreground" />
+            <Lock
+              aria-hidden="true"
+              className="text-primary-foreground size-7"
+            />
           </div>
 
           {/* Title */}
-          <h3 className="mb-2 text-xl font-bold tracking-tight text-foreground">
+          <h3 className="text-foreground mb-2 text-xl font-bold tracking-tight">
             Contenu Exclusif
           </h3>
 
           <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
             Ce contenu est réservé aux abonnés de{" "}
-            <span className="font-semibold text-primary">
+            <span className="text-primary font-semibold">
               @{authorUsername}
             </span>
           </p>
 
           {/* Media count indicator */}
           {mediaCount > 0 && (
-            <div className="mb-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <div className="text-muted-foreground mb-6 flex items-center justify-center gap-2 text-xs">
               {mediaCount === 1 ? (
                 <ImageIcon aria-hidden="true" className="size-3.5" />
               ) : (
                 <Film aria-hidden="true" className="size-3.5" />
               )}
               <span>
-                {mediaCount} {pluralize(mediaCount, "média")} {pluralize(mediaCount, "exclusif")}
+                {mediaCount} {pluralize(mediaCount, "média")}{" "}
+                {pluralize(mediaCount, "exclusif")}
               </span>
             </div>
           )}
@@ -81,7 +86,7 @@ export const LockedContentOverlay = ({
           <Button
             size="lg"
             className={cn(
-              "rounded-full px-8 h-11",
+              "h-11 rounded-full px-8",
               "font-semibold tracking-wide",
             )}
             onClick={(e) => {

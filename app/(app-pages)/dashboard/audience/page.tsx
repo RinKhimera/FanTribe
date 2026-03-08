@@ -8,16 +8,10 @@ export default async function DashboardAudiencePage() {
 
   const [preloadedGrowth, preloadedSubscribers, preloadedMetrics] =
     await Promise.all([
-      preloadQuery(
-        api.dashboard.getSubscriberGrowth,
-        { months: 6 },
-        { token },
-      ),
-      preloadQuery(
-        api.subscriptions.getMySubscribersStats,
-        undefined,
-        { token },
-      ),
+      preloadQuery(api.dashboard.getSubscriberGrowth, { months: 6 }, { token }),
+      preloadQuery(api.subscriptions.getMySubscribersStats, undefined, {
+        token,
+      }),
       preloadQuery(api.dashboard.getAudienceMetrics, {}, { token }),
     ])
 

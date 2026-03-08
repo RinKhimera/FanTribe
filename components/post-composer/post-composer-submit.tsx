@@ -26,8 +26,8 @@ export function PostComposerSubmit({
         "btn-premium h-9 rounded-full px-5",
         "inline-flex items-center gap-1.5",
         "text-sm font-semibold tracking-wide",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        "focus-visible:ring-1 focus-visible:ring-ring",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        "focus-visible:ring-ring focus-visible:ring-1",
         className,
       )}
     >

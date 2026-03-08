@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "motion/react"
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,6 +8,7 @@ import {
   User,
   Wallet,
 } from "lucide-react"
+import { motion } from "motion/react"
 import { UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,8 +48,8 @@ export const StepPersonalInfo = ({
     >
       {/* Header */}
       <motion.div variants={stepItemVariants} className="text-center">
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
-          <User className="size-8 text-primary" />
+        <div className="bg-primary/10 mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
+          <User className="text-primary size-8" />
         </div>
         <h2 className="mb-2 text-2xl font-bold">Informations personnelles</h2>
         <p className="text-muted-foreground">
@@ -62,7 +62,7 @@ export const StepPersonalInfo = ({
         <Card className="glass-premium">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="size-5 text-primary" />
+              <FileText className="text-primary size-5" />
               Vos coordonnées
             </CardTitle>
           </CardHeader>
@@ -140,7 +140,7 @@ export const StepPersonalInfo = ({
                   </FormLabel>
                   <FormControl>
                     <div className="flex">
-                      <div className="flex items-center rounded-l-md border border-r-0 border-input bg-muted/50 px-3 text-sm text-muted-foreground">
+                      <div className="border-input bg-muted/50 text-muted-foreground flex items-center rounded-l-md border border-r-0 px-3 text-sm">
                         +237
                       </div>
                       <Input
@@ -172,7 +172,7 @@ export const StepPersonalInfo = ({
                   </FormLabel>
                   <FormControl>
                     <div className="flex">
-                      <div className="flex items-center rounded-l-md border border-r-0 border-input bg-muted/50 px-3 text-sm text-muted-foreground">
+                      <div className="border-input bg-muted/50 text-muted-foreground flex items-center rounded-l-md border border-r-0 px-3 text-sm">
                         +237
                       </div>
                       <Input
@@ -204,7 +204,7 @@ export const StepPersonalInfo = ({
                   </FormLabel>
                   <FormControl>
                     <div className="flex">
-                      <div className="flex items-center rounded-l-md border border-r-0 border-input bg-muted/50 px-3 text-sm text-muted-foreground">
+                      <div className="border-input bg-muted/50 text-muted-foreground flex items-center rounded-l-md border border-r-0 px-3 text-sm">
                         +237
                       </div>
                       <Input

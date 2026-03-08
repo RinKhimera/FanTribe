@@ -107,7 +107,10 @@ export const NotificationsLayout = () => {
 
             {status === "LoadingMore" && (
               <div className="flex justify-center py-4">
-                <Loader2 className="text-muted-foreground size-5 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="text-muted-foreground size-5 animate-spin"
+                  aria-hidden="true"
+                />
               </div>
             )}
           </motion.div>
@@ -269,7 +272,11 @@ const EmptyState = ({ filter }: { filter: NotificationFilterType }) => {
               transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
               className="absolute -top-1 -right-1"
             >
-              <Sparkles className="size-5 text-amber-400" strokeWidth={2} aria-hidden="true" />
+              <Sparkles
+                className="size-5 text-amber-400"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
             </motion.div>
           </motion.div>
         </div>

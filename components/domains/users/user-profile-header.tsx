@@ -25,7 +25,8 @@ export const UserProfileHeader = ({
       <PageHeader
         className="h-[53px] min-h-[53px]"
         rightAction={
-          isOwnProfile && !isEditPage && (
+          isOwnProfile &&
+          !isEditPage && (
             <Button
               asChild
               variant="ghost"

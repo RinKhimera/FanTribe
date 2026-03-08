@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "motion/react"
 import {
   ArrowRight,
   Camera,
@@ -11,6 +10,7 @@ import {
   Star,
   Zap,
 } from "lucide-react"
+import { motion } from "motion/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -81,7 +81,7 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 400 }}
-            className="absolute -right-1 -top-1 flex size-8 items-center justify-center rounded-full bg-primary"
+            className="bg-primary absolute -top-1 -right-1 flex size-8 items-center justify-center rounded-full"
           >
             <Sparkles className="size-4 text-white" />
           </motion.div>
@@ -89,7 +89,7 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
         <h2 className="mb-3 text-3xl font-bold md:text-4xl">
           <span className="text-gold-gradient">Passez au compte Créateur</span>
         </h2>
-        <p className="mx-auto max-w-lg text-lg text-muted-foreground">
+        <p className="text-muted-foreground mx-auto max-w-lg text-lg">
           Débloquez toutes les fonctionnalités pour partager votre contenu et
           développer votre audience.
         </p>
@@ -100,7 +100,7 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
         <Card className="glass-premium overflow-hidden">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Star className="size-5 text-primary" />
+              <Star className="text-primary size-5" />
               Fonctionnalités Créateur
             </CardTitle>
           </CardHeader>
@@ -113,7 +113,7 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
-                  className="group flex flex-col items-center rounded-xl bg-muted/30 p-4 text-center transition-colors hover:bg-muted/50"
+                  className="group bg-muted/30 hover:bg-muted/50 flex flex-col items-center rounded-xl p-4 text-center transition-colors"
                 >
                   <div
                     className={`mb-3 flex size-12 items-center justify-center rounded-full ${feature.bgColor}`}
@@ -121,7 +121,7 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
                     <Icon className={`size-6 ${feature.color}`} />
                   </div>
                   <h3 className="mb-1 font-semibold">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {feature.description}
                   </p>
                 </motion.div>
@@ -136,7 +136,7 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
         <Card className="glass-premium overflow-hidden">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Shield className="size-5 text-primary" />
+              <Shield className="text-primary size-5" />
               Processus de vérification
             </CardTitle>
           </CardHeader>
@@ -154,14 +154,14 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
                   >
                     {/* Vertical line */}
                     {index < verificationSteps.length - 1 && (
-                      <div className="absolute left-5 top-12 h-full w-px bg-border" />
+                      <div className="bg-border absolute top-12 left-5 h-full w-px" />
                     )}
-                    <div className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Icon className="size-5 text-primary" />
+                    <div className="bg-primary/10 relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full">
+                      <Icon className="text-primary size-5" />
                     </div>
                     <div className="flex-1 pt-1">
                       <h3 className="font-semibold">{step.title}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {step.description}
                       </p>
                     </div>
@@ -183,18 +183,18 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
           Commencer ma candidature
           <ArrowRight className="ml-2 size-5" />
         </Button>
-        <p className="mt-4 text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-4 text-center text-xs">
           En postulant, vous acceptez nos{" "}
           <Link
             href="/terms"
-            className="text-primary underline decoration-primary/30 underline-offset-2 transition-colors hover:decoration-primary/60"
+            className="text-primary decoration-primary/30 hover:decoration-primary/60 underline underline-offset-2 transition-colors"
           >
             conditions d&apos;utilisation
           </Link>{" "}
           et notre{" "}
           <Link
             href="/privacy"
-            className="text-primary underline decoration-primary/30 underline-offset-2 transition-colors hover:decoration-primary/60"
+            className="text-primary decoration-primary/30 hover:decoration-primary/60 underline underline-offset-2 transition-colors"
           >
             politique de confidentialité
           </Link>

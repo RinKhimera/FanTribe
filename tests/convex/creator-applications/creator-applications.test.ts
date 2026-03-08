@@ -618,10 +618,9 @@ describe("creator-applications", () => {
         })
       })
 
-      const result = await t.query(
-        api.creatorApplications.getUserApplication,
-        { userId },
-      )
+      const result = await t.query(api.creatorApplications.getUserApplication, {
+        userId,
+      })
 
       expect(result).toBeNull()
     })
@@ -1020,9 +1019,7 @@ describe("creator-applications", () => {
           decision: "rejected",
           adminNotes: "Changed mind",
         }),
-      ).rejects.toThrow(
-        "Impossible de rejeter une candidature déjà approuvée",
-      )
+      ).rejects.toThrow("Impossible de rejeter une candidature déjà approuvée")
     })
 
     it("should reject non-superuser review attempt", async () => {

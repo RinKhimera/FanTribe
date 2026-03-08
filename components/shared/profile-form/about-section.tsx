@@ -3,7 +3,6 @@
 import { Globe, MapPin } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
-import { FormSection } from "./form-section"
 import {
   FormControl,
   FormDescription,
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { profileFormSchema } from "@/schemas/profile"
+import { FormSection } from "./form-section"
 
 interface AboutSectionProps {
   form: UseFormReturn<z.infer<typeof profileFormSchema>>
@@ -32,7 +32,7 @@ export const AboutSection = ({ form }: AboutSectionProps) => {
         name="bio"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+            <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
               Bio
             </FormLabel>
             <FormControl>
@@ -55,7 +55,7 @@ export const AboutSection = ({ form }: AboutSectionProps) => {
         name="location"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+            <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
               Localisation
             </FormLabel>
             <FormControl>

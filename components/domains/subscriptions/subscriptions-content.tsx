@@ -6,7 +6,8 @@ import { AnimatePresence, motion } from "motion/react"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
-
+import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
+import { PageContainer } from "@/components/layout"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,10 +19,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { PageContainer } from "@/components/layout"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
@@ -79,10 +78,8 @@ export const SubscriptionsContent = () => {
   const isFiltered = activeFilter !== "all" || debouncedSearch.length > 0
 
   return (
-    <PageContainer
-      title="Mes abonnements"
-    >
-      <div className="px-4 py-4 space-y-4">
+    <PageContainer title="Mes abonnements">
+      <div className="space-y-4 px-4 py-4">
         {/* Filter tabs */}
         <div className="flex gap-2">
           {filterTabs.map((tab) => (
@@ -108,14 +105,25 @@ export const SubscriptionsContent = () => {
 
         {/* Search bar */}
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" aria-hidden="true" />
+          <Search
+            className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            aria-hidden="true"
+          />
           <Input
             type="text"
-            placeholder={isBlockedTab ? "Rechercher un utilisateur bloqué…" : "Rechercher un créateur…"}
+            placeholder={
+              isBlockedTab
+                ? "Rechercher un utilisateur bloqué…"
+                : "Rechercher un créateur…"
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
-            aria-label={isBlockedTab ? "Rechercher un utilisateur bloqué" : "Rechercher un créateur"}
+            aria-label={
+              isBlockedTab
+                ? "Rechercher un utilisateur bloqué"
+                : "Rechercher un créateur"
+            }
             autoComplete="off"
             spellCheck={false}
           />
@@ -161,7 +169,10 @@ export const SubscriptionsContent = () => {
             {/* Loading more indicator */}
             {status === "LoadingMore" && (
               <div className="flex justify-center py-4">
-                <Loader2 className="text-muted-foreground size-5 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="text-muted-foreground size-5 animate-spin"
+                  aria-hidden="true"
+                />
               </div>
             )}
           </>
@@ -193,9 +204,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.blocks.getBlockedUsersPaginated,
-    isAuthenticated
-      ? { search: search || undefined }
-      : "skip",
+    isAuthenticated ? { search: search || undefined } : "skip",
     { initialNumItems: INITIAL_ITEMS },
   )
 
@@ -240,7 +249,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
           className="relative overflow-hidden"
         >
           <div className="glass-card relative flex flex-col items-center justify-center px-6 py-12 sm:py-16">
-            <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-muted/40 via-transparent to-transparent opacity-60" />
+            <div className="from-muted/40 pointer-events-none absolute inset-0 bg-linear-to-br via-transparent to-transparent opacity-60" />
 
             <div className="relative mb-6">
               <motion.div
@@ -252,7 +261,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
                   stiffness: 260,
                   damping: 20,
                 }}
-                className="relative flex size-20 items-center justify-center rounded-2xl bg-muted"
+                className="bg-muted relative flex size-20 items-center justify-center rounded-2xl"
               >
                 <Shield
                   className="text-muted-foreground size-10"
@@ -268,9 +277,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
               transition={{ delay: 0.25, duration: 0.4 }}
               className="mb-2 text-center text-lg font-semibold tracking-tight"
             >
-              {search
-                ? "Aucun résultat"
-                : "Aucun utilisateur bloqué"}
+              {search ? "Aucun résultat" : "Aucun utilisateur bloqué"}
             </motion.h3>
 
             <motion.p
@@ -287,7 +294,11 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ delay: 0.5, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{
+                delay: 0.5,
+                duration: 0.6,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               className="via-border mt-8 h-px w-24 bg-linear-to-r from-transparent to-transparent"
             />
           </div>
@@ -317,7 +328,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
                   layout
                   className={cn(
                     "flex items-center gap-3 rounded-lg border p-3",
-                    "transition-colors hover:bg-muted/50",
+                    "hover:bg-muted/50 transition-colors",
                   )}
                 >
                   <Link href={profileHref} className="shrink-0">
@@ -340,7 +351,9 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
                       >
                         {entry.user.name}
                       </Link>
-                      <UserProfileBadgeInline accountType={entry.user.accountType} />
+                      <UserProfileBadgeInline
+                        accountType={entry.user.accountType}
+                      />
                       {entry.user.username && (
                         <span className="text-muted-foreground truncate text-xs">
                           @{entry.user.username}
@@ -386,9 +399,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleUnblock(entry)}
-                        >
+                        <AlertDialogAction onClick={() => handleUnblock(entry)}>
                           Débloquer
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -402,14 +413,15 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
       )}
 
       {/* Infinite scroll sentinel */}
-      {status === "CanLoadMore" && (
-        <div ref={loadMoreRef} className="h-4" />
-      )}
+      {status === "CanLoadMore" && <div ref={loadMoreRef} className="h-4" />}
 
       {/* Loading more indicator */}
       {status === "LoadingMore" && (
         <div className="flex justify-center py-4">
-          <Loader2 className="text-muted-foreground size-5 animate-spin" aria-hidden="true" />
+          <Loader2
+            className="text-muted-foreground size-5 animate-spin"
+            aria-hidden="true"
+          />
         </div>
       )}
     </div>
@@ -423,10 +435,7 @@ const BlockedUsersSection = ({ search }: { search: string }) => {
 const BlockedSkeleton = () => (
   <div className="space-y-2">
     {Array.from({ length: 5 }).map((_, i) => (
-      <div
-        key={i}
-        className="flex items-center gap-3 rounded-lg border p-3"
-      >
+      <div key={i} className="flex items-center gap-3 rounded-lg border p-3">
         <Skeleton className="size-10 shrink-0 rounded-full" />
         <div className="min-w-0 flex-1 space-y-2">
           <Skeleton className="h-4 w-32" />
@@ -447,7 +456,7 @@ const EmptyState = ({ isFiltered }: { isFiltered: boolean }) => {
       className="relative overflow-hidden"
     >
       <div className="glass-card relative flex flex-col items-center justify-center px-6 py-12 sm:py-16">
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/20 via-transparent to-transparent opacity-60" />
+        <div className="from-primary/20 pointer-events-none absolute inset-0 bg-linear-to-br via-transparent to-transparent opacity-60" />
 
         <div className="relative mb-6">
           <motion.div
@@ -459,9 +468,13 @@ const EmptyState = ({ isFiltered }: { isFiltered: boolean }) => {
               stiffness: 260,
               damping: 20,
             }}
-            className="relative flex size-20 items-center justify-center rounded-2xl bg-primary/10"
+            className="bg-primary/10 relative flex size-20 items-center justify-center rounded-2xl"
           >
-            <Users className="size-10 text-primary" strokeWidth={1.5} aria-hidden="true" />
+            <Users
+              className="text-primary size-10"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
           </motion.div>
         </div>
 
@@ -471,9 +484,7 @@ const EmptyState = ({ isFiltered }: { isFiltered: boolean }) => {
           transition={{ delay: 0.25, duration: 0.4 }}
           className="mb-2 text-center text-lg font-semibold tracking-tight"
         >
-          {isFiltered
-            ? "Aucun résultat"
-            : "Aucun abonnement"}
+          {isFiltered ? "Aucun résultat" : "Aucun abonnement"}
         </motion.h3>
 
         <motion.p

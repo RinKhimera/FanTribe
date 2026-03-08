@@ -1,7 +1,6 @@
 "use client"
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react"
-import { motion } from "motion/react"
 import {
   ArrowLeft,
   Bell,
@@ -12,6 +11,7 @@ import {
   Pin,
   PinOff,
 } from "lucide-react"
+import { motion } from "motion/react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect } from "react"
@@ -46,13 +46,13 @@ export const ConversationContent = () => {
   // Query pour récupérer la conversation
   const conversation = useQuery(
     api.messaging.getConversation,
-    isAuthenticated && conversationId ? { conversationId } : "skip"
+    isAuthenticated && conversationId ? { conversationId } : "skip",
   )
 
   // Query pour les permissions
   const permissions = useQuery(
     api.messaging.getConversationPermissionsQuery,
-    isAuthenticated && conversationId ? { conversationId } : "skip"
+    isAuthenticated && conversationId ? { conversationId } : "skip",
   )
 
   // Mutations
@@ -86,7 +86,7 @@ export const ConversationContent = () => {
       toast.success(
         conversation?.isPinned
           ? "Conversation désépinglée"
-          : "Conversation épinglée"
+          : "Conversation épinglée",
       )
     } catch {
       toast.error("Erreur lors de l'action")
@@ -100,7 +100,7 @@ export const ConversationContent = () => {
       toast.success(
         conversation?.isMuted
           ? "Notifications activées"
-          : "Notifications désactivées"
+          : "Notifications désactivées",
       )
     } catch {
       toast.error("Erreur lors de l'action")
@@ -108,11 +108,7 @@ export const ConversationContent = () => {
   }
 
   // Loading state
-  if (
-    conversation === undefined ||
-    !currentUser ||
-    permissions === undefined
-  ) {
+  if (conversation === undefined || !currentUser || permissions === undefined) {
     return (
       <div className="flex h-full w-full items-center justify-center lg:w-3/5">
         <motion.div
@@ -127,7 +123,7 @@ export const ConversationContent = () => {
               className="absolute inset-0 rounded-full border-2 border-amber-500/20 border-t-amber-500"
             />
           </div>
-          <span className="text-sm text-muted-foreground">Chargement…</span>
+          <span className="text-muted-foreground text-sm">Chargement…</span>
         </motion.div>
       </div>
     )
@@ -147,7 +143,7 @@ export const ConversationContent = () => {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-10 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl"
+        className="bg-background/80 sticky top-0 z-10 w-full border-b border-white/5 backdrop-blur-xl"
       >
         <div className="flex items-center justify-between p-3">
           {/* Left section */}
@@ -164,10 +160,7 @@ export const ConversationContent = () => {
             </Button>
 
             {/* Avatar */}
-            <Link
-              href={`/${otherParticipant?.username}`}
-              className="relative"
-            >
+            <Link href={`/${otherParticipant?.username}`} className="relative">
               <Avatar className="size-10 ring-2 ring-white/10 transition-shadow hover:ring-amber-500/30">
                 <AvatarImage
                   src={otherParticipant?.image}
@@ -181,7 +174,7 @@ export const ConversationContent = () => {
 
               {/* Online indicator */}
               {otherParticipant?.isOnline && (
-                <span className="absolute -bottom-0.5 -right-0.5 inline-flex size-3 rounded-full border-2 border-background bg-green-500" />
+                <span className="border-background absolute -right-0.5 -bottom-0.5 inline-flex size-3 rounded-full border-2 bg-green-500" />
               )}
             </Link>
 
@@ -194,7 +187,9 @@ export const ConversationContent = () => {
                 >
                   {otherParticipant?.name ?? "Utilisateur"}
                 </Link>
-                <UserProfileBadgeInline accountType={otherParticipant?.accountType} />
+                <UserProfileBadgeInline
+                  accountType={otherParticipant?.accountType}
+                />
 
                 {conversation.isPinned && (
                   <Pin size={12} className="text-amber-500" />
@@ -203,7 +198,7 @@ export const ConversationContent = () => {
                   <Lock size={12} className="text-destructive" />
                 )}
               </div>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {otherParticipant?.isOnline ? (
                   <span className="text-green-500">En ligne</span>
                 ) : otherParticipant?.username ? (
@@ -228,7 +223,7 @@ export const ConversationContent = () => {
                     variant="ghost"
                     size="icon"
                     aria-label="Envoyer un pourboire"
-                    className="size-8 text-muted-foreground transition-colors hover:text-amber-500"
+                    className="text-muted-foreground size-8 transition-colors hover:text-amber-500"
                   >
                     <Coins size={18} />
                   </Button>
@@ -241,7 +236,7 @@ export const ConversationContent = () => {
                   variant="ghost"
                   size="icon"
                   aria-label="Plus d'options"
-                  className="size-8 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground size-8"
                 >
                   <MoreVertical size={18} />
                 </Button>

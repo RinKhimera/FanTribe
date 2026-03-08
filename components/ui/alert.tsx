@@ -1,6 +1,5 @@
+import { type VariantProps, cva } from "class-variance-authority"
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
@@ -16,11 +15,12 @@ const alertVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 )
 
 interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof alertVariants> {
   ref?: React.Ref<HTMLDivElement>
 }
@@ -41,7 +41,7 @@ interface AlertTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
 const AlertTitle = ({ className, ref, ...props }: AlertTitleProps) => (
   <h5
     ref={ref}
-    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
+    className={cn("mb-1 leading-none font-medium tracking-tight", className)}
     {...props}
   />
 )
@@ -50,7 +50,11 @@ interface AlertDescriptionProps extends React.HTMLAttributes<HTMLParagraphElemen
   ref?: React.Ref<HTMLParagraphElement>
 }
 
-const AlertDescription = ({ className, ref, ...props }: AlertDescriptionProps) => (
+const AlertDescription = ({
+  className,
+  ref,
+  ...props
+}: AlertDescriptionProps) => (
   <div
     ref={ref}
     className={cn("text-sm [&_p]:leading-relaxed", className)}

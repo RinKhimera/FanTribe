@@ -70,7 +70,7 @@ export const SplitPanelLayout = ({
             "overscroll-contain",
             showNavigationOnMobile
               ? "w-full lg:w-(--content-split-nav-width)"
-              : "max-lg:hidden lg:block lg:w-(--content-split-nav-width) w-(--content-split-nav-width)",
+              : "w-(--content-split-nav-width) max-lg:hidden lg:block lg:w-(--content-split-nav-width)",
           )}
         >
           {navigationPanel}
@@ -83,7 +83,7 @@ export const SplitPanelLayout = ({
             "overscroll-contain",
             showNavigationOnMobile
               ? "hidden lg:block lg:w-(--content-split-main-width)"
-              : "max-lg:w-full lg:w-(--content-split-main-width) w-(--content-split-main-width)",
+              : "w-(--content-split-main-width) max-lg:w-full lg:w-(--content-split-main-width)",
           )}
         >
           {children}

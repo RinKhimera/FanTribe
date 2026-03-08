@@ -5,17 +5,17 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { PageContainer } from "@/components/layout/page-container"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { useCurrentUser } from "@/hooks"
 import {
-  PostComposerProvider,
+  PostComposerActions,
   PostComposerFrame,
   PostComposerInput,
   PostComposerMedia,
-  PostComposerActions,
+  PostComposerProvider,
   PostComposerSubmit,
 } from "@/components/post-composer"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { useCurrentUser } from "@/hooks"
 
 const MAX_MEDIA = 3
 
@@ -33,7 +33,13 @@ export const NewPostLayout = () => {
   if (currentUser.accountType === "USER") return null
 
   const BackButton = (
-    <Button variant="ghost" size="icon" className="hover:bg-primary/10 size-9 rounded-full" asChild aria-label="Retour">
+    <Button
+      variant="ghost"
+      size="icon"
+      className="hover:bg-primary/10 size-9 rounded-full"
+      asChild
+      aria-label="Retour"
+    >
       <Link href="/">
         <ArrowLeft aria-hidden="true" className="size-5" />
       </Link>
@@ -52,7 +58,10 @@ export const NewPostLayout = () => {
         <PostComposerFrame>
           <div className="flex items-start gap-4">
             <Avatar className="ring-background size-12 shrink-0 ring-2">
-              <AvatarImage src={currentUser.image} alt={currentUser.username || "Profile image"} />
+              <AvatarImage
+                src={currentUser.image}
+                alt={currentUser.username || "Profile image"}
+              />
               <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
                 {currentUser.name?.charAt(0) || "?"}
               </AvatarFallback>
@@ -62,7 +71,7 @@ export const NewPostLayout = () => {
               <PostComposerInput />
               <PostComposerMedia />
 
-              <div className="my-5 h-px bg-linear-to-r from-transparent via-border to-transparent" />
+              <div className="via-border my-5 h-px bg-linear-to-r from-transparent to-transparent" />
 
               <div className="flex items-center justify-between">
                 <PostComposerActions />

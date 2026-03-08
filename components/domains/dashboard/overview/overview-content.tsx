@@ -2,12 +2,12 @@
 
 import { Preloaded, usePreloadedQuery } from "convex/react"
 import { motion } from "motion/react"
+import { api } from "@/convex/_generated/api"
+import { containerVariants } from "@/lib/animations"
 import { KpiCards } from "./kpi-cards"
 import { MiniRevenueChart } from "./mini-revenue-chart"
 import { QuickActions } from "./quick-actions"
 import { RecentActivityFeed } from "./recent-activity-feed"
-import { containerVariants } from "@/lib/animations"
-import { api } from "@/convex/_generated/api"
 
 type OverviewContentProps = {
   preloadedOverview: Preloaded<typeof api.dashboard.getDashboardOverview>

@@ -227,7 +227,10 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
           </Link>
           <div className="flex flex-col items-center justify-center py-12">
             <div className="bg-muted/50 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <AlertTriangle className="text-muted-foreground h-8 w-8" aria-hidden="true" />
+              <AlertTriangle
+                className="text-muted-foreground h-8 w-8"
+                aria-hidden="true"
+              />
             </div>
             <h2 className="mb-2 text-xl font-semibold">
               Signalement introuvable
@@ -700,7 +703,10 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
           </DialogHeader>
           <div className="space-y-4">
             <Alert className="border-destructive/30 bg-destructive/5">
-              <AlertTriangle className="text-destructive h-4 w-4" aria-hidden="true" />
+              <AlertTriangle
+                className="text-destructive h-4 w-4"
+                aria-hidden="true"
+              />
               <AlertTitle className="text-destructive">Attention</AlertTitle>
               <AlertDescription className="text-destructive/80">
                 {report.type === "post" &&
@@ -710,7 +716,10 @@ export default function ReportDetailsPage({ params }: ReportDetailsProps) {
               </AlertDescription>
             </Alert>
             <div>
-              <label htmlFor="delete-admin-notes" className="mb-1.5 block text-sm font-medium">
+              <label
+                htmlFor="delete-admin-notes"
+                className="mb-1.5 block text-sm font-medium"
+              >
                 Note administrative
               </label>
               <Textarea

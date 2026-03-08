@@ -1,5 +1,6 @@
-import { renderHook, act } from "@testing-library/react"
+import { act, renderHook } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { useAsyncHandler } from "@/hooks/useAsyncHandler"
 
 const { mockToast, mockLogger } = vi.hoisted(() => ({
   mockToast: { success: vi.fn(), error: vi.fn() },
@@ -14,8 +15,6 @@ const { mockToast, mockLogger } = vi.hoisted(() => ({
 
 vi.mock("sonner", () => ({ toast: mockToast }))
 vi.mock("@/lib/config/logger", () => ({ logger: mockLogger }))
-
-import { useAsyncHandler } from "@/hooks/useAsyncHandler"
 
 describe("useAsyncHandler", () => {
   beforeEach(() => {
@@ -35,9 +34,7 @@ describe("useAsyncHandler", () => {
 
   it("success calls onSuccess callback with result", async () => {
     const onSuccess = vi.fn()
-    const { result } = renderHook(() =>
-      useAsyncHandler({ onSuccess })
-    )
+    const { result } = renderHook(() => useAsyncHandler({ onSuccess }))
 
     await act(async () => {
       await result.current.execute(async () => "data")
@@ -48,7 +45,7 @@ describe("useAsyncHandler", () => {
 
   it("success shows toast when successMessage provided", async () => {
     const { result } = renderHook(() =>
-      useAsyncHandler({ successMessage: "Done!" })
+      useAsyncHandler({ successMessage: "Done!" }),
     )
 
     await act(async () => {
@@ -62,7 +59,7 @@ describe("useAsyncHandler", () => {
 
   it("error shows toast.error with error message", async () => {
     const { result } = renderHook(() =>
-      useAsyncHandler({ errorMessage: "Oops" })
+      useAsyncHandler({ errorMessage: "Oops" }),
     )
 
     await act(async () => {
@@ -83,7 +80,7 @@ describe("useAsyncHandler", () => {
       useAsyncHandler({
         errorMessage: "Failed",
         logContext,
-      })
+      }),
     )
 
     await act(async () => {

@@ -61,7 +61,7 @@ export const ApplicationStatus = ({
   } | null>(null)
 
   const requestReapplication = useMutation(
-    api.creatorApplications.requestReapplication
+    api.creatorApplications.requestReapplication,
   )
 
   if (application.status === "pending") {
@@ -142,7 +142,9 @@ export const ApplicationStatus = ({
         const result = await requestReapplication({ userId })
 
         if (result.canReapply) {
-          toast.success("Vous pouvez maintenant soumettre une nouvelle candidature")
+          toast.success(
+            "Vous pouvez maintenant soumettre une nouvelle candidature",
+          )
           onReapplySuccess?.() // Simplifié - plus de données
         } else if (result.mustContactSupport) {
           setLockInfo({ mustContactSupport: true })
@@ -264,7 +266,7 @@ export const AlreadyCreator = () => {
       <motion.div variants={stepItemVariants}>
         <Card className="glass-premium mx-auto max-w-md text-center">
           <CardHeader>
-            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
+            <div className="bg-primary/10 mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
               <Crown className="text-primary size-8" />
             </div>
             <CardTitle className="text-gold-gradient">

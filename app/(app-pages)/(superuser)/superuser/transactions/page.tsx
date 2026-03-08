@@ -113,7 +113,9 @@ export default function TransactionsDashboardPage() {
         {USE_TEST_DATA && (
           <div className="flex items-center justify-between">
             <Badge variant="secondary" className="gap-1.5">
-              <span className="text-base" role="img" aria-label="test">🧪</span>
+              <span className="text-base" role="img" aria-label="test">
+                🧪
+              </span>
               Mode Test - Données fictives
             </Badge>
           </div>

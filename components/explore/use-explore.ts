@@ -14,10 +14,9 @@ export function useExplore() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   // Créateurs suggérés (exclut les déjà suivis)
-  const suggestedCreators = useQuery(
-    api.users.getSuggestedCreatorsForExplore,
-    { refreshKey },
-  )
+  const suggestedCreators = useQuery(api.users.getSuggestedCreatorsForExplore, {
+    refreshKey,
+  })
 
   // Recherche utilisateurs (réutilise searchUsers existant)
   const searchResults = useQuery(

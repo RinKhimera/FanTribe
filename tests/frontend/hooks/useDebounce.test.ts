@@ -1,6 +1,5 @@
-import { renderHook, act } from "@testing-library/react"
+import { act, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-
 import { useDebounce } from "@/hooks/useDebounce"
 
 describe("useDebounce", () => {
@@ -19,10 +18,9 @@ describe("useDebounce", () => {
   })
 
   it("does not update during delay", () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value),
-      { initialProps: { value: "hello" } }
-    )
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value), {
+      initialProps: { value: "hello" },
+    })
 
     rerender({ value: "world" })
 
@@ -30,10 +28,9 @@ describe("useDebounce", () => {
   })
 
   it("updates after delay", () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value),
-      { initialProps: { value: "hello" } }
-    )
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value), {
+      initialProps: { value: "hello" },
+    })
 
     rerender({ value: "world" })
 
@@ -45,10 +42,9 @@ describe("useDebounce", () => {
   })
 
   it("resets timer on rapid value changes", () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value),
-      { initialProps: { value: "hello" } }
-    )
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value), {
+      initialProps: { value: "hello" },
+    })
 
     rerender({ value: "a" })
 
@@ -79,7 +75,7 @@ describe("useDebounce", () => {
   it("supports custom delay", () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: "test", delay: 500 } }
+      { initialProps: { value: "test", delay: 500 } },
     )
 
     rerender({ value: "updated", delay: 500 })

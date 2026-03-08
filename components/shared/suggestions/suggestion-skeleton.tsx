@@ -21,12 +21,12 @@ const SkeletonCard = ({ index }: { index: number }) => (
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.1, duration: 0.3 }}
     className={cn(
-      "relative h-[140px] rounded-xl overflow-hidden",
-      "glass-card"
+      "relative h-[140px] overflow-hidden rounded-xl",
+      "glass-card",
     )}
   >
     {/* Banner skeleton with shimmer */}
-    <div className="absolute inset-0 bg-muted/40 overflow-hidden">
+    <div className="bg-muted/40 absolute inset-0 overflow-hidden">
       <motion.div
         variants={shimmerVariants}
         initial="initial"
@@ -40,13 +40,13 @@ const SkeletonCard = ({ index }: { index: number }) => (
     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
     {/* Avatar skeleton */}
-    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+    <div className="absolute top-1/2 left-4 -translate-y-1/2">
       <div className="relative">
         <div
           className={cn(
             "h-20 w-20 rounded-full",
             "bg-muted/60 ring-2 ring-white/10",
-            "overflow-hidden"
+            "overflow-hidden",
           )}
         >
           <motion.div
@@ -61,8 +61,8 @@ const SkeletonCard = ({ index }: { index: number }) => (
     </div>
 
     {/* Text skeletons */}
-    <div className="absolute bottom-4 left-[100px] right-4 space-y-2">
-      <div className="h-5 w-28 rounded-md bg-white/10 overflow-hidden relative">
+    <div className="absolute right-4 bottom-4 left-[100px] space-y-2">
+      <div className="relative h-5 w-28 overflow-hidden rounded-md bg-white/10">
         <motion.div
           variants={shimmerVariants}
           initial="initial"
@@ -71,7 +71,7 @@ const SkeletonCard = ({ index }: { index: number }) => (
           style={{ width: "100%" }}
         />
       </div>
-      <div className="h-4 w-20 rounded-md bg-white/5 overflow-hidden relative">
+      <div className="relative h-4 w-20 overflow-hidden rounded-md bg-white/5">
         <motion.div
           variants={shimmerVariants}
           initial="initial"
@@ -89,7 +89,7 @@ export const SuggestionSkeleton = () => {
     <div className="space-y-4">
       {/* Header skeleton */}
       <div className="flex items-center justify-between">
-        <div className="h-7 w-28 rounded-lg bg-muted/40 overflow-hidden relative">
+        <div className="bg-muted/40 relative h-7 w-28 overflow-hidden rounded-lg">
           <motion.div
             variants={shimmerVariants}
             initial="initial"
@@ -102,7 +102,7 @@ export const SuggestionSkeleton = () => {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-8 w-8 rounded-full bg-muted/30 overflow-hidden relative"
+              className="bg-muted/30 relative h-8 w-8 overflow-hidden rounded-full"
             >
               <motion.div
                 variants={shimmerVariants}
@@ -132,8 +132,8 @@ export const SuggestionSkeleton = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 + index * 0.05 }}
             className={cn(
-              "h-2 rounded-full bg-muted/40",
-              index === 0 ? "w-6" : "w-2"
+              "bg-muted/40 h-2 rounded-full",
+              index === 0 ? "w-6" : "w-2",
             )}
           />
         ))}

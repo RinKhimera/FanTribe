@@ -34,9 +34,7 @@ const CustomTooltip = ({
           style={{ backgroundColor: entry.payload.fill }}
         />
         <span className="text-muted-foreground">{entry.name}</span>
-        <span className="font-semibold">
-          {formatAmount(entry.value)} XAF
-        </span>
+        <span className="font-semibold">{formatAmount(entry.value)} XAF</span>
       </div>
     </div>
   )
@@ -54,8 +52,9 @@ export const RevenueBreakdown = ({
     { name: "Pourboires", value: tipRevenue },
   ]
 
-  const subsPercent =
-    hasData ? Math.round((subscriptionRevenue / total) * 100) : 0
+  const subsPercent = hasData
+    ? Math.round((subscriptionRevenue / total) * 100)
+    : 0
   const tipsPercent = hasData ? 100 - subsPercent : 0
 
   return (

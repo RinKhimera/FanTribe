@@ -55,10 +55,7 @@ export const RecentTipsList = ({ tips }: RecentTipsListProps) => {
               className="flex items-center gap-3 rounded-lg border border-white/5 p-3"
             >
               <Avatar className="h-9 w-9">
-                <AvatarImage
-                  src={tip.sender?.image}
-                  className="object-cover"
-                />
+                <AvatarImage src={tip.sender?.image} className="object-cover" />
                 <AvatarFallback className="bg-muted text-xs">
                   {tip.sender?.name?.charAt(0) || "?"}
                 </AvatarFallback>

@@ -57,10 +57,12 @@ export const unblockUser = mutation({
 // Liste des utilisateurs que j'ai bloqués (avec leurs infos)
 export const getBlockedUsers = query({
   args: {},
-  returns: v.array(v.object({
-    block: v.any(),
-    blockedUserDetails: v.any(),
-  })),
+  returns: v.array(
+    v.object({
+      block: v.any(),
+      blockedUserDetails: v.any(),
+    }),
+  ),
   handler: async (ctx) => {
     const me = await getAuthenticatedUser(ctx)
     const blocks = await ctx.db

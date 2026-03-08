@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
 import { MessageSquare } from "lucide-react"
+import { motion } from "motion/react"
 
 export const EmptyConversation = () => {
   return (
@@ -55,7 +55,7 @@ export const EmptyConversation = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5, type: "spring" }}
-              className="absolute -right-1 -top-1"
+              className="absolute -top-1 -right-1"
             >
               <span className="relative flex size-4">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
@@ -72,10 +72,10 @@ export const EmptyConversation = () => {
           transition={{ delay: 0.3 }}
           className="max-w-sm space-y-3"
         >
-          <h3 className="text-xl font-semibold text-foreground">
+          <h3 className="text-foreground text-xl font-semibold">
             Bienvenue dans vos messages
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Sélectionnez une conversation dans la liste ou démarrez une nouvelle
             discussion avec un créateur
           </p>
@@ -86,7 +86,7 @@ export const EmptyConversation = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 flex items-center gap-2 text-xs text-muted-foreground"
+          className="text-muted-foreground mt-8 flex items-center gap-2 text-xs"
         >
           <div className="h-px w-8 bg-linear-to-r from-transparent to-white/20" />
           <span>Choisissez une conversation</span>

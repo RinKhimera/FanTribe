@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { Camera, IdCard, Upload, X } from "lucide-react"
 import Image from "next/image"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
+import { CameraCapture } from "@/components/shared/camera-capture"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -10,11 +12,9 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { DocumentPreview } from "./document-preview"
-import { CameraCapture } from "@/components/shared/camera-capture"
 import { useBunnyUpload } from "@/hooks"
 import { logger } from "@/lib/config"
-import { Camera, IdCard, Upload, X } from "lucide-react"
+import { DocumentPreview } from "./document-preview"
 import type { UploadedDocument } from "./types"
 
 interface DocumentUploadSectionProps {
@@ -81,7 +81,7 @@ export const DocumentUploadSection = ({
   }
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -158,8 +158,8 @@ export const DocumentUploadSection = ({
   if (isUploading) {
     return (
       <div className="flex items-center justify-center gap-2 py-4">
-        <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <span className="text-sm text-muted-foreground">Upload en cours…</span>
+        <div className="border-primary size-5 animate-spin rounded-full border-2 border-t-transparent" />
+        <span className="text-muted-foreground text-sm">Upload en cours…</span>
       </div>
     )
   }
@@ -195,7 +195,10 @@ export const DocumentUploadSection = ({
             Uploader
           </Button>
 
-          <CameraCapture facingMode={facingMode} onCapture={handleCameraCapture}>
+          <CameraCapture
+            facingMode={facingMode}
+            onCapture={handleCameraCapture}
+          >
             {({ open }) => (
               <Button type="button" variant="outline" size="sm" onClick={open}>
                 <Camera className="mr-2 size-4" />

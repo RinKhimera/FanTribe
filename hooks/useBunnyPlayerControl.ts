@@ -18,7 +18,7 @@ interface UseBunnyPlayerControlResult {
 }
 
 export function useBunnyPlayerControl(
-  options: UseBunnyPlayerControlOptions
+  options: UseBunnyPlayerControlOptions,
 ): UseBunnyPlayerControlResult {
   const { iframeRef, enabled = true } = options
   const [isReady, setIsReady] = useState(false)
@@ -60,10 +60,10 @@ export function useBunnyPlayerControl(
 
       iframeRef.current.contentWindow.postMessage(
         JSON.stringify(message),
-        BUNNY_ORIGIN
+        BUNNY_ORIGIN,
       )
     },
-    [iframeRef]
+    [iframeRef],
   )
 
   const pause = useCallback(() => sendCommand("pause"), [sendCommand])

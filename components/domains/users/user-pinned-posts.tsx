@@ -1,8 +1,8 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { motion } from "motion/react"
 import { Pin } from "lucide-react"
+import { motion } from "motion/react"
 import Image from "next/image"
 import Link from "next/link"
 import { api } from "@/convex/_generated/api"
@@ -48,7 +48,7 @@ export const UserPinnedPosts = ({
         >
           <Pin className="text-primary size-5" aria-hidden="true" />
         </motion.div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide">
+        <h3 className="text-sm font-semibold tracking-wide uppercase">
           Publications épinglées
         </h3>
       </div>
@@ -92,7 +92,7 @@ const PinnedPostCard = ({ post, username }: PinnedPostCardProps) => {
         whileTap={{ scale: 0.98 }}
         className={cn(
           "glass-card group relative overflow-hidden rounded-xl transition-[border-color,box-shadow]",
-          "hover:shadow-xl"
+          "hover:shadow-xl",
         )}
       >
         {/* Pin indicator */}
@@ -131,7 +131,7 @@ const PinnedPostCard = ({ post, username }: PinnedPostCardProps) => {
           <p
             className={cn(
               "line-clamp-2 text-sm",
-              hasMedia ? "text-muted-foreground" : "font-medium"
+              hasMedia ? "text-muted-foreground" : "font-medium",
             )}
           >
             {post.content}

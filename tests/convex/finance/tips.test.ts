@@ -1,8 +1,11 @@
 import { convexTest } from "convex-test"
 import { describe, expect, it } from "vitest"
 import { api, internal } from "../../../convex/_generated/api"
+import {
+  TIP_CREATOR_RATE,
+  USD_TO_XAF_RATE,
+} from "../../../convex/lib/constants"
 import schema from "../../../convex/schema"
-import { USD_TO_XAF_RATE, TIP_CREATOR_RATE } from "../../../convex/lib/constants"
 import { insertCreator, insertUser } from "../../helpers/convex-setup"
 
 describe("tips", () => {

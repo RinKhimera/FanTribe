@@ -11,11 +11,9 @@ export default async function DashboardLayout({
 }) {
   const token = await getAuthToken()
 
-  const currentUser = await fetchQuery(
-    api.users.getCurrentUser,
-    undefined,
-    { token },
-  )
+  const currentUser = await fetchQuery(api.users.getCurrentUser, undefined, {
+    token,
+  })
 
   // Guard: créateurs et superusers uniquement
   if (
@@ -33,8 +31,6 @@ export default async function DashboardLayout({
   )
 
   return (
-    <DashboardShell preloadedUser={preloadedUser}>
-      {children}
-    </DashboardShell>
+    <DashboardShell preloadedUser={preloadedUser}>{children}</DashboardShell>
   )
 }

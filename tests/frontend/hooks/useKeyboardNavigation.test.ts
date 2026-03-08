@@ -1,6 +1,5 @@
-import { renderHook, act } from "@testing-library/react"
+import { act, renderHook } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation"
 
 const createKeyEvent = (key: string) =>
@@ -20,9 +19,7 @@ describe("useKeyboardNavigation", () => {
   })
 
   it("ArrowDown increments selectedIndex", () => {
-    const { result } = renderHook(() =>
-      useKeyboardNavigation(defaultOptions)
-    )
+    const { result } = renderHook(() => useKeyboardNavigation(defaultOptions))
 
     expect(result.current.selectedIndex).toBe(-1)
 
@@ -34,9 +31,7 @@ describe("useKeyboardNavigation", () => {
   })
 
   it("ArrowDown stops at last item", () => {
-    const { result } = renderHook(() =>
-      useKeyboardNavigation(defaultOptions)
-    )
+    const { result } = renderHook(() => useKeyboardNavigation(defaultOptions))
 
     act(() => {
       result.current.handleKeyDown(createKeyEvent("ArrowDown"))
@@ -49,9 +44,7 @@ describe("useKeyboardNavigation", () => {
   })
 
   it("ArrowUp decrements selectedIndex", () => {
-    const { result } = renderHook(() =>
-      useKeyboardNavigation(defaultOptions)
-    )
+    const { result } = renderHook(() => useKeyboardNavigation(defaultOptions))
 
     act(() => {
       result.current.setSelectedIndex(1)
@@ -65,9 +58,7 @@ describe("useKeyboardNavigation", () => {
   })
 
   it("ArrowUp from 0 goes to -1", () => {
-    const { result } = renderHook(() =>
-      useKeyboardNavigation(defaultOptions)
-    )
+    const { result } = renderHook(() => useKeyboardNavigation(defaultOptions))
 
     act(() => {
       result.current.setSelectedIndex(0)
@@ -83,7 +74,7 @@ describe("useKeyboardNavigation", () => {
   it("Enter calls onSelect with selected item", () => {
     const onSelect = vi.fn()
     const { result } = renderHook(() =>
-      useKeyboardNavigation({ ...defaultOptions, onSelect })
+      useKeyboardNavigation({ ...defaultOptions, onSelect }),
     )
 
     act(() => {
@@ -100,7 +91,7 @@ describe("useKeyboardNavigation", () => {
   it("Enter does nothing when selectedIndex is -1", () => {
     const onSelect = vi.fn()
     const { result } = renderHook(() =>
-      useKeyboardNavigation({ ...defaultOptions, onSelect })
+      useKeyboardNavigation({ ...defaultOptions, onSelect }),
     )
 
     act(() => {
@@ -113,7 +104,7 @@ describe("useKeyboardNavigation", () => {
   it("Escape calls onClose and resets to -1", () => {
     const onClose = vi.fn()
     const { result } = renderHook(() =>
-      useKeyboardNavigation({ ...defaultOptions, onClose })
+      useKeyboardNavigation({ ...defaultOptions, onClose }),
     )
 
     act(() => {
@@ -131,7 +122,7 @@ describe("useKeyboardNavigation", () => {
   it("does nothing when isOpen is false", () => {
     const onSelect = vi.fn()
     const { result } = renderHook(() =>
-      useKeyboardNavigation({ ...defaultOptions, onSelect, isOpen: false })
+      useKeyboardNavigation({ ...defaultOptions, onSelect, isOpen: false }),
     )
 
     act(() => {

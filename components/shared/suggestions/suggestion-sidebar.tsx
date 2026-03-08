@@ -1,13 +1,13 @@
 "use client"
 
-import { motion, AnimatePresence } from "motion/react"
-import { FileText, Shield, Cookie } from "lucide-react"
+import { Cookie, FileText, Shield } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import Link from "next/link"
-import { SuggestionSearch } from "./suggestion-search"
+import { cn } from "@/lib/utils"
 import { SuggestionCarousel } from "./suggestion-carousel"
+import { SuggestionSearch } from "./suggestion-search"
 import { SuggestionSearchResults } from "./suggestion-search-results"
 import { useSuggestions } from "./use-suggestions"
-import { cn } from "@/lib/utils"
 
 const legalLinks = [
   { href: "/terms", label: "Conditions", icon: FileText },
@@ -107,7 +107,7 @@ export const SuggestionSidebar = () => {
       {/* Legal Links */}
       <motion.div
         variants={itemVariants}
-        className="border-t border-border/40 pt-4"
+        className="border-border/40 border-t pt-4"
       >
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           {legalLinks.map((link) => {
@@ -118,8 +118,8 @@ export const SuggestionSidebar = () => {
                 href={link.href}
                 className={cn(
                   "flex items-center gap-1.5",
-                  "text-xs text-muted-foreground",
-                  "transition-colors duration-200 hover:text-primary",
+                  "text-muted-foreground text-xs",
+                  "hover:text-primary transition-colors duration-200",
                 )}
               >
                 <Icon className="h-3 w-3" />

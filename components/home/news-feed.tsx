@@ -1,13 +1,16 @@
 "use client"
 
 import { usePaginatedQuery } from "convex/react"
-import { motion } from "motion/react"
 import { Loader2, Sparkles } from "lucide-react"
+import { motion } from "motion/react"
 import { useEffect, useRef } from "react"
 import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
-import { premiumFeedContainerVariants, premiumFeedItemVariants } from "@/lib/animations"
+import {
+  premiumFeedContainerVariants,
+  premiumFeedItemVariants,
+} from "@/lib/animations"
 import { cn } from "@/lib/utils"
 
 const INITIAL_ITEMS = 20
@@ -21,16 +24,16 @@ type PostWithAuthor = Doc<"posts"> & {
 const PremiumLoader = ({ message }: { message: string }) => (
   <div className="flex flex-col items-center justify-center py-16">
     <div className="relative">
-      <div className={cn(
-        "relative flex items-center justify-center size-14 rounded-full",
-        "bg-primary",
-      )}>
-        <Loader2 className="h-6 w-6 animate-spin text-primary-foreground" />
+      <div
+        className={cn(
+          "relative flex size-14 items-center justify-center rounded-full",
+          "bg-primary",
+        )}
+      >
+        <Loader2 className="text-primary-foreground h-6 w-6 animate-spin" />
       </div>
     </div>
-    <p className="text-muted-foreground mt-5 text-sm font-medium">
-      {message}
-    </p>
+    <p className="text-muted-foreground mt-5 text-sm font-medium">{message}</p>
   </div>
 )
 
@@ -91,15 +94,17 @@ export const NewsFeed = ({
   // Aucun post disponible
   if (results.length === 0 && status === "Exhausted") {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div className="glass-premium p-8 rounded-2xl text-center max-w-sm">
-          <div className={cn(
-            "mx-auto mb-5 flex size-16 items-center justify-center rounded-full",
-            "bg-primary",
-          )}>
-            <Sparkles className="size-7 text-primary-foreground" />
+      <div className="flex flex-col items-center justify-center px-4 py-16">
+        <div className="glass-premium max-w-sm rounded-2xl p-8 text-center">
+          <div
+            className={cn(
+              "mx-auto mb-5 flex size-16 items-center justify-center rounded-full",
+              "bg-primary",
+            )}
+          >
+            <Sparkles className="text-primary-foreground size-7" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-foreground mb-2 text-lg font-semibold">
             Aucune publication
           </h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
@@ -112,6 +117,7 @@ export const NewsFeed = ({
 
   return (
     <motion.div
+      data-testid="news-feed"
       variants={premiumFeedContainerVariants}
       initial="initial"
       animate="animate"
@@ -134,10 +140,8 @@ export const NewsFeed = ({
           className="flex flex-col items-center justify-center py-10"
         >
           <div className="flex items-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="text-muted-foreground text-sm">
-              Chargement…
-            </p>
+            <Loader2 className="text-primary h-5 w-5 animate-spin" />
+            <p className="text-muted-foreground text-sm">Chargement…</p>
           </div>
         </div>
       )}
@@ -146,7 +150,7 @@ export const NewsFeed = ({
       {status === "LoadingMore" && (
         <div className="flex flex-col items-center justify-center py-10">
           <div className="flex items-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <Loader2 className="text-primary h-5 w-5 animate-spin" />
             <p className="text-muted-foreground text-sm">
               Chargement de plus de publications…
             </p>
@@ -157,11 +161,11 @@ export const NewsFeed = ({
       {/* Message de fin */}
       {status === "Exhausted" && results.length > 0 && (
         <div className="flex flex-col items-center justify-center py-12">
-          <div className="h-px bg-border w-24 mb-4" />
-          <p className="text-muted-foreground/70 text-sm flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
+          <div className="bg-border mb-4 h-px w-24" />
+          <p className="text-muted-foreground/70 flex items-center gap-2 text-sm">
+            <Sparkles className="text-primary size-4" />
             <span>Vous avez tout vu</span>
-            <Sparkles className="size-4 text-primary" />
+            <Sparkles className="text-primary size-4" />
           </p>
         </div>
       )}

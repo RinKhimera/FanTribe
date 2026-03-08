@@ -1,8 +1,8 @@
 "use client"
 
 import { usePaginatedQuery } from "convex/react"
-import { motion } from "motion/react"
 import { Compass, Loader2 } from "lucide-react"
+import { motion } from "motion/react"
 import { useEffect, useRef } from "react"
 import { PostCard } from "@/components/shared/post-card"
 import { api } from "@/convex/_generated/api"
@@ -30,10 +30,10 @@ const PremiumLoader = ({ message }: { message: string }) => (
           "bg-primary",
         )}
       >
-        <Loader2 className="h-6 w-6 animate-spin text-primary-foreground" />
+        <Loader2 className="text-primary-foreground h-6 w-6 animate-spin" />
       </div>
     </div>
-    <p className="mt-5 text-sm font-medium text-muted-foreground">{message}</p>
+    <p className="text-muted-foreground mt-5 text-sm font-medium">{message}</p>
   </div>
 )
 
@@ -99,12 +99,12 @@ export const ExploreFeed = ({ currentUser, sortBy }: ExploreFeedProps) => {
               "bg-primary",
             )}
           >
-            <Compass className="size-7 text-primary-foreground" />
+            <Compass className="text-primary-foreground size-7" />
           </div>
-          <h3 className="mb-2 text-lg font-semibold text-foreground">
+          <h3 className="text-foreground mb-2 text-lg font-semibold">
             Aucune publication à explorer
           </h3>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             Revenez bientôt pour découvrir du nouveau contenu
           </p>
         </div>
@@ -114,6 +114,7 @@ export const ExploreFeed = ({ currentUser, sortBy }: ExploreFeedProps) => {
 
   return (
     <motion.div
+      data-testid="explore-feed"
       variants={premiumFeedContainerVariants}
       initial="initial"
       animate="animate"
@@ -136,8 +137,8 @@ export const ExploreFeed = ({ currentUser, sortBy }: ExploreFeedProps) => {
           className="flex flex-col items-center justify-center py-10"
         >
           <div className="flex items-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Chargement…</p>
+            <Loader2 className="text-primary h-5 w-5 animate-spin" />
+            <p className="text-muted-foreground text-sm">Chargement…</p>
           </div>
         </div>
       )}
@@ -146,8 +147,8 @@ export const ExploreFeed = ({ currentUser, sortBy }: ExploreFeedProps) => {
       {status === "LoadingMore" && (
         <div className="flex flex-col items-center justify-center py-10">
           <div className="flex items-center gap-3">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
+            <Loader2 className="text-primary h-5 w-5 animate-spin" />
+            <p className="text-muted-foreground text-sm">
               Chargement de plus de publications…
             </p>
           </div>
@@ -157,11 +158,11 @@ export const ExploreFeed = ({ currentUser, sortBy }: ExploreFeedProps) => {
       {/* Message de fin */}
       {status === "Exhausted" && results.length > 0 && (
         <div className="flex flex-col items-center justify-center py-12">
-          <div className="mb-4 h-px w-24 bg-border" />
-          <p className="flex items-center gap-2 text-sm text-muted-foreground/70">
-            <Compass className="size-4 text-primary" />
+          <div className="bg-border mb-4 h-px w-24" />
+          <p className="text-muted-foreground/70 flex items-center gap-2 text-sm">
+            <Compass className="text-primary size-4" />
             <span>Vous avez tout exploré</span>
-            <Compass className="size-4 text-primary" />
+            <Compass className="text-primary size-4" />
           </p>
         </div>
       )}

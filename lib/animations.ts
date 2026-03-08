@@ -410,11 +410,13 @@ export const goldShimmerVariants: Variants = {
 export const premiumAvatarVariants: Variants = {
   rest: {
     scale: 1,
-    boxShadow: "0 0 0 2.5px var(--background), 0 0 0 4px rgba(255,255,255,0.15)",
+    boxShadow:
+      "0 0 0 2.5px var(--background), 0 0 0 4px rgba(255,255,255,0.15)",
   },
   hover: {
     scale: 1.06,
-    boxShadow: "0 0 0 2.5px var(--background), 0 0 0 4px var(--gold-400), 0 4px 24px rgba(184,139,74,0.25)",
+    boxShadow:
+      "0 0 0 2.5px var(--background), 0 0 0 4px var(--gold-400), 0 4px 24px rgba(184,139,74,0.25)",
     transition: { duration: 0.3, ease: "easeOut" },
   },
 }

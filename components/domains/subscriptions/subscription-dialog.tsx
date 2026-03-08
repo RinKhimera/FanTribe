@@ -3,7 +3,7 @@
 import { Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { UserProps } from "@/types"
-import { SubscriptionUnified, SubscriptionType } from "./subscription-unified"
+import { SubscriptionType, SubscriptionUnified } from "./subscription-unified"
 
 type SubscriptionDialogProps = {
   userProfile: UserProps

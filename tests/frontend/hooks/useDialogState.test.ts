@@ -1,6 +1,5 @@
-import { renderHook, act } from "@testing-library/react"
+import { act, renderHook } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
-
 import { useDialogState } from "@/hooks/useDialogState"
 
 describe("useDialogState", () => {

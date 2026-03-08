@@ -1,24 +1,24 @@
 "use client"
 
-import { motion } from "motion/react"
 import { Coins, MapPin, Sparkles } from "lucide-react"
+import { motion } from "motion/react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useState } from "react"
 import { SubscriptionButton } from "@/components/domains/subscriptions"
 import { TipDialog } from "@/components/domains/tips"
-import { FollowButton } from "./follow-button"
 import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
+import { FollowButton } from "./follow-button"
+import { UserProfileActions } from "./user-profile-actions"
 import {
   UserProfileBadgeInline,
   UserProfileBadges,
 } from "./user-profile-badges"
-import { UserProfileActions } from "./user-profile-actions"
 import { UserProfileStats } from "./user-profile-stats"
 import { UserSocialLinks } from "./user-social-links"
 
@@ -38,7 +38,9 @@ export const UserProfileHero = ({
   subscriptionStatus,
 }: UserProfileHeroProps) => {
   const isOwnProfile = currentUser?.username === userProfile.username
-  const isCreator = userProfile.accountType === "CREATOR" || userProfile.accountType === "SUPERUSER"
+  const isCreator =
+    userProfile.accountType === "CREATOR" ||
+    userProfile.accountType === "SUPERUSER"
 
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false)
 
@@ -77,8 +79,9 @@ export const UserProfileHero = ({
             onClick={openAvatar}
             aria-label="Voir la photo de profil"
             className={cn(
-              "rounded-full outline-none focus-visible:ring-ring focus-visible:ring-2",
-              isCreator && "ring-2 ring-primary/50 shadow-[0_0_15px_oklch(0.541_0.281_293/0.3)]",
+              "focus-visible:ring-ring rounded-full outline-none focus-visible:ring-2",
+              isCreator &&
+                "ring-primary/50 shadow-[0_0_15px_oklch(0.541_0.281_293/0.3)] ring-2",
             )}
           >
             <Avatar className="border-background size-24 cursor-pointer border-4 transition hover:brightness-110 sm:size-28">
@@ -120,9 +123,14 @@ export const UserProfileHero = ({
         >
           <div className="flex items-center gap-1.5">
             <h2 className="text-xl font-bold">{userProfile?.name}</h2>
-            <UserProfileBadgeInline badges={userProfile.badges} accountType={userProfile.accountType} />
+            <UserProfileBadgeInline
+              badges={userProfile.badges}
+              accountType={userProfile.accountType}
+            />
           </div>
-          <p className="text-muted-foreground text-sm">@{userProfile?.username}</p>
+          <p className="text-muted-foreground text-sm">
+            @{userProfile?.username}
+          </p>
         </motion.div>
 
         {/* Bio */}
@@ -223,7 +231,7 @@ export const UserProfileHero = ({
           <div className="mb-4">
             <Button
               asChild
-              className="w-full rounded-2xl bg-linear-to-r from-primary to-purple-600 text-white hover:opacity-90"
+              className="from-primary w-full rounded-2xl bg-linear-to-r to-purple-600 text-white hover:opacity-90"
             >
               <Link href="/be-creator">
                 <Sparkles className="mr-2 size-4" />
@@ -232,7 +240,6 @@ export const UserProfileHero = ({
             </Button>
           </div>
         )}
-
       </div>
 
       {/* Fullscreen avatar viewer */}

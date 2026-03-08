@@ -3,7 +3,6 @@
 import { ArrowLeft, Camera, IdCard, Send } from "lucide-react"
 import { motion } from "motion/react"
 import { UseFormReturn } from "react-hook-form"
-import { DocumentUploadSection } from "./document-upload-section"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -22,6 +21,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { stepContentVariants, stepItemVariants } from "@/lib/animations"
+import { DocumentUploadSection } from "./document-upload-section"
 import {
   ApplicationFormData,
   UploadedDocuments,
@@ -118,7 +118,9 @@ export const StepDocuments = ({
                 <DocumentUploadSection
                   type="selfie"
                   uploadedDocument={uploadedDocuments.selfie}
-                  onUploadSuccess={(result) => onUploadSuccess("selfie", result)}
+                  onUploadSuccess={(result) =>
+                    onUploadSuccess("selfie", result)
+                  }
                   onRemove={() => onRemoveDocument("selfie")}
                   userId={userId}
                   facingMode="user"

@@ -1,7 +1,7 @@
 "use client"
 
-import { UserSubscriptionsList } from "@/components/domains/users/user-subscriptions-list"
 import { useUserProfileContext } from "@/components/domains/users/user-profile-shell"
+import { UserSubscriptionsList } from "@/components/domains/users/user-subscriptions-list"
 
 const UserSubscriptionsPage = () => {
   const ctx = useUserProfileContext()

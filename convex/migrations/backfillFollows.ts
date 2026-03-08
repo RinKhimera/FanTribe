@@ -59,12 +59,10 @@ export const getAllUserIds = internalQuery({
     isDone: v.boolean(),
   }),
   handler: async (ctx, args) => {
-    const result = await ctx.db
-      .query("users")
-      .paginate({
-        numItems: args.batchSize,
-        cursor: args.cursor ?? null,
-      })
+    const result = await ctx.db.query("users").paginate({
+      numItems: args.batchSize,
+      cursor: args.cursor ?? null,
+    })
     return {
       userIds: result.page.map((u) => u._id),
       continueCursor: result.continueCursor,

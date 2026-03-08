@@ -3,9 +3,7 @@
  * Used with ctx.db.insert("users", createUserFixture(...))
  */
 
-export const createUserFixture = (
-  overrides: Record<string, unknown> = {}
-) => ({
+export const createUserFixture = (overrides: Record<string, unknown> = {}) => ({
   name: "Test User",
   tokenIdentifier: "test_user_id",
   accountType: "USER" as const,
@@ -16,7 +14,7 @@ export const createUserFixture = (
 })
 
 export const createCreatorFixture = (
-  overrides: Record<string, unknown> = {}
+  overrides: Record<string, unknown> = {},
 ) => ({
   name: "Test Creator",
   tokenIdentifier: "test_creator_id",
@@ -28,7 +26,7 @@ export const createCreatorFixture = (
 })
 
 export const createSuperuserFixture = (
-  overrides: Record<string, unknown> = {}
+  overrides: Record<string, unknown> = {},
 ) => ({
   name: "Test Admin",
   tokenIdentifier: "test_admin_id",

@@ -71,7 +71,7 @@ export const notificationPreferencesValidator = v.object({
 
 export const privacySettingsValidator = v.object({
   profileVisibility: v.optional(
-    v.union(v.literal("public"), v.literal("private"))
+    v.union(v.literal("public"), v.literal("private")),
   ),
   allowMessagesFromNonSubscribers: v.optional(v.boolean()),
   language: v.optional(v.string()),
@@ -224,11 +224,7 @@ export const tipDocValidator = v.object({
   provider: v.string(),
   providerTransactionId: v.string(),
   context: v.optional(
-    v.union(
-      v.literal("post"),
-      v.literal("profile"),
-      v.literal("message"),
-    ),
+    v.union(v.literal("post"), v.literal("profile"), v.literal("message")),
   ),
   postId: v.optional(v.id("posts")),
   conversationId: v.optional(v.id("conversations")),
@@ -259,7 +255,11 @@ export const enrichedSubscriptionEntryValidator = v.object({
     image: v.string(),
     imageBanner: v.optional(v.string()),
     isOnline: v.boolean(),
-    accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
+    accountType: v.union(
+      v.literal("USER"),
+      v.literal("CREATOR"),
+      v.literal("SUPERUSER"),
+    ),
   }),
   daysUntilExpiry: v.number(),
   subscribedDurationMonths: v.number(),
@@ -275,7 +275,11 @@ export const enrichedBlockedUserValidator = v.object({
     name: v.string(),
     username: v.optional(v.string()),
     image: v.string(),
-    accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
+    accountType: v.union(
+      v.literal("USER"),
+      v.literal("CREATOR"),
+      v.literal("SUPERUSER"),
+    ),
   }),
 })
 
@@ -355,7 +359,11 @@ export const actorSummaryValidator = v.object({
   name: v.string(),
   username: v.optional(v.string()),
   image: v.string(),
-  accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
+  accountType: v.union(
+    v.literal("USER"),
+    v.literal("CREATOR"),
+    v.literal("SUPERUSER"),
+  ),
 })
 
 export const enrichedNotificationValidator = v.object({
@@ -377,4 +385,3 @@ export const enrichedNotificationValidator = v.object({
   isRead: v.boolean(),
   lastActivityAt: v.number(),
 })
-

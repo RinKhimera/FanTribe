@@ -1,6 +1,10 @@
 import { v } from "convex/values"
 import { query } from "./_generated/server"
-import { getAuthenticatedUser, requireSuperuser, requireCreator } from "./lib/auth"
+import {
+  getAuthenticatedUser,
+  requireCreator,
+  requireSuperuser,
+} from "./lib/auth"
 import {
   SUBSCRIPTION_CREATOR_RATE,
   TIP_CREATOR_RATE,
@@ -26,26 +30,34 @@ export const getTransactionsForDashboard = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
-  returns: v.array(v.object({
-    _id: v.id("transactions"),
-    _creationTime: v.number(),
-    amount: v.number(),
-    currency: v.union(v.literal("XAF"), v.literal("USD")),
-    provider: v.string(),
-    providerTransactionId: v.string(),
-    creator: v.union(v.object({
-      _id: v.id("users"),
-      name: v.string(),
-      username: v.optional(v.string()),
-      image: v.string(),
-    }), v.null()),
-    subscriber: v.union(v.object({
-      _id: v.id("users"),
-      name: v.string(),
-      username: v.optional(v.string()),
-      image: v.string(),
-    }), v.null()),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.id("transactions"),
+      _creationTime: v.number(),
+      amount: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      provider: v.string(),
+      providerTransactionId: v.string(),
+      creator: v.union(
+        v.object({
+          _id: v.id("users"),
+          name: v.string(),
+          username: v.optional(v.string()),
+          image: v.string(),
+        }),
+        v.null(),
+      ),
+      subscriber: v.union(
+        v.object({
+          _id: v.id("users"),
+          name: v.string(),
+          username: v.optional(v.string()),
+          image: v.string(),
+        }),
+        v.null(),
+      ),
+    }),
+  ),
   handler: async (ctx, args) => {
     await requireSuperuser(ctx)
 
@@ -131,30 +143,36 @@ export const getTransactionsSummary = query({
     totalAmount: v.number(),
     totalTransactions: v.number(),
     currency: v.string(),
-    creatorSummaries: v.array(v.object({
-      creatorId: v.string(),
-      creatorName: v.string(),
-      creatorUsername: v.optional(v.string()),
-      totalAmount: v.number(),
-      transactionCount: v.number(),
-      currency: v.string(),
-    })),
-    topEarners: v.array(v.object({
-      creatorId: v.string(),
-      creatorName: v.string(),
-      creatorUsername: v.optional(v.string()),
-      totalAmount: v.number(),
-      transactionCount: v.number(),
-      currency: v.string(),
-    })),
-    lowEarners: v.array(v.object({
-      creatorId: v.string(),
-      creatorName: v.string(),
-      creatorUsername: v.optional(v.string()),
-      totalAmount: v.number(),
-      transactionCount: v.number(),
-      currency: v.string(),
-    })),
+    creatorSummaries: v.array(
+      v.object({
+        creatorId: v.string(),
+        creatorName: v.string(),
+        creatorUsername: v.optional(v.string()),
+        totalAmount: v.number(),
+        transactionCount: v.number(),
+        currency: v.string(),
+      }),
+    ),
+    topEarners: v.array(
+      v.object({
+        creatorId: v.string(),
+        creatorName: v.string(),
+        creatorUsername: v.optional(v.string()),
+        totalAmount: v.number(),
+        transactionCount: v.number(),
+        currency: v.string(),
+      }),
+    ),
+    lowEarners: v.array(
+      v.object({
+        creatorId: v.string(),
+        creatorName: v.string(),
+        creatorUsername: v.optional(v.string()),
+        totalAmount: v.number(),
+        transactionCount: v.number(),
+        currency: v.string(),
+      }),
+    ),
   }),
   handler: async (ctx, args) => {
     await requireSuperuser(ctx)
@@ -265,12 +283,14 @@ export const getTransactionsSummary = query({
  */
 export const getAllCreators = query({
   args: {},
-  returns: v.array(v.object({
-    _id: v.id("users"),
-    name: v.string(),
-    username: v.optional(v.string()),
-    image: v.string(),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      username: v.optional(v.string()),
+      image: v.string(),
+    }),
+  ),
   handler: async (ctx) => {
     await requireSuperuser(ctx)
 
@@ -299,26 +319,28 @@ export const getTestTransactionsForDashboard = query({
     creatorId: v.optional(v.id("users")),
     provider: v.optional(v.string()),
   },
-  returns: v.array(v.object({
-    _id: v.string(),
-    _creationTime: v.number(),
-    amount: v.number(),
-    currency: v.string(),
-    provider: v.string(),
-    providerTransactionId: v.string(),
-    creator: v.object({
+  returns: v.array(
+    v.object({
       _id: v.string(),
-      name: v.string(),
-      username: v.string(),
-      image: v.string(),
+      _creationTime: v.number(),
+      amount: v.number(),
+      currency: v.string(),
+      provider: v.string(),
+      providerTransactionId: v.string(),
+      creator: v.object({
+        _id: v.string(),
+        name: v.string(),
+        username: v.string(),
+        image: v.string(),
+      }),
+      subscriber: v.object({
+        _id: v.string(),
+        name: v.string(),
+        username: v.string(),
+        image: v.string(),
+      }),
     }),
-    subscriber: v.object({
-      _id: v.string(),
-      name: v.string(),
-      username: v.string(),
-      image: v.string(),
-    }),
-  })),
+  ),
   handler: async (ctx, args) => {
     await requireSuperuser(ctx)
 
@@ -471,30 +493,36 @@ export const getTestTransactionsSummary = query({
     totalAmount: v.number(),
     totalTransactions: v.number(),
     currency: v.string(),
-    creatorSummaries: v.array(v.object({
-      creatorId: v.string(),
-      creatorName: v.string(),
-      creatorUsername: v.string(),
-      totalAmount: v.number(),
-      transactionCount: v.number(),
-      currency: v.string(),
-    })),
-    topEarners: v.array(v.object({
-      creatorId: v.string(),
-      creatorName: v.string(),
-      creatorUsername: v.string(),
-      totalAmount: v.number(),
-      transactionCount: v.number(),
-      currency: v.string(),
-    })),
-    lowEarners: v.array(v.object({
-      creatorId: v.string(),
-      creatorName: v.string(),
-      creatorUsername: v.string(),
-      totalAmount: v.number(),
-      transactionCount: v.number(),
-      currency: v.string(),
-    })),
+    creatorSummaries: v.array(
+      v.object({
+        creatorId: v.string(),
+        creatorName: v.string(),
+        creatorUsername: v.string(),
+        totalAmount: v.number(),
+        transactionCount: v.number(),
+        currency: v.string(),
+      }),
+    ),
+    topEarners: v.array(
+      v.object({
+        creatorId: v.string(),
+        creatorName: v.string(),
+        creatorUsername: v.string(),
+        totalAmount: v.number(),
+        transactionCount: v.number(),
+        currency: v.string(),
+      }),
+    ),
+    lowEarners: v.array(
+      v.object({
+        creatorId: v.string(),
+        creatorName: v.string(),
+        creatorUsername: v.string(),
+        totalAmount: v.number(),
+        transactionCount: v.number(),
+        currency: v.string(),
+      }),
+    ),
   }),
   handler: async (ctx) => {
     await requireSuperuser(ctx)
@@ -564,12 +592,14 @@ export const getTestTransactionsSummary = query({
  */
 export const getTestCreators = query({
   args: {},
-  returns: v.array(v.object({
-    _id: v.string(),
-    name: v.string(),
-    username: v.string(),
-    image: v.string(),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.string(),
+      name: v.string(),
+      username: v.string(),
+      image: v.string(),
+    }),
+  ),
   handler: async (ctx) => {
     await requireSuperuser(ctx)
 
@@ -793,7 +823,11 @@ export const getPaymentDetails = query({
         status: tx.status,
         createdAt: tx._creationTime,
         creator: creator
-          ? { name: creator.name, username: creator.username, image: creator.image }
+          ? {
+              name: creator.name,
+              username: creator.username,
+              image: creator.image,
+            }
           : null,
       }
     }
@@ -817,7 +851,11 @@ export const getPaymentDetails = query({
         status: tip.status,
         createdAt: tip._creationTime,
         creator: creator
-          ? { name: creator.name, username: creator.username, image: creator.image }
+          ? {
+              name: creator.name,
+              username: creator.username,
+              image: creator.image,
+            }
           : null,
       }
     }

@@ -22,7 +22,7 @@ export function PostComposerInput({
         className={cn(
           "w-full resize-none border-none bg-transparent",
           "placeholder:text-muted-foreground/50 text-lg",
-          "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
+          "focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-hidden",
         )}
         minRows={3}
         maxRows={12}

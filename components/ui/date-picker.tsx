@@ -1,11 +1,9 @@
 "use client"
 
-import * as React from "react"
-import { CalendarIcon } from "lucide-react"
 import { format, parse } from "date-fns"
 import { fr } from "date-fns/locale"
-
-import { cn } from "@/lib/utils"
+import { CalendarIcon } from "lucide-react"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -13,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface DatePickerProps {
   value?: string
@@ -59,7 +58,7 @@ export function DatePicker({
           className={cn(
             "w-full justify-start text-left font-normal",
             !value && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />

@@ -1,19 +1,20 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useMutation } from "convex/react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import { toast } from "sonner"
+import { MediaItem } from "@/components/new-post/components/media-preview-grid"
+import { PostVisibility } from "@/components/new-post/components/visibility-selector"
 import { api } from "@/convex/_generated/api"
 import { useBunnyUpload } from "@/hooks"
 import { logger } from "@/lib/config/logger"
-import { MediaItem } from "@/components/new-post/components/media-preview-grid"
-import { PostVisibility } from "@/components/new-post/components/visibility-selector"
-import type {
-  PostComposerContextValue,
-  PostComposerConfig,
-  MediaMode,
-  CropQueueState,
-} from "./types"
 import {
   PostComposerConfigContext,
   PostComposerFormContext,
@@ -22,6 +23,12 @@ import {
   usePostComposerForm,
   usePostComposerMedia,
 } from "./contexts"
+import type {
+  CropQueueState,
+  MediaMode,
+  PostComposerConfig,
+  PostComposerContextValue,
+} from "./types"
 
 /**
  * Convenience hook — assembles all 3 sub-contexts into the original
@@ -77,7 +84,10 @@ type PostComposerProviderProps = {
   children: React.ReactNode
 }
 
-export function PostComposerProvider({ config, children }: PostComposerProviderProps) {
+export function PostComposerProvider({
+  config,
+  children,
+}: PostComposerProviderProps) {
   // --- States ---
   const [content, setContent] = useState("")
   const [medias, setMedias] = useState<MediaItem[]>([])
@@ -85,8 +95,13 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
   const [isAdult, setIsAdult] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
-  const [cropQueue, setCropQueue] = useState<CropQueueState>({ current: null, remaining: [] })
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {},
+  )
+  const [cropQueue, setCropQueue] = useState<CropQueueState>({
+    current: null,
+    remaining: [],
+  })
 
   // Refs
   const isPostCreatedRef = useRef(false)
@@ -101,7 +116,9 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
   const createPost = useMutation(api.posts.createPost)
   const createDraftAsset = useMutation(api.assetsDraft.createDraftAsset)
   const deleteDraftWithAsset = useMutation(api.assetsDraft.deleteDraftWithAsset)
-  const deleteDraftWithoutAsset = useMutation(api.assetsDraft.deleteDraftWithoutAsset)
+  const deleteDraftWithoutAsset = useMutation(
+    api.assetsDraft.deleteDraftWithoutAsset,
+  )
 
   const { uploadMedia } = useBunnyUpload()
 
@@ -155,7 +172,9 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
         await deleteDraftWithAsset({ mediaId: media.publicId })
         toast.success("Média supprimé avec succès")
       } catch (error) {
-        logger.error("Failed to delete media", error, { mediaId: media.publicId })
+        logger.error("Failed to delete media", error, {
+          mediaId: media.publicId,
+        })
         toast.error("Erreur lors de la suppression du média")
       }
     },
@@ -170,9 +189,12 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
     setUploadProgress((prev) => ({ ...prev, [fileKey]: 0 }))
   }, [])
 
-  const updateUploadProgress = useCallback((fileKey: string, percent: number) => {
-    setUploadProgress((prev) => ({ ...prev, [fileKey]: percent }))
-  }, [])
+  const updateUploadProgress = useCallback(
+    (fileKey: string, percent: number) => {
+      setUploadProgress((prev) => ({ ...prev, [fileKey]: percent }))
+    },
+    [],
+  )
 
   const finishUpload = useCallback((fileKey: string) => {
     setUploadProgress((prev) => {
@@ -186,7 +208,10 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
     async (file: File) => {
       setIsUploading(true)
 
-      const randomSuffix = crypto.randomUUID().replace(/-/g, "").substring(0, 13)
+      const randomSuffix = crypto
+        .randomUUID()
+        .replace(/-/g, "")
+        .substring(0, 13)
       const fileExtension = file.name.split(".").pop()
       const fileName = `${config.userId}/${randomSuffix}.${fileExtension}`
 
@@ -236,14 +261,25 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
         setIsUploading(false)
       }
     },
-    [config.userId, uploadMedia, startUpload, updateUploadProgress, finishUpload, addMedia, createDraftAsset],
+    [
+      config.userId,
+      uploadMedia,
+      startUpload,
+      updateUploadProgress,
+      finishUpload,
+      addMedia,
+      createDraftAsset,
+    ],
   )
 
   const startCropQueue = useCallback((files: File[]) => {
     if (files.length === 0) return
     const [first, ...rest] = files
     const objectUrl = URL.createObjectURL(first)
-    setCropQueue({ current: { file: first, imageSrc: objectUrl }, remaining: rest })
+    setCropQueue({
+      current: { file: first, imageSrc: objectUrl },
+      remaining: rest,
+    })
   }, [])
 
   const processNextInQueue = useCallback(() => {
@@ -310,7 +346,10 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
       // Validate individual files
       const validFiles: File[] = []
       for (const file of files) {
-        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+        if (
+          !file.type.startsWith("image/") &&
+          !file.type.startsWith("video/")
+        ) {
           toast.error(`Format non supporté: ${file.name}`)
           continue
         }
@@ -328,14 +367,20 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
 
       // No-mix enforcement
       if (mediaMode === "video") {
-        toast.error("1 seule vidéo par post. Supprimez la vidéo actuelle pour ajouter d'autres médias.")
+        toast.error(
+          "1 seule vidéo par post. Supprimez la vidéo actuelle pour ajouter d'autres médias.",
+        )
         return
       }
       if (mediaMode === "images" && videoFiles.length > 0) {
         toast.error("Impossible de mixer images et vidéos dans un même post.")
         return
       }
-      if (mediaMode === "empty" && videoFiles.length > 0 && imageFiles.length > 0) {
+      if (
+        mediaMode === "empty" &&
+        videoFiles.length > 0 &&
+        imageFiles.length > 0
+      ) {
         toast.error("Impossible de mixer images et vidéos dans un même post.")
         return
       }
@@ -361,7 +406,13 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
       // Start crop queue for images
       startCropQueue(imageFiles)
     },
-    [mediaMode, medias.length, config.maxMedia, uploadSingleFile, startCropQueue],
+    [
+      mediaMode,
+      medias.length,
+      config.maxMedia,
+      uploadSingleFile,
+      startCropQueue,
+    ],
   )
 
   const submit = useCallback(async () => {
@@ -398,11 +449,20 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
       } catch (error) {
         logger.error("Failed to create post", error)
         toast.error("Une erreur s'est produite !", {
-          description: "Veuillez vérifier votre connexion internet et réessayer",
+          description:
+            "Veuillez vérifier votre connexion internet et réessayer",
         })
       }
     })
-  }, [content, medias, visibility, isAdult, createPost, deleteDraftWithoutAsset, config])
+  }, [
+    content,
+    medias,
+    visibility,
+    isAdult,
+    createPost,
+    deleteDraftWithoutAsset,
+    config,
+  ])
 
   const reset = useCallback(() => {
     setContent("")
@@ -427,7 +487,17 @@ export function PostComposerProvider({ config, children }: PostComposerProviderP
       submit,
       reset,
     }),
-    [content, visibility, isAdult, isPending, setContent, setVisibility, setIsAdult, submit, reset],
+    [
+      content,
+      visibility,
+      isAdult,
+      isPending,
+      setContent,
+      setVisibility,
+      setIsAdult,
+      submit,
+      reset,
+    ],
   )
 
   const mediaValue = useMemo(

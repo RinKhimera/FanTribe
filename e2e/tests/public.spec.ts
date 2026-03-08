@@ -13,9 +13,9 @@ test.describe("Pages publiques", () => {
 
   test("la page explore affiche les créateurs", async ({ page }) => {
     await page.goto("/explore")
-    await expect(
-      page.getByRole("heading", { level: 1 }),
-    ).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      timeout: 15_000,
+    })
   })
 
   test("les pages légales se chargent", async ({ page }) => {

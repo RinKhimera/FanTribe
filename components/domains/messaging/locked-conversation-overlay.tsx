@@ -1,11 +1,11 @@
 "use client"
 
-import { motion } from "motion/react"
 import { Lock, MessageCircleOff, RefreshCw } from "lucide-react"
+import { motion } from "motion/react"
 import { useState } from "react"
+import { SubscriptionUnified } from "@/components/domains/subscriptions/subscription-unified"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
-import { SubscriptionUnified } from "@/components/domains/subscriptions/subscription-unified"
 
 type LockedConversationOverlayProps = {
   reason?: "subscription_expired" | "admin_blocked" | string
@@ -38,7 +38,7 @@ export const LockedConversationOverlay = ({
         >
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/80 p-6 shadow-2xl backdrop-blur-xl">
             {/* Gradient decoration */}
-            <div className="absolute -right-10 -top-10 size-32 rounded-full bg-linear-to-br from-amber-500/20 to-orange-500/10 blur-3xl" />
+            <div className="absolute -top-10 -right-10 size-32 rounded-full bg-linear-to-br from-amber-500/20 to-orange-500/10 blur-3xl" />
             <div className="absolute -bottom-10 -left-10 size-32 rounded-full bg-linear-to-tr from-red-500/10 to-amber-500/10 blur-3xl" />
 
             <div className="relative space-y-4">
@@ -55,9 +55,17 @@ export const LockedConversationOverlay = ({
                   }`}
                 >
                   {isBlocked ? (
-                    <MessageCircleOff size={28} className="text-destructive" aria-hidden="true" />
+                    <MessageCircleOff
+                      size={28}
+                      className="text-destructive"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <Lock size={28} className="text-amber-500" aria-hidden="true" />
+                    <Lock
+                      size={28}
+                      className="text-amber-500"
+                      aria-hidden="true"
+                    />
                   )}
                 </motion.div>
               </div>
@@ -70,7 +78,7 @@ export const LockedConversationOverlay = ({
               </h3>
 
               {/* Description */}
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-center text-sm">
                 {isBlocked
                   ? "Cette conversation a été bloquée par un administrateur. Vous ne pouvez plus envoyer ni recevoir de messages."
                   : "Votre abonnement messagerie a expiré. Renouvelez pour continuer à discuter avec ce créateur."}
@@ -95,7 +103,7 @@ export const LockedConversationOverlay = ({
 
               {/* Price info */}
               {isExpired && (
-                <p className="text-center text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-center text-xs">
                   2 000 XAF pour 2 semaines d&apos;accès
                 </p>
               )}

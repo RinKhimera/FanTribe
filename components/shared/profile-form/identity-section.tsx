@@ -1,6 +1,5 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
 import {
   AlertCircle,
   AtSign,
@@ -9,9 +8,9 @@ import {
   Sparkles,
   User,
 } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
-import { FormSection } from "./form-section"
 import {
   FormControl,
   FormDescription,
@@ -23,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { profileFormSchema } from "@/schemas/profile"
+import { FormSection } from "./form-section"
 
 interface IdentitySectionProps {
   form: UseFormReturn<z.infer<typeof profileFormSchema>>
@@ -42,7 +42,7 @@ export const IdentitySection = ({
         name="displayName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+            <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
               Nom d&apos;affichage
             </FormLabel>
             <FormControl>
@@ -69,7 +69,7 @@ export const IdentitySection = ({
         name="username"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+            <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
               Identifiant
             </FormLabel>
             <FormControl>
@@ -77,9 +77,9 @@ export const IdentitySection = ({
                 <Input
                   placeholder="votre_identifiant"
                   className={cn(
-                    "glass-input rounded-xl border-0 pl-10 pr-10",
+                    "glass-input rounded-xl border-0 pr-10 pl-10",
                     checkUsername === false && "ring-destructive ring-2",
-                    checkUsername === true && "ring-2 ring-emerald-500"
+                    checkUsername === true && "ring-2 ring-emerald-500",
                   )}
                   autoComplete="username"
                   spellCheck={false}

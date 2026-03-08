@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
-  isSameDay,
-  formatDate,
-  formatPostDate,
-  formatTimeAgo,
   formatCustomTimeAgo,
-  getRelativeDateTime,
+  formatDate,
   formatLastSeen,
   formatLastSeenShort,
+  formatPostDate,
+  formatTimeAgo,
+  getRelativeDateTime,
+  isSameDay,
 } from "@/lib/formatters/date/format-date"
 
 beforeEach(() => {
@@ -226,7 +226,7 @@ describe("formatCustomTimeAgo", () => {
   it('should delegate to formatTimeAgo with "short" format', () => {
     const fiveMinAgo = new Date("2026-02-10T11:55:00Z").getTime()
     expect(formatCustomTimeAgo(fiveMinAgo)).toBe(
-      formatTimeAgo(fiveMinAgo, "short")
+      formatTimeAgo(fiveMinAgo, "short"),
     )
   })
 })
@@ -237,18 +237,26 @@ describe("formatCustomTimeAgo", () => {
 
 describe("getRelativeDateTime", () => {
   it('should return "Aujourd\'hui" for a today message with no previous', () => {
-    const message = { _creationTime: new Date("2026-02-10T10:00:00Z").getTime() }
+    const message = {
+      _creationTime: new Date("2026-02-10T10:00:00Z").getTime(),
+    }
     expect(getRelativeDateTime(message, null)).toBe("Aujourd'hui")
   })
 
   it('should return "Hier" for a yesterday message with no previous', () => {
-    const message = { _creationTime: new Date("2026-02-09T10:00:00Z").getTime() }
+    const message = {
+      _creationTime: new Date("2026-02-09T10:00:00Z").getTime(),
+    }
     expect(getRelativeDateTime(message, null)).toBe("Hier")
   })
 
   it("should return undefined when message is on the same day as previous", () => {
-    const message = { _creationTime: new Date("2026-02-10T14:00:00Z").getTime() }
-    const previous = { _creationTime: new Date("2026-02-10T10:00:00Z").getTime() }
+    const message = {
+      _creationTime: new Date("2026-02-10T14:00:00Z").getTime(),
+    }
+    const previous = {
+      _creationTime: new Date("2026-02-10T10:00:00Z").getTime(),
+    }
     expect(getRelativeDateTime(message, previous)).toBeUndefined()
   })
 })

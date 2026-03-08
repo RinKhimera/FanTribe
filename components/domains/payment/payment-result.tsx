@@ -154,7 +154,9 @@ const STATE_CONFIG: Record<
 // Helpers
 // ---------------------------------------------------------------------------
 
-const derivePaymentState = (params: PaymentResultProps["params"]): PaymentState => {
+const derivePaymentState = (
+  params: PaymentResultProps["params"],
+): PaymentState => {
   if (params.status === "success") {
     return params.type === "tip" ? "success_tip" : "success_subscription"
   }
@@ -221,10 +223,7 @@ const ProviderIcon = ({ provider }: { provider: string }) => {
   }
 }
 
-const getCtaLabel = (
-  state: PaymentState,
-  username?: string,
-): string => {
+const getCtaLabel = (state: PaymentState, username?: string): string => {
   if (state === "failed_error") return "Retourner à l'accueil"
   return username
     ? `Retourner au profil de @${username}`
@@ -247,16 +246,15 @@ export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
     canFetch ? { providerTransactionId: params.transaction! } : "skip",
   )
   const isBackendLoading = canFetch && backendData === undefined
-  const hasDetails = backendData !== undefined && backendData !== null && backendData.found
+  const hasDetails =
+    backendData !== undefined && backendData !== null && backendData.found
 
   const ctaHref =
-    state === "failed_error" || !params.username
-      ? "/"
-      : `/${params.username}`
+    state === "failed_error" || !params.username ? "/" : `/${params.username}`
   const ctaText = getCtaLabel(state, params.username)
 
   return (
-    <main className="flex min-h-screen w-full items-center justify-center border-l border-r border-muted px-4 py-12">
+    <main className="border-muted flex min-h-screen w-full items-center justify-center border-r border-l px-4 py-12">
       <motion.div
         variants={containerVariants}
         initial="initial"
@@ -282,7 +280,7 @@ export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 0.06, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="absolute -right-10 -top-10 size-36 rounded-full border-2 border-current"
+              className="absolute -top-10 -right-10 size-36 rounded-full border-2 border-current"
               style={{ color: "var(--primary)" }}
             />
             <motion.div
@@ -311,10 +309,7 @@ export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
               {/* Pulsing ring */}
               <motion.div
                 variants={ringPulse}
-                className={cn(
-                  "absolute inset-0 rounded-full",
-                  config.iconBg,
-                )}
+                className={cn("absolute inset-0 rounded-full", config.iconBg)}
                 style={{ margin: "-8px" }}
               />
               {/* Icon circle */}
@@ -346,7 +341,7 @@ export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
             {/* Subtitle */}
             <motion.p
               variants={itemVariants}
-              className="-mt-2 max-w-xs text-base text-muted-foreground"
+              className="text-muted-foreground -mt-2 max-w-xs text-base"
             >
               {getSubtitle(state, params.reason, params.code)}
             </motion.p>
@@ -355,15 +350,15 @@ export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
             {(hasDetails || isBackendLoading) && (
               <motion.div
                 variants={detailsReveal}
-                className="w-full overflow-hidden rounded-xl border border-border/50 bg-muted/30 backdrop-blur-sm"
+                className="border-border/50 bg-muted/30 w-full overflow-hidden rounded-xl border backdrop-blur-sm"
               >
                 {isBackendLoading ? (
-                  <div className="flex items-center justify-center gap-2 px-5 py-4 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 px-5 py-4 text-sm">
                     <Loader2 className="size-4 animate-spin" />
                     Traitement en cours…
                   </div>
                 ) : hasDetails ? (
-                  <div className="divide-y divide-border/50 text-sm">
+                  <div className="divide-border/50 divide-y text-sm">
                     {/* Amount */}
                     <div className="flex items-center justify-between px-5 py-3">
                       <span className="text-muted-foreground">Montant</span>
@@ -430,7 +425,7 @@ export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
         {/* Decorative divider */}
         <motion.div
           variants={lineReveal}
-          className="mx-auto mt-6 h-px w-24 bg-linear-to-r from-transparent via-border to-transparent"
+          className="via-border mx-auto mt-6 h-px w-24 bg-linear-to-r from-transparent to-transparent"
         />
       </motion.div>
     </main>

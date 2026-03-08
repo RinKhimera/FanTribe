@@ -187,7 +187,7 @@ describe("creator-applications", () => {
       const applicant = t.withIdentity({ tokenIdentifier: "applicant_id" })
       const result = await applicant.mutation(
         api.creatorApplications.requestReapplication,
-        { userId }
+        { userId },
       )
 
       expect(result.canReapply).toBe(true)
@@ -234,7 +234,7 @@ describe("creator-applications", () => {
       const applicant = t.withIdentity({ tokenIdentifier: "applicant_id" })
       const result = await applicant.mutation(
         api.creatorApplications.requestReapplication,
-        { userId }
+        { userId },
       )
 
       expect(result.canReapply).toBe(false)
@@ -266,7 +266,7 @@ describe("creator-applications", () => {
               dateOfBirth: "1990-01-01",
               address: "123 Main St",
               whatsappNumber: "+237123456789",
-            mobileMoneyNumber: "+237123456789",
+              mobileMoneyNumber: "+237123456789",
             },
             applicationReason: "I want to be a creator",
             identityDocuments: [],
@@ -280,7 +280,7 @@ describe("creator-applications", () => {
       const applicant = t.withIdentity({ tokenIdentifier: "applicant_id" })
       const result = await applicant.mutation(
         api.creatorApplications.requestReapplication,
-        { userId }
+        { userId },
       )
 
       expect(result.canReapply).toBe(false)
@@ -338,9 +338,12 @@ describe("creator-applications", () => {
       })
 
       const applicant = t.withIdentity({ tokenIdentifier: "applicant_id" })
-      const app = await applicant.query(api.creatorApplications.getUserApplication, {
-        userId,
-      })
+      const app = await applicant.query(
+        api.creatorApplications.getUserApplication,
+        {
+          userId,
+        },
+      )
 
       expect(app?.status).toBe("pending")
       expect(app?.applicationReason).toBe("Second attempt")
@@ -413,7 +416,9 @@ describe("creator-applications", () => {
       })
 
       const admin = t.withIdentity({ tokenIdentifier: "admin_id" })
-      const applications = await admin.query(api.creatorApplications.getAllApplications)
+      const applications = await admin.query(
+        api.creatorApplications.getAllApplications,
+      )
 
       expect(applications).toHaveLength(1)
       expect(applications[0].user?.name).toBe("Applicant")
@@ -435,7 +440,7 @@ describe("creator-applications", () => {
 
       const user = t.withIdentity({ tokenIdentifier: "user_id" })
       await expect(
-        user.query(api.creatorApplications.getAllApplications)
+        user.query(api.creatorApplications.getAllApplications),
       ).rejects.toThrow("Unauthorized")
     })
   })
@@ -536,7 +541,7 @@ describe("creator-applications", () => {
       await expect(
         admin.mutation(api.creatorApplications.revokeCreatorStatus, {
           userId,
-        })
+        }),
       ).rejects.toThrow("L'utilisateur n'est pas un créateur")
     })
 
@@ -570,7 +575,7 @@ describe("creator-applications", () => {
       await expect(
         user.mutation(api.creatorApplications.revokeCreatorStatus, {
           userId: creatorId,
-        })
+        }),
       ).rejects.toThrow("Unauthorized")
     })
   })
@@ -626,7 +631,7 @@ describe("creator-applications", () => {
           applicationId: appId,
           decision: "rejected",
           adminNotes: "Changed my mind",
-        })
+        }),
       ).rejects.toThrow("Impossible de rejeter une candidature déjà approuvée")
     })
 

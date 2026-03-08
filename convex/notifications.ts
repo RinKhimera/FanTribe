@@ -7,7 +7,12 @@
 import { paginationOptsValidator } from "convex/server"
 import { v } from "convex/values"
 import { Doc, Id } from "./_generated/dataModel"
-import { internalMutation, mutation, query, QueryCtx } from "./_generated/server"
+import {
+  QueryCtx,
+  internalMutation,
+  mutation,
+  query,
+} from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
 import { createAppError } from "./lib/errors"
 import { createNotification } from "./lib/notifications"
@@ -77,18 +82,10 @@ async function enrichNotifications(
   ])
 
   // Create lookup maps
-  const actorMap = new Map(
-    actors.filter(Boolean).map((a) => [a!._id, a!]),
-  )
-  const postMap = new Map(
-    posts.filter(Boolean).map((p) => [p!._id, p!]),
-  )
-  const commentMap = new Map(
-    comments.filter(Boolean).map((c) => [c!._id, c!]),
-  )
-  const tipMap = new Map(
-    tips.filter(Boolean).map((t) => [t!._id, t!]),
-  )
+  const actorMap = new Map(actors.filter(Boolean).map((a) => [a!._id, a!]))
+  const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id, p!]))
+  const commentMap = new Map(comments.filter(Boolean).map((c) => [c!._id, c!]))
+  const tipMap = new Map(tips.filter(Boolean).map((t) => [t!._id, t!]))
 
   return notifications.map((n) => {
     const enrichedActors = n.actorIds
@@ -292,9 +289,7 @@ export const markAllAsRead = mutation({
       )
       .take(500)
 
-    await Promise.all(
-      unread.map((n) => ctx.db.patch(n._id, { isRead: true })),
-    )
+    await Promise.all(unread.map((n) => ctx.db.patch(n._id, { isRead: true })))
 
     return { count: unread.length }
   },

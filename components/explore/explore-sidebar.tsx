@@ -1,19 +1,12 @@
 "use client"
 
 import { useQuery } from "convex/react"
+import { Cookie, Crown, FileText, Heart, Shield, Users } from "lucide-react"
 import { motion } from "motion/react"
-import {
-  Crown,
-  FileText,
-  Shield,
-  Cookie,
-  Users,
-  Heart,
-} from "lucide-react"
 import Link from "next/link"
+import { FollowButton } from "@/components/domains/users/follow-button"
 import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { FollowButton } from "@/components/domains/users/follow-button"
 import { api } from "@/convex/_generated/api"
 import { cn } from "@/lib/utils"
 
@@ -60,10 +53,10 @@ const creatorItemVariants = {
 
 const SkeletonRow = () => (
   <div className="flex items-center gap-3 py-2">
-    <div className="size-10 shrink-0 animate-pulse rounded-full bg-muted/20" />
+    <div className="bg-muted/20 size-10 shrink-0 animate-pulse rounded-full" />
     <div className="flex-1 space-y-1.5">
-      <div className="h-3.5 w-24 animate-pulse rounded bg-muted/20" />
-      <div className="h-3 w-16 animate-pulse rounded bg-muted/20" />
+      <div className="bg-muted/20 h-3.5 w-24 animate-pulse rounded" />
+      <div className="bg-muted/20 h-3 w-16 animate-pulse rounded" />
     </div>
   </div>
 )
@@ -83,7 +76,7 @@ export const ExploreSidebar = () => {
       <motion.div variants={itemVariants}>
         <div className="glass-card overflow-hidden rounded-xl">
           {/* Header */}
-          <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
+          <div className="border-border/40 flex items-center gap-2 border-b px-4 py-3">
             <Crown className="size-4 text-[var(--gold-400)]" />
             <h3 className="text-sm font-semibold">Créateurs populaires</h3>
           </div>
@@ -99,7 +92,7 @@ export const ExploreSidebar = () => {
                 <SkeletonRow />
               </div>
             ) : popularCreators.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground py-4 text-center text-sm">
                 Aucun créateur pour le moment
               </p>
             ) : (
@@ -119,7 +112,7 @@ export const ExploreSidebar = () => {
                       <div
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-2 py-2",
-                          "transition-colors duration-200 hover:bg-muted/30",
+                          "hover:bg-muted/30 transition-colors duration-200",
                         )}
                       >
                         {/* Rank number */}
@@ -143,7 +136,7 @@ export const ExploreSidebar = () => {
                           href={`/${user.username}`}
                           className="flex min-w-0 flex-1 items-center gap-2.5"
                         >
-                          <Avatar className="size-9 ring-1 ring-border/50">
+                          <Avatar className="ring-border/50 size-9 ring-1">
                             <AvatarImage
                               src={user.image}
                               alt={user.name || ""}
@@ -156,12 +149,14 @@ export const ExploreSidebar = () => {
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1">
-                              <p className="truncate text-sm font-semibold leading-tight group-hover:text-primary">
+                              <p className="group-hover:text-primary truncate text-sm leading-tight font-semibold">
                                 {user.name || "Créateur"}
                               </p>
-                              <UserProfileBadgeInline accountType={user.accountType} />
+                              <UserProfileBadgeInline
+                                accountType={user.accountType}
+                              />
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="text-muted-foreground flex items-center gap-2 text-xs">
                               <span className="flex items-center gap-0.5">
                                 <Users className="size-3" />
                                 {followersCount}
@@ -192,7 +187,7 @@ export const ExploreSidebar = () => {
       {/* Legal Links */}
       <motion.div
         variants={itemVariants}
-        className="border-t border-border/40 pt-4"
+        className="border-border/40 border-t pt-4"
       >
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           {legalLinks.map((link) => {
@@ -203,8 +198,8 @@ export const ExploreSidebar = () => {
                 href={link.href}
                 className={cn(
                   "flex items-center gap-1.5",
-                  "text-xs text-muted-foreground",
-                  "transition-colors duration-200 hover:text-primary",
+                  "text-muted-foreground text-xs",
+                  "hover:text-primary transition-colors duration-200",
                 )}
               >
                 <Icon className="h-3 w-3" />

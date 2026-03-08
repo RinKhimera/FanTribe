@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
+  ZERO_DECIMAL_CURRENCIES,
   convertStripeAmount,
   isZeroDecimalCurrency,
-  ZERO_DECIMAL_CURRENCIES,
 } from "@/lib/formatters/currency"
 
 describe("isZeroDecimalCurrency", () => {

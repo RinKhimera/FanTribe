@@ -312,7 +312,13 @@ export const getUserPosts = query({
     isDone: v.boolean(),
     continueCursor: v.string(),
     splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+    pageStatus: v.optional(
+      v.union(
+        v.literal("SplitRecommended"),
+        v.literal("SplitRequired"),
+        v.null(),
+      ),
+    ),
   }),
   handler: async (ctx, args) => {
     const author = await ctx.db.get(args.authorId)
@@ -372,7 +378,13 @@ export const getUserPostsWithPinned = query({
     isDone: v.boolean(),
     continueCursor: v.string(),
     splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+    pageStatus: v.optional(
+      v.union(
+        v.literal("SplitRecommended"),
+        v.literal("SplitRequired"),
+        v.null(),
+      ),
+    ),
   }),
   handler: async (ctx, args) => {
     const author = await ctx.db.get(args.authorId)
@@ -395,7 +407,10 @@ export const getUserPostsWithPinned = query({
 
     // Helper pour filtrer les médias d'un post et normaliser
     const filterPostMedia = <
-      T extends { medias?: Array<{ type: string; url: string }>; visibility?: string },
+      T extends {
+        medias?: Array<{ type: string; url: string }>
+        visibility?: string
+      },
     >(
       post: T,
       isPinned: boolean,
@@ -459,11 +474,13 @@ export const getUserGallery = query({
     authorId: v.id("users"),
     limit: v.optional(v.number()),
   },
-  returns: v.array(v.object({
-    _id: v.string(),
-    media: postMediaValidator,
-    visibility: v.string(),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.string(),
+      media: postMediaValidator,
+      visibility: v.string(),
+    }),
+  ),
   handler: async (ctx, args) => {
     // Déterminer les droits d'accès une fois
     const currentUser = await getAuthenticatedUser(ctx, { optional: true })
@@ -494,7 +511,18 @@ export const getUserGallery = query({
 
     const galleryItems: Array<{
       _id: string
-      media: { type: "image" | "video"; url: string; mediaId: string; mimeType: string; fileName?: string; fileSize?: number; thumbnailUrl?: string; duration?: number; width?: number; height?: number }
+      media: {
+        type: "image" | "video"
+        url: string
+        mediaId: string
+        mimeType: string
+        fileName?: string
+        fileSize?: number
+        thumbnailUrl?: string
+        duration?: number
+        width?: number
+        height?: number
+      }
       visibility: string
     }> = []
 
@@ -521,39 +549,48 @@ export const getUserGallery = query({
 
 export const getAllPosts = query({
   args: {},
-  returns: v.array(v.object({
-    _id: v.id("posts"),
-    _creationTime: v.number(),
-    author: v.union(v.object({
-      _id: v.id("users"),
+  returns: v.array(
+    v.object({
+      _id: v.id("posts"),
       _creationTime: v.number(),
-      name: v.string(),
-      username: v.optional(v.string()),
-      email: v.string(),
-      image: v.string(),
-      imageBanner: v.optional(v.string()),
-      bio: v.optional(v.string()),
-      location: v.optional(v.string()),
-      socialLinks: v.optional(v.any()),
-      pinnedPostIds: v.optional(v.array(v.id("posts"))),
-      isOnline: v.boolean(),
-      activeSessions: v.optional(v.number()),
-      lastSeenAt: v.optional(v.number()),
-      tokenIdentifier: v.string(),
-      externalId: v.optional(v.string()),
-      accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
-      allowAdultContent: v.optional(v.boolean()),
-      personalInfo: v.optional(v.any()),
-      isBanned: v.optional(v.boolean()),
-      banDetails: v.optional(v.any()),
-      banHistory: v.optional(v.any()),
-      badges: v.optional(v.any()),
-    }), v.null()),
-    content: v.string(),
-    medias: v.array(postMediaValidator),
-    visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
-    isAdult: v.optional(v.boolean()),
-  })),
+      author: v.union(
+        v.object({
+          _id: v.id("users"),
+          _creationTime: v.number(),
+          name: v.string(),
+          username: v.optional(v.string()),
+          email: v.string(),
+          image: v.string(),
+          imageBanner: v.optional(v.string()),
+          bio: v.optional(v.string()),
+          location: v.optional(v.string()),
+          socialLinks: v.optional(v.any()),
+          pinnedPostIds: v.optional(v.array(v.id("posts"))),
+          isOnline: v.boolean(),
+          activeSessions: v.optional(v.number()),
+          lastSeenAt: v.optional(v.number()),
+          tokenIdentifier: v.string(),
+          externalId: v.optional(v.string()),
+          accountType: v.union(
+            v.literal("USER"),
+            v.literal("CREATOR"),
+            v.literal("SUPERUSER"),
+          ),
+          allowAdultContent: v.optional(v.boolean()),
+          personalInfo: v.optional(v.any()),
+          isBanned: v.optional(v.boolean()),
+          banDetails: v.optional(v.any()),
+          banHistory: v.optional(v.any()),
+          badges: v.optional(v.any()),
+        }),
+        v.null(),
+      ),
+      content: v.string(),
+      medias: v.array(postMediaValidator),
+      visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
+      isAdult: v.optional(v.boolean()),
+    }),
+  ),
   handler: async (ctx) => {
     const posts = await ctx.db.query("posts").order("desc").take(100)
 
@@ -585,7 +622,13 @@ export const getHomePosts = query({
     isDone: v.boolean(),
     continueCursor: v.string(),
     splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+    pageStatus: v.optional(
+      v.union(
+        v.literal("SplitRecommended"),
+        v.literal("SplitRequired"),
+        v.null(),
+      ),
+    ),
   }),
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx)
@@ -619,7 +662,11 @@ export const getHomePosts = query({
       if (blockedUserIds.has(post.author)) return false
 
       // Ne montrer que les posts des créateurs suivis (+ ses propres posts)
-      if (post.author !== currentUser._id && !followedCreatorIds.has(post.author)) return false
+      if (
+        post.author !== currentUser._id &&
+        !followedCreatorIds.has(post.author)
+      )
+        return false
 
       const isPostAdult = post.isAdult ?? false
 
@@ -680,7 +727,13 @@ export const getHomePostsPaginated = query({
     isDone: v.boolean(),
     continueCursor: v.string(),
     splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+    pageStatus: v.optional(
+      v.union(
+        v.literal("SplitRecommended"),
+        v.literal("SplitRequired"),
+        v.null(),
+      ),
+    ),
   }),
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx)
@@ -710,7 +763,11 @@ export const getHomePostsPaginated = query({
       if (blockedUserIds.has(post.author)) return false
 
       // Ne montrer que les posts des créateurs suivis (+ ses propres posts)
-      if (post.author !== currentUser._id && !followedCreatorIds.has(post.author)) return false
+      if (
+        post.author !== currentUser._id &&
+        !followedCreatorIds.has(post.author)
+      )
+        return false
 
       const isPostAdult = post.isAdult ?? false
 
@@ -768,9 +825,7 @@ export const getHomePostsPaginated = query({
 export const getExplorePostsPaginated = query({
   args: {
     paginationOpts: paginationOptsValidator,
-    sortBy: v.optional(
-      v.union(v.literal("recent"), v.literal("trending")),
-    ),
+    sortBy: v.optional(v.union(v.literal("recent"), v.literal("trending"))),
   },
   returns: v.object({
     page: v.array(v.any()),
@@ -853,7 +908,10 @@ export const getExplorePostsPaginated = query({
       const scores = enrichedPage.map(
         (_, i) => likeCounts[i] + commentCounts[i] * 2,
       )
-      const indexed = enrichedPage.map((post, i) => ({ post, score: scores[i] }))
+      const indexed = enrichedPage.map((post, i) => ({
+        post,
+        score: scores[i],
+      }))
       indexed.sort((a, b) => b.score - a.score)
       enrichedPage = indexed.map(({ post }) => post)
     }

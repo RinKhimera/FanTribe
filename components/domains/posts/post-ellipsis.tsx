@@ -83,7 +83,8 @@ export const PostEllipsis = ({
   const isFollowable =
     !isAuthor &&
     postAuthorAccountType &&
-    (postAuthorAccountType === "CREATOR" || postAuthorAccountType === "SUPERUSER")
+    (postAuthorAccountType === "CREATOR" ||
+      postAuthorAccountType === "SUPERUSER")
 
   const deletePost = useMutation(api.posts.deletePost)
   const togglePinnedPost = useMutation(api.users.togglePinnedPost)
@@ -380,14 +381,17 @@ export const PostEllipsis = ({
       </AlertDialog>
 
       {/* Dialogue de confirmation pour le remplacement du post épinglé */}
-      <AlertDialog open={showMaxPinnedDialog} onOpenChange={setShowMaxPinnedDialog}>
+      <AlertDialog
+        open={showMaxPinnedDialog}
+        onOpenChange={setShowMaxPinnedDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Limite atteinte</AlertDialogTitle>
             <AlertDialogDescription>
-              Vous avez déjà 3 publications épinglées. Si vous continuez,
-              la plus ancienne sera automatiquement désépinglée pour faire
-              place à cette publication.
+              Vous avez déjà 3 publications épinglées. Si vous continuez, la
+              plus ancienne sera automatiquement désépinglée pour faire place à
+              cette publication.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

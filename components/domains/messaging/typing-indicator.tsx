@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { motion, AnimatePresence } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -42,7 +42,7 @@ export const TypingIndicator = ({
           </Avatar>
 
           <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 backdrop-blur-sm">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {otherParticipant?.name ?? "Quelqu'un"} écrit
             </span>
             <div className="flex gap-0.5">

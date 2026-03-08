@@ -5,7 +5,10 @@ import { StepIntroduction } from "@/components/be-creator/step-introduction"
 
 vi.mock("motion/react", () => ({
   motion: {
-    div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
+    div: ({
+      children,
+      ...props
+    }: React.PropsWithChildren<Record<string, unknown>>) => (
       <div {...props}>{children}</div>
     ),
   },

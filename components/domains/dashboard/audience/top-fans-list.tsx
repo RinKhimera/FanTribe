@@ -33,7 +33,7 @@ export const TopFansList = ({ fans }: TopFansListProps) => {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Crown aria-hidden="true" className="text-amber-500 h-5 w-5" />
+          <Crown aria-hidden="true" className="h-5 w-5 text-amber-500" />
           <CardTitle className="text-base font-semibold">
             Top fans fidèles
           </CardTitle>
@@ -42,7 +42,10 @@ export const TopFansList = ({ fans }: TopFansListProps) => {
       <CardContent>
         {fans.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <Trophy aria-hidden="true" className="text-muted-foreground/40 mb-2 h-8 w-8" />
+            <Trophy
+              aria-hidden="true"
+              className="text-muted-foreground/40 mb-2 h-8 w-8"
+            />
             <p className="text-muted-foreground text-sm">
               Aucun fan avec renouvellements
             </p>
@@ -77,10 +80,7 @@ export const TopFansList = ({ fans }: TopFansListProps) => {
                   </Badge>
 
                   <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={fan.image}
-                      className="object-cover"
-                    />
+                    <AvatarImage src={fan.image} className="object-cover" />
                     <AvatarFallback className="bg-muted text-xs">
                       {fan.name?.charAt(0) ?? "?"}
                     </AvatarFallback>
@@ -103,7 +103,8 @@ export const TopFansList = ({ fans }: TopFansListProps) => {
                   </div>
 
                   <span className="text-muted-foreground shrink-0 text-xs">
-                    {fan.renewalCount} {pluralize(fan.renewalCount, "renouvellement")}
+                    {fan.renewalCount}{" "}
+                    {pluralize(fan.renewalCount, "renouvellement")}
                   </span>
                 </motion.div>
               )

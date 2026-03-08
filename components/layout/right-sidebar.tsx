@@ -39,7 +39,6 @@ export const RightSidebar = () => {
   // Routes sans sidebar droite
   const hiddenRoutes = new Set(["messages", "subscriptions", "dashboard"])
 
-
   // Routes réservées (non-username)
   const reserved = new Set([
     "",

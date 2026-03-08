@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
 import { Check, LucideIcon } from "lucide-react"
+import { motion } from "motion/react"
 import { stepperCircleVariants, stepperLineVariants } from "@/lib/animations"
 import { cn } from "@/lib/utils"
 
@@ -47,7 +47,7 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
                       "border-2 border-[var(--gold-400)] bg-[var(--gold-400)]/10",
                     !isActive &&
                       !isCompleted &&
-                      "border border-muted-foreground/30 bg-muted/50",
+                      "border-muted-foreground/30 bg-muted/50 border",
                   )}
                 >
                   {isCompleted ? (
@@ -79,7 +79,7 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
 
               {/* Progress line */}
               {!isLast && (
-                <div className="relative mx-2 h-0.5 flex-1 bg-muted/50 md:mx-4">
+                <div className="bg-muted/50 relative mx-2 h-0.5 flex-1 md:mx-4">
                   <motion.div
                     variants={stepperLineVariants}
                     initial="incomplete"

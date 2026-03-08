@@ -264,10 +264,13 @@ export default function CreatorApplicationsPage() {
                                       "shrink-0 text-[10px] font-semibold",
                                       (application.attemptNumber ?? 1) >= 3
                                         ? "border-red-500/30 bg-red-500/10 text-red-600"
-                                        : "border-orange-500/30 bg-orange-500/10 text-orange-600"
+                                        : "border-orange-500/30 bg-orange-500/10 text-orange-600",
                                     )}
                                   >
-                                    <RefreshCw className="mr-1 h-2.5 w-2.5" aria-hidden="true" />
+                                    <RefreshCw
+                                      className="mr-1 h-2.5 w-2.5"
+                                      aria-hidden="true"
+                                    />
                                     Tentative #{application.attemptNumber}
                                   </Badge>
                                 )}
@@ -293,7 +296,10 @@ export default function CreatorApplicationsPage() {
                               variant="outline"
                               className="border-orange-500/30 bg-orange-500/10 font-medium text-orange-600"
                             >
-                              <AlertTriangle className="mr-1 h-3 w-3" aria-hidden="true" />
+                              <AlertTriangle
+                                className="mr-1 h-3 w-3"
+                                aria-hidden="true"
+                              />
                               {application.riskFactors.length}
                             </Badge>
                           ) : (
@@ -304,13 +310,19 @@ export default function CreatorApplicationsPage() {
                         </TableCell>
                         <TableCell className="text-muted-foreground hidden text-sm md:table-cell">
                           <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                            <Calendar
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
                             {formatDate(application.submittedAt)}
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                            <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                            <FileText
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
                             {application.identityDocuments.length}
                           </div>
                         </TableCell>
@@ -324,7 +336,10 @@ export default function CreatorApplicationsPage() {
                               className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
                               aria-label="Voir la candidature"
                             >
-                              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                              <ChevronRight
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
                             </Button>
                           </Link>
                         </TableCell>
@@ -409,7 +424,10 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="bg-muted/50 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-        <FileText className="text-muted-foreground h-6 w-6" aria-hidden="true" />
+        <FileText
+          className="text-muted-foreground h-6 w-6"
+          aria-hidden="true"
+        />
       </div>
       <h3 className="mb-1 font-medium">Aucune candidature</h3>
       <p className="text-muted-foreground text-sm">

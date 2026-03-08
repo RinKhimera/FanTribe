@@ -14,6 +14,8 @@ interface ApplicationStepperProps {
   currentStep: number
 }
 
-export const ApplicationStepper = ({ currentStep }: ApplicationStepperProps) => (
+export const ApplicationStepper = ({
+  currentStep,
+}: ApplicationStepperProps) => (
   <Stepper steps={creatorSteps} currentStep={currentStep} />
 )

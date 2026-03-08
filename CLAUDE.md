@@ -3,6 +3,7 @@
 Creator-focused social platform for the African market (French-speaking). Creators share exclusive content with paying subscribers.
 
 > **Instruction routing**: Detailed rules live in `.claude/rules/`. When adding new patterns or updating existing ones, edit the appropriate rules file — NOT this root file. Route by topic:
+>
 > - Convex/backend → `.claude/rules/convex-patterns.md`
 > - Frontend/React/hooks → `.claude/rules/frontend-patterns.md`
 > - Performance → `.claude/rules/react-performance.md`
@@ -23,21 +24,21 @@ Creator-focused social platform for the African market (French-speaking). Creato
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `bun dev` | Start dev server (Turbopack) |
-| `bun run build` | Production build |
-| `bun run check` | TypeScript + ESLint check (zero warnings) |
-| `bun run lint` | ESLint (zero warnings) |
-| `bun run lint:fix` | ESLint auto-fix |
-| `bun run format` | Prettier format all files |
-| `bun run format:check` | Prettier check formatting |
-| `bun test` | All tests (frontend + convex) |
-| `bun run test:watch` | Watch mode |
-| `bun run test:convex` | Convex tests only |
-| `bun run test:coverage` | Coverage reports |
-| `bun run test:e2e` | Playwright E2E tests |
-| `bunx convex dev` | Start Convex dev + regenerate types |
+| Command                 | Description                               |
+| ----------------------- | ----------------------------------------- |
+| `bun dev`               | Start dev server (Turbopack)              |
+| `bun run build`         | Production build                          |
+| `bun run check`         | TypeScript + ESLint check (zero warnings) |
+| `bun run lint`          | ESLint (zero warnings)                    |
+| `bun run lint:fix`      | ESLint auto-fix                           |
+| `bun run format`        | Prettier format all files                 |
+| `bun run format:check`  | Prettier check formatting                 |
+| `bun test`              | All tests (frontend + convex)             |
+| `bun run test:watch`    | Watch mode                                |
+| `bun run test:convex`   | Convex tests only                         |
+| `bun run test:coverage` | Coverage reports                          |
+| `bun run test:e2e`      | Playwright E2E tests                      |
+| `bunx convex dev`       | Start Convex dev + regenerate types       |
 
 ## Architecture
 

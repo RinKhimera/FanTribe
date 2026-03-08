@@ -1,9 +1,9 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
 import { Compass } from "lucide-react"
-import { SuggestionSearchResults } from "@/components/shared/suggestions/suggestion-search-results"
+import { AnimatePresence, motion } from "motion/react"
 import { PageContainer } from "@/components/layout"
+import { SuggestionSearchResults } from "@/components/shared/suggestions/suggestion-search-results"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { ExploreFeed } from "./explore-feed"
 import { ExploreHeader } from "./explore-header"

@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      radix:
+        patterns:
+          - "@radix-ui/*"
+      clerk:
+        patterns:
+          - "@clerk/*"
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "@playwright/*"
+          - "vitest"
+          - "@vitest/*"
+          - "convex-test"
+          - "happy-dom"
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "tw-animate-css"
+          - "prettier-plugin-tailwindcss"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"

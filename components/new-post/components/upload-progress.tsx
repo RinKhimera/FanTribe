@@ -18,20 +18,20 @@ export const UploadProgress = ({
       {Object.entries(progress).map(([key, prog]) => (
         <div key={key} className="flex items-center gap-3">
           <div
-            className="h-2 flex-1 rounded-full bg-muted overflow-hidden"
+            className="bg-muted h-2 flex-1 overflow-hidden rounded-full"
             role="progressbar"
             aria-valuenow={prog}
             aria-valuemin={0}
             aria-valuemax={100}
           >
             <motion.div
-              className="h-full bg-primary rounded-full"
+              className="bg-primary h-full rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${prog}%` }}
               transition={{ duration: 0.3 }}
             />
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
+          <span className="text-muted-foreground w-10 text-right text-xs tabular-nums">
             {prog}%
           </span>
         </div>

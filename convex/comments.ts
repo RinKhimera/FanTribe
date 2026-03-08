@@ -5,8 +5,8 @@ import {
   createNotification,
   removeActorFromNotification,
 } from "./lib/notifications"
-import { hasActiveSubscription } from "./lib/subscriptions"
 import { rateLimiter } from "./lib/rateLimiter"
+import { hasActiveSubscription } from "./lib/subscriptions"
 import { postDocValidator, userDocValidator } from "./lib/validators"
 
 export const addComment = mutation({
@@ -20,7 +20,8 @@ export const addComment = mutation({
     await rateLimiter.limit(ctx, "addComment", { key: user._id, throws: true })
 
     if (!args.content.trim()) throw new ConvexError("Empty content")
-    if (args.content.length > 1000) throw new ConvexError("Commentaire trop long (max 1000 caractères)")
+    if (args.content.length > 1000)
+      throw new ConvexError("Commentaire trop long (max 1000 caractères)")
 
     const post = await ctx.db.get(args.postId)
     if (!post) throw new ConvexError("Post not found")
@@ -28,9 +29,16 @@ export const addComment = mutation({
     // Vérifier accès si post subscribers_only
     if (post.visibility === "subscribers_only" && post.author !== user._id) {
       if (user.accountType !== "SUPERUSER") {
-        const hasAccess = await hasActiveSubscription(ctx, user._id, post.author, "content_access")
+        const hasAccess = await hasActiveSubscription(
+          ctx,
+          user._id,
+          post.author,
+          "content_access",
+        )
         if (!hasAccess) {
-          throw new ConvexError("Vous devez être abonné pour commenter ce contenu")
+          throw new ConvexError(
+            "Vous devez être abonné pour commenter ce contenu",
+          )
         }
       }
     }
@@ -70,7 +78,8 @@ export const updateComment = mutation({
     }
 
     if (!args.content.trim()) throw new ConvexError("Empty content")
-    if (args.content.length > 1000) throw new ConvexError("Commentaire trop long (max 1000 caractères)")
+    if (args.content.length > 1000)
+      throw new ConvexError("Commentaire trop long (max 1000 caractères)")
 
     await ctx.db.patch(args.commentId, {
       content: args.content.trim(),

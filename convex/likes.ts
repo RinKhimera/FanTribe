@@ -193,9 +193,7 @@ export const getUserLikedPostsPaginated = query({
     const posts = await Promise.all(postIds.map((id) => ctx.db.get(id)))
 
     // Build post map (some may be deleted)
-    const postMap = new Map(
-      postIds.map((id, i) => [id, posts[i]]),
-    )
+    const postMap = new Map(postIds.map((id, i) => [id, posts[i]]))
 
     // Batch fetch authors from non-null posts
     const validPosts = posts.filter((p): p is NonNullable<typeof p> => !!p)

@@ -72,17 +72,18 @@ export const TipDialog = ({
     | { type: "preset"; value: number }
     | { type: "custom"; input: string }
 
-  const [amount, setAmount] = useState<TipAmount>({ type: "preset", value: 1000 })
+  const [amount, setAmount] = useState<TipAmount>({
+    type: "preset",
+    value: 1000,
+  })
   const [tipMessage, setTipMessage] = useState("")
 
-  const resolvedAmount = amount.type === "preset"
-    ? amount.value
-    : parseInt(amount.input, 10) || 0
+  const resolvedAmount =
+    amount.type === "preset" ? amount.value : parseInt(amount.input, 10) || 0
   const isCustom = amount.type === "custom"
   const isValidAmount = resolvedAmount >= TIP_MIN && resolvedAmount <= TIP_MAX
 
-  const { processPayment, isPending: isCinetpayPending } =
-    useCinetpayPayment()
+  const { processPayment, isPending: isCinetpayPending } = useCinetpayPayment()
   const [isStripePending, startStripeTransition] = useTransition()
 
   const handleOpenChange = (open: boolean) => {
@@ -152,13 +153,12 @@ export const TipDialog = ({
 
   const isPending = isCinetpayPending || isStripePending
 
-  const formatXAF = (n: number) =>
-    new Intl.NumberFormat("fr-FR").format(n)
+  const formatXAF = (n: number) => new Intl.NumberFormat("fr-FR").format(n)
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-sm overflow-hidden border-amber-500/15 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
+      <DialogContent className="bg-background/95 max-w-sm overflow-hidden border-amber-500/15 p-0 shadow-2xl backdrop-blur-xl">
         {/* Header */}
         <div className="relative px-6 pt-6 pb-2 text-center">
           {/* Ambient glow */}
@@ -171,7 +171,7 @@ export const TipDialog = ({
             className="relative mx-auto"
           >
             <div className="relative inline-block">
-              <Avatar className="mx-auto size-20 ring-2 ring-amber-500/30 ring-offset-2 ring-offset-background">
+              <Avatar className="ring-offset-background mx-auto size-20 ring-2 ring-amber-500/30 ring-offset-2">
                 <AvatarImage
                   src={creator.image}
                   className="object-cover"
@@ -224,7 +224,7 @@ export const TipDialog = ({
                   "rounded-xl border p-2.5 text-center text-sm font-semibold transition-colors",
                   amount.type === "preset" && amount.value === preset
                     ? "border-amber-500/60 bg-amber-500/10 text-amber-500 shadow-sm shadow-amber-500/10"
-                    : "border-white/10 bg-white/5 text-muted-foreground hover:border-amber-500/30 hover:text-foreground",
+                    : "text-muted-foreground hover:text-foreground border-white/10 bg-white/5 hover:border-amber-500/30",
                 )}
               >
                 {formatXAF(preset)}
@@ -238,7 +238,7 @@ export const TipDialog = ({
                 "rounded-xl border p-2.5 text-center text-sm font-semibold transition-colors",
                 isCustom
                   ? "border-amber-500/60 bg-amber-500/10 text-amber-500 shadow-sm shadow-amber-500/10"
-                  : "border-white/10 bg-white/5 text-muted-foreground hover:border-amber-500/30 hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground border-white/10 bg-white/5 hover:border-amber-500/30",
               )}
             >
               Autre
@@ -259,7 +259,9 @@ export const TipDialog = ({
                     type="number"
                     placeholder={`Min. ${formatXAF(TIP_MIN)} XAF`}
                     value={amount.type === "custom" ? amount.input : ""}
-                    onChange={(e) => setAmount({ type: "custom", input: e.target.value })}
+                    onChange={(e) =>
+                      setAmount({ type: "custom", input: e.target.value })
+                    }
                     min={TIP_MIN}
                     max={TIP_MAX}
                     className="pr-14 text-center text-lg font-semibold"
@@ -272,11 +274,13 @@ export const TipDialog = ({
                     XAF
                   </span>
                 </div>
-                {amount.type === "custom" && amount.input && parseInt(amount.input) < TIP_MIN && (
-                  <p className="text-destructive mt-1.5 text-xs">
-                    Minimum {formatXAF(TIP_MIN)} XAF
-                  </p>
-                )}
+                {amount.type === "custom" &&
+                  amount.input &&
+                  parseInt(amount.input) < TIP_MIN && (
+                    <p className="text-destructive mt-1.5 text-xs">
+                      Minimum {formatXAF(TIP_MIN)} XAF
+                    </p>
+                  )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -321,10 +325,7 @@ export const TipDialog = ({
 
           {/* Payment buttons */}
           <div className="space-y-2.5">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 className={cn(
                   "w-full rounded-xl bg-gradient-to-r from-amber-500 via-amber-500/95 to-orange-500 text-base font-semibold",
@@ -349,10 +350,7 @@ export const TipDialog = ({
               </Button>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <Button
                 variant="outline"
                 className={cn(

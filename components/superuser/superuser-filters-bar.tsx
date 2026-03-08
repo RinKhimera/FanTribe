@@ -139,7 +139,7 @@ export function SuperuserFiltersBar({
             <Badge
               key={`${pill.filterKey}-${pill.value}-${idx}`}
               variant="secondary"
-              className="group gap-1 py-1 pl-2 pr-1 text-xs"
+              className="group gap-1 py-1 pr-1 pl-2 text-xs"
             >
               <span className="text-muted-foreground font-normal">
                 {pill.filterLabel}:
@@ -170,7 +170,7 @@ function FilterDropdown({
 }) {
   const isMulti = filter.type === "multi-select"
   const selectedValues = isMulti
-    ? (value as string[]) ?? []
+    ? ((value as string[]) ?? [])
     : value
       ? [value as string]
       : []
@@ -227,9 +227,7 @@ function FilterDropdown({
               onClick={() => onChange(option.value)}
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                isSelected
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-muted",
+                isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted",
               )}
             >
               {isMulti && (

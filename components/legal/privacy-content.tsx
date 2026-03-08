@@ -1,28 +1,28 @@
 "use client"
 
 import {
-  Shield,
-  Database,
-  Eye,
-  Lock,
-  UserCog,
-  Cookie,
-  Share2,
-  Clock,
-  Globe,
   Baby,
   Bell,
+  Clock,
+  Cookie,
+  Database,
+  Eye,
+  Globe,
+  Lock,
   Mail,
+  Share2,
+  Shield,
+  UserCog,
 } from "lucide-react"
+import { LegalPageContent } from "./legal-page-content"
 import {
+  LegalHighlight,
+  LegalLink,
+  LegalList,
   LegalSection,
   LegalSubSection,
   LegalText,
-  LegalList,
-  LegalHighlight,
-  LegalLink,
 } from "./legal-section"
-import { LegalPageContent } from "./legal-page-content"
 
 const quickLinks = [
   {
@@ -155,9 +155,7 @@ export const PrivacyContent = () => {
         </LegalSubSection>
 
         <LegalSubSection title="3.2 Partage avec des tiers">
-          <LegalText>
-            Nous pouvons partager vos informations avec :
-          </LegalText>
+          <LegalText>Nous pouvons partager vos informations avec :</LegalText>
           <LegalList
             items={[
               <>
@@ -172,7 +170,9 @@ export const PrivacyContent = () => {
                 si requis par la loi ou pour protéger nos droits
               </>,
               <>
-                <strong className="text-foreground">Autres utilisateurs :</strong>{" "}
+                <strong className="text-foreground">
+                  Autres utilisateurs :
+                </strong>{" "}
                 selon vos paramètres de confidentialité
               </>,
             ]}
@@ -190,11 +190,7 @@ export const PrivacyContent = () => {
         </LegalSubSection>
       </LegalSection>
 
-      <LegalSection
-        id="section-4"
-        icon={Lock}
-        title="4. Sécurité des données"
-      >
+      <LegalSection id="section-4" icon={Lock} title="4. Sécurité des données">
         <LegalText>
           Nous mettons en œuvre des mesures de sécurité techniques et
           organisationnelles pour protéger vos données :
@@ -266,9 +262,7 @@ export const PrivacyContent = () => {
               vous opposer à certains traitements
             </>,
             <>
-              <strong className="text-foreground">
-                Droit de limitation :
-              </strong>{" "}
+              <strong className="text-foreground">Droit de limitation :</strong>{" "}
               limiter le traitement de vos données
             </>,
           ]}
@@ -364,7 +358,7 @@ export const PrivacyContent = () => {
         <LegalHighlight variant="info">
           <div className="space-y-2">
             <LegalText>
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 Email confidentialité :
               </span>{" "}
               <LegalLink href="mailto:privacy@fantribe.com">
@@ -372,7 +366,7 @@ export const PrivacyContent = () => {
               </LegalLink>
             </LegalText>
             <LegalText>
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 Support général :
               </span>{" "}
               <LegalLink href="mailto:support@fantribe.com">

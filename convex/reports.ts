@@ -31,7 +31,10 @@ export const createReport = mutation({
   }),
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx)
-    await rateLimiter.limit(ctx, "createReport", { key: currentUser._id, throws: true })
+    await rateLimiter.limit(ctx, "createReport", {
+      key: currentUser._id,
+      throws: true,
+    })
 
     // Vérifier qu'il y a soit un utilisateur, soit un post, soit un commentaire signalé
     if (
@@ -137,44 +140,50 @@ export const createReport = mutation({
 // Récupérer tous les signalements (Admin seulement)
 export const getAllReports = query({
   args: {},
-  returns: v.array(v.object({
-    _id: v.id("reports"),
-    _creationTime: v.number(),
-    reporterId: v.id("users"),
-    reportedUserId: v.optional(v.id("users")),
-    reportedPostId: v.optional(v.id("posts")),
-    reportedCommentId: v.optional(v.id("comments")),
-    type: v.union(v.literal("user"), v.literal("post"), v.literal("comment")),
-    reason: v.union(
-      v.literal("spam"),
-      v.literal("harassment"),
-      v.literal("inappropriate_content"),
-      v.literal("fake_account"),
-      v.literal("copyright"),
-      v.literal("violence"),
-      v.literal("hate_speech"),
-      v.literal("other"),
-    ),
-    description: v.optional(v.string()),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("reviewing"),
-      v.literal("resolved"),
-      v.literal("rejected"),
-    ),
-    resolutionAction: v.optional(
-      v.union(v.literal("banned"), v.literal("content_deleted"), v.literal("dismissed")),
-    ),
-    adminNotes: v.optional(v.string()),
-    reviewedBy: v.optional(v.id("users")),
-    reviewedAt: v.optional(v.number()),
-    createdAt: v.number(),
-    reporter: v.any(),
-    reportedUser: v.any(),
-    reportedPost: v.any(),
-    reportedComment: v.any(),
-    reviewedByUser: v.any(),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.id("reports"),
+      _creationTime: v.number(),
+      reporterId: v.id("users"),
+      reportedUserId: v.optional(v.id("users")),
+      reportedPostId: v.optional(v.id("posts")),
+      reportedCommentId: v.optional(v.id("comments")),
+      type: v.union(v.literal("user"), v.literal("post"), v.literal("comment")),
+      reason: v.union(
+        v.literal("spam"),
+        v.literal("harassment"),
+        v.literal("inappropriate_content"),
+        v.literal("fake_account"),
+        v.literal("copyright"),
+        v.literal("violence"),
+        v.literal("hate_speech"),
+        v.literal("other"),
+      ),
+      description: v.optional(v.string()),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("reviewing"),
+        v.literal("resolved"),
+        v.literal("rejected"),
+      ),
+      resolutionAction: v.optional(
+        v.union(
+          v.literal("banned"),
+          v.literal("content_deleted"),
+          v.literal("dismissed"),
+        ),
+      ),
+      adminNotes: v.optional(v.string()),
+      reviewedBy: v.optional(v.id("users")),
+      reviewedAt: v.optional(v.number()),
+      createdAt: v.number(),
+      reporter: v.any(),
+      reportedUser: v.any(),
+      reportedPost: v.any(),
+      reportedComment: v.any(),
+      reviewedByUser: v.any(),
+    }),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
@@ -216,17 +225,13 @@ export const getAllReports = query({
 
     // Batch fetch en parallèle
     const [reporters, users, posts, comments, reviewers] = await Promise.all([
-      Promise.all(
-        [...reporterIds].map((id) => ctx.db.get(id as Id<"users">)),
-      ),
+      Promise.all([...reporterIds].map((id) => ctx.db.get(id as Id<"users">))),
       Promise.all([...userIds].map((id) => ctx.db.get(id as Id<"users">))),
       Promise.all([...postIds].map((id) => ctx.db.get(id as Id<"posts">))),
       Promise.all(
         [...commentIds].map((id) => ctx.db.get(id as Id<"comments">)),
       ),
-      Promise.all(
-        [...reviewerIds].map((id) => ctx.db.get(id as Id<"users">)),
-      ),
+      Promise.all([...reviewerIds].map((id) => ctx.db.get(id as Id<"users">))),
     ])
 
     // Créer les maps pour O(1) lookup
@@ -235,7 +240,9 @@ export const getAllReports = query({
     )
     const userMap = new Map([...userIds].map((id, i) => [id, users[i]]))
     const postMap = new Map([...postIds].map((id, i) => [id, posts[i]]))
-    const commentMap = new Map([...commentIds].map((id, i) => [id, comments[i]]))
+    const commentMap = new Map(
+      [...commentIds].map((id, i) => [id, comments[i]]),
+    )
     const reviewerMap = new Map(
       [...reviewerIds].map((id, i) => [id, reviewers[i]]),
     )
@@ -428,7 +435,11 @@ export const getReportById = query({
         v.literal("rejected"),
       ),
       resolutionAction: v.optional(
-        v.union(v.literal("banned"), v.literal("content_deleted"), v.literal("dismissed")),
+        v.union(
+          v.literal("banned"),
+          v.literal("content_deleted"),
+          v.literal("dismissed"),
+        ),
       ),
       adminNotes: v.optional(v.string()),
       reviewedBy: v.optional(v.id("users")),
@@ -622,28 +633,34 @@ export const getReportHistoryForUser = query({
       userReports: v.number(),
       postReports: v.number(),
       commentReports: v.number(),
-      recentReports: v.array(v.object({
-        _id: v.id("reports"),
-        type: v.union(v.literal("user"), v.literal("post"), v.literal("comment")),
-        reason: v.union(
-          v.literal("spam"),
-          v.literal("harassment"),
-          v.literal("inappropriate_content"),
-          v.literal("fake_account"),
-          v.literal("copyright"),
-          v.literal("violence"),
-          v.literal("hate_speech"),
-          v.literal("other"),
-        ),
-        status: v.union(
-          v.literal("pending"),
-          v.literal("reviewing"),
-          v.literal("resolved"),
-          v.literal("rejected"),
-        ),
-        createdAt: v.number(),
-        reporterName: v.string(),
-      })),
+      recentReports: v.array(
+        v.object({
+          _id: v.id("reports"),
+          type: v.union(
+            v.literal("user"),
+            v.literal("post"),
+            v.literal("comment"),
+          ),
+          reason: v.union(
+            v.literal("spam"),
+            v.literal("harassment"),
+            v.literal("inappropriate_content"),
+            v.literal("fake_account"),
+            v.literal("copyright"),
+            v.literal("violence"),
+            v.literal("hate_speech"),
+            v.literal("other"),
+          ),
+          status: v.union(
+            v.literal("pending"),
+            v.literal("reviewing"),
+            v.literal("resolved"),
+            v.literal("rejected"),
+          ),
+          createdAt: v.number(),
+          reporterName: v.string(),
+        }),
+      ),
       isRecidivist: v.boolean(),
     }),
     v.null(),

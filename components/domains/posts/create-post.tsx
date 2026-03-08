@@ -30,9 +30,9 @@ export const CreatePost = ({
     <div
       className={cn(
         "relative cursor-pointer max-sm:hidden",
-        "mx-4 my-4 p-5 rounded-2xl",
+        "mx-4 my-4 rounded-2xl p-5",
         "glass-premium",
-        "border border-primary/10",
+        "border-primary/10 border",
         "hover:border-primary/25 transition-[border-color,box-shadow] duration-300",
         "hover:shadow-[0_4px_24px_color-mix(in_oklch,var(--primary)_25%,transparent)]",
       )}
@@ -54,8 +54,8 @@ export const CreatePost = ({
             placeholder="Partager une publication…"
             className={cn(
               "w-full cursor-pointer resize-none border-none bg-transparent",
-              "text-lg placeholder:text-muted-foreground/50",
-              "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
+              "placeholder:text-muted-foreground/50 text-lg",
+              "focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-hidden",
             )}
             onClick={(e) => {
               e.stopPropagation()
@@ -67,7 +67,7 @@ export const CreatePost = ({
           />
 
           {/* Divider */}
-          <div className="h-px bg-border my-4" />
+          <div className="bg-border my-4 h-px" />
 
           <div className="flex items-center justify-between">
             {currentUser !== undefined && (
@@ -76,7 +76,7 @@ export const CreatePost = ({
                 size="icon"
                 variant="ghost"
                 className={cn(
-                  "rounded-full h-10 w-10",
+                  "h-10 w-10 rounded-full",
                   "hover:bg-primary/10 hover:text-primary",
                   "transition-colors duration-200",
                 )}
@@ -91,7 +91,7 @@ export const CreatePost = ({
 
             <Button
               className={cn(
-                "rounded-full px-6 h-10",
+                "h-10 rounded-full px-6",
                 "font-semibold tracking-wide",
               )}
               onClick={(e) => {
@@ -100,7 +100,7 @@ export const CreatePost = ({
               }}
               type="button"
             >
-              <Sparkles className="size-4 mr-2" />
+              <Sparkles className="mr-2 size-4" />
               Publier
             </Button>
           </div>

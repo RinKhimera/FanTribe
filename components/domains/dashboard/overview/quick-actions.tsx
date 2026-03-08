@@ -1,8 +1,8 @@
 "use client"
 
 import { Mail, PenLine, Users } from "lucide-react"
-import Link from "next/link"
 import { motion } from "motion/react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -25,31 +25,19 @@ export const QuickActions = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Button
-            asChild
-            variant="outline"
-            className="w-full justify-start"
-          >
+          <Button asChild variant="outline" className="w-full justify-start">
             <Link href="/new-post">
               <PenLine className="mr-2 h-4 w-4" />
               Créer un post
             </Link>
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full justify-start"
-          >
+          <Button asChild variant="outline" className="w-full justify-start">
             <Link href="/messages">
               <Mail className="mr-2 h-4 w-4" />
               Voir les messages
             </Link>
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full justify-start"
-          >
+          <Button asChild variant="outline" className="w-full justify-start">
             <Link href="/dashboard/audience">
               <Users className="mr-2 h-4 w-4" />
               Gérer les abonnés

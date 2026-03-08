@@ -1,13 +1,13 @@
 "use client"
 
-import { motion } from "motion/react"
 import { Check, Crown, LoaderCircle } from "lucide-react"
+import { motion } from "motion/react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Doc } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
-import { SubscriptionUnified, SubscriptionType } from "./subscription-unified"
+import { SubscriptionType, SubscriptionUnified } from "./subscription-unified"
 
 type SubscriptionStatus = {
   status: "pending" | "active" | "canceled" | "expired"
@@ -101,7 +101,8 @@ export const SubscriptionButton = ({
   const handleClick = () => {
     if (state === "pending") {
       toast.info("Votre abonnement est en attente de validation", {
-        description: "Vous recevrez une notification une fois le paiement confirmé",
+        description:
+          "Vous recevrez une notification une fois le paiement confirmé",
       })
       return
     }
@@ -111,6 +112,7 @@ export const SubscriptionButton = ({
   return (
     <>
       <motion.div
+        data-testid="subscription-button"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
@@ -125,9 +127,9 @@ export const SubscriptionButton = ({
               onClick={handleClick}
               className={cn(
                 "relative w-full overflow-hidden rounded-2xl px-6 py-6 text-lg font-semibold",
-                "bg-gradient-to-r from-primary via-primary/95 to-primary/85",
-                "shadow-lg shadow-primary/25",
-                "transition-shadow duration-300 hover:shadow-xl hover:shadow-primary/35",
+                "from-primary via-primary/95 to-primary/85 bg-gradient-to-r",
+                "shadow-primary/25 shadow-lg",
+                "hover:shadow-primary/35 transition-shadow duration-300 hover:shadow-xl",
                 className,
               )}
             >
@@ -166,14 +168,14 @@ export const SubscriptionButton = ({
               variant="outline"
               className={cn(
                 "relative w-full overflow-hidden rounded-full px-6 py-6 text-lg font-semibold",
-                "border-2 border-primary/40 bg-primary/5 backdrop-blur-sm",
-                "transition-colors duration-300 hover:border-primary/60 hover:bg-primary/10",
+                "border-primary/40 bg-primary/5 border-2 backdrop-blur-sm",
+                "hover:border-primary/60 hover:bg-primary/10 transition-colors duration-300",
                 className,
               )}
             >
               {/* Subtle glow pulse */}
               <motion.div
-                className="absolute inset-0 rounded-full bg-primary/10"
+                className="bg-primary/10 absolute inset-0 rounded-full"
                 animate={{
                   opacity: [0.3, 0.6, 0.3],
                 }}
@@ -185,11 +187,14 @@ export const SubscriptionButton = ({
               />
 
               <div className="relative flex w-full items-center justify-center gap-2.5">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-                  <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                <div className="bg-primary flex h-5 w-5 items-center justify-center rounded-full">
+                  <Check
+                    className="text-primary-foreground h-3 w-3"
+                    aria-hidden="true"
+                  />
                 </div>
                 <span>{config.text}</span>
-                <Crown className="h-4 w-4 text-primary/70" aria-hidden="true" />
+                <Crown className="text-primary/70 h-4 w-4" aria-hidden="true" />
               </div>
             </Button>
           </motion.div>
@@ -202,13 +207,16 @@ export const SubscriptionButton = ({
             disabled
             className={cn(
               "w-full cursor-wait rounded-full px-6 py-6 text-lg font-semibold",
-              "border-2 border-muted bg-muted/30 backdrop-blur-sm",
+              "border-muted bg-muted/30 border-2 backdrop-blur-sm",
               "text-muted-foreground",
               className,
             )}
           >
             <div className="flex w-full items-center justify-center gap-2.5">
-              <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+              <LoaderCircle
+                className="h-5 w-5 animate-spin"
+                aria-hidden="true"
+              />
               <span>{config.text}</span>
             </div>
           </Button>
@@ -225,8 +233,8 @@ export const SubscriptionButton = ({
               variant="outline"
               className={cn(
                 "relative w-full overflow-hidden rounded-full px-6 py-6 text-lg font-semibold",
-                "border-2 border-primary bg-transparent",
-                "text-primary transition-colors duration-300 hover:bg-primary/10",
+                "border-primary border-2 bg-transparent",
+                "text-primary hover:bg-primary/10 transition-colors duration-300",
                 className,
               )}
             >

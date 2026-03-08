@@ -3,12 +3,8 @@
 import { UserProfile } from "@clerk/nextjs"
 import { ChevronRight, Link2, Mail, User } from "lucide-react"
 import { useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { FormSection } from "@/components/shared/profile-form/form-section"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { VisuallyHidden } from "@/components/ui/visually-hidden"
 import { cn } from "@/lib/utils"
 
@@ -23,7 +19,8 @@ const profileSections = [
   {
     icon: Mail,
     label: "Adresses e-mail",
-    description: "Ajoutez ou supprimez des adresses e-mail liées à votre compte",
+    description:
+      "Ajoutez ou supprimez des adresses e-mail liées à votre compte",
     iconColor: "text-emerald-500",
     iconBg: "bg-emerald-500/10",
   },
@@ -46,7 +43,7 @@ export default function AccountProfilePage() {
         title="Informations personnelles"
         delay={0}
       >
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-muted-foreground text-sm leading-relaxed">
           Gérez votre profil, vos adresses e-mail et vos comptes connectés
           depuis votre espace Clerk.
         </p>
@@ -60,10 +57,10 @@ export default function AccountProfilePage() {
                 type="button"
                 onClick={() => setIsClerkDialogOpen(true)}
                 className={cn(
-                  "w-full flex items-center gap-4 p-4 rounded-xl",
+                  "flex w-full items-center gap-4 rounded-xl p-4",
                   "border transition-all duration-300",
-                  "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary",
-                  "cursor-pointer group",
+                  "hover:bg-muted/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                  "group cursor-pointer",
                 )}
               >
                 <div
@@ -75,14 +72,14 @@ export default function AccountProfilePage() {
                   <Icon className={cn("size-5", section.iconColor)} />
                 </div>
 
-                <div className="text-left min-w-0 flex-1">
+                <div className="min-w-0 flex-1 text-left">
                   <p className="font-medium">{section.label}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     {section.description}
                   </p>
                 </div>
 
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground/50 transition-transform duration-300 group-hover:translate-x-0.5" />
+                <ChevronRight className="text-muted-foreground/50 size-4 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
               </button>
             )
           })}
@@ -96,7 +93,7 @@ export default function AccountProfilePage() {
           </VisuallyHidden>
 
           {/* Decorative gradient header */}
-          <div className="absolute inset-x-0 top-0 h-32 bg-linear-to-b from-primary/5 via-primary/3 to-transparent pointer-events-none" />
+          <div className="from-primary/5 via-primary/3 pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b to-transparent" />
 
           <div className="relative">
             <UserProfile

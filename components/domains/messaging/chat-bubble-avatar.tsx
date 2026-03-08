@@ -16,7 +16,7 @@ export const ChatBubbleAvatar = ({ message }: ChatBubbleAvatarProps) => {
         alt={message.sender.name || "Profile image"}
       />
       <AvatarFallback className="h-8 w-8">
-        <div className="h-full w-full animate-pulse rounded-full bg-muted" />
+        <div className="bg-muted h-full w-full animate-pulse rounded-full" />
       </AvatarFallback>
     </Avatar>
   )

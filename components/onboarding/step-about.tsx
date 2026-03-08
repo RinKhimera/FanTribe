@@ -1,7 +1,6 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { AnimatePresence, motion } from "motion/react"
 import {
   AlertCircle,
   ArrowRight,
@@ -14,6 +13,7 @@ import {
   SkipForward,
   Trash2,
 } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { useCallback } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { FormSection } from "@/components/shared/profile-form/form-section"
@@ -38,8 +38,8 @@ import {
   normalizeUrl,
 } from "@/lib/social-links"
 import { PLATFORM_CONFIG } from "@/lib/social-links/platform-config"
-import { onboardingStep2Schema, OnboardingStep2Data } from "@/schemas/profile"
 import { cn } from "@/lib/utils"
+import { OnboardingStep2Data, onboardingStep2Schema } from "@/schemas/profile"
 
 interface StepAboutProps {
   currentUser: Doc<"users">
@@ -85,18 +85,23 @@ export const StepAbout = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
         {/* About section */}
-        <FormSection icon={<Globe className="size-4" />} title="À propos" delay={0}>
+        <FormSection
+          icon={<Globe className="size-4" />}
+          title="À propos"
+          delay={0}
+        >
           {/* Bio */}
           <FormField
             control={form.control}
             name="bio"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+                <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
                   Bio
-                  <span className="text-muted-foreground/60 ml-1">(optionnel)</span>
+                  <span className="text-muted-foreground/60 ml-1">
+                    (optionnel)
+                  </span>
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -119,9 +124,11 @@ export const StepAbout = ({
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+                <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
                   Localisation
-                  <span className="text-muted-foreground/60 ml-1">(optionnel)</span>
+                  <span className="text-muted-foreground/60 ml-1">
+                    (optionnel)
+                  </span>
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
@@ -141,9 +148,14 @@ export const StepAbout = ({
         </FormSection>
 
         {/* Social links */}
-        <FormSection icon={<Link2 className="size-4" />} title="Liens sociaux" delay={0.1}>
+        <FormSection
+          icon={<Link2 className="size-4" />}
+          title="Liens sociaux"
+          delay={0.1}
+        >
           <FormDescription className="text-muted-foreground text-xs">
-            Ajoutez jusqu&apos;à 5 liens vers vos réseaux sociaux ({fields.length}/5)
+            Ajoutez jusqu&apos;à 5 liens vers vos réseaux sociaux (
+            {fields.length}/5)
           </FormDescription>
 
           <div className="space-y-3">
@@ -187,7 +199,7 @@ export const StepAbout = ({
             variant="ghost"
             onClick={onSkip}
             disabled={isSubmitting}
-            className="gap-2 text-muted-foreground"
+            className="text-muted-foreground gap-2"
           >
             <SkipForward className="size-4" />
             Passer cette étape
@@ -196,7 +208,7 @@ export const StepAbout = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn-premium flex cursor-pointer items-center gap-2 rounded-xl px-8 py-2.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+            className="btn-premium flex cursor-pointer items-center gap-2 rounded-xl px-8 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? (
               <>
@@ -235,7 +247,11 @@ const SocialLinkRow = ({ form, index, onRemove }: SocialLinkRowProps) => {
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const value = e.target.value.trim()
-    if (value && !value.startsWith("http://") && !value.startsWith("https://")) {
+    if (
+      value &&
+      !value.startsWith("http://") &&
+      !value.startsWith("https://")
+    ) {
       const normalized = normalizeUrl(value)
       if (normalized !== value) {
         form.setValue(`socialLinks.${index}.url`, normalized)
@@ -263,7 +279,7 @@ const SocialLinkRow = ({ form, index, onRemove }: SocialLinkRowProps) => {
                   {/* Platform icon */}
                   <div
                     className={cn(
-                      "absolute left-3 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1.5 transition-colors duration-200",
+                      "absolute top-1/2 left-3 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1.5 transition-colors duration-200",
                       isValid ? config.bgColor : "bg-muted/50",
                     )}
                   >
@@ -279,7 +295,7 @@ const SocialLinkRow = ({ form, index, onRemove }: SocialLinkRowProps) => {
                     {...field}
                     value={field.value || ""}
                     placeholder={config.placeholder}
-                    className="glass-input rounded-xl border-0 pl-14 pr-10"
+                    className="glass-input rounded-xl border-0 pr-10 pl-14"
                     autoComplete="url"
                     onBlur={(e) => {
                       field.onBlur()
@@ -294,14 +310,14 @@ const SocialLinkRow = ({ form, index, onRemove }: SocialLinkRowProps) => {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                        className="absolute top-1/2 right-3 -translate-y-1/2"
                       >
                         {isValid ? (
                           <div className="rounded-full bg-emerald-500/10 p-1">
                             <Check className="size-3.5 text-emerald-500" />
                           </div>
                         ) : (
-                          <div className="rounded-full bg-destructive/10 p-1">
+                          <div className="bg-destructive/10 rounded-full p-1">
                             <AlertCircle className="text-destructive size-3.5" />
                           </div>
                         )}
@@ -311,7 +327,10 @@ const SocialLinkRow = ({ form, index, onRemove }: SocialLinkRowProps) => {
                 </div>
               </FormControl>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Button
                   type="button"
                   variant="ghost"
@@ -332,7 +351,7 @@ const SocialLinkRow = ({ form, index, onRemove }: SocialLinkRowProps) => {
                   initial={{ opacity: 0, y: -8, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -8, height: 0 }}
-                  className="flex items-center gap-1.5 overflow-hidden pl-1 pt-1"
+                  className="flex items-center gap-1.5 overflow-hidden pt-1 pl-1"
                 >
                   <span className={cn("text-xs font-medium", config.color)}>
                     {config.label}

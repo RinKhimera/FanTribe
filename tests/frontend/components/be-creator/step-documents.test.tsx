@@ -3,13 +3,13 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useForm } from "react-hook-form"
 import { describe, expect, it, vi } from "vitest"
-import { Form } from "@/components/ui/form"
 import { StepDocuments } from "@/components/be-creator/step-documents"
 import {
   ApplicationFormData,
-  applicationSchema,
   UploadedDocuments,
+  applicationSchema,
 } from "@/components/be-creator/types"
+import { Form } from "@/components/ui/form"
 
 vi.mock("@/lib/config", () => ({
   logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
@@ -22,10 +22,22 @@ vi.mock("@clerk/nextjs", () => ({
 }))
 vi.mock("motion/react", () => ({
   motion: {
-    div: ({ children, onPointerDown, ...props }: React.PropsWithChildren<{
-      onPointerDown?: () => void; [key: string]: unknown
-    }>) => <div {...props} onPointerDown={onPointerDown}>{children}</div>,
-    p: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
+    div: ({
+      children,
+      onPointerDown,
+      ...props
+    }: React.PropsWithChildren<{
+      onPointerDown?: () => void
+      [key: string]: unknown
+    }>) => (
+      <div {...props} onPointerDown={onPointerDown}>
+        {children}
+      </div>
+    ),
+    p: ({
+      children,
+      ...props
+    }: React.PropsWithChildren<Record<string, unknown>>) => (
       <p {...props}>{children}</p>
     ),
   },
@@ -54,19 +66,28 @@ vi.mock("@/components/shared/camera-capture", () => ({
 }))
 
 vi.mock("@/components/be-creator/document-upload-section", () => ({
-  DocumentUploadSection: ({ type, uploadedDocument }: {
+  DocumentUploadSection: ({
+    type,
+    uploadedDocument,
+  }: {
     type: "identityCard" | "selfie"
     uploadedDocument?: { url: string; mediaId: string; uploadedAt: number }
   }) => (
     <div data-testid={`document-upload-${type}`}>
       {uploadedDocument ? (
         <div>
-          <span>{type === "identityCard" ? "Document d'identité uploadé" : "Selfie uploadé"}</span>
+          <span>
+            {type === "identityCard"
+              ? "Document d'identité uploadé"
+              : "Selfie uploadé"}
+          </span>
         </div>
       ) : (
         <div>
           <button>Uploader</button>
-          <button>Prendre {type === "identityCard" ? "une photo" : "un selfie"}</button>
+          <button>
+            Prendre {type === "identityCard" ? "une photo" : "un selfie"}
+          </button>
         </div>
       )}
     </div>
@@ -131,10 +152,10 @@ describe("StepDocuments", () => {
       render(<TestWrapper onPrevious={vi.fn()} onSubmit={vi.fn()} />)
 
       expect(
-        screen.getByText("Pièce d'identité (carte, passeport, permis)")
+        screen.getByText("Pièce d'identité (carte, passeport, permis)"),
       ).toBeInTheDocument()
       expect(
-        screen.getByText("Selfie avec votre pièce d'identité")
+        screen.getByText("Selfie avec votre pièce d'identité"),
       ).toBeInTheDocument()
     })
 
@@ -147,10 +168,10 @@ describe("StepDocuments", () => {
 
       // Camera buttons
       expect(
-        screen.getByRole("button", { name: /prendre une photo/i })
+        screen.getByRole("button", { name: /prendre une photo/i }),
       ).toBeInTheDocument()
       expect(
-        screen.getByRole("button", { name: /prendre un selfie/i })
+        screen.getByRole("button", { name: /prendre un selfie/i }),
       ).toBeInTheDocument()
     })
 
@@ -168,10 +189,12 @@ describe("StepDocuments", () => {
           onPrevious={vi.fn()}
           onSubmit={vi.fn()}
           uploadedDocuments={uploadedDocuments}
-        />
+        />,
       )
 
-      expect(screen.getByText("Document d'identité uploadé")).toBeInTheDocument()
+      expect(
+        screen.getByText("Document d'identité uploadé"),
+      ).toBeInTheDocument()
     })
 
     it("should show success message when selfie is uploaded", () => {
@@ -188,7 +211,7 @@ describe("StepDocuments", () => {
           onPrevious={vi.fn()}
           onSubmit={vi.fn()}
           uploadedDocuments={uploadedDocuments}
-        />
+        />,
       )
 
       expect(screen.getByText("Selfie uploadé")).toBeInTheDocument()
@@ -209,9 +232,13 @@ describe("StepDocuments", () => {
 
       const passionOption = screen.getByText("Partager ma passion")
       // Use pointerDown to match the component behavior
-      fireEvent.pointerDown(passionOption.closest("div[class*='cursor-pointer']")!)
+      fireEvent.pointerDown(
+        passionOption.closest("div[class*='cursor-pointer']")!,
+      )
 
-      const radioButton = screen.getByRole("radio", { name: /partager ma passion/i })
+      const radioButton = screen.getByRole("radio", {
+        name: /partager ma passion/i,
+      })
       expect(radioButton).toBeChecked()
     })
 
@@ -219,11 +246,13 @@ describe("StepDocuments", () => {
       render(<TestWrapper onPrevious={vi.fn()} onSubmit={vi.fn()} />)
 
       const autreOption = screen.getByText("Autre raison")
-      fireEvent.pointerDown(autreOption.closest("div[class*='cursor-pointer']")!)
+      fireEvent.pointerDown(
+        autreOption.closest("div[class*='cursor-pointer']")!,
+      )
 
       expect(screen.getByText("Précisez votre motivation")).toBeInTheDocument()
       expect(
-        screen.getByPlaceholderText("Décrivez votre motivation spécifique…")
+        screen.getByPlaceholderText("Décrivez votre motivation spécifique…"),
       ).toBeInTheDocument()
     })
 
@@ -232,22 +261,28 @@ describe("StepDocuments", () => {
 
       // First select "autre"
       const autreOption = screen.getByText("Autre raison")
-      fireEvent.pointerDown(autreOption.closest("div[class*='cursor-pointer']")!)
+      fireEvent.pointerDown(
+        autreOption.closest("div[class*='cursor-pointer']")!,
+      )
 
       // Verify textarea appears
       expect(screen.getByText("Précisez votre motivation")).toBeInTheDocument()
 
       // Now select a different option
       const passionOption = screen.getByText("Partager ma passion")
-      fireEvent.pointerDown(passionOption.closest("div[class*='cursor-pointer']")!)
+      fireEvent.pointerDown(
+        passionOption.closest("div[class*='cursor-pointer']")!,
+      )
 
       // Verify the new option is selected
-      const radioButton = screen.getByRole("radio", { name: /partager ma passion/i })
+      const radioButton = screen.getByRole("radio", {
+        name: /partager ma passion/i,
+      })
       expect(radioButton).toBeChecked()
 
       // Verify textarea is hidden
       expect(
-        screen.queryByText("Précisez votre motivation")
+        screen.queryByText("Précisez votre motivation"),
       ).not.toBeInTheDocument()
     })
   })
@@ -293,7 +328,7 @@ describe("StepDocuments", () => {
           onPrevious={vi.fn()}
           onSubmit={vi.fn()}
           uploadedDocuments={uploadedDocuments}
-        />
+        />,
       )
 
       const submitButton = screen.getByRole("button", {
@@ -323,7 +358,7 @@ describe("StepDocuments", () => {
           onPrevious={vi.fn()}
           onSubmit={onSubmit}
           uploadedDocuments={uploadedDocuments}
-        />
+        />,
       )
 
       const submitButton = screen.getByRole("button", {
@@ -354,7 +389,7 @@ describe("StepDocuments", () => {
           onSubmit={vi.fn()}
           uploadedDocuments={uploadedDocuments}
           isSubmitting={true}
-        />
+        />,
       )
 
       expect(screen.getByText("Soumission en cours…")).toBeInTheDocument()
@@ -365,8 +400,8 @@ describe("StepDocuments", () => {
 
       expect(
         screen.getByText(
-          "Veuillez uploader les deux documents requis pour continuer"
-        )
+          "Veuillez uploader les deux documents requis pour continuer",
+        ),
       ).toBeInTheDocument()
     })
   })

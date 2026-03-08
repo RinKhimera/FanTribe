@@ -5,6 +5,7 @@ import { useMutation } from "convex/react"
 import { Eye, Lock, MessageSquare } from "lucide-react"
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
+import { FormSection } from "@/components/shared/profile-form/form-section"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { FormSection } from "@/components/shared/profile-form/form-section"
 import { VisuallyHidden } from "@/components/ui/visually-hidden"
 import { api } from "@/convex/_generated/api"
 import { useCurrentUser } from "@/hooks"
@@ -45,7 +45,7 @@ export default function SecurityPage() {
   }, [isClerkDialogOpen])
 
   if (!currentUser) {
-    return <div className="p-4 text-muted-foreground">Chargement…</div>
+    return <div className="text-muted-foreground p-4">Chargement…</div>
   }
 
   const handlePrivacyToggle = () => {
@@ -97,18 +97,18 @@ export default function SecurityPage() {
             onClick={handlePrivacyToggle}
             disabled={isPending}
             className={cn(
-              "w-full flex items-center justify-between gap-4 p-3 rounded-lg",
+              "flex w-full items-center justify-between gap-4 rounded-lg p-3",
               "border transition-all duration-300",
-              "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary",
-              "cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed",
+              "hover:bg-muted/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+              "cursor-pointer disabled:cursor-not-allowed disabled:opacity-70",
               "group",
             )}
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex min-w-0 items-center gap-3">
               <Eye className="size-5 shrink-0 text-blue-500" />
-              <div className="text-left min-w-0">
+              <div className="min-w-0 text-left">
                 <p className="font-medium">Profil privé</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Seuls vos abonnés peuvent voir votre profil
                 </p>
               </div>
@@ -124,7 +124,7 @@ export default function SecurityPage() {
               >
                 {/* Subtle glow when active */}
                 {isPrivate && (
-                  <div className="absolute inset-0 rounded-full bg-primary blur-sm opacity-30" />
+                  <div className="bg-primary absolute inset-0 rounded-full opacity-30 blur-sm" />
                 )}
 
                 {/* Thumb */}
@@ -145,18 +145,18 @@ export default function SecurityPage() {
             onClick={handleMessagesToggle}
             disabled={isPending}
             className={cn(
-              "w-full flex items-center justify-between gap-4 p-3 rounded-lg",
+              "flex w-full items-center justify-between gap-4 rounded-lg p-3",
               "border transition-all duration-300",
-              "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary",
-              "cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed",
+              "hover:bg-muted/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+              "cursor-pointer disabled:cursor-not-allowed disabled:opacity-70",
               "group",
             )}
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex min-w-0 items-center gap-3">
               <MessageSquare className="size-5 shrink-0 text-purple-500" />
-              <div className="text-left min-w-0">
+              <div className="min-w-0 text-left">
                 <p className="font-medium">Messages de tout le monde</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Autoriser les messages des utilisateurs non-abonnés
                 </p>
               </div>
@@ -172,7 +172,7 @@ export default function SecurityPage() {
               >
                 {/* Subtle glow when active */}
                 {allowMessages && (
-                  <div className="absolute inset-0 rounded-full bg-primary blur-sm opacity-30" />
+                  <div className="bg-primary absolute inset-0 rounded-full opacity-30 blur-sm" />
                 )}
 
                 {/* Thumb */}
@@ -196,21 +196,21 @@ export default function SecurityPage() {
         delay={0.1}
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Gérez la sécurité de votre compte : mot de passe, authentification
-            à deux facteurs
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Gérez la sécurité de votre compte : mot de passe, authentification à
+            deux facteurs
           </p>
 
           <Dialog open={isClerkDialogOpen} onOpenChange={setIsClerkDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full sm:w-auto group relative overflow-hidden cursor-pointer"
+                className="group relative w-full cursor-pointer overflow-hidden sm:w-auto"
               >
                 {/* Subtle gradient on hover */}
-                <div className="absolute inset-0 bg-linear-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="from-primary/0 via-primary/5 to-primary/0 absolute inset-0 bg-linear-to-r opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-                <Lock className="mr-2 size-4 transition-transform group-hover:scale-110 duration-300" />
+                <Lock className="mr-2 size-4 transition-transform duration-300 group-hover:scale-110" />
                 <span className="relative">Gérer la sécurité du compte</span>
               </Button>
             </DialogTrigger>
@@ -221,7 +221,7 @@ export default function SecurityPage() {
               </VisuallyHidden>
 
               {/* Decorative gradient header */}
-              <div className="absolute inset-x-0 top-0 h-32 bg-linear-to-b from-primary/5 via-primary/3 to-transparent pointer-events-none" />
+              <div className="from-primary/5 via-primary/3 pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b to-transparent" />
 
               <div className="relative">
                 <UserProfile

@@ -20,11 +20,7 @@ import type { PostMedia } from "@/types"
 // Masonry item heights for visual variety
 const MASONRY_HEIGHTS = ["h-48", "h-64", "h-56", "h-72", "h-52", "h-60"]
 
-const VideoThumbnail = ({
-  thumbnailUrl,
-}: {
-  thumbnailUrl?: string
-}) => {
+const VideoThumbnail = ({ thumbnailUrl }: { thumbnailUrl?: string }) => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
 
@@ -109,9 +105,7 @@ const GalleryItem = ({
           <>
             {isVideo ? (
               <div className="relative h-full w-full">
-                <VideoThumbnail
-                  thumbnailUrl={item.media.thumbnailUrl}
-                />
+                <VideoThumbnail thumbnailUrl={item.media.thumbnailUrl} />
                 {/* Play button — matches Bunny Stream player style */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div className="flex size-12 items-center justify-center rounded-full bg-[#7C3AED] shadow-lg">

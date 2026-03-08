@@ -6,24 +6,13 @@ import { api } from "@/convex/_generated/api"
 export default async function DashboardRevenuePage() {
   const token = await getAuthToken()
 
-  const [preloadedEarnings, preloadedTips, preloadedTrends] =
-    await Promise.all([
-      preloadQuery(
-        api.transactions.getCreatorEarnings,
-        undefined,
-        { token },
-      ),
-      preloadQuery(
-        api.tips.getCreatorTipEarnings,
-        undefined,
-        { token },
-      ),
-      preloadQuery(
-        api.dashboard.getRevenueTrends,
-        { months: 12 },
-        { token },
-      ),
-    ])
+  const [preloadedEarnings, preloadedTips, preloadedTrends] = await Promise.all(
+    [
+      preloadQuery(api.transactions.getCreatorEarnings, undefined, { token }),
+      preloadQuery(api.tips.getCreatorTipEarnings, undefined, { token }),
+      preloadQuery(api.dashboard.getRevenueTrends, { months: 12 }, { token }),
+    ],
+  )
 
   return (
     <RevenueContent

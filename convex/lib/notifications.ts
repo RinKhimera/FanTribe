@@ -49,20 +49,23 @@ const MAX_UNREAD_NOTIFICATIONS = 50
 
 // Preference mapping: notification type → user pref key
 // null = always send (no pref toggle)
-type NotificationPreferences = NonNullable<Doc<"users">["notificationPreferences"]>
-const PREF_MAP: Record<NotificationType, keyof NotificationPreferences | null> = {
-  like: "likes",
-  comment: "comments",
-  newPost: "newPosts",
-  newSubscription: "subscriptions",
-  renewSubscription: "subscriptions",
-  subscriptionExpired: "subscriptions",
-  subscriptionConfirmed: "subscriptions",
-  creatorApplicationApproved: null,
-  creatorApplicationRejected: null,
-  tip: "tips",
-  follow: "follows",
-}
+type NotificationPreferences = NonNullable<
+  Doc<"users">["notificationPreferences"]
+>
+const PREF_MAP: Record<NotificationType, keyof NotificationPreferences | null> =
+  {
+    like: "likes",
+    comment: "comments",
+    newPost: "newPosts",
+    newSubscription: "subscriptions",
+    renewSubscription: "subscriptions",
+    subscriptionExpired: "subscriptions",
+    subscriptionConfirmed: "subscriptions",
+    creatorApplicationApproved: null,
+    creatorApplicationRejected: null,
+    tip: "tips",
+    follow: "follows",
+  }
 
 // Types that can be throttled when too many unread
 const THROTTLEABLE_TYPES: Set<NotificationType> = new Set([
@@ -227,9 +230,7 @@ export async function createNotification(
 
     // Only increment count if actor is new (not already in the group)
     const isNewActor = !existing.actorIds.includes(params.actorId)
-    const newCount = isNewActor
-      ? existing.actorCount + 1
-      : existing.actorCount
+    const newCount = isNewActor ? existing.actorCount + 1 : existing.actorCount
 
     await ctx.db.patch(existing._id, {
       actorIds: newActorIds,

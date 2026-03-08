@@ -1,13 +1,13 @@
 "use client"
 
-import { motion } from "motion/react"
 import { LucideIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { motion } from "motion/react"
 import {
   legalContainerVariants,
   legalHeaderVariants,
   legalQuickLinkVariants,
 } from "@/lib/animations"
+import { cn } from "@/lib/utils"
 
 type QuickLink = {
   icon: LucideIcon
@@ -51,8 +51,8 @@ export const LegalPageContent = ({
         variants={legalHeaderVariants}
         className={cn(
           "relative mb-12 overflow-hidden rounded-2xl",
-          "bg-gradient-to-br from-card via-card/80 to-card/60",
-          "border border-border/40",
+          "from-card via-card/80 to-card/60 bg-gradient-to-br",
+          "border-border/40 border",
           "p-8 sm:p-10",
         )}
       >
@@ -60,15 +60,15 @@ export const LegalPageContent = ({
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
             className={cn(
-              "absolute -right-16 -top-16 h-64 w-64 rounded-full",
-              "bg-gradient-to-br from-primary/10 to-transparent",
+              "absolute -top-16 -right-16 h-64 w-64 rounded-full",
+              "from-primary/10 bg-gradient-to-br to-transparent",
               "blur-3xl",
             )}
           />
           <div
             className={cn(
               "absolute -bottom-8 -left-8 h-48 w-48 rounded-full",
-              "bg-gradient-to-tr from-primary/5 to-transparent",
+              "from-primary/5 bg-gradient-to-tr to-transparent",
               "blur-2xl",
             )}
           />
@@ -96,30 +96,30 @@ export const LegalPageContent = ({
               }}
               className={cn(
                 "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl",
-                "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5",
-                "border border-primary/20",
-                "shadow-lg shadow-primary/10",
+                "from-primary/20 via-primary/10 to-primary/5 bg-gradient-to-br",
+                "border-primary/20 border",
+                "shadow-primary/10 shadow-lg",
               )}
             >
-              <PageIcon className="h-7 w-7 text-primary" />
+              <PageIcon className="text-primary h-7 w-7" />
             </motion.div>
 
             <div className="flex flex-col justify-center">
               <h1
                 className={cn(
-                  "text-3xl font-bold tracking-tight leading-tight sm:text-4xl",
+                  "text-3xl leading-tight font-bold tracking-tight sm:text-4xl",
                 )}
               >
                 {title}
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Dernière mise à jour : {formattedDate}
               </p>
             </div>
           </div>
 
           {/* Description */}
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
+          <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
             {description}
           </p>
         </div>
@@ -137,7 +137,8 @@ export const LegalPageContent = ({
               "grid gap-4",
               quickLinks.length === 3 && "sm:grid-cols-3",
               quickLinks.length === 4 && "sm:grid-cols-2 lg:grid-cols-4",
-              quickLinks.length === 5 && "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+              quickLinks.length === 5 &&
+                "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
               quickLinks.length >= 6 && "sm:grid-cols-2 lg:grid-cols-3",
             )}
           >
@@ -152,8 +153,8 @@ export const LegalPageContent = ({
                   whileTap="tap"
                   className={cn(
                     "group relative overflow-hidden rounded-xl",
-                    "bg-gradient-to-br from-muted/50 via-muted/30 to-transparent",
-                    "border border-border/40",
+                    "from-muted/50 via-muted/30 bg-gradient-to-br to-transparent",
+                    "border-border/40 border",
                     "p-4",
                     "transition-colors duration-300",
                     "hover:border-primary/30 hover:from-primary/5 hover:via-primary/[0.02]",
@@ -164,7 +165,7 @@ export const LegalPageContent = ({
                   <div
                     className={cn(
                       "absolute inset-0 opacity-0 transition-opacity duration-300",
-                      "bg-gradient-to-br from-primary/5 to-transparent",
+                      "from-primary/5 bg-gradient-to-br to-transparent",
                       "group-hover:opacity-100",
                     )}
                   />
@@ -177,10 +178,10 @@ export const LegalPageContent = ({
                         "group-hover:text-primary",
                       )}
                     />
-                    <h3 className="font-semibold text-foreground">
+                    <h3 className="text-foreground font-semibold">
                       {link.title}
                     </h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-sm">
                       {link.description}
                     </p>
                   </div>

@@ -49,7 +49,7 @@ export const USD_TO_XAF_RATE = 562.2
  */
 export function isZeroDecimalCurrency(currency: string): boolean {
   return ZERO_DECIMAL_CURRENCIES.includes(
-    currency.toUpperCase() as ZeroDecimalCurrency
+    currency.toUpperCase() as ZeroDecimalCurrency,
   )
 }
 
@@ -70,7 +70,7 @@ export function isZeroDecimalCurrency(currency: string): boolean {
  */
 export function convertStripeAmount(
   amountTotal: number | null | undefined,
-  currency: string | null | undefined
+  currency: string | null | undefined,
 ): number {
   if (amountTotal === null || amountTotal === undefined) {
     return 0
@@ -92,7 +92,7 @@ export function convertStripeAmount(
 export const convertCurrency = (
   amount: number,
   from: Currency,
-  to: Currency
+  to: Currency,
 ): number => {
   if (from === to) return amount
 
@@ -143,7 +143,7 @@ export const formatCurrency = (amount: number, currency: Currency): string => {
 export const formatDualCurrency = (
   amount: number,
   originalCurrency: Currency,
-  showConversion: boolean = true
+  showConversion: boolean = true,
 ): string => {
   if (!showConversion) {
     return formatCurrency(amount, originalCurrency)

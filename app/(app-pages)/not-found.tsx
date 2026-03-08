@@ -19,7 +19,10 @@ export default function NotFound() {
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
         <div className="bg-muted mb-8 flex h-24 w-24 items-center justify-center rounded-full">
-          <UserX className="text-muted-foreground h-12 w-12" aria-hidden="true" />
+          <UserX
+            className="text-muted-foreground h-12 w-12"
+            aria-hidden="true"
+          />
         </div>
 
         <div className="mb-8 text-center">

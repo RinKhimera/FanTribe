@@ -1,20 +1,20 @@
 "use client"
 
-import { useState, useCallback, useEffect, useEffectEvent } from "react"
-import { motion, AnimatePresence } from "motion/react"
-import { RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { useCallback, useEffect, useEffectEvent, useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from "@/components/ui/carousel"
-import { Button } from "@/components/ui/button"
-import { SuggestionCard } from "./suggestion-card"
-import { SuggestionSkeleton } from "./suggestion-skeleton"
-import { SuggestionEmpty } from "./suggestion-empty"
 import { cn } from "@/lib/utils"
 import { UserProps } from "@/types"
+import { SuggestionCard } from "./suggestion-card"
+import { SuggestionEmpty } from "./suggestion-empty"
+import { SuggestionSkeleton } from "./suggestion-skeleton"
 
 interface SuggestionCarouselProps {
   creators: NonNullable<UserProps>[]
@@ -90,9 +90,9 @@ export const SuggestionCarousel = ({
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-4"
+        className="mb-4 flex items-center justify-between"
       >
-        <h3 className="text-lg font-bold text-foreground tracking-tight">
+        <h3 className="text-foreground text-lg font-bold tracking-tight">
           Suggestions
         </h3>
 
@@ -107,7 +107,7 @@ export const SuggestionCarousel = ({
               "h-8 w-8 rounded-full",
               "glass-button border-0",
               "hover:bg-primary/15 hover:text-primary",
-              "transition-[opacity,background-color] duration-200"
+              "transition-[opacity,background-color] duration-200",
             )}
             aria-label="Rafraîchir"
           >
@@ -132,7 +132,7 @@ export const SuggestionCarousel = ({
                   "glass-button border-0",
                   "hover:bg-primary/15 hover:text-primary",
                   "disabled:opacity-30 disabled:hover:bg-transparent",
-                  "transition-[opacity,background-color] duration-200"
+                  "transition-[opacity,background-color] duration-200",
                 )}
                 aria-label="Précédent"
               >
@@ -148,7 +148,7 @@ export const SuggestionCarousel = ({
                   "glass-button border-0",
                   "hover:bg-primary/15 hover:text-primary",
                   "disabled:opacity-30 disabled:hover:bg-transparent",
-                  "transition-[opacity,background-color] duration-200"
+                  "transition-[opacity,background-color] duration-200",
                 )}
                 aria-label="Suivant"
               >
@@ -173,11 +173,7 @@ export const SuggestionCarousel = ({
                   className="space-y-3"
                 >
                   {group.map((user, index) => (
-                    <SuggestionCard
-                      key={user._id}
-                      user={user}
-                      index={index}
-                    />
+                    <SuggestionCard key={user._id} user={user} index={index} />
                   ))}
                 </motion.div>
               </CarouselItem>
@@ -192,7 +188,7 @@ export const SuggestionCarousel = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex justify-center gap-2 mt-5"
+          className="mt-5 flex justify-center gap-2"
         >
           {userGroups.map((_, index) => (
             <motion.button
@@ -201,8 +197,8 @@ export const SuggestionCarousel = ({
               className={cn(
                 "h-2 rounded-full transition-[width,background-color] duration-300 ease-out",
                 index === current
-                  ? "w-7 bg-primary shadow-[0_0_12px_2px_var(--primary)]"
-                  : "w-2 bg-muted/60 hover:bg-muted"
+                  ? "bg-primary w-7 shadow-[0_0_12px_2px_var(--primary)]"
+                  : "bg-muted/60 hover:bg-muted w-2",
               )}
               whileHover={{ scale: index === current ? 1 : 1.2 }}
               whileTap={{ scale: 0.9 }}

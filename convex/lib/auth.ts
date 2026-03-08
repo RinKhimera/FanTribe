@@ -70,7 +70,9 @@ export const getAuthenticatedUser = async <TOptional extends boolean = false>(
 
     if (!isTempBanExpired) {
       if (options?.optional) {
-        return null as TOptional extends true ? Doc<"users"> | null : Doc<"users">
+        return null as TOptional extends true
+          ? Doc<"users"> | null
+          : Doc<"users">
       }
       throw createAppError("BANNED", {
         userMessage: !user.banDetails

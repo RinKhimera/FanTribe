@@ -46,7 +46,7 @@ export function detectPlatform(url: string): SocialPlatform {
  */
 export function extractUsername(
   url: string,
-  platform: SocialPlatform
+  platform: SocialPlatform,
 ): string | undefined {
   try {
     const urlObj = new URL(url)

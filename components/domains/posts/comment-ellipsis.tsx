@@ -96,7 +96,12 @@ export const CommentEllipsis = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Plus d'options">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8"
+          aria-label="Plus d'options"
+        >
           <Ellipsis className="h-4 w-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
@@ -139,7 +144,10 @@ export const CommentEllipsis = ({
                     disabled={isUpdating || !editContent.trim()}
                   >
                     {isUpdating ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      <LoaderCircle
+                        className="h-4 w-4 animate-spin"
+                        aria-hidden="true"
+                      />
                     ) : (
                       "Enregistrer"
                     )}
@@ -176,7 +184,10 @@ export const CommentEllipsis = ({
                 <AlertDialogCancel>Annuler</AlertDialogCancel>
                 <AlertDialogAction onClick={deleteHandler} disabled={isPending}>
                   {isPending ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    <LoaderCircle
+                      className="h-4 w-4 animate-spin"
+                      aria-hidden="true"
+                    />
                   ) : (
                     "Supprimer"
                   )}

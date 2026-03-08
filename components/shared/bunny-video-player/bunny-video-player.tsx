@@ -33,7 +33,7 @@ export const BunnyVideoPlayer: React.FC<BunnyVideoPlayerProps> = ({
           pause()
         }
       },
-      { threshold }
+      { threshold },
     )
 
     observer.observe(containerRef.current)

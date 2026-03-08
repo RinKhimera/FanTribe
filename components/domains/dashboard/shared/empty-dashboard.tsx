@@ -1,8 +1,8 @@
 "use client"
 
 import { BarChart3, PenLine } from "lucide-react"
-import Link from "next/link"
 import { motion } from "motion/react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 interface EmptyDashboardProps {
@@ -24,7 +24,10 @@ export function EmptyDashboard({
       className="flex flex-col items-center justify-center py-16 text-center"
     >
       <div className="bg-muted/50 mb-6 flex h-20 w-20 items-center justify-center rounded-2xl">
-        <BarChart3 aria-hidden="true" className="text-muted-foreground h-10 w-10" />
+        <BarChart3
+          aria-hidden="true"
+          className="text-muted-foreground h-10 w-10"
+        />
       </div>
       <h3 className="text-lg font-semibold">{title}</h3>
       <p className="text-muted-foreground mt-2 max-w-sm text-sm">

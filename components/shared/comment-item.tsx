@@ -22,7 +22,7 @@ export const CommentItem = ({ comment }: CommentItemProps) => {
   return (
     <div
       className={cn(
-        "flex gap-3 px-4 py-2 mx-4 rounded-xl",
+        "mx-4 flex gap-3 rounded-xl px-4 py-2",
         "hover:bg-muted/50 transition-colors duration-200",
       )}
       role="presentation"
@@ -35,28 +35,30 @@ export const CommentItem = ({ comment }: CommentItemProps) => {
             alt={comment.author?.name || "Avatar"}
             className="object-cover"
           />
-          <AvatarFallback className="text-xs bg-muted text-muted-foreground font-semibold">
+          <AvatarFallback className="bg-muted text-muted-foreground text-xs font-semibold">
             {comment.author?.name?.charAt(0) || "U"}
           </AvatarFallback>
         </Avatar>
       </Link>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
               <Link
                 href={`/${comment.author?.username}`}
-                className="text-sm font-semibold hover:text-primary transition-colors truncate"
+                className="hover:text-primary truncate text-sm font-semibold transition-colors"
               >
                 {comment.author?.name}
               </Link>
-              <UserProfileBadgeInline accountType={comment.author?.accountType} />
+              <UserProfileBadgeInline
+                accountType={comment.author?.accountType}
+              />
               <span className="text-muted-foreground/60 text-xs">
                 {formatPostDate(comment._creationTime)}
               </span>
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-foreground/90 break-words">
+            <p className="text-foreground/90 mt-1 text-sm leading-relaxed break-words">
               {comment.content}
             </p>
           </div>

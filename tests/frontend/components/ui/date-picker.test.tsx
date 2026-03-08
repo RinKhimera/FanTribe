@@ -27,13 +27,7 @@ describe("DatePicker", () => {
     const handleChange = vi.fn()
     const user = userEvent.setup()
 
-    render(
-      <DatePicker
-        onChange={handleChange}
-        fromYear={2000}
-        toYear={2000}
-      />
-    )
+    render(<DatePicker onChange={handleChange} fromYear={2000} toYear={2000} />)
 
     await user.click(screen.getByRole("button"))
     await user.click(screen.getByText("15"))

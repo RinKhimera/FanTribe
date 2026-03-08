@@ -1,11 +1,11 @@
 "use client"
 
-import { motion, AnimatePresence } from "motion/react"
-import { Search, Loader2 } from "lucide-react"
-import { SuggestionCard } from "./suggestion-card"
-import { UserProps } from "@/types"
+import { Loader2, Search } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import { UserProps } from "@/types"
+import { SuggestionCard } from "./suggestion-card"
 
 interface SuggestionSearchResultsProps {
   results: NonNullable<UserProps>[]
@@ -42,14 +42,16 @@ export const SuggestionSearchResults = ({
         transition={{ duration: 0.3 }}
         className="flex items-center gap-2"
       >
-        <h3 className="text-base font-semibold text-foreground">
+        <h3 className="text-foreground text-base font-semibold">
           Resultats pour{" "}
         </h3>
-        <span className={cn(
-          "px-2.5 py-1 rounded-lg text-sm font-medium",
-          "bg-primary/15 text-primary",
-          "border border-primary/20"
-        )}>
+        <span
+          className={cn(
+            "rounded-lg px-2.5 py-1 text-sm font-medium",
+            "bg-primary/15 text-primary",
+            "border-primary/20 border",
+          )}
+        >
           &quot;{searchTerm}&quot;
         </span>
       </motion.div>
@@ -68,14 +70,14 @@ export const SuggestionSearchResults = ({
             className="relative"
           >
             {/* Glow effect */}
-            <div className="absolute inset-0 rounded-full bg-primary/30 blur-lg" />
-            <Loader2 className="h-8 w-8 text-primary relative" />
+            <div className="bg-primary/30 absolute inset-0 rounded-full blur-lg" />
+            <Loader2 className="text-primary relative h-8 w-8" />
           </motion.div>
           <motion.p
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-sm text-muted-foreground mt-4 font-medium"
+            className="text-muted-foreground mt-4 text-sm font-medium"
           >
             Recherche en cours…
           </motion.p>
@@ -86,8 +88,8 @@ export const SuggestionSearchResults = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className={cn(
-            "flex flex-col items-center justify-center py-12 px-6",
-            "glass-card rounded-xl text-center"
+            "flex flex-col items-center justify-center px-6 py-12",
+            "glass-card rounded-xl text-center",
           )}
         >
           <motion.div
@@ -96,13 +98,15 @@ export const SuggestionSearchResults = ({
             transition={{ delay: 0.1, type: "spring", bounce: 0.4 }}
             className="relative mb-4"
           >
-            <div className="absolute inset-0 rounded-full bg-muted/50 blur-lg scale-150" />
-            <div className={cn(
-              "relative h-14 w-14 rounded-full",
-              "bg-muted/60",
-              "flex items-center justify-center"
-            )}>
-              <Search className="h-6 w-6 text-muted-foreground" />
+            <div className="bg-muted/50 absolute inset-0 scale-150 rounded-full blur-lg" />
+            <div
+              className={cn(
+                "relative h-14 w-14 rounded-full",
+                "bg-muted/60",
+                "flex items-center justify-center",
+              )}
+            >
+              <Search className="text-muted-foreground h-6 w-6" />
             </div>
           </motion.div>
 
@@ -110,7 +114,7 @@ export const SuggestionSearchResults = ({
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="font-semibold text-foreground mb-1"
+            className="text-foreground mb-1 font-semibold"
           >
             Aucun utilisateur trouve
           </motion.h4>
@@ -118,7 +122,7 @@ export const SuggestionSearchResults = ({
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-sm text-muted-foreground"
+            className="text-muted-foreground text-sm"
           >
             Essayez avec un autre nom ou username
           </motion.p>
@@ -149,9 +153,10 @@ export const SuggestionSearchResults = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-xs text-muted-foreground text-center pt-2"
+            className="text-muted-foreground pt-2 text-center text-xs"
           >
-            {results.length} {pluralize(results.length, "resultat")} {pluralize(results.length, "trouve")}
+            {results.length} {pluralize(results.length, "resultat")}{" "}
+            {pluralize(results.length, "trouve")}
           </motion.p>
         </motion.div>
       )}

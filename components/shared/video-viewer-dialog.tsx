@@ -37,7 +37,10 @@ function useThumbnailAspectRatio(
     const img = new window.Image()
     img.onload = () => {
       if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-        setLoaded({ url: thumbnailUrl, ratio: img.naturalWidth / img.naturalHeight })
+        setLoaded({
+          url: thumbnailUrl,
+          ratio: img.naturalWidth / img.naturalHeight,
+        })
       }
     }
     img.src = thumbnailUrl
@@ -65,9 +68,7 @@ export function VideoViewerDialog({
 
   // Determine aspect ratio: stored dimensions > thumbnail detection > 16:9 fallback
   const aspectRatio =
-    width && height
-      ? width / height
-      : thumbnailRatio ?? 16 / 9
+    width && height ? width / height : (thumbnailRatio ?? 16 / 9)
 
   const isPortrait = aspectRatio < 1
 

@@ -1,5 +1,7 @@
 import { renderHook } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+// Must be imported AFTER vi.mock
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 const { mockUseConvexAuth, mockUseQuery } = vi.hoisted(() => ({
   mockUseConvexAuth: vi.fn(),
@@ -10,9 +12,6 @@ vi.mock("convex/react", () => ({
   useConvexAuth: mockUseConvexAuth,
   useQuery: mockUseQuery,
 }))
-
-// Must be imported AFTER vi.mock
-import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 describe("useCurrentUser", () => {
   beforeEach(() => {

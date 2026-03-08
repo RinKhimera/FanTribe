@@ -29,9 +29,7 @@ export const DashboardShell = ({
   return (
     <PageContainer
       title="Dashboard"
-      secondaryBar={
-        <NavigationTabs items={navItems} variant="underline" />
-      }
+      secondaryBar={<NavigationTabs items={navItems} variant="underline" />}
     >
       {children}
     </PageContainer>

@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
 import { ArrowLeft } from "lucide-react"
+import { motion } from "motion/react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -28,22 +28,22 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
         {/* Gradient orbs */}
         <div
           className={cn(
-            "absolute -left-[20%] top-0 h-[600px] w-[600px] rounded-full",
-            "bg-gradient-to-br from-primary/8 via-primary/4 to-transparent",
+            "absolute top-0 -left-[20%] h-[600px] w-[600px] rounded-full",
+            "from-primary/8 via-primary/4 bg-gradient-to-br to-transparent",
             "blur-3xl",
           )}
         />
         <div
           className={cn(
-            "absolute -right-[10%] top-[30%] h-[500px] w-[500px] rounded-full",
-            "bg-gradient-to-bl from-primary/6 via-transparent to-transparent",
+            "absolute top-[30%] -right-[10%] h-[500px] w-[500px] rounded-full",
+            "from-primary/6 bg-gradient-to-bl via-transparent to-transparent",
             "blur-3xl",
           )}
         />
         <div
           className={cn(
             "absolute -bottom-[10%] left-[30%] h-[400px] w-[400px] rounded-full",
-            "bg-gradient-to-t from-primary/5 to-transparent",
+            "from-primary/5 bg-gradient-to-t to-transparent",
             "blur-3xl",
           )}
         />
@@ -65,7 +65,7 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
           "sticky top-0 z-50",
-          "border-b border-border/40",
+          "border-border/40 border-b",
           "bg-background/70 backdrop-blur-xl",
           "supports-[backdrop-filter]:bg-background/50",
         )}
@@ -141,13 +141,16 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
               </Button>
             </Link>
             <Link href="/auth/sign-up">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <Button
                   size="sm"
                   className={cn(
                     "rounded-full",
                     "bg-primary hover:bg-primary/90",
-                    "shadow-md shadow-primary/20",
+                    "shadow-primary/20 shadow-md",
                   )}
                 >
                   S&apos;inscrire
@@ -170,8 +173,8 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
             href="/"
             className={cn(
               "group mb-8 inline-flex items-center gap-2",
-              "text-sm text-muted-foreground",
-              "transition-colors duration-200 hover:text-foreground",
+              "text-muted-foreground text-sm",
+              "hover:text-foreground transition-colors duration-200",
             )}
           >
             <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
@@ -221,11 +224,11 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.3 }}
-        className="relative border-t border-border/40 py-8"
+        className="border-border/40 relative border-t py-8"
       >
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               © {new Date().getFullYear()} FanTribe. Tous droits réservés.
             </p>
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
@@ -234,8 +237,8 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
                   key={page.href}
                   href={page.href}
                   className={cn(
-                    "text-sm text-muted-foreground",
-                    "transition-colors duration-200 hover:text-primary",
+                    "text-muted-foreground text-sm",
+                    "hover:text-primary transition-colors duration-200",
                     pathname === page.href && "text-foreground",
                   )}
                 >

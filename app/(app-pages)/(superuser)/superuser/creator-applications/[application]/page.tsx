@@ -38,8 +38,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { detectRiskFactors } from "@/lib/validators/detect-risk-factors"
 import { cn } from "@/lib/utils"
+import { detectRiskFactors } from "@/lib/validators/detect-risk-factors"
 
 interface ApplicationDetailsProps {
   params: Promise<{ application: Id<"creatorApplications"> }>
@@ -67,7 +67,9 @@ const documentTypeLabels: Record<string, string> = {
   selfie: "Selfie",
 }
 
-export default function ApplicationDetails({ params }: ApplicationDetailsProps) {
+export default function ApplicationDetails({
+  params,
+}: ApplicationDetailsProps) {
   const { application: applicationId } = use(params)
   const { currentUser } = useCurrentUser()
   const [adminNotes, setAdminNotes] = useState("")
@@ -135,7 +137,10 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
     return (
       <div className="flex h-full flex-col items-center justify-center p-8">
         <div className="bg-muted/50 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-          <FileText className="text-muted-foreground h-8 w-8" aria-hidden="true" />
+          <FileText
+            className="text-muted-foreground h-8 w-8"
+            aria-hidden="true"
+          />
         </div>
         <h2 className="mb-2 text-xl font-semibold">Candidature introuvable</h2>
         <p className="text-muted-foreground mb-6 text-center">
@@ -178,7 +183,10 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={cn("text-sm", status.className)}>
+            <Badge
+              variant="outline"
+              className={cn("text-sm", status.className)}
+            >
               {status.label}
             </Badge>
             {/* Badge tentative multiple */}
@@ -189,7 +197,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                   "text-sm font-semibold",
                   (application.attemptNumber ?? 1) >= 3
                     ? "border-red-500/30 bg-red-500/10 text-red-600"
-                    : "border-orange-500/30 bg-orange-500/10 text-orange-600"
+                    : "border-orange-500/30 bg-orange-500/10 text-orange-600",
                 )}
               >
                 <RefreshCw className="mr-1 h-3 w-3" aria-hidden="true" />
@@ -253,7 +261,10 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                   <p className="truncate text-lg font-semibold">
                     {application.user?.name}
                   </p>
-                  <ExternalLink className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-60" aria-hidden="true" />
+                  <ExternalLink
+                    className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-60"
+                    aria-hidden="true"
+                  />
                 </div>
                 <p className="text-muted-foreground truncate text-sm">
                   @{application.user?.username}
@@ -272,7 +283,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
             className={cn(
               (application.attemptNumber ?? 1) >= 3
                 ? "border-red-500/30 bg-red-500/5"
-                : "border-orange-500/30 bg-orange-500/5"
+                : "border-orange-500/30 bg-orange-500/5",
             )}
           >
             <History
@@ -280,7 +291,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                 "h-4 w-4",
                 (application.attemptNumber ?? 1) >= 3
                   ? "text-red-500"
-                  : "text-orange-500"
+                  : "text-orange-500",
               )}
             />
             <AlertDescription>
@@ -289,7 +300,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                   "mb-2 font-medium",
                   (application.attemptNumber ?? 1) >= 3
                     ? "text-red-700 dark:text-red-400"
-                    : "text-orange-700 dark:text-orange-400"
+                    : "text-orange-700 dark:text-orange-400",
                 )}
               >
                 Historique des candidatures
@@ -312,7 +323,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                   </span>
                 </div>
                 {application.previousRejectionReason && (
-                  <div className="mt-2 rounded-lg bg-background/50 p-3">
+                  <div className="bg-background/50 mt-2 rounded-lg p-3">
                     <p className="text-muted-foreground mb-1 text-xs font-medium">
                       Raison du rejet précédent:
                     </p>
@@ -405,7 +416,7 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                       setViewerIndex(index)
                       setViewerOpen(true)
                     }}
-                    className="relative aspect-video w-full cursor-pointer overflow-hidden rounded-lg border bg-muted transition-shadow hover:ring-2 hover:ring-primary/50"
+                    className="bg-muted hover:ring-primary/50 relative aspect-video w-full cursor-pointer overflow-hidden rounded-lg border transition-shadow hover:ring-2"
                   >
                     <Image
                       src={doc.url}
@@ -563,7 +574,8 @@ export default function ApplicationDetails({ params }: ApplicationDetailsProps) 
                       Statut créateur actif
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Cet utilisateur est actuellement créateur sur la plateforme
+                      Cet utilisateur est actuellement créateur sur la
+                      plateforme
                     </p>
                   </div>
                 </div>

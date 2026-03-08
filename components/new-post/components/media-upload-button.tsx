@@ -56,7 +56,7 @@ export const MediaUploadButton = ({
               "text-muted-foreground",
               "hover:bg-primary/10 hover:text-primary",
               "transition-colors duration-200",
-              isDisabled && "opacity-50 cursor-not-allowed",
+              isDisabled && "cursor-not-allowed opacity-50",
             )}
             onClick={onUploadClick}
             disabled={isDisabled}

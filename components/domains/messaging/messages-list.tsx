@@ -1,7 +1,7 @@
 "use client"
 
-import { motion, AnimatePresence } from "motion/react"
 import { ChevronDown, ChevronUp, Loader2 } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import { useMessagesPagination } from "@/hooks/useMessagesPagination"
@@ -81,7 +81,7 @@ export const MessagesList = ({
             className="flex flex-col items-center gap-2 py-6 text-center"
           >
             <div className="h-px w-16 bg-linear-to-r from-transparent via-amber-500/30 to-transparent" />
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               Début de la conversation
             </span>
           </motion.div>
@@ -116,7 +116,7 @@ export const MessagesList = ({
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             onClick={scrollToBottom}
             aria-label="Défiler vers le bas"
-            className="absolute bottom-4 right-4 z-10 flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/80 text-foreground shadow-lg backdrop-blur-sm transition-colors hover:bg-black/90"
+            className="text-foreground absolute right-4 bottom-4 z-10 flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-black/90"
           >
             <ChevronDown size={20} />
           </motion.button>

@@ -104,6 +104,7 @@ export function DashboardStatCard({
 
   return (
     <motion.div
+      data-testid="kpi-card"
       className="h-full"
       variants={{
         initial: { opacity: 0, y: 10 },
@@ -118,7 +119,7 @@ export function DashboardStatCard({
         className={cn(
           "group relative h-full overflow-hidden border-l-4 p-5",
           "transition-[box-shadow,transform] duration-300 ease-out",
-          "hover:shadow-lg hover:-translate-y-0.5",
+          "hover:-translate-y-0.5 hover:shadow-lg",
           scheme.accentBorder,
           className,
         )}
@@ -186,7 +187,7 @@ export function DashboardStatCard({
         {/* Decorative corner accent */}
         <div
           className={cn(
-            "absolute -bottom-8 -right-8 h-24 w-24 rounded-full opacity-10",
+            "absolute -right-8 -bottom-8 h-24 w-24 rounded-full opacity-10",
             "transition-transform duration-500 group-hover:scale-150",
             scheme.iconBg,
           )}

@@ -79,9 +79,7 @@ export async function simulateTipPayment(params: {
     currency: params.currency ?? "XAF",
     message: params.tipMessage || undefined,
     context: params.context || undefined,
-    postId: params.postId
-      ? (params.postId as Id<"posts">)
-      : undefined,
+    postId: params.postId ? (params.postId as Id<"posts">) : undefined,
     conversationId: params.conversationId
       ? (params.conversationId as Id<"conversations">)
       : undefined,

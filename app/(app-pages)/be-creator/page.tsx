@@ -8,23 +8,23 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import {
   AlreadyCreator,
+  ApplicationFormData,
   ApplicationStatus,
   ApplicationStepper,
-  applicationSchema,
-  ApplicationFormData,
-  motivationOptions,
   StepDocuments,
   StepIntroduction,
   StepPersonalInfo,
   UploadedDocument,
   UploadedDocuments,
+  applicationSchema,
+  motivationOptions,
 } from "@/components/be-creator"
 import { PageContainer } from "@/components/layout"
 import { Form } from "@/components/ui/form"
 import { api } from "@/convex/_generated/api"
+import { useBunnyUpload } from "@/hooks"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { stepSlideVariants } from "@/lib/animations"
-import { useBunnyUpload } from "@/hooks"
 
 const BeCreatorPage = () => {
   const { currentUser } = useCurrentUser()
@@ -36,23 +36,23 @@ const BeCreatorPage = () => {
   const [isReapplying, setIsReapplying] = useState(false)
 
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocuments>(
-    {}
+    {},
   )
 
   // Convex mutations and queries
   const existingApplication = useQuery(
     api.creatorApplications.getUserApplication,
-    currentUser ? { userId: currentUser._id } : "skip"
+    currentUser ? { userId: currentUser._id } : "skip",
   )
 
   const submitApplication = useMutation(
-    api.creatorApplications.submitApplication
+    api.creatorApplications.submitApplication,
   )
   const createDraftDocument = useMutation(
-    api.validationDocuments.createDraftDocument
+    api.validationDocuments.createDraftDocument,
   )
   const deleteDraftDocument = useMutation(
-    api.validationDocuments.deleteDraftDocument
+    api.validationDocuments.deleteDraftDocument,
   )
 
   // Refs for cleanup
@@ -71,19 +71,21 @@ const BeCreatorPage = () => {
         const currentDocs = uploadedDocumentsRef.current
         Object.values(currentDocs).forEach((doc) => {
           if (doc?.mediaId) {
-            deleteMedia({ mediaId: doc.mediaId, type: "image" }).catch((error: unknown) => {
-              console.error(
-                "Erreur lors de la suppression du document:",
-                error
-              )
-            })
+            deleteMedia({ mediaId: doc.mediaId, type: "image" }).catch(
+              (error: unknown) => {
+                console.error(
+                  "Erreur lors de la suppression du document:",
+                  error,
+                )
+              },
+            )
             deleteDraftDocument({ mediaUrl: doc.mediaId }).catch(
               (error: unknown) => {
                 console.error(
                   "Erreur lors de la suppression du brouillon:",
-                  error
+                  error,
                 )
-              }
+              },
             )
           }
         })
@@ -121,7 +123,7 @@ const BeCreatorPage = () => {
     setPage([step, newDirection])
     setCurrentStep(step)
     // Scroll to top when changing steps
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const validateAndGoNext = async () => {
@@ -151,7 +153,7 @@ const BeCreatorPage = () => {
   // Document upload handlers
   const handleUploadSuccess = (
     type: "identityCard" | "selfie",
-    result: { url: string; mediaId: string; type: "image" | "video" }
+    result: { url: string; mediaId: string; type: "image" | "video" },
   ) => {
     const uploadedDoc: UploadedDocument = {
       url: result.url,
@@ -172,7 +174,7 @@ const BeCreatorPage = () => {
     }
 
     toast.success(
-      `${type === "identityCard" ? "Pièce d'identité" : "Selfie"} ajouté`
+      `${type === "identityCard" ? "Pièce d'identité" : "Selfie"} ajouté`,
     )
   }
 
@@ -241,7 +243,7 @@ const BeCreatorPage = () => {
           data.applicationReason === "autre"
             ? data.customReason
             : motivationOptions.find(
-                (opt) => opt.value === data.applicationReason
+                (opt) => opt.value === data.applicationReason,
               )?.label
 
         await submitApplication({
@@ -292,7 +294,7 @@ const BeCreatorPage = () => {
         contentClassName="items-center justify-center"
       >
         <div className="flex flex-col items-center gap-4">
-          <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="border-primary size-8 animate-spin rounded-full border-4 border-t-transparent" />
           <span className="text-muted-foreground">Chargement…</span>
         </div>
       </PageContainer>
@@ -335,12 +337,7 @@ const BeCreatorPage = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <StepIntroduction
-            key="step-1"
-            onNext={() => goToStep(2)}
-          />
-        )
+        return <StepIntroduction key="step-1" onNext={() => goToStep(2)} />
       case 2:
         return (
           <StepPersonalInfo
@@ -395,7 +392,7 @@ const BeCreatorPage = () => {
                 </svg>
               </motion.div>
             </div>
-            <h2 className="mb-2 text-2xl font-bold text-gold-gradient">
+            <h2 className="text-gold-gradient mb-2 text-2xl font-bold">
               Candidature envoyée !
             </h2>
             <p className="text-muted-foreground">

@@ -8,7 +8,7 @@ interface UseKeyboardNavigationOptions<T> {
 }
 
 export function useKeyboardNavigation<T>(
-  options: UseKeyboardNavigationOptions<T>
+  options: UseKeyboardNavigationOptions<T>,
 ) {
   const { items, onSelect, onClose, isOpen } = options
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -21,7 +21,7 @@ export function useKeyboardNavigation<T>(
         case "ArrowDown":
           e.preventDefault()
           setSelectedIndex((prev) =>
-            prev < items.length - 1 ? prev + 1 : prev
+            prev < items.length - 1 ? prev + 1 : prev,
           )
           break
         case "ArrowUp":
@@ -41,7 +41,7 @@ export function useKeyboardNavigation<T>(
           break
       }
     },
-    [isOpen, items, selectedIndex, onSelect, onClose]
+    [isOpen, items, selectedIndex, onSelect, onClose],
   )
 
   const resetSelection = useCallback(() => {

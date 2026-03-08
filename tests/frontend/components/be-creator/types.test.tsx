@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { applicationSchema, motivationOptions } from "@/components/be-creator/types"
+import {
+  applicationSchema,
+  motivationOptions,
+} from "@/components/be-creator/types"
 
 describe("applicationSchema", () => {
   describe("fullName", () => {
@@ -16,7 +19,8 @@ describe("applicationSchema", () => {
 
   describe("whatsappNumber", () => {
     it("should reject phone numbers with less than 9 digits", () => {
-      const result = applicationSchema.shape.whatsappNumber.safeParse("12345678")
+      const result =
+        applicationSchema.shape.whatsappNumber.safeParse("12345678")
       expect(result.success).toBe(false)
     })
 
@@ -27,12 +31,14 @@ describe("applicationSchema", () => {
     })
 
     it("should reject phone numbers with non-digit characters", () => {
-      const result = applicationSchema.shape.whatsappNumber.safeParse("12345678a")
+      const result =
+        applicationSchema.shape.whatsappNumber.safeParse("12345678a")
       expect(result.success).toBe(false)
     })
 
     it("should accept exactly 9 digits", () => {
-      const result = applicationSchema.shape.whatsappNumber.safeParse("123456789")
+      const result =
+        applicationSchema.shape.whatsappNumber.safeParse("123456789")
       expect(result.success).toBe(true)
     })
   })
@@ -59,9 +65,8 @@ describe("applicationSchema", () => {
 
   describe("mobileMoneyNumber2", () => {
     it("should be optional", () => {
-      const result = applicationSchema.shape.mobileMoneyNumber2.safeParse(
-        undefined
-      )
+      const result =
+        applicationSchema.shape.mobileMoneyNumber2.safeParse(undefined)
       expect(result.success).toBe(true)
     })
 
@@ -90,7 +95,8 @@ describe("applicationSchema", () => {
     })
 
     it("should accept addresses with 10 or more characters", () => {
-      const result = applicationSchema.shape.address.safeParse("123 Main Street")
+      const result =
+        applicationSchema.shape.address.safeParse("123 Main Street")
       expect(result.success).toBe(true)
     })
   })
@@ -109,7 +115,8 @@ describe("applicationSchema", () => {
       ]
 
       validReasons.forEach((reason) => {
-        const result = applicationSchema.shape.applicationReason.safeParse(reason)
+        const result =
+          applicationSchema.shape.applicationReason.safeParse(reason)
         expect(result.success).toBe(true)
       })
     })

@@ -1,7 +1,7 @@
 "use node"
 
-import Stripe from "stripe"
 import { v } from "convex/values"
+import Stripe from "stripe"
 import { internal } from "./_generated/api"
 import type { Id } from "./_generated/dataModel"
 import { internalAction } from "./_generated/server"
@@ -117,19 +117,16 @@ export const verifyAndProcess = internalAction({
 
           if (!creatorId || !subscriberId || !session.id) break
 
-          await ctx.runMutation(
-            internal.internalActions.processPaymentAtomic,
-            {
-              provider: "stripe",
-              providerTransactionId: session.id,
-              creatorId: creatorId as Id<"users">,
-              subscriberId: subscriberId as Id<"users">,
-              amount,
-              currency,
-              paymentMethod: session.payment_method_types?.[0],
-              startedAt,
-            },
-          )
+          await ctx.runMutation(internal.internalActions.processPaymentAtomic, {
+            provider: "stripe",
+            providerTransactionId: session.id,
+            creatorId: creatorId as Id<"users">,
+            subscriberId: subscriberId as Id<"users">,
+            amount,
+            currency,
+            paymentMethod: session.payment_method_types?.[0],
+            startedAt,
+          })
         }
         break
       }

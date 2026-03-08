@@ -11,7 +11,6 @@ import {
 import { getFollowedCreatorIds } from "./follows"
 import { getAuthenticatedUser, requireSuperuser } from "./lib/auth"
 import { hasActiveSubscription } from "./lib/subscriptions"
-import { incrementUserStat } from "./userStats"
 import {
   badgeValidator,
   banDetailsValidator,
@@ -22,6 +21,7 @@ import {
   userDocValidator,
   userProfileWithBlockStatusValidator,
 } from "./lib/validators"
+import { incrementUserStat } from "./userStats"
 
 async function userByExternalId(ctx: QueryCtx, externalId: string) {
   return await ctx.db
@@ -95,27 +95,90 @@ export const deleteFromClerk = internalMutation({
       validationDocs,
       creatorApplications,
     ] = await Promise.all([
-      ctx.db.query("posts").withIndex("by_author", (q) => q.eq("author", userId)).collect(),
-      ctx.db.query("comments").withIndex("by_author", (q) => q.eq("author", userId)).collect(),
-      ctx.db.query("likes").withIndex("by_user", (q) => q.eq("userId", userId)).collect(),
-      ctx.db.query("bookmarks").withIndex("by_user", (q) => q.eq("userId", userId)).collect(),
-      ctx.db.query("notifications").withIndex("by_recipient", (q) => q.eq("recipientId", userId)).take(10000),
-      ctx.db.query("blocks").withIndex("by_blocker", (q) => q.eq("blockerId", userId)).collect(),
-      ctx.db.query("blocks").withIndex("by_blocked", (q) => q.eq("blockedId", userId)).collect(),
-      ctx.db.query("conversations").withIndex("by_creatorId", (q) => q.eq("creatorId", userId)).collect(),
-      ctx.db.query("conversations").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
-      ctx.db.query("subscriptions").withIndex("by_subscriber", (q) => q.eq("subscriber", userId)).collect(),
-      ctx.db.query("subscriptions").withIndex("by_creator", (q) => q.eq("creator", userId)).collect(),
-      ctx.db.query("transactions").withIndex("by_subscriber", (q) => q.eq("subscriberId", userId)).collect(),
-      ctx.db.query("transactions").withIndex("by_creator", (q) => q.eq("creatorId", userId)).collect(),
-      ctx.db.query("tips").withIndex("by_sender", (q) => q.eq("senderId", userId)).collect(),
-      ctx.db.query("tips").withIndex("by_creator", (q) => q.eq("creatorId", userId)).collect(),
-      ctx.db.query("reports").withIndex("by_reporter", (q) => q.eq("reporterId", userId)).collect(),
-      ctx.db.query("reports").withIndex("by_reported_user", (q) => q.eq("reportedUserId", userId)).collect(),
-      ctx.db.query("userStats").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
-      ctx.db.query("assetsDraft").withIndex("by_author", (q) => q.eq("author", userId)).collect(),
-      ctx.db.query("validationDocumentsDraft").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
-      ctx.db.query("creatorApplications").withIndex("by_userId", (q) => q.eq("userId", userId)).collect(),
+      ctx.db
+        .query("posts")
+        .withIndex("by_author", (q) => q.eq("author", userId))
+        .collect(),
+      ctx.db
+        .query("comments")
+        .withIndex("by_author", (q) => q.eq("author", userId))
+        .collect(),
+      ctx.db
+        .query("likes")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("bookmarks")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("notifications")
+        .withIndex("by_recipient", (q) => q.eq("recipientId", userId))
+        .take(10000),
+      ctx.db
+        .query("blocks")
+        .withIndex("by_blocker", (q) => q.eq("blockerId", userId))
+        .collect(),
+      ctx.db
+        .query("blocks")
+        .withIndex("by_blocked", (q) => q.eq("blockedId", userId))
+        .collect(),
+      ctx.db
+        .query("conversations")
+        .withIndex("by_creatorId", (q) => q.eq("creatorId", userId))
+        .collect(),
+      ctx.db
+        .query("conversations")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("subscriptions")
+        .withIndex("by_subscriber", (q) => q.eq("subscriber", userId))
+        .collect(),
+      ctx.db
+        .query("subscriptions")
+        .withIndex("by_creator", (q) => q.eq("creator", userId))
+        .collect(),
+      ctx.db
+        .query("transactions")
+        .withIndex("by_subscriber", (q) => q.eq("subscriberId", userId))
+        .collect(),
+      ctx.db
+        .query("transactions")
+        .withIndex("by_creator", (q) => q.eq("creatorId", userId))
+        .collect(),
+      ctx.db
+        .query("tips")
+        .withIndex("by_sender", (q) => q.eq("senderId", userId))
+        .collect(),
+      ctx.db
+        .query("tips")
+        .withIndex("by_creator", (q) => q.eq("creatorId", userId))
+        .collect(),
+      ctx.db
+        .query("reports")
+        .withIndex("by_reporter", (q) => q.eq("reporterId", userId))
+        .collect(),
+      ctx.db
+        .query("reports")
+        .withIndex("by_reported_user", (q) => q.eq("reportedUserId", userId))
+        .collect(),
+      ctx.db
+        .query("userStats")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("assetsDraft")
+        .withIndex("by_author", (q) => q.eq("author", userId))
+        .collect(),
+      ctx.db
+        .query("validationDocumentsDraft")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("creatorApplications")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
     ])
 
     // Collect media URLs before any deletion
@@ -125,7 +188,9 @@ export const deleteFromClerk = internalMutation({
       ...posts.flatMap((p) => p.medias.map((m) => m.url)),
       ...assetsDraft.map((a) => a.mediaUrl),
       ...validationDocs.map((d) => d.mediaUrl),
-      ...creatorApplications.flatMap((app) => app.identityDocuments.map((d) => d.url)),
+      ...creatorApplications.flatMap((app) =>
+        app.identityDocuments.map((d) => d.url),
+      ),
     ]
 
     // Stash IDs for Phase 2 cascade queries
@@ -169,28 +234,50 @@ export const deleteFromClerk = internalMutation({
     // Reads in this phase see Phase 1 deletions: user's own comments/likes/bookmarks
     // are already gone, so by_post queries return only other users' interactions.
     // Promise.all(emptyArray.map(...)) = Promise<[]> — no ternary needed.
-    const [postCascade, messages, allNotifs, pendingNotifs] = await Promise.all([
-      Promise.all(
-        postIds.map((postId) =>
-          Promise.all([
-            ctx.db.query("comments").withIndex("by_post", (q) => q.eq("post", postId)).collect(),
-            ctx.db.query("likes").withIndex("by_post", (q) => q.eq("postId", postId)).collect(),
-            ctx.db.query("bookmarks").withIndex("by_post", (q) => q.eq("postId", postId)).collect(),
-            ctx.db.query("notifications").withIndex("by_post", (q) => q.eq("postId", postId)).collect(),
-          ]),
+    const [postCascade, messages, allNotifs, pendingNotifs] = await Promise.all(
+      [
+        Promise.all(
+          postIds.map((postId) =>
+            Promise.all([
+              ctx.db
+                .query("comments")
+                .withIndex("by_post", (q) => q.eq("post", postId))
+                .collect(),
+              ctx.db
+                .query("likes")
+                .withIndex("by_post", (q) => q.eq("postId", postId))
+                .collect(),
+              ctx.db
+                .query("bookmarks")
+                .withIndex("by_post", (q) => q.eq("postId", postId))
+                .collect(),
+              ctx.db
+                .query("notifications")
+                .withIndex("by_post", (q) => q.eq("postId", postId))
+                .collect(),
+            ]),
+          ),
         ),
-      ),
-      Promise.all(
-        allConversationIds.map((convId) =>
-          ctx.db.query("messages").withIndex("by_conversation", (q) => q.eq("conversationId", convId)).collect(),
-        ),
-      ).then((r) => r.flat()),
-      // Full scan for notifications where user appears as actor.
-      // Recipient notifications were deleted in Phase 1 and are invisible here.
-      ctx.db.query("notifications").collect(),
-      // Filter scan for pending notifications triggered by this user.
-      ctx.db.query("pendingNotifications").filter((q) => q.eq(q.field("actorId"), userId)).collect(),
-    ])
+        Promise.all(
+          allConversationIds.map((convId) =>
+            ctx.db
+              .query("messages")
+              .withIndex("by_conversation", (q) =>
+                q.eq("conversationId", convId),
+              )
+              .collect(),
+          ),
+        ).then((r) => r.flat()),
+        // Full scan for notifications where user appears as actor.
+        // Recipient notifications were deleted in Phase 1 and are invisible here.
+        ctx.db.query("notifications").collect(),
+        // Filter scan for pending notifications triggered by this user.
+        ctx.db
+          .query("pendingNotifications")
+          .filter((q) => q.eq(q.field("actorId"), userId))
+          .collect(),
+      ],
+    )
 
     // Collect message media URLs
     for (const msg of messages) {
@@ -201,7 +288,9 @@ export const deleteFromClerk = internalMutation({
 
     // Exclude by_post notifications from actor scan to avoid double-delete
     const postNotifIds = new Set(
-      postCascade.flatMap(([, , , notifs]) => notifs.map((n) => n._id as string)),
+      postCascade.flatMap(([, , , notifs]) =>
+        notifs.map((n) => n._id as string),
+      ),
     )
     const actorNotifications = allNotifs.filter(
       (n) => n.actorIds.includes(userId) && !postNotifIds.has(n._id as string),
@@ -209,9 +298,13 @@ export const deleteFromClerk = internalMutation({
 
     // ── Schedule Bunny CDN cleanup (fire-and-forget) ────────────────────────
     if (mediaUrls.length > 0) {
-      await ctx.scheduler.runAfter(0, internal.internalActions.deleteMultipleBunnyAssets, {
-        mediaUrls,
-      })
+      await ctx.scheduler.runAfter(
+        0,
+        internal.internalActions.deleteMultipleBunnyAssets,
+        {
+          mediaUrls,
+        },
+      )
     }
 
     // ── Phase 2 delete ─────────────────────────────────────────────────────
@@ -225,7 +318,10 @@ export const deleteFromClerk = internalMutation({
         const filtered = n.actorIds.filter((id) => id !== userId)
         return filtered.length === 0
           ? ctx.db.delete(n._id)
-          : ctx.db.patch(n._id, { actorIds: filtered, actorCount: filtered.length })
+          : ctx.db.patch(n._id, {
+              actorIds: filtered,
+              actorCount: filtered.length,
+            })
       }),
     ])
 
@@ -330,7 +426,7 @@ export const getCurrentUser = query({
       privacySettings: v.optional(
         v.object({
           profileVisibility: v.optional(
-            v.union(v.literal("public"), v.literal("private"))
+            v.union(v.literal("public"), v.literal("private")),
           ),
           allowMessagesFromNonSubscribers: v.optional(v.boolean()),
           language: v.optional(v.string()),
@@ -446,9 +542,7 @@ export const getSuggestedCreators = query({
       .take(200)
 
     // Exclude current user from suggestions
-    const filtered = creators.filter(
-      (c) => c.externalId !== identity.subject,
-    )
+    const filtered = creators.filter((c) => c.externalId !== identity.subject)
 
     // Mélanger avec Fisher-Yates (distribution uniforme) et prendre les 48 premiers
     const shuffled = fisherYatesShuffle(filtered)
@@ -808,8 +902,10 @@ export const updateOnboardingProfile = mutation({
     if (args.bio !== undefined) patch.bio = args.bio
     if (args.location !== undefined) patch.location = args.location
     if (args.socialLinks !== undefined) patch.socialLinks = args.socialLinks
-    if (args.allowAdultContent !== undefined) patch.allowAdultContent = args.allowAdultContent
-    if (args.onboardingCompleted !== undefined) patch.onboardingCompleted = args.onboardingCompleted
+    if (args.allowAdultContent !== undefined)
+      patch.allowAdultContent = args.allowAdultContent
+    if (args.onboardingCompleted !== undefined)
+      patch.onboardingCompleted = args.onboardingCompleted
 
     await ctx.db.patch(user._id, patch)
     return null
@@ -1012,11 +1108,16 @@ export const getPinnedPosts = query({
     const canViewSubscribersOnly = currentUser
       ? currentUser._id === args.userId ||
         currentUser.accountType === "SUPERUSER" ||
-        (await hasActiveSubscription(ctx, currentUser._id, args.userId, "content_access"))
+        (await hasActiveSubscription(
+          ctx,
+          currentUser._id,
+          args.userId,
+          "content_access",
+        ))
       : false
 
     const posts = await Promise.all(
-      user.pinnedPostIds.map((id) => ctx.db.get(id))
+      user.pinnedPostIds.map((id) => ctx.db.get(id)),
     )
 
     // Filter out deleted posts, apply media gating, enrich with author data
@@ -1024,7 +1125,8 @@ export const getPinnedPosts = query({
       .filter((post): post is NonNullable<typeof post> => post !== null)
       .map((post) => {
         const mediaCount = post.medias?.length || 0
-        const isLocked = post.visibility === "subscribers_only" && !canViewSubscribersOnly
+        const isLocked =
+          post.visibility === "subscribers_only" && !canViewSubscribersOnly
         return {
           ...post,
           medias: isLocked ? [] : post.medias || [],
@@ -1050,11 +1152,11 @@ export const updateSocialLinks = mutation({
           v.literal("snapchat"),
           v.literal("facebook"),
           v.literal("website"),
-          v.literal("other")
+          v.literal("other"),
         ),
         url: v.string(),
         username: v.optional(v.string()),
-      })
+      }),
     ),
   },
   returns: v.null(),
@@ -1080,7 +1182,7 @@ export const addBadge = mutation({
       v.literal("top_creator"),
       v.literal("founding_member"),
       v.literal("popular"),
-      v.literal("rising_star")
+      v.literal("rising_star"),
     ),
   },
   returns: v.object({ success: v.boolean() }),
@@ -1115,7 +1217,7 @@ export const removeBadge = mutation({
       v.literal("top_creator"),
       v.literal("founding_member"),
       v.literal("popular"),
-      v.literal("rising_star")
+      v.literal("rising_star"),
     ),
   },
   returns: v.object({ success: v.boolean() }),
@@ -1183,7 +1285,7 @@ export const updateNotificationPreferences = mutation({
 export const updatePrivacySettings = mutation({
   args: {
     profileVisibility: v.optional(
-      v.union(v.literal("public"), v.literal("private"))
+      v.union(v.literal("public"), v.literal("private")),
     ),
     allowMessagesFromNonSubscribers: v.optional(v.boolean()),
     language: v.optional(v.string()),
@@ -1200,7 +1302,8 @@ export const updatePrivacySettings = mutation({
       updates.profileVisibility = args.profileVisibility
     }
     if (args.allowMessagesFromNonSubscribers !== undefined) {
-      updates.allowMessagesFromNonSubscribers = args.allowMessagesFromNonSubscribers
+      updates.allowMessagesFromNonSubscribers =
+        args.allowMessagesFromNonSubscribers
     }
     if (args.language !== undefined) {
       updates.language = args.language

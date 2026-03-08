@@ -28,7 +28,7 @@ export const applicationSchema = z.object({
     ],
     {
       required_error: "Veuillez sélectionner une motivation",
-    }
+    },
   ),
   customReason: z.string().optional(),
 })

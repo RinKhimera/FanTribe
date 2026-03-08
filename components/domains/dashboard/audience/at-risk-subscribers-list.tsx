@@ -29,7 +29,10 @@ export const AtRiskSubscribersList = ({
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <AlertTriangle aria-hidden="true" className="h-5 w-5 text-amber-500" />
+          <AlertTriangle
+            aria-hidden="true"
+            className="h-5 w-5 text-amber-500"
+          />
           <CardTitle className="text-base font-semibold">
             Abonnés à risque
           </CardTitle>
@@ -46,10 +49,11 @@ export const AtRiskSubscribersList = ({
       <CardContent>
         {subscribers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <CheckCircle aria-hidden="true" className="mb-2 h-8 w-8 text-emerald-500/40" />
-            <p className="text-sm text-emerald-600">
-              Aucun abonné à risque
-            </p>
+            <CheckCircle
+              aria-hidden="true"
+              className="mb-2 h-8 w-8 text-emerald-500/40"
+            />
+            <p className="text-sm text-emerald-600">Aucun abonné à risque</p>
           </div>
         ) : (
           <motion.div
@@ -68,10 +72,7 @@ export const AtRiskSubscribersList = ({
                   className="flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-white/5"
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={sub.image}
-                      className="object-cover"
-                    />
+                    <AvatarImage src={sub.image} className="object-cover" />
                     <AvatarFallback className="bg-muted text-xs">
                       {sub.name?.charAt(0) ?? "?"}
                     </AvatarFallback>

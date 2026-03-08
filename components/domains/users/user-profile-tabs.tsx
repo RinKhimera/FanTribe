@@ -8,7 +8,10 @@ type UserProfileTabsProps = {
   accountType: "USER" | "CREATOR" | "SUPERUSER"
 }
 
-export const UserProfileTabs = ({ username, accountType }: UserProfileTabsProps) => {
+export const UserProfileTabs = ({
+  username,
+  accountType,
+}: UserProfileTabsProps) => {
   const isCreator = accountType === "CREATOR" || accountType === "SUPERUSER"
 
   const navItems = useMemo(

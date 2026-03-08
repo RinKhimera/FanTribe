@@ -250,7 +250,10 @@ export default function ReportsPage() {
         {/* Urgent Alert */}
         {urgentCount > 0 && (
           <Alert className="border-red-500/30 bg-red-500/5">
-            <AlertTriangle className="h-4 w-4 text-red-500" aria-hidden="true" />
+            <AlertTriangle
+              className="h-4 w-4 text-red-500"
+              aria-hidden="true"
+            />
             <AlertDescription className="text-red-700 dark:text-red-400">
               <span className="font-semibold">{urgentCount}</span>{" "}
               signalement(s) urgent(s) en attente (harcèlement, violence,
@@ -323,7 +326,10 @@ export default function ReportsPage() {
                                 type.className,
                               )}
                             >
-                              <TypeIcon className="h-3 w-3" aria-hidden="true" />
+                              <TypeIcon
+                                className="h-3 w-3"
+                                aria-hidden="true"
+                              />
                               <span className="hidden sm:inline">
                                 {type.label}
                               </span>
@@ -334,7 +340,10 @@ export default function ReportsPage() {
                           <Link href={`/superuser/reports/${report._id}`}>
                             <div className="flex items-center gap-1.5">
                               {isUrgent && (
-                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" aria-hidden="true" />
+                                <AlertTriangle
+                                  className="h-3.5 w-3.5 shrink-0 text-red-500"
+                                  aria-hidden="true"
+                                />
                               )}
                               <span className="max-w-30 truncate text-sm font-medium">
                                 {reasonLabels[report.reason] || report.reason}
@@ -379,7 +388,10 @@ export default function ReportsPage() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                            <Calendar
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
                             {formatDate(report.createdAt)}
                           </div>
                         </TableCell>
@@ -391,7 +403,10 @@ export default function ReportsPage() {
                               className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
                               aria-label="Voir le signalement"
                             >
-                              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                              <ChevronRight
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
                             </Button>
                           </Link>
                         </TableCell>

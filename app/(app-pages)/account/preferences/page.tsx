@@ -20,7 +20,7 @@ export default function PreferencesPage() {
   )
 
   if (!currentUser) {
-    return <div className="p-4 text-muted-foreground">Chargement…</div>
+    return <div className="text-muted-foreground p-4">Chargement…</div>
   }
 
   const currentLanguage = currentUser.privacySettings?.language ?? "fr"
@@ -67,10 +67,10 @@ export default function PreferencesPage() {
           onClick={handleAdultToggle}
           disabled={isPending}
           className={cn(
-            "w-full flex items-center justify-between gap-4 p-4 rounded-xl",
+            "flex w-full items-center justify-between gap-4 rounded-xl p-4",
             "border transition-all duration-300",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-            "cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed",
+            "focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+            "cursor-pointer disabled:cursor-not-allowed disabled:opacity-70",
             "group relative overflow-hidden",
             adultContent
               ? "border-orange-500/30 bg-orange-500/5 focus-visible:ring-orange-500"
@@ -79,12 +79,12 @@ export default function PreferencesPage() {
         >
           {/* Animated glow effect when active */}
           {adultContent && (
-            <div className="absolute inset-0 bg-linear-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0 animate-pulse" />
+            <div className="absolute inset-0 animate-pulse bg-linear-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0" />
           )}
 
           <div className="relative flex flex-col items-start gap-1">
             <span className="font-medium">Afficher le contenu adulte</span>
-            <span className="text-sm text-muted-foreground text-left">
+            <span className="text-muted-foreground text-left text-sm">
               {adultContent
                 ? "Le contenu +18 public apparaît dans votre fil"
                 : "Le contenu +18 public est masqué de votre fil"}
@@ -104,7 +104,7 @@ export default function PreferencesPage() {
             >
               {/* Glow effect when active */}
               {adultContent && (
-                <div className="absolute inset-0 rounded-full bg-orange-500 blur-md opacity-40" />
+                <div className="absolute inset-0 rounded-full bg-orange-500 opacity-40 blur-md" />
               )}
 
               {/* Thumb */}
@@ -120,7 +120,7 @@ export default function PreferencesPage() {
                   className={cn(
                     "size-3 transition-all duration-300",
                     adultContent
-                      ? "text-orange-500 scale-110"
+                      ? "scale-110 text-orange-500"
                       : "text-muted-foreground/50 scale-90",
                   )}
                 />
@@ -130,9 +130,9 @@ export default function PreferencesPage() {
         </button>
 
         {/* Info card */}
-        <div className="flex gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
-          <Flame className="size-4 text-orange-500/70 shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
+        <div className="bg-muted/50 border-border/50 flex gap-3 rounded-lg border p-3">
+          <Flame className="mt-0.5 size-4 shrink-0 text-orange-500/70" />
+          <p className="text-muted-foreground text-xs leading-relaxed">
             En activant cette option, vous confirmez avoir 18 ans ou plus. Ce
             paramètre n&apos;affecte que le contenu public dans votre fil.
           </p>
@@ -150,9 +150,9 @@ export default function PreferencesPage() {
             onClick={() => handleLanguageChange("fr")}
             disabled={isPending}
             className={cn(
-              "w-full flex items-center justify-between p-3 rounded-lg border transition-all duration-300",
-              "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-              "cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed",
+              "flex w-full items-center justify-between rounded-lg border p-3 transition-all duration-300",
+              "hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+              "cursor-pointer disabled:cursor-not-allowed disabled:opacity-70",
               "group relative overflow-hidden",
               currentLanguage === "fr"
                 ? "border-primary bg-primary/10 focus-visible:ring-primary"
@@ -161,24 +161,28 @@ export default function PreferencesPage() {
           >
             {/* Subtle shine effect on selected */}
             {currentLanguage === "fr" && (
-              <div className="absolute inset-0 bg-linear-to-r from-primary/0 via-primary/5 to-primary/0 opacity-50" />
+              <div className="from-primary/0 via-primary/5 to-primary/0 absolute inset-0 bg-linear-to-r opacity-50" />
             )}
 
             <div className="relative flex items-center gap-3">
-              <span className="text-2xl" role="img" aria-label="Drapeau français">
+              <span
+                className="text-2xl"
+                role="img"
+                aria-label="Drapeau français"
+              >
                 🇫🇷
               </span>
               <span className="font-medium">Français</span>
             </div>
 
             {currentLanguage === "fr" && (
-              <Check className="size-5 text-primary transition-transform group-hover:scale-110 duration-300" />
+              <Check className="text-primary size-5 transition-transform duration-300 group-hover:scale-110" />
             )}
           </button>
 
           {/* Placeholder for future languages */}
-          <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-border/50">
-            <p className="text-xs text-muted-foreground text-center">
+          <div className="bg-muted/30 border-border/50 rounded-lg border border-dashed p-3">
+            <p className="text-muted-foreground text-center text-xs">
               D&apos;autres langues seront bientôt disponibles
             </p>
           </div>

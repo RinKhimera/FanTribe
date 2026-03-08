@@ -1,11 +1,9 @@
 "use client"
 
-import { lazy, Suspense, useCallback, useRef, useState } from "react"
-import type WebcamType from "react-webcam"
 import { Camera, RefreshCw, X } from "lucide-react"
+import { Suspense, lazy, useCallback, useRef, useState } from "react"
+import type WebcamType from "react-webcam"
 import { toast } from "sonner"
-
-const Webcam = lazy(() => import("react-webcam"))
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,6 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+
+const Webcam = lazy(() => import("react-webcam"))
 
 interface CameraCaptureProps {
   onCapture: (file: File) => void
@@ -49,7 +49,7 @@ export const CameraCapture = ({
       .enumerateDevices()
       .then((devices) => {
         const videoDevices = devices.filter(
-          (device) => device.kind === "videoinput"
+          (device) => device.kind === "videoinput",
         )
         setHasMultipleCameras(videoDevices.length > 1)
       })
@@ -91,9 +91,7 @@ export const CameraCapture = ({
   }, [onCapture, onError])
 
   const handleSwitchCamera = useCallback(() => {
-    setCurrentFacingMode((prev) =>
-      prev === "user" ? "environment" : "user"
-    )
+    setCurrentFacingMode((prev) => (prev === "user" ? "environment" : "user"))
   }, [])
 
   const handleUserMediaError = useCallback(
@@ -114,7 +112,8 @@ export const CameraCapture = ({
               "La caméra est déjà utilisée par une autre application."
             break
           default:
-            errorMessage = "Erreur lors de l'accès à la caméra. Veuillez réessayer."
+            errorMessage =
+              "Erreur lors de l'accès à la caméra. Veuillez réessayer."
         }
       } else {
         errorMessage = "Erreur lors de l'accès à la caméra. Veuillez réessayer."
@@ -123,7 +122,7 @@ export const CameraCapture = ({
       setCameraError(errorMessage)
       onError?.(errorMessage)
     },
-    [onError]
+    [onError],
   )
 
   const videoConstraints = {
@@ -151,9 +150,9 @@ export const CameraCapture = ({
 
           <div className="space-y-4">
             {cameraError ? (
-              <div className="flex flex-col items-center justify-center rounded-lg bg-destructive/10 p-8 text-center">
-                <X className="mb-4 size-12 text-destructive" />
-                <p className="text-sm text-destructive">{cameraError}</p>
+              <div className="bg-destructive/10 flex flex-col items-center justify-center rounded-lg p-8 text-center">
+                <X className="text-destructive mb-4 size-12" />
+                <p className="text-destructive text-sm">{cameraError}</p>
                 <Button
                   variant="outline"
                   className="mt-4"
@@ -191,7 +190,7 @@ export const CameraCapture = ({
                     type="button"
                     variant="secondary"
                     size="icon"
-                    className="absolute right-3 top-3 bg-black/50 hover:bg-black/70"
+                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/70"
                     onClick={handleSwitchCamera}
                     aria-label="Changer de caméra"
                   >

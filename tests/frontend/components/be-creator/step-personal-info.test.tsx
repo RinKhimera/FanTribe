@@ -3,13 +3,19 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useForm } from "react-hook-form"
 import { describe, expect, it, vi } from "vitest"
-import { Form } from "@/components/ui/form"
 import { StepPersonalInfo } from "@/components/be-creator/step-personal-info"
-import { ApplicationFormData, applicationSchema } from "@/components/be-creator/types"
+import {
+  ApplicationFormData,
+  applicationSchema,
+} from "@/components/be-creator/types"
+import { Form } from "@/components/ui/form"
 
 vi.mock("motion/react", () => ({
   motion: {
-    div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
+    div: ({
+      children,
+      ...props
+    }: React.PropsWithChildren<Record<string, unknown>>) => (
       <div {...props}>{children}</div>
     ),
   },
@@ -79,12 +85,14 @@ describe("StepPersonalInfo", () => {
     render(<TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} />)
 
     expect(
-      screen.getByText("Nom complet (le nom sur votre pièce d'identité)")
+      screen.getByText("Nom complet (le nom sur votre pièce d'identité)"),
     ).toBeInTheDocument()
     expect(screen.getByText("Date de naissance")).toBeInTheDocument()
     expect(screen.getByText("Adresse complète")).toBeInTheDocument()
     expect(screen.getByText(/Numéro WhatsApp/)).toBeInTheDocument()
-    expect(screen.getByText(/Numéro Mobile Money \(pour paiements\)/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Numéro Mobile Money \(pour paiements\)/),
+    ).toBeInTheDocument()
   })
 
   it("should render the +237 phone prefix for all phone fields", () => {
@@ -121,7 +129,7 @@ describe("StepPersonalInfo", () => {
 
   it("should show loading state when isValidating is true", () => {
     render(
-      <TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} isValidating={true} />
+      <TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} isValidating={true} />,
     )
 
     expect(screen.getByText("Validation…")).toBeInTheDocument()
@@ -129,7 +137,7 @@ describe("StepPersonalInfo", () => {
 
   it("should disable continue button when isValidating is true", () => {
     render(
-      <TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} isValidating={true} />
+      <TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} isValidating={true} />,
     )
 
     const continueButton = screen.getByRole("button", { name: /validation/i })
@@ -166,7 +174,7 @@ describe("StepPersonalInfo", () => {
     render(<TestWrapper onNext={vi.fn()} onPrevious={vi.fn()} />)
 
     const addressInput = screen.getByPlaceholderText(
-      "Entrez votre adresse complète"
+      "Entrez votre adresse complète",
     )
     await user.type(addressInput, "123 Main Street, City")
 

@@ -1,8 +1,8 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
-import { motion, AnimatePresence } from "motion/react"
 import { Loader2, Send } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { CommentItem } from "@/components/shared/comment-item"
@@ -44,7 +44,8 @@ export const CommentSection = (props: CommentSectionProps) => {
   const postId = props.postId ?? cardContext?.post._id
   const currentUser = props.currentUser ?? cardContext?.currentUser
   const isOpen = props.isOpen ?? cardContext?.isCommentsOpen ?? false
-  const disabled = props.disabled ?? (cardContext ? !cardContext.canViewMedia : false)
+  const disabled =
+    props.disabled ?? (cardContext ? !cardContext.canViewMedia : false)
   const onClose = props.onClose ?? cardContext?.toggleComments
 
   const [commentText, setCommentText] = useState("")
@@ -115,8 +116,8 @@ export const CommentSection = (props: CommentSectionProps) => {
         >
           <div className="pt-2">
             {disabled ? (
-              <div className="flex items-center justify-center py-6 mx-4">
-                <div className="glass-premium px-6 py-4 rounded-xl text-center">
+              <div className="mx-4 flex items-center justify-center py-6">
+                <div className="glass-premium rounded-xl px-6 py-4 text-center">
                   <p className="text-muted-foreground text-sm">
                     Abonnez-vous pour commenter ce post
                   </p>
@@ -129,7 +130,9 @@ export const CommentSection = (props: CommentSectionProps) => {
                   <div className="flex items-center justify-center py-8">
                     <div className="flex items-center gap-3">
                       <Loader2 className="text-primary h-5 w-5 animate-spin" />
-                      <span className="text-muted-foreground text-sm">Chargement…</span>
+                      <span className="text-muted-foreground text-sm">
+                        Chargement…
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -155,7 +158,7 @@ export const CommentSection = (props: CommentSectionProps) => {
                       <div className="mb-4 px-4">
                         <button
                           onClick={() => setShowAllComments(true)}
-                          className="text-primary cursor-pointer text-sm font-semibold hover:text-primary/80 transition-colors"
+                          className="text-primary hover:text-primary/80 cursor-pointer text-sm font-semibold transition-colors"
                         >
                           Voir plus de commentaires ({totalComments - 3})
                         </button>
@@ -166,7 +169,7 @@ export const CommentSection = (props: CommentSectionProps) => {
 
                 {/* Barre d'emojis - Premium pill style */}
                 <div className="mb-4 px-4">
-                  <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+                  <div className="scrollbar-none flex gap-1 overflow-x-auto pb-1">
                     {EMOJIS.map((emoji, index) => (
                       <motion.button
                         key={emoji}
@@ -179,7 +182,7 @@ export const CommentSection = (props: CommentSectionProps) => {
                         whileTap="tap"
                         onClick={() => handleEmojiClick(emoji)}
                         className={cn(
-                          "text-xl p-2 rounded-full",
+                          "rounded-full p-2 text-xl",
                           "hover:bg-muted transition-colors",
                         )}
                         aria-label={`Ajouter ${emoji}`}
@@ -196,7 +199,7 @@ export const CommentSection = (props: CommentSectionProps) => {
                   className="px-4"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="glass-premium p-3 rounded-xl">
+                  <div className="glass-premium rounded-xl p-3">
                     <div className="flex gap-3">
                       <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage
@@ -216,7 +219,7 @@ export const CommentSection = (props: CommentSectionProps) => {
                           onClick={(e) => e.stopPropagation()}
                           placeholder="Ajouter un commentaire…"
                           className={cn(
-                            "min-h-10 resize-none text-sm py-2.5",
+                            "min-h-10 resize-none py-2.5 text-sm",
                             "placeholder:text-muted-foreground/60",
                           )}
                           disabled={isSubmitting}
@@ -229,8 +232,8 @@ export const CommentSection = (props: CommentSectionProps) => {
                           size="icon"
                           disabled={!commentText.trim() || isSubmitting}
                           className={cn(
-                            "shrink-0 rounded-full h-10 w-10",
-                            "disabled:opacity-50 disabled:cursor-not-allowed",
+                            "h-10 w-10 shrink-0 rounded-full",
+                            "disabled:cursor-not-allowed disabled:opacity-50",
                           )}
                           onClick={(e) => e.stopPropagation()}
                           aria-label="Envoyer"
@@ -253,7 +256,7 @@ export const CommentSection = (props: CommentSectionProps) => {
                       setShowAllComments(false)
                       onClose?.()
                     }}
-                    className="text-muted-foreground/70 cursor-pointer text-sm hover:text-primary transition-colors"
+                    className="text-muted-foreground/70 hover:text-primary cursor-pointer text-sm transition-colors"
                   >
                     Masquer les commentaires
                   </button>

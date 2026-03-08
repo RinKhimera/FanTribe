@@ -1,13 +1,13 @@
 "use client"
 
-import * as React from "react"
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
 import { Circle } from "lucide-react"
-
+import * as React from "react"
 import { cn } from "@/lib/utils"
 
-interface RadioGroupProps
-  extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
+interface RadioGroupProps extends React.ComponentPropsWithoutRef<
+  typeof RadioGroupPrimitive.Root
+> {
   ref?: React.Ref<React.ElementRef<typeof RadioGroupPrimitive.Root>>
 }
 
@@ -21,8 +21,9 @@ const RadioGroup = ({ className, ref, ...props }: RadioGroupProps) => {
   )
 }
 
-interface RadioGroupItemProps
-  extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item> {
+interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<
+  typeof RadioGroupPrimitive.Item
+> {
   ref?: React.Ref<React.ElementRef<typeof RadioGroupPrimitive.Item>>
 }
 
@@ -31,8 +32,8 @@ const RadioGroupItem = ({ className, ref, ...props }: RadioGroupItemProps) => {
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        "border-primary text-primary ring-offset-background focus-visible:ring-ring aspect-square h-4 w-4 rounded-full border focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        className,
       )}
       {...props}
     >

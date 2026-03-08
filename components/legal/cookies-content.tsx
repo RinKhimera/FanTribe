@@ -1,23 +1,23 @@
 "use client"
 
 import {
-  Cookie,
-  Shield,
   BarChart3,
+  Cookie,
+  Info,
+  Mail,
   Palette,
   Settings,
-  Mail,
-  Info,
+  Shield,
 } from "lucide-react"
+import { LegalPageContent } from "./legal-page-content"
 import {
+  LegalHighlight,
+  LegalLink,
+  LegalList,
   LegalSection,
   LegalSubSection,
   LegalText,
-  LegalList,
-  LegalHighlight,
-  LegalLink,
 } from "./legal-section"
-import { LegalPageContent } from "./legal-page-content"
 
 const quickLinks = [
   {
@@ -71,11 +71,7 @@ export const CookiesContent = () => {
         </LegalText>
       </LegalSection>
 
-      <LegalSection
-        id="section-2"
-        icon={Shield}
-        title="2. Cookies essentiels"
-      >
+      <LegalSection id="section-2" icon={Shield} title="2. Cookies essentiels">
         <LegalText>
           Ces cookies sont indispensables au fonctionnement de FanTribe. Sans
           eux, vous ne pourriez pas utiliser les fonctionnalités de base de la
@@ -276,11 +272,7 @@ export const CookiesContent = () => {
         </LegalText>
       </LegalSection>
 
-      <LegalSection
-        id="section-7"
-        icon={Mail}
-        title="7. Contact"
-      >
+      <LegalSection id="section-7" icon={Mail} title="7. Contact">
         <LegalText>
           Pour toute question concernant notre utilisation des cookies ou pour
           exercer vos droits, contactez-nous :
@@ -288,7 +280,7 @@ export const CookiesContent = () => {
         <LegalHighlight variant="info">
           <div className="space-y-2">
             <LegalText>
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 Email confidentialité :
               </span>{" "}
               <LegalLink href="mailto:privacy@fantribe.com">
@@ -296,7 +288,7 @@ export const CookiesContent = () => {
               </LegalLink>
             </LegalText>
             <LegalText>
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 Support général :
               </span>{" "}
               <LegalLink href="mailto:support@fantribe.com">

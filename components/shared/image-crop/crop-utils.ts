@@ -8,7 +8,7 @@ export async function getCroppedImage(
   imageSrc: string,
   pixelCrop: Area,
   mimeType: string = "image/jpeg",
-  quality: number = 0.92
+  quality: number = 0.92,
 ): Promise<Blob> {
   const image = await loadImage(imageSrc)
 
@@ -28,7 +28,7 @@ export async function getCroppedImage(
     0,
     0,
     pixelCrop.width,
-    pixelCrop.height
+    pixelCrop.height,
   )
 
   return new Promise<Blob>((resolve, reject) => {
@@ -41,7 +41,7 @@ export async function getCroppedImage(
         }
       },
       mimeType,
-      quality
+      quality,
     )
   })
 }

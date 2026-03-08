@@ -1,11 +1,11 @@
 "use client"
 
-import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { AppLayout } from "@/components/layout/app-layout"
 import { PageContainer } from "@/components/layout/page-container"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { cn } from "@/lib/utils"
 import { LegalGuestLayout } from "./legal-guest-layout"
 import { LegalNavigation } from "./legal-navigation"
-import { cn } from "@/lib/utils"
 
 type LegalLayoutWrapperProps = {
   children: React.ReactNode
@@ -27,11 +27,11 @@ export const LegalLayoutWrapper = ({ children }: LegalLayoutWrapperProps) => {
           <div
             className={cn(
               "h-8 w-8 animate-spin rounded-full",
-              "border-2 border-muted",
+              "border-muted border-2",
               "border-t-primary",
             )}
           />
-          <p className="text-sm text-muted-foreground">Chargement…</p>
+          <p className="text-muted-foreground text-sm">Chargement…</p>
         </div>
       </div>
     )

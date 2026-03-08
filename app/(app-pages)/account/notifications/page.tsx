@@ -35,7 +35,7 @@ export default function NotificationsPage() {
   )
 
   if (!currentUser) {
-    return <div className="p-4 text-muted-foreground">Chargement…</div>
+    return <div className="text-muted-foreground p-4">Chargement…</div>
   }
 
   const toggles = [
@@ -121,21 +121,21 @@ export default function NotificationsPage() {
                 onClick={() => handleToggle(toggle.key)}
                 disabled={isPending}
                 className={cn(
-                  "w-full flex items-center justify-between gap-4 p-3 rounded-lg",
+                  "flex w-full items-center justify-between gap-4 rounded-lg p-3",
                   "border transition-all duration-300",
-                  "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary",
-                  "cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed",
+                  "hover:bg-muted/50 focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                  "cursor-pointer disabled:cursor-not-allowed disabled:opacity-70",
                   "group",
                 )}
                 style={{
                   animationDelay: `${index * 50}ms`,
                 }}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex min-w-0 items-center gap-3">
                   <Icon className={cn("size-5 shrink-0", toggle.iconColor)} />
-                  <div className="text-left min-w-0">
+                  <div className="min-w-0 text-left">
                     <p className="font-medium">{toggle.label}</p>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-muted-foreground truncate text-sm">
                       {toggle.description}
                     </p>
                   </div>
@@ -151,7 +151,7 @@ export default function NotificationsPage() {
                   >
                     {/* Subtle glow when active */}
                     {value && (
-                      <div className="absolute inset-0 rounded-full bg-primary blur-sm opacity-30" />
+                      <div className="bg-primary absolute inset-0 rounded-full opacity-30 blur-sm" />
                     )}
 
                     {/* Thumb */}
@@ -176,10 +176,10 @@ export default function NotificationsPage() {
         title="Notifications par email"
         delay={0.1}
       >
-        <div className="p-4 rounded-lg bg-muted/30 border border-dashed border-border/50">
+        <div className="bg-muted/30 border-border/50 rounded-lg border border-dashed p-4">
           <div className="flex items-center gap-3">
-            <Mail className="size-5 text-muted-foreground shrink-0" />
-            <p className="text-sm text-muted-foreground">
+            <Mail className="text-muted-foreground size-5 shrink-0" />
+            <p className="text-muted-foreground text-sm">
               Les notifications par email ne sont pas encore disponibles.
             </p>
           </div>

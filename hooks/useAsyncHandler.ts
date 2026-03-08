@@ -17,7 +17,7 @@ interface AsyncHandlerResult<T> {
 }
 
 export function useAsyncHandler<T = unknown>(
-  options: AsyncHandlerOptions<T> = {}
+  options: AsyncHandlerOptions<T> = {},
 ): AsyncHandlerResult<T> {
   const [isPending, startTransition] = useTransition()
 
@@ -45,7 +45,7 @@ export function useAsyncHandler<T = unknown>(
             logger.error(
               options.errorMessage || "Operation failed",
               error,
-              options.logContext
+              options.logContext,
             )
 
             toast.error(options.errorMessage || "Une erreur s'est produite !", {
@@ -57,7 +57,7 @@ export function useAsyncHandler<T = unknown>(
         })
       })
     },
-    [options]
+    [options],
   )
 
   return { execute, isPending }

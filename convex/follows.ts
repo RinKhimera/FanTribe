@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values"
 import { Id } from "./_generated/dataModel"
-import { mutation, MutationCtx, query, QueryCtx } from "./_generated/server"
+import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
 import { isBlocked } from "./lib/blocks"
 import { createAppError } from "./lib/errors"

@@ -1,14 +1,14 @@
 "use client"
 
-import { motion } from "motion/react"
 import { LucideIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { motion } from "motion/react"
 import {
-  legalSectionVariants,
   legalContainerVariants,
-  legalListItemVariants,
   legalIconVariants,
+  legalListItemVariants,
+  legalSectionVariants,
 } from "@/lib/animations"
+import { cn } from "@/lib/utils"
 
 type LegalSectionProps = {
   id?: string
@@ -32,8 +32,8 @@ export const LegalSection = ({
       className={cn(
         // Glass effect with subtle gradient
         "group relative overflow-hidden rounded-2xl",
-        "bg-gradient-to-br from-card/80 via-card/60 to-card/40",
-        "border border-border/40",
+        "from-card/80 via-card/60 to-card/40 bg-gradient-to-br",
+        "border-border/40 border",
         "p-6 sm:p-8",
         // Subtle shadow and glow
         "shadow-lg shadow-black/5 dark:shadow-black/20",
@@ -46,7 +46,7 @@ export const LegalSection = ({
       {/* Background gradient orb */}
       <div
         className={cn(
-          "absolute -right-20 -top-20 h-40 w-40 rounded-full",
+          "absolute -top-20 -right-20 h-40 w-40 rounded-full",
           "bg-primary/5 blur-3xl",
           "transition-opacity duration-500",
           "opacity-0 group-hover:opacity-100",
@@ -61,12 +61,12 @@ export const LegalSection = ({
             whileHover="hover"
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-              "bg-gradient-to-br from-primary/15 to-primary/5",
-              "border border-primary/20",
-              "shadow-sm shadow-primary/10",
+              "from-primary/15 to-primary/5 bg-gradient-to-br",
+              "border-primary/20 border",
+              "shadow-primary/10 shadow-sm",
             )}
           >
-            <Icon className="h-5 w-5 text-primary" />
+            <Icon className="text-primary h-5 w-5" />
           </motion.div>
         )}
         <h2
@@ -106,7 +106,7 @@ export const LegalSubSection = ({
 }: LegalSubSectionProps) => {
   return (
     <div className={cn("space-y-3", className)}>
-      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+      <h3 className="text-foreground text-lg font-semibold">{title}</h3>
       {children}
     </div>
   )
@@ -140,10 +140,7 @@ export const LegalList = ({ items, className }: LegalListProps) => {
         <motion.li
           key={index}
           variants={legalListItemVariants}
-          className={cn(
-            "flex items-start gap-3 text-muted-foreground",
-            "pl-1",
-          )}
+          className={cn("text-muted-foreground flex items-start gap-3", "pl-1")}
         >
           <span
             className={cn(
@@ -174,15 +171,9 @@ export const LegalHighlight = ({
       className={cn(
         "rounded-xl p-4",
         "border",
-        variant === "default" && [
-          "bg-muted/30 border-border/50",
-        ],
-        variant === "info" && [
-          "bg-primary/5 border-primary/20",
-        ],
-        variant === "warning" && [
-          "bg-amber-500/5 border-amber-500/20",
-        ],
+        variant === "default" && ["bg-muted/30 border-border/50"],
+        variant === "info" && ["bg-primary/5 border-primary/20"],
+        variant === "warning" && ["border-amber-500/20 bg-amber-500/5"],
         className,
       )}
     >
@@ -203,7 +194,7 @@ export const LegalLink = ({ href, children, className }: LegalLinkProps) => {
       href={href}
       className={cn(
         "text-primary font-medium",
-        "underline decoration-primary/30 underline-offset-2",
+        "decoration-primary/30 underline underline-offset-2",
         "transition-colors duration-200",
         "hover:decoration-primary/60",
         className,

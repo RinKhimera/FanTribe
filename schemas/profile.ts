@@ -36,7 +36,8 @@ const usernameField = z
     message: "L'identifiant ne doit contenir que des caractères minuscules.",
   })
   .refine((value) => /^[a-z0-9_]+$/.test(value), {
-    message: "L'identifiant ne doit pas contenir des caractères non-alphanumériques.",
+    message:
+      "L'identifiant ne doit pas contenir des caractères non-alphanumériques.",
   })
   .refine((value) => (value.match(/_/g) || []).length <= 1, {
     message: "L'identifiant ne doit pas contenir plus d'un underscore.",
@@ -46,8 +47,12 @@ export const onboardingStep1Schema = z.object({
   displayName: z
     .string({ required_error: "Cette entrée est requise." })
     .trim()
-    .min(3, { message: "Le nom d'affichage doit comporter au moins 3 caractères." })
-    .max(30, { message: "Le nom d'affichage ne doit pas dépasser 30 caractères." }),
+    .min(3, {
+      message: "Le nom d'affichage doit comporter au moins 3 caractères.",
+    })
+    .max(30, {
+      message: "Le nom d'affichage ne doit pas dépasser 30 caractères.",
+    }),
   username: usernameField,
 })
 
@@ -55,7 +60,9 @@ export const onboardingStep2Schema = z.object({
   bio: z
     .string()
     .trim()
-    .max(150, { message: "La description ne doit pas dépasser 150 caractères." })
+    .max(150, {
+      message: "La description ne doit pas dépasser 150 caractères.",
+    })
     .optional()
     .or(z.literal("")),
   location: z

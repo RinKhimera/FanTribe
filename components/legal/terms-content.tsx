@@ -1,26 +1,26 @@
 "use client"
 
 import {
-  CheckCircle,
-  Users,
-  FileText,
-  CreditCard,
-  UserCheck,
-  Shield,
-  Scale,
   AlertTriangle,
+  CheckCircle,
+  CreditCard,
+  FileText,
   Globe,
   Mail,
+  Scale,
+  Shield,
+  UserCheck,
+  Users,
 } from "lucide-react"
+import { LegalPageContent } from "./legal-page-content"
 import {
+  LegalHighlight,
+  LegalLink,
+  LegalList,
   LegalSection,
   LegalSubSection,
   LegalText,
-  LegalList,
-  LegalHighlight,
-  LegalLink,
 } from "./legal-section"
-import { LegalPageContent } from "./legal-page-content"
 
 const quickLinks = [
   {
@@ -96,7 +96,11 @@ export const TermsContent = () => {
         </LegalText>
       </LegalSection>
 
-      <LegalSection id="section-4" icon={FileText} title="4. Contenu utilisateur">
+      <LegalSection
+        id="section-4"
+        icon={FileText}
+        title="4. Contenu utilisateur"
+      >
         <LegalSubSection title="4.1 Propriété du contenu">
           <LegalText>
             Vous conservez tous les droits de propriété intellectuelle sur le
@@ -156,9 +160,9 @@ export const TermsContent = () => {
 
         <LegalSubSection title="5.2 Traitement des paiements">
           <LegalText>
-            Les paiements sont traités par nos partenaires de paiement
-            sécurisés (CinetPay et Stripe). En effectuant un achat, vous
-            acceptez également les conditions de ces prestataires de services de
+            Les paiements sont traités par nos partenaires de paiement sécurisés
+            (CinetPay et Stripe). En effectuant un achat, vous acceptez
+            également les conditions de ces prestataires de services de
             paiement.
           </LegalText>
         </LegalSubSection>
@@ -203,11 +207,7 @@ export const TermsContent = () => {
         </LegalText>
       </LegalSection>
 
-      <LegalSection
-        id="section-8"
-        icon={AlertTriangle}
-        title="8. Résiliation"
-      >
+      <LegalSection id="section-8" icon={AlertTriangle} title="8. Résiliation">
         <LegalText>
           Nous pouvons suspendre ou résilier votre compte immédiatement, sans
           préavis ni responsabilité, pour quelque raison que ce soit, notamment
@@ -248,7 +248,7 @@ export const TermsContent = () => {
         </LegalText>
         <LegalHighlight variant="info">
           <LegalText>
-            <span className="font-medium text-foreground">Email :</span>{" "}
+            <span className="text-foreground font-medium">Email :</span>{" "}
             <LegalLink href="mailto:support@fantribe.com">
               support@fantribe.com
             </LegalLink>

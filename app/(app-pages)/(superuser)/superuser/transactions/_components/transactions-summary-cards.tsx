@@ -57,7 +57,10 @@ export function TransactionsSummaryCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Revenu Total</CardTitle>
-          <DollarSign className="text-muted-foreground h-4 w-4" aria-hidden="true" />
+          <DollarSign
+            className="text-muted-foreground h-4 w-4"
+            aria-hidden="true"
+          />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
@@ -77,7 +80,10 @@ export function TransactionsSummaryCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-          <Receipt className="text-muted-foreground h-4 w-4" aria-hidden="true" />
+          <Receipt
+            className="text-muted-foreground h-4 w-4"
+            aria-hidden="true"
+          />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{summary.totalTransactions}</div>
@@ -111,7 +117,10 @@ export function TransactionsSummaryCards({
           <CardTitle className="text-sm font-medium">
             Moyenne/Transaction
           </CardTitle>
-          <TrendingUp className="text-muted-foreground h-4 w-4" aria-hidden="true" />
+          <TrendingUp
+            className="text-muted-foreground h-4 w-4"
+            aria-hidden="true"
+          />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">

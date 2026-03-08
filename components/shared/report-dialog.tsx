@@ -200,7 +200,8 @@ export const ReportDialog = ({
         })
 
         toast.success("Signalement envoyé", {
-          description: "Votre signalement a été transmis à nos équipes de modération.",
+          description:
+            "Votre signalement a été transmis à nos équipes de modération.",
         })
         handleClose()
       } else if (result.duplicate) {
@@ -248,11 +249,11 @@ export const ReportDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-lg overflow-hidden p-0 sm:max-w-xl">
         {/* Header with gradient accent */}
-        <div className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-transparent px-6 pt-6 pb-5">
+        <div className="border-border/50 from-primary/5 relative overflow-hidden border-b bg-gradient-to-br via-transparent to-transparent px-6 pt-6 pb-5">
           {/* Subtle background pattern */}
           <div className="pointer-events-none absolute inset-0 opacity-30">
-            <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+            <div className="bg-primary/20 absolute -top-12 -right-12 h-32 w-32 rounded-full blur-3xl" />
+            <div className="bg-primary/10 absolute -bottom-8 -left-8 h-24 w-24 rounded-full blur-2xl" />
           </div>
 
           <DialogHeader className="relative">
@@ -266,15 +267,15 @@ export const ReportDialog = ({
                   damping: 15,
                   delay: 0.1,
                 }}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/20"
+                className="bg-primary/15 ring-primary/20 flex h-11 w-11 items-center justify-center rounded-xl ring-1"
               >
-                <Shield className="h-5 w-5 text-primary" />
+                <Shield className="text-primary h-5 w-5" />
               </motion.div>
               <div>
                 <DialogTitle className="text-lg font-semibold tracking-tight">
                   {getDialogTitle()}
                 </DialogTitle>
-                <DialogDescription className="mt-0.5 text-sm text-muted-foreground">
+                <DialogDescription className="text-muted-foreground mt-0.5 text-sm">
                   {getDialogDescription()}
                 </DialogDescription>
               </div>
@@ -300,19 +301,23 @@ export const ReportDialog = ({
                   onClick={() => setReason(r.value)}
                   className={cn(
                     "group relative flex items-start gap-3 rounded-xl p-3.5 text-left transition-colors duration-200",
-                    "border outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                    "focus-visible:ring-primary/50 border outline-none focus-visible:ring-2",
                     isSelected
-                      ? "border-primary/50 bg-primary/8 shadow-[0_0_20px_-4px] shadow-primary/25"
-                      : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50"
+                      ? "border-primary/50 bg-primary/8 shadow-primary/25 shadow-[0_0_20px_-4px]"
+                      : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50",
                   )}
                 >
                   {/* Selected indicator glow */}
                   {isSelected && (
                     <motion.div
                       layoutId="selectedGlow"
-                      className="absolute inset-0 rounded-xl bg-primary/5"
+                      className="bg-primary/5 absolute inset-0 rounded-xl"
                       initial={false}
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
                     />
                   )}
 
@@ -322,7 +327,7 @@ export const ReportDialog = ({
                       "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
                       isSelected
                         ? "bg-primary/20 text-primary"
-                        : "bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground"
+                        : "bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground",
                     )}
                   >
                     <Icon className="h-4.5 w-4.5" />
@@ -333,12 +338,12 @@ export const ReportDialog = ({
                     <p
                       className={cn(
                         "text-sm font-medium transition-colors duration-200",
-                        isSelected ? "text-primary" : "text-foreground"
+                        isSelected ? "text-primary" : "text-foreground",
                       )}
                     >
                       {r.label}
                     </p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                    <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-relaxed">
                       {r.description}
                     </p>
                   </div>
@@ -350,11 +355,15 @@ export const ReportDialog = ({
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                        className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary"
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 25,
+                        }}
+                        className="bg-primary absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full"
                       >
                         <svg
-                          className="h-3 w-3 text-primary-foreground"
+                          className="text-primary-foreground h-3 w-3"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -386,10 +395,10 @@ export const ReportDialog = ({
               >
                 <Label
                   htmlFor="description"
-                  className="text-sm font-medium text-foreground"
+                  className="text-foreground text-sm font-medium"
                 >
                   Détails supplémentaires{" "}
-                  <span className="font-normal text-muted-foreground">
+                  <span className="text-muted-foreground font-normal">
                     (optionnel)
                   </span>
                 </Label>
@@ -398,7 +407,7 @@ export const ReportDialog = ({
                   placeholder="Décrivez le problème en détail pour nous aider à mieux comprendre la situation…"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="mt-2 min-h-[100px] resize-none bg-muted/30 transition-colors focus:bg-muted/50"
+                  className="bg-muted/30 focus:bg-muted/50 mt-2 min-h-[100px] resize-none transition-colors"
                 />
               </motion.div>
             )}
@@ -406,7 +415,7 @@ export const ReportDialog = ({
         </div>
 
         {/* Footer with actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-muted/20 px-6 py-4">
+        <div className="border-border/50 bg-muted/20 flex items-center justify-end gap-3 border-t px-6 py-4">
           <Button
             variant="ghost"
             onClick={handleClose}
@@ -425,7 +434,7 @@ export const ReportDialog = ({
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground"
+                  className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 rounded-full border-2"
                 />
                 Envoi…
               </>

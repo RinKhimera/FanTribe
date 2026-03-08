@@ -1,4 +1,4 @@
-import { beforeAll, afterAll } from "vitest"
+import { afterAll, beforeAll } from "vitest"
 
 /**
  * Handle "Write outside of transaction" errors from convex-test scheduler.
@@ -10,9 +10,7 @@ const originalListeners: NodeJS.UnhandledRejectionListener[] = []
 beforeAll(() => {
   // Store original listeners
   const listeners = process.listeners("unhandledRejection")
-  originalListeners.push(
-    ...(listeners as NodeJS.UnhandledRejectionListener[]),
-  )
+  originalListeners.push(...(listeners as NodeJS.UnhandledRejectionListener[]))
 
   // Remove all listeners
   process.removeAllListeners("unhandledRejection")

@@ -58,7 +58,7 @@ export const formatDate = (timestamp: number): string => {
 
 export const getRelativeDateTime = (
   message: MessageWithTime,
-  previousMessage: MessageWithTime | null | undefined
+  previousMessage: MessageWithTime | null | undefined,
 ): string | undefined => {
   const today = new Date()
   const yesterday = new Date(today)
@@ -117,7 +117,7 @@ export const formatPostDate = (timestamp: DateInput): string => {
 
 export const formatTimeAgo = (
   timestamp: number,
-  formatStyle: TimeAgoFormat = "short"
+  formatStyle: TimeAgoFormat = "short",
 ): string => {
   const now = new Date()
   const date = new Date(timestamp)
@@ -167,7 +167,7 @@ export const formatCustomTimeAgo = (timestamp: number): string =>
 
 export const formatLastSeen = (
   timestamp: number | undefined,
-  isOnline: boolean
+  isOnline: boolean,
 ): string => {
   if (isOnline) return "En ligne"
   if (!timestamp) return "Hors ligne"
@@ -203,7 +203,7 @@ export const formatLastSeen = (
 
 export const formatLastSeenShort = (
   timestamp: number | undefined,
-  isOnline: boolean
+  isOnline: boolean,
 ): string => {
   if (isOnline) return "En ligne"
   if (!timestamp) return "Hors ligne"

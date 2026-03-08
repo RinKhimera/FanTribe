@@ -11,14 +11,14 @@ import {
   X,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useCallback, useMemo, useRef, useState, useEffect } from "react"
-import { ResultItem, ResultSection } from "./components"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { api } from "@/convex/_generated/api"
 import { useDebounce } from "@/hooks"
 import { cn } from "@/lib/utils"
+import { ResultItem, ResultSection } from "./components"
 
 type SearchCategory = "all" | "users" | "applications" | "reports"
 
@@ -43,7 +43,13 @@ const categoryConfig = {
   },
 }
 
-const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusLabels: Record<
+  string,
+  {
+    label: string
+    variant: "default" | "secondary" | "destructive" | "outline"
+  }
+> = {
   pending: { label: "En attente", variant: "secondary" },
   approved: { label: "Approuvé", variant: "default" },
   rejected: { label: "Rejeté", variant: "destructive" },
@@ -85,21 +91,32 @@ export function SuperuserSearch() {
   // Flatten results for keyboard navigation (memoized to avoid recreating on every render)
   const flatResults = useMemo(
     () => [
-      ...(searchResults?.users?.map((u) => ({ ...u, type: "user" as const })) ?? []),
-      ...(searchResults?.applications?.map((a) => ({ ...a, type: "application" as const })) ?? []),
-      ...(searchResults?.reports?.map((r) => ({ ...r, type: "report" as const })) ?? []),
+      ...(searchResults?.users?.map((u) => ({ ...u, type: "user" as const })) ??
+        []),
+      ...(searchResults?.applications?.map((a) => ({
+        ...a,
+        type: "application" as const,
+      })) ?? []),
+      ...(searchResults?.reports?.map((r) => ({
+        ...r,
+        type: "report" as const,
+      })) ?? []),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [resultsKey],
   )
 
   const hasResults = flatResults.length > 0
-  const showNoResults = debouncedQuery.length >= 2 && !isSearching && !hasResults
+  const showNoResults =
+    debouncedQuery.length >= 2 && !isSearching && !hasResults
 
   // Handle click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false)
       }
     }
@@ -181,8 +198,8 @@ export function SuperuserSearch() {
         className={cn(
           "flex items-center gap-2 rounded-lg border px-3 py-1.5",
           "bg-muted/50 transition-colors duration-200",
-          "focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/20",
-          isOpen && "ring-2 ring-primary/20 bg-background",
+          "focus-within:bg-background focus-within:ring-primary/20 focus-within:ring-2",
+          isOpen && "ring-primary/20 bg-background ring-2",
         )}
       >
         <Search className="text-muted-foreground h-4 w-4 shrink-0" />
@@ -200,7 +217,7 @@ export function SuperuserSearch() {
           className={cn(
             "bg-transparent text-sm outline-none",
             "placeholder:text-muted-foreground/60",
-            "w-32 focus:w-48 transition-[width] duration-200",
+            "w-32 transition-[width] duration-200 focus:w-48",
           )}
         />
         {query && (
@@ -223,8 +240,8 @@ export function SuperuserSearch() {
       {isOpen && query.length >= 2 && (
         <div
           className={cn(
-            "absolute right-0 top-full z-50 mt-2 w-80",
-            "bg-popover border rounded-xl shadow-xl",
+            "absolute top-full right-0 z-50 mt-2 w-80",
+            "bg-popover rounded-xl border shadow-xl",
             "animate-in fade-in-0 zoom-in-95 duration-150",
             "overflow-hidden",
           )}
@@ -238,7 +255,7 @@ export function SuperuserSearch() {
                     key={cat}
                     onClick={() => setCategory(cat)}
                     className={cn(
-                      "px-2.5 py-1 text-xs font-medium rounded-md transition-colors",
+                      "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                       category === cat
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted",
@@ -292,7 +309,9 @@ export function SuperuserSearch() {
                           <p className="truncate text-sm font-medium">
                             {user.name}
                           </p>
-                          <UserProfileBadgeInline accountType={user.accountType} />
+                          <UserProfileBadgeInline
+                            accountType={user.accountType}
+                          />
                         </div>
                         <p className="text-muted-foreground truncate text-xs">
                           @{user.username}
@@ -313,8 +332,7 @@ export function SuperuserSearch() {
                   color="orange"
                 >
                   {searchResults.applications.map((app, idx) => {
-                    const globalIdx =
-                      (searchResults?.users?.length ?? 0) + idx
+                    const globalIdx = (searchResults?.users?.length ?? 0) + idx
                     const status = statusLabels[app.status] ?? {
                       label: app.status,
                       variant: "secondary" as const,
@@ -397,7 +415,9 @@ export function SuperuserSearch() {
                 naviguer •{" "}
                 <kbd className="bg-muted rounded px-1 py-0.5 font-mono">↵</kbd>{" "}
                 sélectionner •{" "}
-                <kbd className="bg-muted rounded px-1 py-0.5 font-mono">esc</kbd>{" "}
+                <kbd className="bg-muted rounded px-1 py-0.5 font-mono">
+                  esc
+                </kbd>{" "}
                 fermer
               </p>
             </div>

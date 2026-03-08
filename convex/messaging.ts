@@ -1,13 +1,13 @@
 import { v } from "convex/values"
 import { Doc } from "./_generated/dataModel"
 import { internalMutation, mutation, query } from "./_generated/server"
+import { getAuthenticatedUser } from "./lib/auth"
 import {
   checkConversationPermissions,
   checkMessagingPermission,
   getConversationRole,
   truncateMessagePreview,
 } from "./lib/messaging"
-import { getAuthenticatedUser } from "./lib/auth"
 import { rateLimiter } from "./lib/rateLimiter"
 
 // ============================================
@@ -462,7 +462,10 @@ export const toggleReaction = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
-    await rateLimiter.limit(ctx, "toggleReaction", { key: user._id, throws: true })
+    await rateLimiter.limit(ctx, "toggleReaction", {
+      key: user._id,
+      throws: true,
+    })
     const message = await ctx.db.get(args.messageId)
 
     if (!message) {
@@ -731,10 +734,7 @@ export const getMyConversations = query({
       isLocked: v.boolean(),
       lockedAt: v.optional(v.number()),
       lockedReason: v.optional(
-        v.union(
-          v.literal("subscription_expired"),
-          v.literal("admin_blocked"),
-        ),
+        v.union(v.literal("subscription_expired"), v.literal("admin_blocked")),
       ),
       mutedByCreator: v.optional(v.boolean()),
       mutedByUser: v.optional(v.boolean()),
@@ -746,11 +746,7 @@ export const getMyConversations = query({
       blockedByAdminReason: v.optional(v.string()),
       initiatedBy: v.optional(v.id("users")),
       initiatorRole: v.optional(
-        v.union(
-          v.literal("admin"),
-          v.literal("creator"),
-          v.literal("user"),
-        ),
+        v.union(v.literal("admin"), v.literal("creator"), v.literal("user")),
       ),
       requiresSubscription: v.optional(v.boolean()),
       role: v.union(v.literal("creator"), v.literal("user")),
@@ -1267,10 +1263,7 @@ export const getConversation = query({
       isLocked: v.boolean(),
       lockedAt: v.optional(v.number()),
       lockedReason: v.optional(
-        v.union(
-          v.literal("subscription_expired"),
-          v.literal("admin_blocked"),
-        ),
+        v.union(v.literal("subscription_expired"), v.literal("admin_blocked")),
       ),
       mutedByCreator: v.optional(v.boolean()),
       mutedByUser: v.optional(v.boolean()),
@@ -1282,11 +1275,7 @@ export const getConversation = query({
       blockedByAdminReason: v.optional(v.string()),
       initiatedBy: v.optional(v.id("users")),
       initiatorRole: v.optional(
-        v.union(
-          v.literal("admin"),
-          v.literal("creator"),
-          v.literal("user"),
-        ),
+        v.union(v.literal("admin"), v.literal("creator"), v.literal("user")),
       ),
       requiresSubscription: v.optional(v.boolean()),
       role: v.union(

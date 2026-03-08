@@ -1,7 +1,7 @@
 "use node"
 
-import crypto from "crypto"
 import { v } from "convex/values"
+import crypto from "crypto"
 import { internal } from "./_generated/api"
 import type { Id } from "./_generated/dataModel"
 import { internalAction } from "./_generated/server"
@@ -169,7 +169,11 @@ export const verifyAndProcessWebhook = internalAction({
 
     if (!secretKey || !apiKey || !siteId) {
       console.error("CinetPay env vars not configured")
-      return { success: false, message: "Server configuration error", status: 500 }
+      return {
+        success: false,
+        message: "Server configuration error",
+        status: 500,
+      }
     }
 
     // 1. Parse URL-encoded body
@@ -193,12 +197,20 @@ export const verifyAndProcessWebhook = internalAction({
 
     // 3. Parse metadata
     if (!body.cpm_custom) {
-      return { success: false, message: "Missing cpm_custom metadata", status: 400 }
+      return {
+        success: false,
+        message: "Missing cpm_custom metadata",
+        status: 400,
+      }
     }
 
     const metadata = parseMetadata(body.cpm_custom)
     if (!metadata) {
-      return { success: false, message: "Invalid cpm_custom format", status: 400 }
+      return {
+        success: false,
+        message: "Invalid cpm_custom format",
+        status: 400,
+      }
     }
 
     const creatorId = metadata.creatorId as Id<"users">
@@ -233,9 +245,7 @@ export const verifyAndProcessWebhook = internalAction({
         currency: checkData.data.currency || "XOF",
         message: metadata.tipMessage || undefined,
         context: metadata.tipContext || undefined,
-        postId: metadata.postId
-          ? (metadata.postId as Id<"posts">)
-          : undefined,
+        postId: metadata.postId ? (metadata.postId as Id<"posts">) : undefined,
         conversationId: metadata.conversationId
           ? (metadata.conversationId as Id<"conversations">)
           : undefined,
@@ -273,7 +283,9 @@ export const verifyAndProcessReturn = internalAction({
     const siteId = process.env.CINETPAY_SITE_ID
 
     if (!apiKey || !siteId) {
-      return { redirect: "/payment/result?status=failed&reason=configuration_error" }
+      return {
+        redirect: "/payment/result?status=failed&reason=configuration_error",
+      }
     }
 
     // 1. Extract transaction_id from form body
@@ -281,7 +293,9 @@ export const verifyAndProcessReturn = internalAction({
     const transactionId = params.get("transaction_id")
 
     if (!transactionId) {
-      return { redirect: "/payment/result?status=failed&reason=missing_transaction" }
+      return {
+        redirect: "/payment/result?status=failed&reason=missing_transaction",
+      }
     }
 
     // 2. Check if already processed
@@ -300,7 +314,9 @@ export const verifyAndProcessReturn = internalAction({
     const checkData = await verifyCinetPayPayment(apiKey, siteId, transactionId)
 
     if (!checkData) {
-      return { redirect: "/payment/result?status=failed&reason=payment_check_failed" }
+      return {
+        redirect: "/payment/result?status=failed&reason=payment_check_failed",
+      }
     }
 
     if (checkData.code === "00") {

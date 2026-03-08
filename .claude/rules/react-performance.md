@@ -7,15 +7,18 @@ paths:
 # React Performance Rules
 
 ## Critical
+
 - **No waterfalls**: `Promise.all()` for independent async ops. Start promises early, await late.
 - **Dynamic imports**: `next/dynamic` for heavy components not needed on initial render (e.g., emoji picker, editors).
 - **No barrel imports from large libs**: lucide-react and recharts are handled by `optimizePackageImports` in next.config — safe to import normally. Add new heavy libs there before considering `next/dynamic`.
 
 ## High
+
 - **Minimize RSC serialization**: Pass only needed fields to client components, not full objects.
 - **Suspense boundaries**: Wrap async data-dependent sections, let shell render immediately.
 
 ## Medium
+
 - **Derive state inline**: `const fullName = first + ' ' + last` — no `useState` + `useEffect` for computed values. **Exception**: `Date.now()` is impure — React Compiler blocks it during render (`react-hooks/purity`). Keep time-dependent derived state in `useEffect`.
 - **Functional setState**: `setItems(curr => [...curr, newItem])` — avoids stale closures, enables stable callbacks.
 - **useTransition**: For non-urgent updates (search filtering, scroll tracking).

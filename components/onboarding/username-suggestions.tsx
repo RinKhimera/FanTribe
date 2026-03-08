@@ -1,7 +1,7 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
 import { Sparkles } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 
 interface UsernameSuggestionsProps {
   suggestions: string[]

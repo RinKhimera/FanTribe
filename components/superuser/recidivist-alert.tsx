@@ -40,7 +40,9 @@ const typeIcons = {
 }
 
 export const RecidivistAlert = ({ userId, username }: RecidivistAlertProps) => {
-  const reportHistory = useQuery(api.reports.getReportHistoryForUser, { userId })
+  const reportHistory = useQuery(api.reports.getReportHistoryForUser, {
+    userId,
+  })
 
   // Loading state
   if (reportHistory === undefined) {
@@ -104,8 +106,8 @@ export const RecidivistAlert = ({ userId, username }: RecidivistAlertProps) => {
 
         {/* Stats breakdown */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg bg-muted/30 p-3 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+          <div className="bg-muted/30 rounded-lg p-3 text-center">
+            <div className="text-muted-foreground flex items-center justify-center gap-1.5">
               <User className="h-3.5 w-3.5" />
               <span className="text-xs">Utilisateur</span>
             </div>
@@ -113,8 +115,8 @@ export const RecidivistAlert = ({ userId, username }: RecidivistAlertProps) => {
               {reportHistory.userReports}
             </p>
           </div>
-          <div className="rounded-lg bg-muted/30 p-3 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+          <div className="bg-muted/30 rounded-lg p-3 text-center">
+            <div className="text-muted-foreground flex items-center justify-center gap-1.5">
               <FileText className="h-3.5 w-3.5" />
               <span className="text-xs">Publications</span>
             </div>
@@ -122,8 +124,8 @@ export const RecidivistAlert = ({ userId, username }: RecidivistAlertProps) => {
               {reportHistory.postReports}
             </p>
           </div>
-          <div className="rounded-lg bg-muted/30 p-3 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+          <div className="bg-muted/30 rounded-lg p-3 text-center">
+            <div className="text-muted-foreground flex items-center justify-center gap-1.5">
               <MessageSquare className="h-3.5 w-3.5" />
               <span className="text-xs">Commentaires</span>
             </div>
@@ -136,28 +138,30 @@ export const RecidivistAlert = ({ userId, username }: RecidivistAlertProps) => {
         {/* Recent reports */}
         {reportHistory.recentReports.length > 0 && (
           <div>
-            <p className="mb-2 text-sm font-medium text-muted-foreground">
+            <p className="text-muted-foreground mb-2 text-sm font-medium">
               Signalements récents
             </p>
             <div className="space-y-2">
               {reportHistory.recentReports.slice(0, 5).map((report) => {
-                const TypeIcon = typeIcons[report.type as keyof typeof typeIcons] || User
+                const TypeIcon =
+                  typeIcons[report.type as keyof typeof typeIcons] || User
                 return (
                   <Link
                     key={report._id}
                     href={`/superuser/reports/${report._id}`}
-                    className="flex items-center justify-between rounded-lg border border-border/50 p-2.5 transition-colors hover:bg-muted/30"
+                    className="border-border/50 hover:bg-muted/30 flex items-center justify-between rounded-lg border p-2.5 transition-colors"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                        <TypeIcon className="h-4 w-4 text-muted-foreground" />
+                      <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-lg">
+                        <TypeIcon className="text-muted-foreground h-4 w-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">
                           {reasonLabels[report.reason] || report.reason}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Par {report.reporterName} • {formatDate(report.createdAt)}
+                        <p className="text-muted-foreground text-xs">
+                          Par {report.reporterName} •{" "}
+                          {formatDate(report.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -172,7 +176,7 @@ export const RecidivistAlert = ({ userId, username }: RecidivistAlertProps) => {
                         report.status === "resolved" &&
                           "border-emerald-500/20 bg-emerald-500/10 text-emerald-600",
                         report.status === "rejected" &&
-                          "border-rose-500/20 bg-rose-500/10 text-rose-600"
+                          "border-rose-500/20 bg-rose-500/10 text-rose-600",
                       )}
                     >
                       {report.status === "pending" && "En attente"}

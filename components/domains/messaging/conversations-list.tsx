@@ -1,17 +1,17 @@
 "use client"
 
 import { useConvexAuth, useQuery } from "convex/react"
-import { motion, AnimatePresence } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/convex/_generated/api"
 import { ConversationBox } from "./conversation-box"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export const ConversationsList = () => {
   const { isAuthenticated } = useConvexAuth()
 
   const conversations = useQuery(
     api.messaging.getMyConversations,
-    isAuthenticated ? {} : "skip"
+    isAuthenticated ? {} : "skip",
   )
 
   // Loading state avec skeleton amélioré
@@ -95,10 +95,10 @@ const EmptyConversationsList = () => {
       </motion.div>
 
       {/* Texte */}
-      <h3 className="mb-2 text-lg font-semibold text-foreground">
+      <h3 className="text-foreground mb-2 text-lg font-semibold">
         Aucune conversation
       </h3>
-      <p className="max-w-xs text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground max-w-xs text-center text-sm">
         Vos conversations avec les créateurs apparaîtront ici. Commencez par
         vous abonner à un créateur !
       </p>

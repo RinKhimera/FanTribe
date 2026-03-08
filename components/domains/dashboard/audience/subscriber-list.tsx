@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
 import { motion } from "motion/react"
+import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Doc } from "@/convex/_generated/dataModel"
 import { containerVariants, itemVariants } from "@/lib/animations"
 import { formatCustomTimeAgo, pluralize } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { Doc } from "@/convex/_generated/dataModel"
 
 type SubscriberEntry = {
   _id: string
@@ -41,9 +41,7 @@ export const SubscriberList = ({ subscribers, now }: SubscriberListProps) => {
       ? subscribers
       : subscribers.filter((s) => s.status === filter)
 
-  const sorted = [...filtered].sort(
-    (a, b) => b._creationTime - a._creationTime,
-  )
+  const sorted = [...filtered].sort((a, b) => b._creationTime - a._creationTime)
 
   return (
     <Card>
@@ -94,9 +92,7 @@ export const SubscriberList = ({ subscribers, now }: SubscriberListProps) => {
               const daysLeft = isActive
                 ? Math.max(
                     0,
-                    Math.ceil(
-                      (sub.endDate - now) / (1000 * 60 * 60 * 24),
-                    ),
+                    Math.ceil((sub.endDate - now) / (1000 * 60 * 60 * 24)),
                   )
                 : 0
 
@@ -107,10 +103,7 @@ export const SubscriberList = ({ subscribers, now }: SubscriberListProps) => {
                   className="flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-white/5"
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={user.image}
-                      className="object-cover"
-                    />
+                    <AvatarImage src={user.image} className="object-cover" />
                     <AvatarFallback className="bg-muted text-xs">
                       {user.name?.charAt(0) ?? "?"}
                     </AvatarFallback>
@@ -132,7 +125,10 @@ export const SubscriberList = ({ subscribers, now }: SubscriberListProps) => {
                         Depuis {formatCustomTimeAgo(sub._creationTime)}
                       </span>
                       {sub.renewalCount > 0 && (
-                        <span>• {sub.renewalCount} {pluralize(sub.renewalCount, "renouvellement")}</span>
+                        <span>
+                          • {sub.renewalCount}{" "}
+                          {pluralize(sub.renewalCount, "renouvellement")}
+                        </span>
                       )}
                     </div>
                   </div>

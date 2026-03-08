@@ -144,7 +144,13 @@ export const UserListDialog = () => {
 
   // Appeler handleUserSelectCreator quand le subscriptionStatus change
   // (après que selectedCreator soit défini)
-  if (selectedCreator && subscriptionStatus && isRegularUser && !showSubscriptionModal && !isPending) {
+  if (
+    selectedCreator &&
+    subscriptionStatus &&
+    isRegularUser &&
+    !showSubscriptionModal &&
+    !isPending
+  ) {
     handleUserSelectCreator()
   }
 
@@ -201,10 +207,10 @@ export const UserListDialog = () => {
         <div className="flex max-h-80 flex-col gap-2 overflow-auto">
           {contacts === undefined ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
             </div>
           ) : contacts.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center text-sm">
               {isCreator
                 ? "Aucun abonné trouvé"
                 : "Aucun créateur trouvé. Abonnez-vous à un créateur pour pouvoir lui envoyer des messages."}
@@ -213,7 +219,7 @@ export const UserListDialog = () => {
             contacts.map((contact) => (
               <button
                 key={contact._id}
-                className="flex items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-accent disabled:opacity-50"
+                className="hover:bg-accent flex items-center gap-3 rounded-lg p-3 text-left transition-colors disabled:opacity-50"
                 onClick={() => handleSelectContact(contact)}
                 disabled={isPending || selectedCreator?._id === contact._id}
               >
@@ -229,7 +235,7 @@ export const UserListDialog = () => {
                     </AvatarFallback>
                   </Avatar>
                   {contact.isOnline && (
-                    <span className="absolute -bottom-0.5 -right-0.5 inline-flex h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500" />
+                    <span className="border-background absolute -right-0.5 -bottom-0.5 inline-flex h-2.5 w-2.5 rounded-full border-2 bg-green-500" />
                   )}
                 </div>
 
@@ -239,13 +245,16 @@ export const UserListDialog = () => {
                     <UserProfileBadgeInline accountType={contact.accountType} />
                   </div>
                   {contact.username && (
-                    <p className="truncate text-sm text-muted-foreground">
+                    <p className="text-muted-foreground truncate text-sm">
                       @{contact.username}
                     </p>
                   )}
                 </div>
 
-                <MessageSquare className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <MessageSquare
+                  className="text-muted-foreground h-4 w-4"
+                  aria-hidden="true"
+                />
               </button>
             ))
           )}

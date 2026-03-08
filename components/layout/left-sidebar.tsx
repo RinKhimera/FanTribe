@@ -101,6 +101,7 @@ export const LeftSidebar = ({ currentUser }: LeftSidebarProps) => {
       {/* Sidebar Desktop/Tablet */}
       <TooltipProvider delayDuration={100}>
         <aside
+          data-testid="sidebar"
           className={cn(
             // Layout de base
             "sticky top-0 z-30 h-screen",

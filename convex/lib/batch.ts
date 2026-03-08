@@ -1,5 +1,5 @@
 import { Doc, Id } from "../_generated/dataModel"
-import { QueryCtx, MutationCtx } from "../_generated/server"
+import { MutationCtx, QueryCtx } from "../_generated/server"
 
 type DbCtx = QueryCtx | MutationCtx
 
@@ -13,7 +13,7 @@ type DbCtx = QueryCtx | MutationCtx
  */
 export async function batchGetUsers(
   ctx: DbCtx,
-  userIds: Id<"users">[]
+  userIds: Id<"users">[],
 ): Promise<Map<Id<"users">, Doc<"users">>> {
   const uniqueIds = [...new Set(userIds)]
   const users = await Promise.all(uniqueIds.map((id) => ctx.db.get(id)))
@@ -33,7 +33,7 @@ export async function batchGetUsers(
  */
 export async function batchGetPosts(
   ctx: DbCtx,
-  postIds: Id<"posts">[]
+  postIds: Id<"posts">[],
 ): Promise<Map<Id<"posts">, Doc<"posts">>> {
   const uniqueIds = [...new Set(postIds)]
   const posts = await Promise.all(uniqueIds.map((id) => ctx.db.get(id)))
@@ -53,7 +53,7 @@ export async function batchGetPosts(
  */
 export async function batchGetComments(
   ctx: DbCtx,
-  commentIds: Id<"comments">[]
+  commentIds: Id<"comments">[],
 ): Promise<Map<Id<"comments">, Doc<"comments">>> {
   const uniqueIds = [...new Set(commentIds)]
   const comments = await Promise.all(uniqueIds.map((id) => ctx.db.get(id)))

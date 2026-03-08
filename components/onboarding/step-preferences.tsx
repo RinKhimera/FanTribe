@@ -1,7 +1,6 @@
 "use client"
 
 import { useQuery } from "convex/react"
-import { AnimatePresence, motion } from "motion/react"
 import {
   ArrowRight,
   Flame,
@@ -11,14 +10,15 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { useState } from "react"
-import { SuggestionCard } from "@/components/shared/suggestions/suggestion-card"
 import { FormSection } from "@/components/shared/profile-form/form-section"
+import { SuggestionCard } from "@/components/shared/suggestions/suggestion-card"
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
-import { OnboardingStep3Data } from "@/schemas/profile"
 import { cn } from "@/lib/utils"
+import { OnboardingStep3Data } from "@/schemas/profile"
 
 interface StepPreferencesProps {
   currentUser: Doc<"users">
@@ -72,7 +72,11 @@ export const StepPreferences = ({
   return (
     <div className="space-y-4">
       {/* Intent selection */}
-      <FormSection icon={<Users className="size-4" />} title="Votre profil" delay={0}>
+      <FormSection
+        icon={<Users className="size-4" />}
+        title="Votre profil"
+        delay={0}
+      >
         <p className="text-muted-foreground text-sm">
           Qu&apos;est-ce qui vous amène sur FanTribe ?
         </p>
@@ -96,7 +100,9 @@ export const StepPreferences = ({
                 <div
                   className={cn(
                     "flex size-10 items-center justify-center rounded-xl transition-colors",
-                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted",
+                    isSelected
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted",
                   )}
                 >
                   <Icon className="size-5" />
@@ -121,7 +127,11 @@ export const StepPreferences = ({
       </FormSection>
 
       {/* Adult content toggle */}
-      <FormSection icon={<Flame className="size-4" />} title="Contenu adulte" delay={0.08}>
+      <FormSection
+        icon={<Flame className="size-4" />}
+        title="Contenu adulte"
+        delay={0.08}
+      >
         <button
           type="button"
           onClick={() => setAdultContent((v) => !v)}
@@ -135,7 +145,7 @@ export const StepPreferences = ({
           )}
         >
           {adultContent && (
-            <div className="from-orange-500/0 via-orange-500/10 to-orange-500/0 absolute inset-0 animate-pulse bg-linear-to-r" />
+            <div className="absolute inset-0 animate-pulse bg-linear-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0" />
           )}
 
           <div className="relative flex flex-col items-start gap-0.5">
@@ -151,7 +161,7 @@ export const StepPreferences = ({
           <div className="relative shrink-0">
             <div
               className={cn(
-                "relative h-7 w-12 rounded-full ring-1 ring-inset transition-all duration-300",
+                "relative h-7 w-12 rounded-full ring-1 transition-all duration-300 ring-inset",
                 adultContent
                   ? "bg-orange-500 ring-orange-600/20"
                   : "bg-muted ring-border",
@@ -169,7 +179,9 @@ export const StepPreferences = ({
                 <Flame
                   className={cn(
                     "size-3 transition-all duration-300",
-                    adultContent ? "scale-110 text-orange-500" : "scale-90 text-muted-foreground/50",
+                    adultContent
+                      ? "scale-110 text-orange-500"
+                      : "text-muted-foreground/50 scale-90",
                   )}
                 />
               </div>
@@ -177,13 +189,18 @@ export const StepPreferences = ({
           </div>
         </button>
 
-        <p className="text-muted-foreground rounded-lg border border-border/50 bg-muted/50 px-3 py-2 text-xs leading-relaxed">
-          En activant cette option, vous confirmez avoir 18 ans ou plus. Ce paramètre n&apos;affecte que le contenu public dans votre fil.
+        <p className="text-muted-foreground border-border/50 bg-muted/50 rounded-lg border px-3 py-2 text-xs leading-relaxed">
+          En activant cette option, vous confirmez avoir 18 ans ou plus. Ce
+          paramètre n&apos;affecte que le contenu public dans votre fil.
         </p>
       </FormSection>
 
       {/* Suggested creators */}
-      <FormSection icon={<Users className="size-4" />} title="Créateurs à découvrir" delay={0.15}>
+      <FormSection
+        icon={<Users className="size-4" />}
+        title="Créateurs à découvrir"
+        delay={0.15}
+      >
         <p className="text-muted-foreground text-sm">
           Explorez quelques créateurs populaires sur FanTribe
         </p>
@@ -223,7 +240,7 @@ export const StepPreferences = ({
           variant="ghost"
           onClick={onSkip}
           disabled={isSubmitting}
-          className="gap-2 text-muted-foreground"
+          className="text-muted-foreground gap-2"
         >
           <SkipForward className="size-4" />
           Passer

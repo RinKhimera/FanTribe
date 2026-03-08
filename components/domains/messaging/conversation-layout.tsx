@@ -10,7 +10,7 @@ export const ConversationLayout = () => {
       showNavigationOnMobile
       navigationPanel={
         <>
-          <div className="border-muted flex items-center justify-between border-b py-3 px-4 text-lg font-bold">
+          <div className="border-muted flex items-center justify-between border-b px-4 py-3 text-lg font-bold">
             <div>Mes conversations</div>
             <UserListDialog />
           </div>

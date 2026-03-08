@@ -27,7 +27,10 @@ export default function MessagesLayout({
       <PageContainer variant="wide" hideHeader>
         <div className="flex h-full min-h-screen items-center justify-center">
           <div className="text-center">
-            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" aria-hidden="true" />
+            <Loader2
+              className="text-primary mx-auto mb-4 h-12 w-12 animate-spin"
+              aria-hidden="true"
+            />
             <p className="text-muted-foreground text-lg">Chargement…</p>
           </div>
         </div>
@@ -41,7 +44,10 @@ export default function MessagesLayout({
       <PageContainer variant="wide" hideHeader>
         <div className="flex h-full min-h-screen items-center justify-center">
           <div className="text-center">
-            <Loader2 className="text-primary mx-auto mb-4 h-12 w-12 animate-spin" aria-hidden="true" />
+            <Loader2
+              className="text-primary mx-auto mb-4 h-12 w-12 animate-spin"
+              aria-hidden="true"
+            />
             <p className="text-muted-foreground text-lg">
               Redirection vers la connexion…
             </p>

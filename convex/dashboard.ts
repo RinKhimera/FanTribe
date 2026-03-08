@@ -43,10 +43,7 @@ export const getDashboardOverview = query({
     currency: v.string(),
     recentActivity: v.array(
       v.object({
-        type: v.union(
-          v.literal("new_subscriber"),
-          v.literal("tip_received"),
-        ),
+        type: v.union(v.literal("new_subscriber"), v.literal("tip_received")),
         timestamp: v.number(),
         actorName: v.string(),
         actorImage: v.string(),
@@ -97,8 +94,7 @@ export const getDashboardOverview = query({
       0,
     )
     const totalRevenueNet = Math.round(
-      subsGross * SUBSCRIPTION_CREATOR_RATE +
-        tipsGross * TIP_CREATOR_RATE,
+      subsGross * SUBSCRIPTION_CREATOR_RATE + tipsGross * TIP_CREATOR_RATE,
     )
 
     // Recent activity: last 5 subscriptions + last 5 tips
@@ -117,9 +113,7 @@ export const getDashboardOverview = query({
       ]),
     ]
     const actors = await Promise.all(actorIds.map((id) => ctx.db.get(id)))
-    const actorMap = new Map(
-      actorIds.map((id, i) => [id, actors[i]]),
-    )
+    const actorMap = new Map(actorIds.map((id, i) => [id, actors[i]]))
 
     // Build activity feed
     const recentActivity = [
@@ -203,10 +197,7 @@ export const getRevenueTrends = query({
     ])
 
     // Group by month
-    const monthlyData = new Map<
-      string,
-      { subs: number; tips: number }
-    >()
+    const monthlyData = new Map<string, { subs: number; tips: number }>()
 
     for (const tx of allTransactions) {
       if (tx._creationTime < startTimestamp) continue
@@ -301,10 +292,7 @@ export const getSubscriberGrowth = query({
 
       for (const sub of subscriptions) {
         // New: created during this month
-        if (
-          sub._creationTime >= monthStart &&
-          sub._creationTime <= monthEnd
-        ) {
+        if (sub._creationTime >= monthStart && sub._creationTime <= monthEnd) {
           newCount++
         }
         // Active: had an active period overlapping with month end
@@ -338,10 +326,7 @@ export const getTopPosts = query({
         _creationTime: v.number(),
         content: v.string(),
         medias: v.array(postMediaValidator),
-        visibility: v.union(
-          v.literal("public"),
-          v.literal("subscribers_only"),
-        ),
+        visibility: v.union(v.literal("public"), v.literal("subscribers_only")),
         likeCount: v.number(),
         commentCount: v.number(),
         engagementScore: v.number(),
@@ -457,10 +442,7 @@ export const getEngagementStats = query({
     )
 
     const totalLikes = enriched.reduce((sum, p) => sum + p.likeCount, 0)
-    const totalComments = enriched.reduce(
-      (sum, p) => sum + p.commentCount,
-      0,
-    )
+    const totalComments = enriched.reduce((sum, p) => sum + p.commentCount, 0)
     const totalEngagements = totalLikes + totalComments
 
     const publicPosts = enriched.filter((p) => p.visibility === "public")
@@ -543,13 +525,10 @@ export const getAudienceMetrics = query({
       0,
     )
     const totalRevenueNet = Math.round(
-      subsGross * SUBSCRIPTION_CREATOR_RATE +
-        tipsGross * TIP_CREATOR_RATE,
+      subsGross * SUBSCRIPTION_CREATOR_RATE + tipsGross * TIP_CREATOR_RATE,
     )
 
-    const uniqueSubscriberIds = [
-      ...new Set(allSubs.map((s) => s.subscriber)),
-    ]
+    const uniqueSubscriberIds = [...new Set(allSubs.map((s) => s.subscriber))]
     const arpu =
       uniqueSubscriberIds.length > 0
         ? Math.round(totalRevenueNet / uniqueSubscriberIds.length)
@@ -558,9 +537,7 @@ export const getAudienceMetrics = query({
     // --- Retention rate: % subs who renewed at least once ---
     const renewedCount = allSubs.filter((s) => s.renewalCount > 0).length
     const retentionRate =
-      allSubs.length > 0
-        ? Math.round((renewedCount / allSubs.length) * 100)
-        : 0
+      allSubs.length > 0 ? Math.round((renewedCount / allSubs.length) * 100) : 0
 
     // --- Churn rate: expired this month / active at start of month ---
     const monthStart = new Date(
@@ -571,9 +548,7 @@ export const getAudienceMetrics = query({
 
     const expiredThisMonth = allSubs.filter(
       (s) =>
-        s.status === "expired" &&
-        s.endDate >= monthStart &&
-        s.endDate <= now,
+        s.status === "expired" && s.endDate >= monthStart && s.endDate <= now,
     ).length
 
     const activeAtMonthStart = allSubs.filter(
@@ -591,9 +566,7 @@ export const getAudienceMetrics = query({
       .slice(0, 5)
 
     const topFanIds = sortedByRenewal.map((s) => s.subscriber)
-    const topFanUsers = await Promise.all(
-      topFanIds.map((id) => ctx.db.get(id)),
-    )
+    const topFanUsers = await Promise.all(topFanIds.map((id) => ctx.db.get(id)))
 
     // Calculate total spent per top fan
     const topFanSpent = await Promise.all(
@@ -625,9 +598,7 @@ export const getAudienceMetrics = query({
           username: user.username,
           image: user.image,
           renewalCount: s.renewalCount,
-          totalSpent: Math.round(
-            topFanSpent[i] * SUBSCRIPTION_CREATOR_RATE,
-          ),
+          totalSpent: Math.round(topFanSpent[i] * SUBSCRIPTION_CREATOR_RATE),
         }
       })
       .filter((f): f is NonNullable<typeof f> => f !== null)
@@ -644,9 +615,7 @@ export const getAudienceMetrics = query({
       .slice(0, 10)
 
     const atRiskIds = atRiskSubs.map((s) => s.subscriber)
-    const atRiskUsers = await Promise.all(
-      atRiskIds.map((id) => ctx.db.get(id)),
-    )
+    const atRiskUsers = await Promise.all(atRiskIds.map((id) => ctx.db.get(id)))
 
     const atRiskSubscribers = atRiskSubs
       .map((s, i) => {

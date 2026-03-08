@@ -268,8 +268,7 @@ export function useBunnyUpload() {
           mimeType: file.type,
           fileName: file.name,
           fileSize: file.size,
-          error:
-            error instanceof Error ? error.message : "Erreur inconnue",
+          error: error instanceof Error ? error.message : "Erreur inconnue",
         }
       } finally {
         setIsUploading(false)

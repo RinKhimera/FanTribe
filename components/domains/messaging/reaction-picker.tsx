@@ -1,19 +1,10 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion } from "motion/react"
-import { Plus } from "lucide-react"
 import { Theme } from "emoji-picker-react"
+import { Plus } from "lucide-react"
+import { motion } from "motion/react"
 import dynamic from "next/dynamic"
-
-const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-[400px] w-[320px] items-center justify-center rounded-xl bg-black/80">
-      <div className="size-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-    </div>
-  ),
-})
 import { useState } from "react"
 import {
   Popover,
@@ -23,6 +14,15 @@ import {
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
+
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[400px] w-[320px] items-center justify-center rounded-xl bg-black/80">
+      <div className="size-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+    </div>
+  ),
+})
 
 const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👍"]
 const EMPTY_REACTIONS: string[] = []
@@ -64,7 +64,7 @@ export const ReactionPicker = ({
       className={cn(
         "flex items-center gap-0.5 rounded-full border border-white/10 bg-black/80 p-1 shadow-xl backdrop-blur-xl",
         align === "end" && "origin-right",
-        align === "start" && "origin-left"
+        align === "start" && "origin-left",
       )}
     >
       {QUICK_REACTIONS.map((emoji, index) => {
@@ -78,7 +78,7 @@ export const ReactionPicker = ({
             onClick={() => handleReaction(emoji)}
             className={cn(
               "relative flex size-8 items-center justify-center rounded-full text-lg transition-[transform,background-color] hover:scale-125 hover:bg-white/10",
-              hasReacted && "bg-amber-500/20"
+              hasReacted && "bg-amber-500/20",
             )}
           >
             {emoji}
@@ -100,7 +100,7 @@ export const ReactionPicker = ({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Plus de réactions"
-            className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-full transition-colors hover:bg-white/10"
           >
             <Plus size={16} />
           </motion.button>
@@ -154,7 +154,7 @@ export const MessageReactionsDisplay = ({
     {} as Record<
       string,
       { count: number; userIds: string[]; hasCurrentUser: boolean }
-    >
+    >,
   )
 
   const handleReactionClick = async (emoji: string) => {
@@ -167,10 +167,7 @@ export const MessageReactionsDisplay = ({
     <motion.div
       initial={{ opacity: 0, y: -5 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "flex flex-wrap gap-1",
-        isFromCurrentUser && "justify-end"
-      )}
+      className={cn("flex flex-wrap gap-1", isFromCurrentUser && "justify-end")}
     >
       {Object.entries(grouped).map(([emoji, data]) => (
         <motion.button
@@ -182,12 +179,12 @@ export const MessageReactionsDisplay = ({
             "flex items-center gap-1 rounded-full px-2 py-0.5 text-sm transition-colors",
             data.hasCurrentUser
               ? "bg-amber-500/20 ring-1 ring-amber-500/50"
-              : "bg-white/5 hover:bg-white/10"
+              : "bg-white/5 hover:bg-white/10",
           )}
         >
           <span>{emoji}</span>
           {data.count > 1 && (
-            <span className="text-xs text-muted-foreground">{data.count}</span>
+            <span className="text-muted-foreground text-xs">{data.count}</span>
           )}
         </motion.button>
       ))}

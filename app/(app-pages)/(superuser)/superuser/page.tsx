@@ -140,7 +140,7 @@ export default function SuperUserPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Pending Applications Card */}
             <Card className="group relative overflow-hidden transition-shadow duration-300 hover:shadow-md">
-              <div className="from-orange-500/5 via-amber-500/5 to-transparent absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <CardHeader className="relative pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -192,7 +192,10 @@ export default function SuperUserPage() {
                 {/* Stats row */}
                 <div className="border-border/50 flex gap-6 border-t pt-3">
                   <div className="flex items-center gap-2">
-                    <UserCheck className="text-emerald-500 h-4 w-4" aria-hidden="true" />
+                    <UserCheck
+                      className="h-4 w-4 text-emerald-500"
+                      aria-hidden="true"
+                    />
                     <span className="text-sm">
                       <span className="font-medium">
                         {dashboardStats?.applications.approved ?? 0}
@@ -214,7 +217,7 @@ export default function SuperUserPage() {
 
             {/* Pending Reports Card */}
             <Card className="group relative overflow-hidden transition-shadow duration-300 hover:shadow-md">
-              <div className="from-rose-500/5 via-pink-500/5 to-transparent absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-pink-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <CardHeader className="relative pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">

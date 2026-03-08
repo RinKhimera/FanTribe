@@ -1,12 +1,17 @@
 "use client"
 
-import { Preloaded, usePreloadedQuery, useMutation, useQuery } from "convex/react"
+import {
+  Preloaded,
+  useMutation,
+  usePreloadedQuery,
+  useQuery,
+} from "convex/react"
 import { Ban, Loader2, ShieldOff } from "lucide-react"
+import { motion } from "motion/react"
 import { notFound, usePathname } from "next/navigation"
 import { createContext, use, useState } from "react"
-import { motion } from "motion/react"
 import { toast } from "sonner"
-
+import { PageContainer } from "@/components/layout"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +24,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { PageContainer } from "@/components/layout"
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import { UserProfileHeader } from "./user-profile-header"
@@ -136,7 +140,10 @@ export function UserProfileShell({
               userProfile={userProfile}
               subscriptionStatus={subscriptionStatus}
             />
-            <UserProfileTabs username={username} accountType={userProfile.accountType} />
+            <UserProfileTabs
+              username={username}
+              accountType={userProfile.accountType}
+            />
           </>
         )}
         {children}
@@ -194,7 +201,7 @@ function BlockedProfileState({
             stiffness: 260,
             damping: 22,
           }}
-          className="mb-6 flex size-20 items-center justify-center rounded-2xl bg-muted"
+          className="bg-muted mb-6 flex size-20 items-center justify-center rounded-2xl"
         >
           {iBlockedThem ? (
             <ShieldOff
@@ -242,20 +249,14 @@ function BlockedProfileState({
           >
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  disabled={isUnblocking}
-                >
+                <Button variant="outline" disabled={isUnblocking}>
                   {isUnblocking ? (
                     <Loader2
                       aria-hidden="true"
                       className="mr-2 size-4 animate-spin"
                     />
                   ) : (
-                    <ShieldOff
-                      aria-hidden="true"
-                      className="mr-2 size-4"
-                    />
+                    <ShieldOff aria-hidden="true" className="mr-2 size-4" />
                   )}
                   Débloquer {userProfile.name}
                 </Button>
@@ -266,8 +267,8 @@ function BlockedProfileState({
                     Débloquer {userProfile.name} ?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Cette personne pourra à nouveau voir votre contenu et
-                    vous envoyer des messages.
+                    Cette personne pourra à nouveau voir votre contenu et vous
+                    envoyer des messages.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

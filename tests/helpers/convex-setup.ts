@@ -7,7 +7,6 @@
  *   const creatorId = await insertCreator(ctx, { name: "Alice" })
  *   const subId = await insertSubscription(ctx, { creator: creatorId, subscriber: userId })
  */
-
 import { GenericMutationCtx } from "convex/server"
 import { Id } from "../../convex/_generated/dataModel"
 import type { DataModel } from "../../convex/_generated/dataModel"

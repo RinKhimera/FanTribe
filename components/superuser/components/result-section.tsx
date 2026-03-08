@@ -25,7 +25,7 @@ export function ResultSection({
     <div className="mb-2 last:mb-0">
       <div className="mb-1 flex items-center gap-1.5 px-2">
         <Icon className={cn("h-3 w-3", colorClasses[color])} />
-        <span className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">
+        <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
           {title}
         </span>
       </div>

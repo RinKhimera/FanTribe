@@ -8,7 +8,10 @@ type PostComposerFrameProps = {
   className?: string
 }
 
-export function PostComposerFrame({ children, className }: PostComposerFrameProps) {
+export function PostComposerFrame({
+  children,
+  className,
+}: PostComposerFrameProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

@@ -85,8 +85,9 @@ const FormItem = ({ className, ref, ...props }: FormItemProps) => {
   )
 }
 
-interface FormLabelProps
-  extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> {
+interface FormLabelProps extends React.ComponentPropsWithoutRef<
+  typeof LabelPrimitive.Root
+> {
   ref?: React.Ref<React.ElementRef<typeof LabelPrimitive.Root>>
 }
 
@@ -103,8 +104,7 @@ const FormLabel = ({ className, ref, ...props }: FormLabelProps) => {
   )
 }
 
-interface FormControlProps
-  extends React.ComponentPropsWithoutRef<typeof Slot> {
+interface FormControlProps extends React.ComponentPropsWithoutRef<typeof Slot> {
   ref?: React.Ref<React.ElementRef<typeof Slot>>
 }
 
@@ -126,8 +126,7 @@ const FormControl = ({ ref, ...props }: FormControlProps) => {
   )
 }
 
-interface FormDescriptionProps
-  extends React.HTMLAttributes<HTMLParagraphElement> {
+interface FormDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {
   ref?: React.Ref<HTMLParagraphElement>
 }
 

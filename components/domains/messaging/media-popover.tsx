@@ -1,8 +1,8 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion } from "motion/react"
 import { ImageIcon, Loader2 } from "lucide-react"
+import { motion } from "motion/react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { POST_CROP_PRESETS } from "@/components/shared/image-crop/aspect-ratio-presets"
@@ -10,9 +10,9 @@ import { ImageCropDialog } from "@/components/shared/image-crop/image-crop-dialo
 import { Button } from "@/components/ui/button"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { useBunnyUpload } from "@/hooks"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { logger } from "@/lib/config"
-import { useBunnyUpload } from "@/hooks"
 import { cn } from "@/lib/utils"
 
 type MediaPopoverProps = {
@@ -154,7 +154,7 @@ export const MediaPopover = ({ conversationId }: MediaPopoverProps) => {
           "size-9 rounded-full transition-colors",
           isUploading
             ? "bg-amber-500/20 text-amber-500"
-            : "text-muted-foreground hover:bg-white/10 hover:text-foreground"
+            : "text-muted-foreground hover:text-foreground hover:bg-white/10",
         )}
         onClick={handleFileSelect}
         disabled={isUploading}

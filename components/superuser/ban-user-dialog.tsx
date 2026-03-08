@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { Ban, Clock, Infinity as InfinityIcon, ShieldAlert } from "lucide-react"
+import { Infinity as InfinityIcon, Ban, Clock, ShieldAlert } from "lucide-react"
 import { motion } from "motion/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -87,9 +87,10 @@ export const BanUserDialog = ({
         userId,
         banType,
         reason: reason.trim(),
-        durationDays: banType === "temporary" ? parseInt(durationDays) : undefined,
+        durationDays:
+          banType === "temporary" ? parseInt(durationDays) : undefined,
         reportId,
-      })
+      }),
     )
   }
 
@@ -97,9 +98,9 @@ export const BanUserDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md overflow-hidden p-0">
         {/* Header with warning accent */}
-        <div className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-destructive/5 via-transparent to-transparent px-6 pt-6 pb-5">
+        <div className="border-border/50 from-destructive/5 relative overflow-hidden border-b bg-gradient-to-br via-transparent to-transparent px-6 pt-6 pb-5">
           <div className="pointer-events-none absolute inset-0 opacity-30">
-            <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-destructive/20 blur-3xl" />
+            <div className="bg-destructive/20 absolute -top-12 -right-12 h-32 w-32 rounded-full blur-3xl" />
           </div>
 
           <DialogHeader className="relative">
@@ -108,16 +109,17 @@ export const BanUserDialog = ({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/15 ring-1 ring-destructive/20"
+                className="bg-destructive/15 ring-destructive/20 flex h-11 w-11 items-center justify-center rounded-xl ring-1"
               >
-                <ShieldAlert className="h-5 w-5 text-destructive" />
+                <ShieldAlert className="text-destructive h-5 w-5" />
               </motion.div>
               <div>
                 <DialogTitle className="text-lg font-semibold">
                   Bannir {username ? `@${username}` : "l'utilisateur"}
                 </DialogTitle>
                 <DialogDescription className="mt-0.5 text-sm">
-                  Cette action empêchera l&apos;utilisateur d&apos;accéder à la plateforme.
+                  Cette action empêchera l&apos;utilisateur d&apos;accéder à la
+                  plateforme.
                 </DialogDescription>
               </div>
             </div>
@@ -133,7 +135,9 @@ export const BanUserDialog = ({
             </Label>
             <RadioGroup
               value={banType}
-              onValueChange={(value) => setBanType(value as "temporary" | "permanent")}
+              onValueChange={(value) =>
+                setBanType(value as "temporary" | "permanent")
+              }
               className="grid grid-cols-2 gap-3"
             >
               <Label
@@ -142,23 +146,27 @@ export const BanUserDialog = ({
                   "flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-[border-color,background-color]",
                   banType === "temporary"
                     ? "border-amber-500/50 bg-amber-500/5"
-                    : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50"
+                    : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50",
                 )}
               >
-                <RadioGroupItem value="temporary" id="temporary" className="sr-only" />
+                <RadioGroupItem
+                  value="temporary"
+                  id="temporary"
+                  className="sr-only"
+                />
                 <div
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-lg",
                     banType === "temporary"
                       ? "bg-amber-500/20 text-amber-500"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   <Clock className="h-4 w-4" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Temporaire</p>
-                  <p className="text-xs text-muted-foreground">Durée limitée</p>
+                  <p className="text-muted-foreground text-xs">Durée limitée</p>
                 </div>
               </Label>
 
@@ -168,23 +176,27 @@ export const BanUserDialog = ({
                   "flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-[border-color,background-color]",
                   banType === "permanent"
                     ? "border-destructive/50 bg-destructive/5"
-                    : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50"
+                    : "border-border/60 bg-muted/30 hover:border-border hover:bg-muted/50",
                 )}
               >
-                <RadioGroupItem value="permanent" id="permanent" className="sr-only" />
+                <RadioGroupItem
+                  value="permanent"
+                  id="permanent"
+                  className="sr-only"
+                />
                 <div
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-lg",
                     banType === "permanent"
                       ? "bg-destructive/20 text-destructive"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   <InfinityIcon className="h-4 w-4" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Permanent</p>
-                  <p className="text-xs text-muted-foreground">Définitif</p>
+                  <p className="text-muted-foreground text-xs">Définitif</p>
                 </div>
               </Label>
             </RadioGroup>
@@ -198,7 +210,10 @@ export const BanUserDialog = ({
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Label htmlFor="duration" className="mb-2 block text-sm font-medium">
+              <Label
+                htmlFor="duration"
+                className="mb-2 block text-sm font-medium"
+              >
                 Durée du bannissement
               </Label>
               <Select value={durationDays} onValueChange={setDurationDays}>
@@ -232,7 +247,7 @@ export const BanUserDialog = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-muted/20 px-6 py-4">
+        <div className="border-border/50 bg-muted/20 flex items-center justify-end gap-3 border-t px-6 py-4">
           <Button variant="ghost" onClick={handleClose} disabled={isPending}>
             Annuler
           </Button>
@@ -247,7 +262,7 @@ export const BanUserDialog = ({
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="h-4 w-4 rounded-full border-2 border-destructive-foreground/30 border-t-destructive-foreground"
+                  className="border-destructive-foreground/30 border-t-destructive-foreground h-4 w-4 rounded-full border-2"
                 />
                 Bannissement…
               </>

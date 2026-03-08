@@ -1,9 +1,9 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion, AnimatePresence } from "motion/react"
 import { Copy, Pencil, Reply, Smile, Trash2 } from "lucide-react"
-import { useState, useCallback, useEffect, useRef } from "react"
+import { AnimatePresence, motion } from "motion/react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import {
   ContextMenu,
@@ -15,9 +15,9 @@ import {
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
-import { ReactionPicker } from "./reaction-picker"
-import { EditMessageDialog } from "./edit-message-dialog"
 import { DeleteMessageDialog } from "./delete-message-dialog"
+import { EditMessageDialog } from "./edit-message-dialog"
+import { ReactionPicker } from "./reaction-picker"
 
 type MessageContextMenuProps = {
   children: React.ReactNode
@@ -49,7 +49,9 @@ export const MessageContextMenu = ({
   const [canEdit, setCanEdit] = useState(false)
   useEffect(() => {
     const check = () =>
-      setCanEdit(isFromCurrentUser && Date.now() - createdAt < EDIT_TIME_LIMIT_MS)
+      setCanEdit(
+        isFromCurrentUser && Date.now() - createdAt < EDIT_TIME_LIMIT_MS,
+      )
     check()
     const interval = setInterval(check, 60000)
     return () => clearInterval(interval)
@@ -79,7 +81,7 @@ export const MessageContextMenu = ({
             ))}
             <button
               onClick={() => setShowReactionPicker(true)}
-              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-full transition-colors hover:bg-white/10"
             >
               <Smile size={16} />
             </button>
@@ -121,7 +123,7 @@ export const MessageContextMenu = ({
 
               <ContextMenuItem
                 onClick={() => setShowDeleteDialog(true)}
-                className="gap-2 text-sm text-destructive focus:bg-destructive/10 focus:text-destructive"
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive gap-2 text-sm"
               >
                 <Trash2 size={16} />
                 Supprimer
@@ -139,7 +141,7 @@ export const MessageContextMenu = ({
             onClick={() => setShowReactionPicker(false)}
           >
             <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
               onClick={(e) => e.stopPropagation()}
             >
               <ReactionPicker
@@ -193,7 +195,7 @@ const QuickReactionButton = ({
       onClick={handleClick}
       className={cn(
         "flex size-8 items-center justify-center rounded-full text-lg transition-colors",
-        isActive ? "bg-amber-500/20" : "hover:bg-white/10"
+        isActive ? "bg-amber-500/20" : "hover:bg-white/10",
       )}
     >
       {emoji}

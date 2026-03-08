@@ -1,7 +1,11 @@
 import { convexTest } from "convex-test"
 import { describe, expect, it } from "vitest"
+import {
+  batchGetComments,
+  batchGetPosts,
+  batchGetUsers,
+} from "../../../convex/lib/batch"
 import schema from "../../../convex/schema"
-import { batchGetUsers, batchGetPosts, batchGetComments } from "../../../convex/lib/batch"
 
 describe("batch helpers", () => {
   describe("batchGetUsers", () => {

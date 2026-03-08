@@ -1,11 +1,10 @@
 "use client"
 
+import { AlertCircle, Check, Link2, Plus, Trash2 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { Check, AlertCircle, Link2, Plus, Trash2 } from "lucide-react"
 import { useCallback } from "react"
 import { UseFieldArrayReturn, UseFormReturn } from "react-hook-form"
 import { z } from "zod"
-import { FormSection } from "./form-section"
 import { Button } from "@/components/ui/button"
 import {
   FormControl,
@@ -23,8 +22,9 @@ import {
   normalizeUrl,
 } from "@/lib/social-links"
 import { PLATFORM_CONFIG } from "@/lib/social-links/platform-config"
-import { profileFormSchema } from "@/schemas/profile"
 import { cn } from "@/lib/utils"
+import { profileFormSchema } from "@/schemas/profile"
+import { FormSection } from "./form-section"
 
 interface LinksSectionProps {
   form: UseFormReturn<z.infer<typeof profileFormSchema>>
@@ -116,7 +116,11 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
   // Normalize URL on blur (add https:// if missing)
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const value = e.target.value.trim()
-    if (value && !value.startsWith("http://") && !value.startsWith("https://")) {
+    if (
+      value &&
+      !value.startsWith("http://") &&
+      !value.startsWith("https://")
+    ) {
       const normalized = normalizeUrl(value)
       if (normalized !== value) {
         form.setValue(`socialLinks.${index}.url`, normalized)
@@ -144,14 +148,14 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                   {/* Platform icon indicator */}
                   <div
                     className={cn(
-                      "absolute left-3 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1.5 transition-colors duration-200",
-                      isValid ? config.bgColor : "bg-muted/50"
+                      "absolute top-1/2 left-3 z-10 flex -translate-y-1/2 items-center justify-center rounded-lg p-1.5 transition-colors duration-200",
+                      isValid ? config.bgColor : "bg-muted/50",
                     )}
                   >
                     <Icon
                       className={cn(
                         "size-4 transition-colors duration-200",
-                        isValid ? config.color : "text-muted-foreground"
+                        isValid ? config.color : "text-muted-foreground",
                       )}
                     />
                   </div>
@@ -160,7 +164,7 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                     {...field}
                     value={field.value || ""}
                     placeholder={config.placeholder}
-                    className="glass-input rounded-xl border-0 pl-14 pr-10"
+                    className="glass-input rounded-xl border-0 pr-10 pl-14"
                     autoComplete="url"
                     onBlur={(e) => {
                       field.onBlur()
@@ -175,7 +179,7 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                        className="absolute top-1/2 right-3 -translate-y-1/2"
                       >
                         {isValid ? (
                           <motion.div
@@ -186,7 +190,7 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                             <Check className="size-3.5 text-emerald-500" />
                           </motion.div>
                         ) : (
-                          <motion.div className="rounded-full bg-destructive/10 p-1">
+                          <motion.div className="bg-destructive/10 rounded-full p-1">
                             <AlertCircle className="text-destructive size-3.5" />
                           </motion.div>
                         )}
@@ -196,7 +200,10 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                 </div>
               </FormControl>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Button
                   type="button"
                   variant="ghost"
@@ -217,7 +224,7 @@ const SocialLinkInput = ({ form, index, onRemove }: SocialLinkInputProps) => {
                   initial={{ opacity: 0, y: -8, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -8, height: 0 }}
-                  className="flex items-center gap-1.5 overflow-hidden pl-1 pt-1"
+                  className="flex items-center gap-1.5 overflow-hidden pt-1 pl-1"
                 >
                   <span className={cn("text-xs font-medium", config.color)}>
                     {config.label}

@@ -85,9 +85,7 @@ const CustomTooltip = ({
               {labelMap[entry.dataKey] ?? entry.dataKey}
             </span>
           </div>
-          <span className="font-semibold">
-            {formatAmount(entry.value)} XAF
-          </span>
+          <span className="font-semibold">{formatAmount(entry.value)} XAF</span>
         </div>
       ))}
     </div>

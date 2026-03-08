@@ -1,12 +1,12 @@
 "use client"
 
 import {
+  Facebook,
   Globe,
   Instagram,
+  Linkedin,
   Twitter,
   Youtube,
-  Linkedin,
-  Facebook,
 } from "lucide-react"
 import type { SocialPlatform } from "./index"
 

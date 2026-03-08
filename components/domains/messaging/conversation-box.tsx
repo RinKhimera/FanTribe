@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
 import { ImageIcon, Lock, Pin, VideoIcon, Volume2 } from "lucide-react"
+import { motion } from "motion/react"
 import { useParams, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/formatters"
@@ -23,7 +23,7 @@ export const ConversationBox = ({
     // Si la conversation est verrouillée, masquer le preview
     if (conversation.isLocked) {
       return (
-        <span className="flex items-center gap-1.5 italic text-muted-foreground/70">
+        <span className="text-muted-foreground/70 flex items-center gap-1.5 italic">
           <Lock size={12} />
           <span>Conversation verrouillée</span>
         </span>
@@ -32,7 +32,7 @@ export const ConversationBox = ({
 
     if (!conversation.lastMessagePreview) {
       return (
-        <span className="italic text-muted-foreground/70">
+        <span className="text-muted-foreground/70 italic">
           Démarrer une conversation
         </span>
       )
@@ -72,20 +72,21 @@ export const ConversationBox = ({
 
   return (
     <motion.div
+      data-testid="conversation-item"
       onClick={() => router.push(`/messages/${conversation._id}`)}
       whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.03)" }}
       whileTap={{ scale: 0.98 }}
       className={cn(
         "relative flex cursor-pointer items-center gap-3 border-b border-white/5 p-4 transition-[background-color,opacity]",
         isSelected && "bg-white/5",
-        conversation.isLocked && "opacity-60"
+        conversation.isLocked && "opacity-60",
       )}
     >
       {/* Indicateur de sélection */}
       {isSelected && (
         <motion.div
           layoutId="conversation-indicator"
-          className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-linear-to-b from-amber-500 to-orange-500"
+          className="absolute top-1/2 left-0 h-8 w-1 -translate-y-1/2 rounded-r-full bg-linear-to-b from-amber-500 to-orange-500"
         />
       )}
 
@@ -94,7 +95,7 @@ export const ConversationBox = ({
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute left-1.5 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-amber-500"
+          className="absolute top-1/2 left-1.5 size-1.5 -translate-y-1/2 rounded-full bg-amber-500"
         />
       )}
 
@@ -103,7 +104,7 @@ export const ConversationBox = ({
         <Avatar
           className={cn(
             "size-12 ring-2 transition-shadow",
-            conversation.hasUnread ? "ring-amber-500/30" : "ring-white/5"
+            conversation.hasUnread ? "ring-amber-500/30" : "ring-white/5",
           )}
         >
           <AvatarImage
@@ -121,9 +122,9 @@ export const ConversationBox = ({
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -bottom-0.5 -right-0.5"
+            className="absolute -right-0.5 -bottom-0.5"
           >
-            <span className="inline-flex size-3.5 rounded-full border-2 border-background bg-green-500" />
+            <span className="border-background inline-flex size-3.5 rounded-full border-2 bg-green-500" />
           </motion.div>
         )}
       </div>
@@ -136,8 +137,8 @@ export const ConversationBox = ({
             className={cn(
               "truncate text-sm",
               conversation.hasUnread
-                ? "font-semibold text-foreground"
-                : "font-medium text-foreground/90"
+                ? "text-foreground font-semibold"
+                : "text-foreground/90 font-medium",
             )}
           >
             {conversation.otherParticipant?.name ?? "Utilisateur"}
@@ -166,8 +167,8 @@ export const ConversationBox = ({
           className={cn(
             "mt-0.5 truncate text-sm",
             conversation.hasUnread
-              ? "font-medium text-foreground/80"
-              : "text-muted-foreground"
+              ? "text-foreground/80 font-medium"
+              : "text-muted-foreground",
           )}
         >
           {getPreviewContent()}
@@ -194,7 +195,7 @@ export const ConversationBox = ({
               "text-xs",
               conversation.hasUnread
                 ? "font-medium text-amber-500"
-                : "text-muted-foreground"
+                : "text-muted-foreground",
             )}
           >
             {formatDate(conversation.lastMessageAt)}

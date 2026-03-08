@@ -10,7 +10,10 @@ import schema from "../../../convex/schema"
 // Helper to create test users
 async function createTestUser(
   t: ReturnType<typeof convexTest>,
-  overrides: { name: string; tokenIdentifier: string; email: string } & Record<string, unknown>,
+  overrides: { name: string; tokenIdentifier: string; email: string } & Record<
+    string,
+    unknown
+  >,
 ) {
   const { name, tokenIdentifier, email, accountType, ...rest } = overrides
   return await t.run(async (ctx) => {

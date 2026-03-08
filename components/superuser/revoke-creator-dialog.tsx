@@ -36,7 +36,7 @@ export const RevokeCreatorDialog = ({
   const [reason, setReason] = useState("")
 
   const revokeCreatorStatus = useMutation(
-    api.creatorApplications.revokeCreatorStatus
+    api.creatorApplications.revokeCreatorStatus,
   )
 
   const { execute, isPending } = useAsyncHandler({
@@ -60,7 +60,7 @@ export const RevokeCreatorDialog = ({
       revokeCreatorStatus({
         userId,
         reason: reason.trim() || undefined,
-      })
+      }),
     )
   }
 
@@ -68,7 +68,7 @@ export const RevokeCreatorDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md overflow-hidden p-0">
         {/* Header with warning accent */}
-        <div className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent px-6 pt-6 pb-5">
+        <div className="border-border/50 relative overflow-hidden border-b bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent px-6 pt-6 pb-5">
           <div className="pointer-events-none absolute inset-0 opacity-40">
             <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-amber-500/30 blur-3xl" />
           </div>
@@ -129,7 +129,7 @@ export const RevokeCreatorDialog = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-muted/20 px-6 py-4">
+        <div className="border-border/50 bg-muted/20 flex items-center justify-end gap-3 border-t px-6 py-4">
           <Button variant="ghost" onClick={handleClose} disabled={isPending}>
             Annuler
           </Button>

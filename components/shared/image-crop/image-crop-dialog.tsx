@@ -1,7 +1,15 @@
 "use client"
 
+import {
+  Check,
+  Crop,
+  Loader2,
+  SkipForward,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { Check, Crop, Loader2, SkipForward, X, ZoomIn, ZoomOut } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Area, Point } from "react-easy-crop"
@@ -21,14 +29,17 @@ import { cn } from "@/lib/utils"
 import type { AspectRatioPreset } from "./aspect-ratio-presets"
 import { getCroppedImage } from "./crop-utils"
 
-const Cropper = dynamic(() => import("react-easy-crop").then((m) => m.default), {
-  ssr: false,
-  loading: () => (
-    <div className="flex aspect-square items-center justify-center rounded-xl bg-black">
-      <Loader2 className="size-8 animate-spin text-white/40" />
-    </div>
-  ),
-})
+const Cropper = dynamic(
+  () => import("react-easy-crop").then((m) => m.default),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex aspect-square items-center justify-center rounded-xl bg-black">
+        <Loader2 className="size-8 animate-spin text-white/40" />
+      </div>
+    ),
+  },
+)
 
 type CropShape = "round" | "rect"
 
@@ -69,7 +80,7 @@ export function ImageCropDialog({
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [activeAspect, setActiveAspect] = useState<number>(
-    aspectRatio ?? presets?.[0]?.value ?? 1
+    aspectRatio ?? presets?.[0]?.value ?? 1,
   )
   const [isProcessing, setIsProcessing] = useState(false)
   // Key used to force Cropper re-mount after image loads (fixes race condition
@@ -102,7 +113,7 @@ export function ImageCropDialog({
     (_croppedArea: Area, croppedAreaPixels: Area) => {
       setCroppedAreaPixels(croppedAreaPixels)
     },
-    []
+    [],
   )
 
   const handleConfirm = async () => {
@@ -113,7 +124,7 @@ export function ImageCropDialog({
         imageSrc,
         croppedAreaPixels,
         outputMimeType,
-        outputQuality
+        outputQuality,
       )
       onConfirm(croppedBlob)
     } catch (error) {
@@ -139,20 +150,20 @@ export function ImageCropDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "max-w-md p-0 overflow-hidden",
+          "max-w-md overflow-hidden p-0",
           "bg-background/95 backdrop-blur-xl",
           "border-primary/10",
-          "shadow-2xl"
+          "shadow-2xl",
         )}
         showCloseButton={false}
       >
         {/* Header */}
         <DialogHeader className="relative px-5 pt-5 pb-1">
           {/* Ambient glow */}
-          <div className="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-24 w-24 rounded-full bg-primary/8 blur-3xl" />
+          <div className="bg-primary/8 pointer-events-none absolute inset-x-0 -top-8 mx-auto h-24 w-24 rounded-full blur-3xl" />
 
           <DialogTitle className="flex items-center justify-center gap-2 text-base">
-            <Crop className="size-4 text-primary" />
+            <Crop className="text-primary size-4" />
             {dialogTitle}
           </DialogTitle>
           <DialogDescription className="text-center text-xs">
@@ -166,7 +177,7 @@ export function ImageCropDialog({
           <div
             className={cn(
               "relative overflow-hidden rounded-xl bg-black",
-              cropShape === "round" ? "aspect-square" : "aspect-4/3"
+              cropShape === "round" ? "aspect-square" : "aspect-4/3",
             )}
             style={{ touchAction: "none" }}
           >
@@ -201,7 +212,7 @@ export function ImageCropDialog({
 
         {/* Zoom slider */}
         <div className="flex items-center gap-3 px-5">
-          <ZoomOut className="size-3.5 shrink-0 text-muted-foreground" />
+          <ZoomOut className="text-muted-foreground size-3.5 shrink-0" />
           <Slider
             value={[zoom]}
             min={1}
@@ -211,7 +222,7 @@ export function ImageCropDialog({
             className="flex-1"
             aria-label="Zoom"
           />
-          <ZoomIn className="size-3.5 shrink-0 text-muted-foreground" />
+          <ZoomIn className="text-muted-foreground size-3.5 shrink-0" />
         </div>
 
         {/* Aspect ratio presets */}
@@ -235,7 +246,7 @@ export function ImageCropDialog({
                       "rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200",
                       isActive
                         ? "bg-primary text-primary-foreground shadow-sm"
-                        : "glass-button text-muted-foreground hover:text-foreground"
+                        : "glass-button text-muted-foreground hover:text-foreground",
                     )}
                   >
                     {preset.label}
@@ -247,7 +258,7 @@ export function ImageCropDialog({
         </AnimatePresence>
 
         {/* Actions */}
-        <DialogFooter className="border-t border-border/50 px-5 py-4 bg-muted/20">
+        <DialogFooter className="border-border/50 bg-muted/20 border-t px-5 py-4">
           <div className="flex w-full items-center gap-2">
             <Button
               variant="ghost"
@@ -256,7 +267,7 @@ export function ImageCropDialog({
               disabled={isProcessing}
               className="text-muted-foreground"
             >
-              <X className="size-3.5 mr-1.5" />
+              <X className="mr-1.5 size-3.5" />
               Annuler
             </Button>
 
@@ -270,7 +281,7 @@ export function ImageCropDialog({
                 disabled={isProcessing}
                 className="text-muted-foreground"
               >
-                <SkipForward className="size-3.5 mr-1.5" />
+                <SkipForward className="mr-1.5 size-3.5" />
                 Passer
               </Button>
             )}
@@ -283,12 +294,12 @@ export function ImageCropDialog({
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
                   Traitement…
                 </>
               ) : (
                 <>
-                  <Check className="size-3.5 mr-1.5" />
+                  <Check className="mr-1.5 size-3.5" />
                   Recadrer
                 </>
               )}

@@ -28,7 +28,12 @@ export const getFollowSubscription = query({
       renewalCount: v.number(),
       lastUpdateTime: v.number(),
       type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      status: v.union(
+        v.literal("active"),
+        v.literal("expired"),
+        v.literal("canceled"),
+        v.literal("pending"),
+      ),
       grantedByCreator: v.optional(v.boolean()),
       bundlePurchase: v.optional(v.boolean()),
     }),
@@ -51,22 +56,29 @@ export const getFollowSubscription = query({
 // PUBLIC: liste des souscriptions d'un abonné (content_access)
 export const listSubscriberSubscriptions = query({
   args: { subscriberId: v.id("users") },
-  returns: v.array(v.object({
-    _id: v.id("subscriptions"),
-    _creationTime: v.number(),
-    subscriber: v.id("users"),
-    creator: v.id("users"),
-    startDate: v.number(),
-    endDate: v.number(),
-    amountPaid: v.number(),
-    currency: v.union(v.literal("XAF"), v.literal("USD")),
-    renewalCount: v.number(),
-    lastUpdateTime: v.number(),
-    type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-    status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
-    grantedByCreator: v.optional(v.boolean()),
-    bundlePurchase: v.optional(v.boolean()),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(
+        v.literal("active"),
+        v.literal("expired"),
+        v.literal("canceled"),
+        v.literal("pending"),
+      ),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+    }),
+  ),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     if (user._id !== args.subscriberId) {
@@ -84,22 +96,29 @@ export const listSubscriberSubscriptions = query({
 // PUBLIC: liste des abonnés d'un créateur (content_access)
 export const listCreatorSubscribers = query({
   args: { creatorId: v.id("users") },
-  returns: v.array(v.object({
-    _id: v.id("subscriptions"),
-    _creationTime: v.number(),
-    subscriber: v.id("users"),
-    creator: v.id("users"),
-    startDate: v.number(),
-    endDate: v.number(),
-    amountPaid: v.number(),
-    currency: v.union(v.literal("XAF"), v.literal("USD")),
-    renewalCount: v.number(),
-    lastUpdateTime: v.number(),
-    type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-    status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
-    grantedByCreator: v.optional(v.boolean()),
-    bundlePurchase: v.optional(v.boolean()),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.id("subscriptions"),
+      _creationTime: v.number(),
+      subscriber: v.id("users"),
+      creator: v.id("users"),
+      startDate: v.number(),
+      endDate: v.number(),
+      amountPaid: v.number(),
+      currency: v.union(v.literal("XAF"), v.literal("USD")),
+      renewalCount: v.number(),
+      lastUpdateTime: v.number(),
+      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
+      status: v.union(
+        v.literal("active"),
+        v.literal("expired"),
+        v.literal("canceled"),
+        v.literal("pending"),
+      ),
+      grantedByCreator: v.optional(v.boolean()),
+      bundlePurchase: v.optional(v.boolean()),
+    }),
+  ),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     if (user._id !== args.creatorId) {
@@ -163,7 +182,12 @@ export const getSubscriptionByTransactionId = internalQuery({
       renewalCount: v.number(),
       lastUpdateTime: v.number(),
       type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      status: v.union(
+        v.literal("active"),
+        v.literal("expired"),
+        v.literal("canceled"),
+        v.literal("pending"),
+      ),
       grantedByCreator: v.optional(v.boolean()),
       bundlePurchase: v.optional(v.boolean()),
     }),
@@ -209,7 +233,7 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
     await Promise.all([
       // Batch patch all expired subscriptions
       ...expired.map((s) =>
-        ctx.db.patch(s._id, { status: "expired", lastUpdateTime: now })
+        ctx.db.patch(s._id, { status: "expired", lastUpdateTime: now }),
       ),
       // Batch create notifications (prefs checked per recipient)
       ...expired.map((s) =>
@@ -217,17 +241,22 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
           type: "subscriptionExpired",
           recipientId: s.subscriber,
           actorId: s.creator,
-        })
+        }),
       ),
     ])
 
     // Decrement subscribersCount per creator (grouped to avoid concurrent stat conflicts)
     const expiredPerCreator = new Map<string, number>()
     for (const s of expired) {
-      expiredPerCreator.set(s.creator, (expiredPerCreator.get(s.creator) ?? 0) + 1)
+      expiredPerCreator.set(
+        s.creator,
+        (expiredPerCreator.get(s.creator) ?? 0) + 1,
+      )
     }
     for (const [creatorId, count] of expiredPerCreator) {
-      await incrementUserStat(ctx, creatorId as Id<"users">, { subscribersCount: -count })
+      await incrementUserStat(ctx, creatorId as Id<"users">, {
+        subscribersCount: -count,
+      })
     }
 
     return {
@@ -241,23 +270,33 @@ export const checkAndUpdateExpiredSubscriptions = internalMutation({
 export const getMyContentAccessSubscriptionsStats = query({
   args: {},
   returns: v.object({
-    subscriptions: v.array(v.object({
-      _id: v.id("subscriptions"),
-      _creationTime: v.number(),
-      subscriber: v.id("users"),
-      creator: v.id("users"),
-      startDate: v.number(),
-      endDate: v.number(),
-      amountPaid: v.number(),
-      currency: v.union(v.literal("XAF"), v.literal("USD")),
-      renewalCount: v.number(),
-      lastUpdateTime: v.number(),
-      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
-      grantedByCreator: v.optional(v.boolean()),
-      bundlePurchase: v.optional(v.boolean()),
-      creatorUser: v.any(),
-    })),
+    subscriptions: v.array(
+      v.object({
+        _id: v.id("subscriptions"),
+        _creationTime: v.number(),
+        subscriber: v.id("users"),
+        creator: v.id("users"),
+        startDate: v.number(),
+        endDate: v.number(),
+        amountPaid: v.number(),
+        currency: v.union(v.literal("XAF"), v.literal("USD")),
+        renewalCount: v.number(),
+        lastUpdateTime: v.number(),
+        type: v.union(
+          v.literal("content_access"),
+          v.literal("messaging_access"),
+        ),
+        status: v.union(
+          v.literal("active"),
+          v.literal("expired"),
+          v.literal("canceled"),
+          v.literal("pending"),
+        ),
+        grantedByCreator: v.optional(v.boolean()),
+        bundlePurchase: v.optional(v.boolean()),
+        creatorUser: v.any(),
+      }),
+    ),
     creatorsCount: v.number(),
     postsCount: v.number(),
   }),
@@ -311,23 +350,33 @@ export const getMyContentAccessSubscriptionsStats = query({
 export const getMySubscribersStats = query({
   args: {},
   returns: v.object({
-    subscribers: v.array(v.object({
-      _id: v.id("subscriptions"),
-      _creationTime: v.number(),
-      subscriber: v.id("users"),
-      creator: v.id("users"),
-      startDate: v.number(),
-      endDate: v.number(),
-      amountPaid: v.number(),
-      currency: v.union(v.literal("XAF"), v.literal("USD")),
-      renewalCount: v.number(),
-      lastUpdateTime: v.number(),
-      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
-      grantedByCreator: v.optional(v.boolean()),
-      bundlePurchase: v.optional(v.boolean()),
-      subscriberUser: v.any(),
-    })),
+    subscribers: v.array(
+      v.object({
+        _id: v.id("subscriptions"),
+        _creationTime: v.number(),
+        subscriber: v.id("users"),
+        creator: v.id("users"),
+        startDate: v.number(),
+        endDate: v.number(),
+        amountPaid: v.number(),
+        currency: v.union(v.literal("XAF"), v.literal("USD")),
+        renewalCount: v.number(),
+        lastUpdateTime: v.number(),
+        type: v.union(
+          v.literal("content_access"),
+          v.literal("messaging_access"),
+        ),
+        status: v.union(
+          v.literal("active"),
+          v.literal("expired"),
+          v.literal("canceled"),
+          v.literal("pending"),
+        ),
+        grantedByCreator: v.optional(v.boolean()),
+        bundlePurchase: v.optional(v.boolean()),
+        subscriberUser: v.any(),
+      }),
+    ),
     subscribersCount: v.number(),
     postsCount: v.number(),
   }),
@@ -450,9 +499,7 @@ export const getMySubscriptionsPaginated = query({
             const posts = await ctx.db
               .query("posts")
               .withIndex("by_author", (q) => q.eq("author", id))
-              .filter((q) =>
-                q.eq(q.field("visibility"), "subscribers_only"),
-              )
+              .filter((q) => q.eq(q.field("visibility"), "subscribers_only"))
               .take(1000)
             return posts.length
           }),
@@ -475,10 +522,7 @@ export const getMySubscriptionsPaginated = query({
 
         const daysUntilExpiry =
           s.status === "active"
-            ? Math.max(
-                0,
-                Math.ceil((s.endDate - now) / (1000 * 60 * 60 * 24)),
-              )
+            ? Math.max(0, Math.ceil((s.endDate - now) / (1000 * 60 * 60 * 24)))
             : 0
 
         const subscribedMs = now - s._creationTime
@@ -547,7 +591,11 @@ export const getPublicSubscriptionsPaginated = query({
           username: v.optional(v.string()),
           image: v.string(),
           isOnline: v.boolean(),
-          accountType: v.union(v.literal("USER"), v.literal("CREATOR"), v.literal("SUPERUSER")),
+          accountType: v.union(
+            v.literal("USER"),
+            v.literal("CREATOR"),
+            v.literal("SUPERUSER"),
+          ),
         }),
       }),
     ),
@@ -719,9 +767,7 @@ export const canBuyMessagingSubscription = query({
       .first()
 
     const hasActiveContentSub =
-      contentSub &&
-      contentSub.status === "active" &&
-      contentSub.endDate > now
+      contentSub && contentSub.status === "active" && contentSub.endDate > now
 
     // Vérifier l'abonnement messagerie existant
     const messagingSub = await ctx.db
@@ -799,7 +845,12 @@ export const getMessagingSubscription = query({
       renewalCount: v.number(),
       lastUpdateTime: v.number(),
       type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+      status: v.union(
+        v.literal("active"),
+        v.literal("expired"),
+        v.literal("canceled"),
+        v.literal("pending"),
+      ),
       grantedByCreator: v.optional(v.boolean()),
       bundlePurchase: v.optional(v.boolean()),
     }),
@@ -840,8 +891,16 @@ export const getSubscriptionStatus = query({
         currency: v.union(v.literal("XAF"), v.literal("USD")),
         renewalCount: v.number(),
         lastUpdateTime: v.number(),
-        type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-        status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+        type: v.union(
+          v.literal("content_access"),
+          v.literal("messaging_access"),
+        ),
+        status: v.union(
+          v.literal("active"),
+          v.literal("expired"),
+          v.literal("canceled"),
+          v.literal("pending"),
+        ),
         grantedByCreator: v.optional(v.boolean()),
         bundlePurchase: v.optional(v.boolean()),
       }),
@@ -859,8 +918,16 @@ export const getSubscriptionStatus = query({
         currency: v.union(v.literal("XAF"), v.literal("USD")),
         renewalCount: v.number(),
         lastUpdateTime: v.number(),
-        type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-        status: v.union(v.literal("active"), v.literal("expired"), v.literal("canceled"), v.literal("pending")),
+        type: v.union(
+          v.literal("content_access"),
+          v.literal("messaging_access"),
+        ),
+        status: v.union(
+          v.literal("active"),
+          v.literal("expired"),
+          v.literal("canceled"),
+          v.literal("pending"),
+        ),
         grantedByCreator: v.optional(v.boolean()),
         bundlePurchase: v.optional(v.boolean()),
       }),
@@ -935,12 +1002,14 @@ export const getSubscriptionStatusForMessaging = query({
       v.literal("not_authenticated"),
     ),
     suggestBundle: v.boolean(),
-    prices: v.optional(v.object({
-      contentAccess: v.number(),
-      messagingAccess: v.number(),
-      bundle: v.number(),
-      bundleSavings: v.number(),
-    })),
+    prices: v.optional(
+      v.object({
+        contentAccess: v.number(),
+        messagingAccess: v.number(),
+        bundle: v.number(),
+        bundleSavings: v.number(),
+      }),
+    ),
   }),
   handler: async (ctx, args) => {
     let currentUser = null

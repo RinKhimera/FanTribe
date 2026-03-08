@@ -1,9 +1,9 @@
 "use client"
 
 import { useMutation } from "convex/react"
-import { motion } from "motion/react"
 import { Clock, Pencil } from "lucide-react"
-import { useState, useEffect } from "react"
+import { motion } from "motion/react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -96,7 +96,7 @@ export const EditMessageDialog = ({
             </div>
             Modifier le message
           </DialogTitle>
-          <DialogDescription className="flex items-center gap-1.5 text-muted-foreground">
+          <DialogDescription className="text-muted-foreground flex items-center gap-1.5">
             <Clock size={14} aria-hidden="true" />
             Modifiable pendant 15 minutes après l&apos;envoi
           </DialogDescription>
@@ -113,7 +113,7 @@ export const EditMessageDialog = ({
             className="min-h-[100px] resize-none border-white/10 bg-white/5 focus-visible:ring-amber-500/50"
             autoFocus
           />
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-2 text-xs">
             Appuyez sur Entrée pour sauvegarder, Shift+Entrée pour un retour à
             la ligne
           </p>

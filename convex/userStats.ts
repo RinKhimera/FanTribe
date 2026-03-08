@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values"
 import { Id } from "./_generated/dataModel"
-import { internalMutation, MutationCtx, query } from "./_generated/server"
+import { MutationCtx, internalMutation, query } from "./_generated/server"
 
 /**
  * Helper pour les mises à jour incrémentales des stats utilisateur.
@@ -126,7 +126,13 @@ export const getUserProfileStats = query({
         totalLikes += likes.length
       }
 
-      return { kind: "creator" as const, postsCount, subscribersCount, followersCount, totalLikes }
+      return {
+        kind: "creator" as const,
+        postsCount,
+        subscribersCount,
+        followersCount,
+        totalLikes,
+      }
     }
 
     // USER stats — count all content_access subscriptions (active + expired)

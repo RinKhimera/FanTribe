@@ -15,9 +15,7 @@ import { useEffect, useRef, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { UsernameSuggestions } from "@/components/onboarding/username-suggestions"
-import {
-  AVATAR_ASPECT,
-} from "@/components/shared/image-crop/aspect-ratio-presets"
+import { AVATAR_ASPECT } from "@/components/shared/image-crop/aspect-ratio-presets"
 import { ImageCropDialog } from "@/components/shared/image-crop/image-crop-dialog"
 import { FormSection } from "@/components/shared/profile-form/form-section"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -33,10 +31,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { api } from "@/convex/_generated/api"
 import { Doc } from "@/convex/_generated/dataModel"
-import { useDebounce, useBunnyUpload } from "@/hooks"
+import { useBunnyUpload, useDebounce } from "@/hooks"
 import { logger } from "@/lib/config/logger"
-import { onboardingStep1Schema, OnboardingStep1Data } from "@/schemas/profile"
 import { cn } from "@/lib/utils"
+import { OnboardingStep1Data, onboardingStep1Schema } from "@/schemas/profile"
 
 export type Step1Payload = OnboardingStep1Data & { _avatarUrl?: string | null }
 
@@ -61,7 +59,9 @@ export const StepIdentity = ({
 
   const [cropDialogState, setCropDialogState] = useState<CropDialogState>(null)
   const [optimisticAvatar, setOptimisticAvatar] = useState<string | null>(null)
-  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null)
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(
+    null,
+  )
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<OnboardingStep1Data>({
@@ -87,7 +87,9 @@ export const StepIdentity = ({
 
   const suggestions = useQuery(
     api.users.suggestUsernames,
-    isUsernameAvailable === false ? { baseName: currentUser.name || "" } : "skip",
+    isUsernameAvailable === false
+      ? { baseName: currentUser.name || "" }
+      : "skip",
   )
 
   // Keep optimistic preview in sync
@@ -135,7 +137,10 @@ export const StepIdentity = ({
     startUploadTransition(async () => {
       try {
         const fileExtension = file.name.split(".").pop() || "jpg"
-        const randomSuffix = crypto.randomUUID().replace(/-/g, "").substring(0, 13)
+        const randomSuffix = crypto
+          .randomUUID()
+          .replace(/-/g, "")
+          .substring(0, 13)
         const fileName = `${currentUser._id}/avatar_${randomSuffix}.${fileExtension}`
 
         const result = await uploadMedia({
@@ -164,7 +169,8 @@ export const StepIdentity = ({
     setCropDialogState(null)
   }
 
-  const displayedAvatar = optimisticAvatar || uploadedAvatarUrl || currentUser.image
+  const displayedAvatar =
+    optimisticAvatar || uploadedAvatarUrl || currentUser.image
 
   const onSubmit = async (data: OnboardingStep1Data) => {
     if (isUsernameAvailable === false) {
@@ -175,7 +181,9 @@ export const StepIdentity = ({
   }
 
   const isCheckingUsername =
-    debouncedUsername && debouncedUsername.length >= 6 && isUsernameAvailable === undefined
+    debouncedUsername &&
+    debouncedUsername.length >= 6 &&
+    isUsernameAvailable === undefined
 
   return (
     <Form {...form}>
@@ -190,7 +198,11 @@ export const StepIdentity = ({
           onChange={handleFileSelect}
         />
 
-        <FormSection icon={<User className="size-4" />} title="Photo de profil" delay={0}>
+        <FormSection
+          icon={<User className="size-4" />}
+          title="Photo de profil"
+          delay={0}
+        >
           <div className="flex items-center gap-5">
             <div className="relative shrink-0">
               <Avatar
@@ -198,7 +210,9 @@ export const StepIdentity = ({
                   "ring-background size-24 cursor-pointer ring-4 transition-shadow hover:shadow-xl",
                   { "pointer-events-none opacity-50": isPendingUpload },
                 )}
-                onClick={() => !isPendingUpload && avatarInputRef.current?.click()}
+                onClick={() =>
+                  !isPendingUpload && avatarInputRef.current?.click()
+                }
               >
                 {displayedAvatar ? (
                   <AvatarImage
@@ -216,11 +230,13 @@ export const StepIdentity = ({
               {/* Camera badge */}
               <button
                 type="button"
-                onClick={() => !isPendingUpload && avatarInputRef.current?.click()}
+                onClick={() =>
+                  !isPendingUpload && avatarInputRef.current?.click()
+                }
                 className={cn(
-                  "absolute -bottom-1 -right-1 flex size-8 cursor-pointer items-center justify-center",
+                  "absolute -right-1 -bottom-1 flex size-8 cursor-pointer items-center justify-center",
                   "bg-primary rounded-full shadow-md transition-transform hover:scale-110",
-                  { "opacity-50 pointer-events-none": isPendingUpload },
+                  { "pointer-events-none opacity-50": isPendingUpload },
                 )}
                 aria-label="Changer la photo de profil"
               >
@@ -245,14 +261,18 @@ export const StepIdentity = ({
         </FormSection>
 
         {/* Identity fields */}
-        <FormSection icon={<AtSign className="size-4" />} title="Identité" delay={0.05}>
+        <FormSection
+          icon={<AtSign className="size-4" />}
+          title="Identité"
+          delay={0.05}
+        >
           {/* Display name */}
           <FormField
             control={form.control}
             name="displayName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+                <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
                   Nom d&apos;affichage
                 </FormLabel>
                 <FormControl>
@@ -280,7 +300,7 @@ export const StepIdentity = ({
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground text-xs uppercase tracking-wide">
+                <FormLabel className="text-muted-foreground text-xs tracking-wide uppercase">
                   Identifiant
                 </FormLabel>
                 <FormControl>
@@ -288,9 +308,11 @@ export const StepIdentity = ({
                     <Input
                       placeholder="votre_identifiant"
                       className={cn(
-                        "glass-input rounded-xl border-0 pl-10 pr-10",
-                        isUsernameAvailable === false && "ring-destructive ring-2",
-                        isUsernameAvailable === true && "ring-2 ring-emerald-500",
+                        "glass-input rounded-xl border-0 pr-10 pl-10",
+                        isUsernameAvailable === false &&
+                          "ring-destructive ring-2",
+                        isUsernameAvailable === true &&
+                          "ring-2 ring-emerald-500",
                       )}
                       autoComplete="username"
                       spellCheck={false}
@@ -325,7 +347,9 @@ export const StepIdentity = ({
                 {/* Username suggestions */}
                 <UsernameSuggestions
                   suggestions={suggestions ?? []}
-                  onSelect={(s) => form.setValue("username", s, { shouldValidate: true })}
+                  onSelect={(s) =>
+                    form.setValue("username", s, { shouldValidate: true })
+                  }
                 />
               </FormItem>
             )}
@@ -342,7 +366,7 @@ export const StepIdentity = ({
               isUsernameAvailable === false ||
               !form.formState.isValid
             }
-            className="btn-premium flex cursor-pointer items-center gap-2 rounded-xl px-8 py-2.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+            className="btn-premium flex cursor-pointer items-center gap-2 rounded-xl px-8 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? (
               <>
@@ -364,7 +388,9 @@ export const StepIdentity = ({
         <ImageCropDialog
           imageSrc={cropDialogState.imageSrc}
           open={true}
-          onOpenChange={(open) => { if (!open) handleCropCancel() }}
+          onOpenChange={(open) => {
+            if (!open) handleCropCancel()
+          }}
           onConfirm={handleCropConfirm}
           onCancel={handleCropCancel}
           cropShape="round"

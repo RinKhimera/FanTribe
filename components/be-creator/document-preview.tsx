@@ -1,9 +1,9 @@
 "use client"
 
+import { CheckCircle, X, ZoomIn } from "lucide-react"
 import { motion } from "motion/react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, X, ZoomIn } from "lucide-react"
 
 interface DocumentPreviewProps {
   url: string
@@ -48,11 +48,11 @@ export const DocumentPreview = ({
           type="button"
           variant="ghost"
           size="sm"
-          className="absolute bottom-2 right-2 bg-black/60 hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute right-2 bottom-2 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
           onClick={onViewFullscreen}
         >
           <ZoomIn className="mr-1.5 size-3.5 text-white" />
-          <span className="text-white text-xs">Agrandir</span>
+          <span className="text-xs text-white">Agrandir</span>
         </Button>
       </div>
 

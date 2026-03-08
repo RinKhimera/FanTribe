@@ -4,8 +4,8 @@ import { usePaginatedQuery } from "convex/react"
 import { Loader2, Users } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
-import { EmptyState } from "@/components/shared/empty-state"
 import { UserProfileBadgeInline } from "@/components/domains/users/user-profile-badges"
+import { EmptyState } from "@/components/shared/empty-state"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -13,11 +13,7 @@ import { Id } from "@/convex/_generated/dataModel"
 const INITIAL_ITEMS = 20
 const LOAD_MORE_ITEMS = 10
 
-export const UserSubscriptionsList = ({
-  userId,
-}: {
-  userId: Id<"users">
-}) => {
+export const UserSubscriptionsList = ({ userId }: { userId: Id<"users"> }) => {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
@@ -57,10 +53,11 @@ export const UserSubscriptionsList = ({
   if (status === "LoadingFirstPage") {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
-        <p className="text-muted-foreground mt-4 text-sm">
-          Chargement…
-        </p>
+        <Loader2
+          className="text-primary h-8 w-8 animate-spin"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground mt-4 text-sm">Chargement…</p>
       </div>
     )
   }
@@ -80,25 +77,22 @@ export const UserSubscriptionsList = ({
   }
 
   return (
-    <div className="flex flex-col divide-y divide-border/50">
+    <div className="divide-border/50 flex flex-col divide-y">
       {results.map((sub) => (
         <Link
           key={sub._id}
           href={`/${sub.creator.username}`}
-          className="flex items-center gap-3 px-4 py-3 transition hover:bg-muted/50"
+          className="hover:bg-muted/50 flex items-center gap-3 px-4 py-3 transition"
         >
           <div className="relative">
             <Avatar className="size-12">
-              <AvatarImage
-                src={sub.creator.image}
-                alt={sub.creator.name}
-              />
+              <AvatarImage src={sub.creator.image} alt={sub.creator.name} />
               <AvatarFallback className="bg-muted">
                 {sub.creator.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
             {sub.creator.isOnline && (
-              <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-background bg-green-500" />
+              <span className="border-background absolute right-0 bottom-0 size-3 rounded-full border-2 bg-green-500" />
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -119,29 +113,29 @@ export const UserSubscriptionsList = ({
           ref={loadMoreRef}
           className="flex flex-col items-center justify-center py-8"
         >
-          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
-          <p className="text-muted-foreground mt-2 text-sm">
-            Chargement…
-          </p>
+          <Loader2
+            className="text-primary h-6 w-6 animate-spin"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground mt-2 text-sm">Chargement…</p>
         </div>
       )}
 
       {/* Chargement en cours */}
       {status === "LoadingMore" && (
         <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
-          <p className="text-muted-foreground mt-2 text-sm">
-            Chargement…
-          </p>
+          <Loader2
+            className="text-primary h-6 w-6 animate-spin"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground mt-2 text-sm">Chargement…</p>
         </div>
       )}
 
       {/* Message de fin */}
       {status === "Exhausted" && results.length > 0 && (
         <div className="flex flex-col items-center justify-center py-8">
-          <p className="text-muted-foreground text-sm">
-            Vous avez tout vu !
-          </p>
+          <p className="text-muted-foreground text-sm">Vous avez tout vu !</p>
         </div>
       )}
     </div>

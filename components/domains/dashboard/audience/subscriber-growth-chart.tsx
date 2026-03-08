@@ -83,9 +83,7 @@ const CustomTooltip = ({
   )
 }
 
-export const SubscriberGrowthChart = ({
-  data,
-}: SubscriberGrowthChartProps) => {
+export const SubscriberGrowthChart = ({ data }: SubscriberGrowthChartProps) => {
   const hasData = data.growth.some(
     (g) => g.newSubscribers > 0 || g.activeSubscribers > 0,
   )

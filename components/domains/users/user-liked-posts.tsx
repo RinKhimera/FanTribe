@@ -61,10 +61,11 @@ export const UserLikedPosts = ({
   if (status === "LoadingFirstPage") {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden="true" />
-        <p className="text-muted-foreground mt-4 text-sm">
-          Chargement…
-        </p>
+        <Loader2
+          className="text-primary h-8 w-8 animate-spin"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground mt-4 text-sm">Chargement…</p>
       </div>
     )
   }
@@ -95,29 +96,29 @@ export const UserLikedPosts = ({
           ref={loadMoreRef}
           className="flex flex-col items-center justify-center py-8"
         >
-          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
-          <p className="text-muted-foreground mt-2 text-sm">
-            Chargement…
-          </p>
+          <Loader2
+            className="text-primary h-6 w-6 animate-spin"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground mt-2 text-sm">Chargement…</p>
         </div>
       )}
 
       {/* Chargement en cours */}
       {status === "LoadingMore" && (
         <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="text-primary h-6 w-6 animate-spin" aria-hidden="true" />
-          <p className="text-muted-foreground mt-2 text-sm">
-            Chargement…
-          </p>
+          <Loader2
+            className="text-primary h-6 w-6 animate-spin"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground mt-2 text-sm">Chargement…</p>
         </div>
       )}
 
       {/* Message de fin */}
       {status === "Exhausted" && results.length > 0 && (
         <div className="flex flex-col items-center justify-center py-8">
-          <p className="text-muted-foreground text-sm">
-            Vous avez tout vu !
-          </p>
+          <p className="text-muted-foreground text-sm">Vous avez tout vu !</p>
         </div>
       )}
     </div>
