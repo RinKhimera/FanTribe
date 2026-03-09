@@ -8,6 +8,7 @@ export const socialPlatformSchema = z.enum([
   "linkedin",
   "snapchat",
   "facebook",
+  "github",
   "website",
   "other",
 ])

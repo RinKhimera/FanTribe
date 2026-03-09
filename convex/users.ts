@@ -1141,23 +1141,7 @@ export const getPinnedPosts = query({
 // Update social links with platform metadata
 export const updateSocialLinks = mutation({
   args: {
-    socialLinks: v.array(
-      v.object({
-        platform: v.union(
-          v.literal("twitter"),
-          v.literal("instagram"),
-          v.literal("tiktok"),
-          v.literal("youtube"),
-          v.literal("linkedin"),
-          v.literal("snapchat"),
-          v.literal("facebook"),
-          v.literal("website"),
-          v.literal("other"),
-        ),
-        url: v.string(),
-        username: v.optional(v.string()),
-      }),
-    ),
+    socialLinks: v.array(socialLinkValidator),
   },
   returns: v.null(),
   handler: async (ctx, args) => {

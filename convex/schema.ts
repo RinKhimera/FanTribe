@@ -21,6 +21,7 @@ export default defineSchema({
             v.literal("linkedin"),
             v.literal("snapchat"),
             v.literal("facebook"),
+            v.literal("github"),
             v.literal("website"),
             v.literal("other"),
           ),

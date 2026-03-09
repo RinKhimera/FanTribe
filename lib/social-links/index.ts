@@ -11,6 +11,7 @@ export type SocialPlatform =
   | "linkedin"
   | "snapchat"
   | "facebook"
+  | "github"
   | "website"
   | "other"
 
@@ -23,6 +24,7 @@ const PLATFORM_PATTERNS: Record<string, RegExp[]> = {
   linkedin: [/linkedin\.com/i],
   snapchat: [/snapchat\.com/i, /snap\.com/i],
   facebook: [/facebook\.com/i, /fb\.com/i, /fb\.me/i],
+  github: [/github\.com/i],
 }
 
 /**
@@ -94,6 +96,13 @@ export function extractUsername(
       case "facebook":
         // Format: /username or /profile.php?id=...
         if (segments[0] && segments[0] !== "profile.php") {
+          return segments[0]
+        }
+        return undefined
+
+      case "github":
+        // Format: /username or /username/repo
+        if (segments[0]) {
           return segments[0]
         }
         return undefined

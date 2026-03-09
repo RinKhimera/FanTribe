@@ -2,6 +2,7 @@
 
 import {
   Facebook,
+  Github,
   Globe,
   Instagram,
   Linkedin,
@@ -91,6 +92,13 @@ export const PLATFORM_CONFIG: Record<SocialPlatform, PlatformConfig> = {
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
     placeholder: "https://facebook.com/username",
+  },
+  github: {
+    icon: Github,
+    label: "GitHub",
+    color: "text-foreground",
+    bgColor: "bg-foreground/10",
+    placeholder: "https://github.com/username",
   },
   website: {
     icon: Globe,
