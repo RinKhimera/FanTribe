@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "convex/react"
 import {
   Ban,
+  Bookmark,
   CheckCircle,
   Ellipsis,
   Flag,
@@ -42,6 +43,7 @@ import {
 import { api } from "@/convex/_generated/api"
 import { Doc, Id } from "@/convex/_generated/dataModel"
 import { logger } from "@/lib/config"
+import { cn } from "@/lib/utils"
 
 type PostEllipsisProps = {
   postId: Id<"posts">
@@ -92,6 +94,8 @@ export const PostEllipsis = ({
   const unfollowMutation = useMutation(api.follows.unfollowUser)
   const blockMutation = useMutation(api.blocks.blockUser)
   const unblockMutation = useMutation(api.blocks.unblockUser)
+  const addBookmark = useMutation(api.bookmarks.addBookmark)
+  const removeBookmark = useMutation(api.bookmarks.removeBookmark)
 
   // Queries for follow/block state (skip if own post)
   const isFollowing = useQuery(
@@ -102,6 +106,11 @@ export const PostEllipsis = ({
     api.blocks.isBlocked,
     postAuthorId && !isAuthor ? { targetUserId: postAuthorId } : "skip",
   )
+
+  // Bookmark state
+  const bookmarkedQuery = useQuery(api.bookmarks.isBookmarked, { postId })
+  const isBookmarked = bookmarkedQuery?.bookmarked || false
+  const [isBookmarkLoading, setIsBookmarkLoading] = useState(false)
 
   // Construction de l'URL complète du post pour le partage
   const host = typeof window !== "undefined" ? window.location.origin : ""
@@ -225,6 +234,23 @@ export const PostEllipsis = ({
     }
   }
 
+  const handleBookmarkToggle = async () => {
+    setIsBookmarkLoading(true)
+    try {
+      if (isBookmarked) {
+        await removeBookmark({ postId })
+        toast.success("Retiré des collections")
+      } else {
+        await addBookmark({ postId })
+        toast.success("Ajouté aux collections")
+      }
+    } catch {
+      toast.error("Une erreur s'est produite")
+    } finally {
+      setIsBookmarkLoading(false)
+    }
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -251,6 +277,18 @@ export const PostEllipsis = ({
         <DropdownMenuItem onClick={handleShareLink}>
           <Share2 className="mr-2 size-4" aria-hidden="true" />
           Partager la publication
+        </DropdownMenuItem>
+
+        {/* Option de collection (disponible pour tous) */}
+        <DropdownMenuItem
+          onClick={handleBookmarkToggle}
+          disabled={isBookmarkLoading}
+        >
+          <Bookmark
+            className={cn("mr-2 size-4", isBookmarked && "fill-current")}
+            aria-hidden="true"
+          />
+          {isBookmarked ? "Retirer des collections" : "Ajouter aux collections"}
         </DropdownMenuItem>
 
         {/* Follow/Unfollow + Block/Unblock - non-auteurs seulement */}
