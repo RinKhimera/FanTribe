@@ -127,7 +127,7 @@ export const SubscriptionButton = ({
               onClick={handleClick}
               className={cn(
                 "relative w-full overflow-hidden rounded-2xl px-6 py-6 text-lg font-semibold",
-                "from-primary via-primary/95 to-primary/85 bg-gradient-to-r",
+                "from-primary via-primary/95 to-primary/85 bg-linear-to-r",
                 "shadow-primary/25 shadow-lg",
                 "hover:shadow-primary/35 transition-shadow duration-300 hover:shadow-xl",
                 className,
@@ -135,7 +135,7 @@ export const SubscriptionButton = ({
             >
               {/* Shimmer effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent"
                 initial={{ x: "-100%" }}
                 animate={{ x: "200%" }}
                 transition={{

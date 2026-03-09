@@ -77,9 +77,9 @@ export const PageHeader = ({
         className={cn(
           "sticky top-0 z-20",
           "flex items-center justify-between",
-          "min-h-[var(--header-height)]",
+          "min-h-(--header-height)",
           !hideBottomBorder && "border-border border-b",
-          "px-[var(--header-padding)] py-3",
+          "px-(--header-padding) py-3",
           "frosted",
           className,
         )}
@@ -109,8 +109,8 @@ export const PageHeader = ({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2, delay: 0.1 }}
           className={cn(
-            "sticky top-[var(--header-height)] z-20",
-            "border-b border-white/[0.08]",
+            "sticky top-(--header-height) z-20",
+            "border-b border-white/8",
             "frosted",
             secondaryBarClassName,
           )}

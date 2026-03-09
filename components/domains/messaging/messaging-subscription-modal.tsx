@@ -232,7 +232,7 @@ export const MessagingSubscriptionModal = ({
               width={400}
               height={128}
             />
-            <div className="from-background via-background/60 to-primary/10 absolute inset-0 bg-gradient-to-t" />
+            <div className="from-background via-background/60 to-primary/10 absolute inset-0 bg-linear-to-t" />
           </div>
 
           {/* Bouton fermer */}
@@ -324,7 +324,7 @@ export const MessagingSubscriptionModal = ({
                 key={index}
                 className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/5 p-2.5 backdrop-blur-sm"
               >
-                <div className="from-primary to-primary/60 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br">
+                <div className="from-primary to-primary/60 flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br">
                   <feature.icon
                     className="h-4 w-4 text-white"
                     aria-hidden="true"
@@ -350,7 +350,7 @@ export const MessagingSubscriptionModal = ({
             transition={{ delay: 0.25 }}
           >
             <div className="mb-4 text-center">
-              <div className="from-primary to-primary/70 bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent">
+              <div className="from-primary to-primary/70 bg-linear-to-r bg-clip-text text-3xl font-bold text-transparent">
                 {formatCurrency(content.price, "XAF")}
               </div>
               <div className="text-muted-foreground text-sm">
@@ -365,7 +365,7 @@ export const MessagingSubscriptionModal = ({
               >
                 <Button
                   className={cn(
-                    "from-primary via-primary/95 to-primary/85 w-full rounded-xl bg-gradient-to-r font-semibold",
+                    "from-primary via-primary/95 to-primary/85 w-full rounded-xl bg-linear-to-r font-semibold",
                     "shadow-primary/25 hover:shadow-primary/35 shadow-lg transition-shadow hover:shadow-xl",
                     { "pointer-events-none opacity-70": isPending },
                   )}

@@ -29,21 +29,21 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
         <div
           className={cn(
             "absolute top-0 -left-[20%] h-[600px] w-[600px] rounded-full",
-            "from-primary/8 via-primary/4 bg-gradient-to-br to-transparent",
+            "from-primary/8 via-primary/4 bg-linear-to-br to-transparent",
             "blur-3xl",
           )}
         />
         <div
           className={cn(
             "absolute top-[30%] -right-[10%] h-[500px] w-[500px] rounded-full",
-            "from-primary/6 bg-gradient-to-bl via-transparent to-transparent",
+            "from-primary/6 bg-linear-to-bl via-transparent to-transparent",
             "blur-3xl",
           )}
         />
         <div
           className={cn(
             "absolute -bottom-[10%] left-[30%] h-[400px] w-[400px] rounded-full",
-            "from-primary/5 bg-gradient-to-t to-transparent",
+            "from-primary/5 bg-linear-to-t to-transparent",
             "blur-3xl",
           )}
         />
@@ -53,7 +53,7 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
           className={cn(
             "absolute inset-0 opacity-[0.02]",
             "bg-[linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)]",
-            "bg-[size:48px_48px]",
+            "bg-size-[48px_48px]",
           )}
         />
       </div>
@@ -67,7 +67,7 @@ export const LegalGuestLayout = ({ children }: LegalGuestLayoutProps) => {
           "sticky top-0 z-50",
           "border-border/40 border-b",
           "bg-background/70 backdrop-blur-xl",
-          "supports-[backdrop-filter]:bg-background/50",
+          "supports-backdrop-filter:bg-background/50",
         )}
       >
         <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6 lg:px-8">

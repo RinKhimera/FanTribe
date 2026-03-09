@@ -22,7 +22,7 @@ export const DocumentPreview = ({
       animate={{ opacity: 1, scale: 1 }}
       className="group relative"
     >
-      <div className="relative aspect-[3/2] overflow-hidden rounded-lg">
+      <div className="relative aspect-3/2 overflow-hidden rounded-lg">
         <Image
           src={url}
           alt="Document uploadé"

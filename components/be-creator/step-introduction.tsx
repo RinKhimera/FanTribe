@@ -74,7 +74,7 @@ export const StepIntroduction = ({ onNext }: StepIntroductionProps) => {
       {/* Hero Section */}
       <motion.div variants={stepItemVariants} className="text-center">
         <div className="relative mx-auto mb-6 inline-flex">
-          <div className="flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-[var(--gold-400)] to-[var(--gold-600)]">
+          <div className="flex size-20 items-center justify-center rounded-full bg-linear-to-br from-(--gold-400) to-(--gold-600)">
             <Crown className="size-10 text-[oklch(0.15_0.02_60)]" />
           </div>
           <motion.div

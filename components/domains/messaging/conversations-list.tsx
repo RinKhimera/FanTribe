@@ -82,8 +82,8 @@ const EmptyConversationsList = () => {
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         className="relative mb-6"
       >
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/10 blur-2xl" />
-        <div className="relative flex size-24 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02]">
+        <div className="absolute inset-0 rounded-full bg-linear-to-br from-amber-500/20 to-orange-500/10 blur-2xl" />
+        <div className="relative flex size-24 items-center justify-center rounded-full border border-white/10 bg-linear-to-br from-white/5 to-white/2">
           <motion.span
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 2, repeat: Infinity }}

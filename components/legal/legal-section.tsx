@@ -32,7 +32,7 @@ export const LegalSection = ({
       className={cn(
         // Glass effect with subtle gradient
         "group relative overflow-hidden rounded-2xl",
-        "from-card/80 via-card/60 to-card/40 bg-gradient-to-br",
+        "from-card/80 via-card/60 to-card/40 bg-linear-to-br",
         "border-border/40 border",
         "p-6 sm:p-8",
         // Subtle shadow and glow
@@ -61,7 +61,7 @@ export const LegalSection = ({
             whileHover="hover"
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-              "from-primary/15 to-primary/5 bg-gradient-to-br",
+              "from-primary/15 to-primary/5 bg-linear-to-br",
               "border-primary/20 border",
               "shadow-primary/10 shadow-sm",
             )}

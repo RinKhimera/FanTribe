@@ -38,7 +38,7 @@ export const EmptyConversation = () => {
           />
 
           {/* Icône principale */}
-          <div className="relative flex size-24 items-center justify-center rounded-2xl border border-white/10 bg-linear-to-br from-white/5 to-white/[0.02] shadow-2xl backdrop-blur-sm">
+          <div className="relative flex size-24 items-center justify-center rounded-2xl border border-white/10 bg-linear-to-br from-white/5 to-white/2 shadow-2xl backdrop-blur-sm">
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}

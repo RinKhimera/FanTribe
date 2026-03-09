@@ -34,7 +34,7 @@ const colorSchemes: Record<
 > = {
   blue: {
     gradient: "from-blue-500/10 via-cyan-500/5 to-transparent",
-    iconBg: "bg-gradient-to-br from-blue-500 to-cyan-500",
+    iconBg: "bg-linear-to-br from-blue-500 to-cyan-500",
     iconColor: "text-white",
     trendPositive: "text-emerald-600 bg-emerald-500/10",
     trendNegative: "text-rose-600 bg-rose-500/10",
@@ -42,7 +42,7 @@ const colorSchemes: Record<
   },
   green: {
     gradient: "from-emerald-500/10 via-teal-500/5 to-transparent",
-    iconBg: "bg-gradient-to-br from-emerald-500 to-teal-500",
+    iconBg: "bg-linear-to-br from-emerald-500 to-teal-500",
     iconColor: "text-white",
     trendPositive: "text-emerald-600 bg-emerald-500/10",
     trendNegative: "text-rose-600 bg-rose-500/10",
@@ -50,7 +50,7 @@ const colorSchemes: Record<
   },
   orange: {
     gradient: "from-orange-500/10 via-amber-500/5 to-transparent",
-    iconBg: "bg-gradient-to-br from-orange-500 to-amber-500",
+    iconBg: "bg-linear-to-br from-orange-500 to-amber-500",
     iconColor: "text-white",
     trendPositive: "text-emerald-600 bg-emerald-500/10",
     trendNegative: "text-rose-600 bg-rose-500/10",
@@ -58,7 +58,7 @@ const colorSchemes: Record<
   },
   red: {
     gradient: "from-rose-500/10 via-pink-500/5 to-transparent",
-    iconBg: "bg-gradient-to-br from-rose-500 to-pink-500",
+    iconBg: "bg-linear-to-br from-rose-500 to-pink-500",
     iconColor: "text-white",
     trendPositive: "text-emerald-600 bg-emerald-500/10",
     trendNegative: "text-rose-600 bg-rose-500/10",
@@ -66,7 +66,7 @@ const colorSchemes: Record<
   },
   purple: {
     gradient: "from-violet-500/10 via-purple-500/5 to-transparent",
-    iconBg: "bg-gradient-to-br from-violet-500 to-purple-500",
+    iconBg: "bg-linear-to-br from-violet-500 to-purple-500",
     iconColor: "text-white",
     trendPositive: "text-emerald-600 bg-emerald-500/10",
     trendNegative: "text-rose-600 bg-rose-500/10",
@@ -114,7 +114,7 @@ export function SuperuserStatsCard({
       {/* Gradient background overlay */}
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-60",
+          "pointer-events-none absolute inset-0 bg-linear-to-br opacity-60",
           "transition-opacity duration-300 group-hover:opacity-100",
           scheme.gradient,
         )}

@@ -246,7 +246,6 @@ const Button = ({ ref, ...props }: ButtonProps) => <button ref={ref} {...props} 
 | `useDebounce`           | Debounce values (default 300ms)                                                                                   |
 | `useInfiniteScroll`     | IntersectionObserver sentinel for `usePaginatedQuery` auto-load (`{ status, loadMore }` → `{ loadMoreRef }`)      |
 | `useBunnyPlayerControl` | Bunny video player controls                                                                                       |
-| `useVideoMetadata`      | Fetch Bunny video metadata                                                                                        |
 | `useKeyboardNavigation` | Keyboard nav in lists                                                                                             |
 | `useMessagesPagination` | Messages pagination + scroll (`{ conversationId }` → messages, hasMore, loadMore, scrollToBottom, refs)           |
 | `useCinetpayPayment`    | CinetPay payment processing                                                                                       |

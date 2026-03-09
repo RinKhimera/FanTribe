@@ -24,7 +24,7 @@ export const BannedUserScreen = ({ banInfo }: BannedUserScreenProps) => {
   const expiresDate = banInfo.expiresAt ? formatDate(banInfo.expiresAt) : null
 
   return (
-    <div className="bg-background fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="bg-background fixed inset-0 z-100 flex items-center justify-center">
       {/* Background pattern */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="bg-destructive/5 absolute -top-40 -right-40 h-80 w-80 rounded-full blur-3xl" />

@@ -182,7 +182,7 @@ export const TipDialog = ({
                 </AvatarFallback>
               </Avatar>
               <motion.div
-                className="absolute -right-1 -bottom-1 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-1.5 shadow-lg"
+                className="absolute -right-1 -bottom-1 rounded-full bg-linear-to-br from-amber-400 to-orange-500 p-1.5 shadow-lg"
                 animate={{ scale: [1, 1.12, 1] }}
                 transition={{ duration: 2.5, repeat: Infinity }}
               >
@@ -316,7 +316,7 @@ export const TipDialog = ({
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="text-center"
               >
-                <div className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-3xl font-bold text-transparent">
+                <div className="bg-linear-to-r from-amber-400 to-orange-500 bg-clip-text text-3xl font-bold text-transparent">
                   {formatXAF(resolvedAmount)} XAF
                 </div>
               </motion.div>
@@ -328,7 +328,7 @@ export const TipDialog = ({
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 className={cn(
-                  "w-full rounded-xl bg-gradient-to-r from-amber-500 via-amber-500/95 to-orange-500 text-base font-semibold",
+                  "w-full rounded-xl bg-linear-to-r from-amber-500 via-amber-500/95 to-orange-500 text-base font-semibold",
                   "shadow-lg shadow-amber-500/20 transition-shadow hover:shadow-xl hover:shadow-amber-500/30",
                   { "pointer-events-none opacity-70": isPending },
                 )}

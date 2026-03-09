@@ -32,7 +32,7 @@ paths:
 
 ## Content
 
-- Text overflow: always handle with `truncate`, `line-clamp-*`, or `break-words`
+- Text overflow: always handle with `truncate`, `line-clamp-*`, or `wrap-break-word`
 - `min-w-0` on flex children for truncation to work
 - Number columns: `font-variant-numeric: tabular-nums`
 - Render empty states, never broken UI

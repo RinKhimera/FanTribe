@@ -58,7 +58,7 @@ export const CommentItem = ({ comment }: CommentItemProps) => {
                 {formatPostDate(comment._creationTime)}
               </span>
             </div>
-            <p className="text-foreground/90 mt-1 text-sm leading-relaxed break-words">
+            <p className="text-foreground/90 mt-1 text-sm leading-relaxed wrap-break-word">
               {comment.content}
             </p>
           </div>

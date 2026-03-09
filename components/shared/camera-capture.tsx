@@ -167,7 +167,7 @@ export const CameraCapture = ({
               <div className="relative overflow-hidden rounded-lg bg-black">
                 <Suspense
                   fallback={
-                    <div className="flex aspect-[4/3] w-full items-center justify-center bg-black">
+                    <div className="flex aspect-4/3 w-full items-center justify-center bg-black">
                       <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     </div>
                   }
@@ -179,7 +179,7 @@ export const CameraCapture = ({
                     screenshotQuality={1}
                     videoConstraints={videoConstraints}
                     onUserMediaError={handleUserMediaError}
-                    className="aspect-[4/3] w-full object-cover"
+                    className="aspect-4/3 w-full object-cover"
                     mirrored={currentFacingMode === "user"}
                   />
                 </Suspense>

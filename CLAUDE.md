@@ -46,13 +46,16 @@ Creator-focused social platform for the African market (French-speaking). Creato
 app/                      # Next.js App Router
 ├── (app-pages)/          # Main routes (dashboard layout, auth guards)
 ├── (auth)/               # Sign-in, sign-up
-├── api/                  # Clerk webhook only (Stripe + CinetPay → Convex HTTP Actions)
+├── api/bunny/            # Bunny presign route (all webhooks → Convex HTTP Actions)
 components/
 ├── domains/              # Feature components (messaging, posts, users, subscriptions, notifications, tips)
 ├── shared/               # Cross-feature reusable components
 ├── post-composer/        # Post creation compound components (Provider + Frame + Input + Media + Actions + Submit)
 ├── new-post/             # Post creation flow (uses PostComposer)
 ├── home/                 # Home page components (news feed)
+├── explore/              # Explore page components
+├── collections/          # Collections components
+├── onboarding/           # Onboarding step components
 ├── be-creator/           # Creator application flow (step-based)
 ├── superuser/            # Admin panel (search, stats, moderation dialogs)
 ├── legal/                # Legal pages (layout, sections)
@@ -60,7 +63,7 @@ components/
 └── ui/                   # shadcn/ui (CVA + Radix primitives)
 convex/                   # Backend functions
 ├── lib/                  # Shared: auth, errors, validators, rateLimiter, bunny, constants, subscriptions, blocks, notifications, signedUrls, batch
-hooks/                    # 13 custom hooks
+hooks/                    # 12 custom hooks
 lib/
 ├── config/               # env.client.ts, env.ts (server), logger.ts
 ├── formatters/           # date/ (French locale) + currency/ (XAF/USD)
@@ -71,6 +74,10 @@ types/                    # Shared TS types (PostMedia, MessageProps, etc.)
 tests/
 ├── frontend/             # Vitest + happy-dom + @testing-library
 └── convex/               # Vitest + convex-test (node env)
+e2e/                      # Playwright E2E tests
+├── pages/                # Page Object Model classes
+├── tests/                # Test specs (15 spec files)
+└── helpers/              # Selectors & utilities
 ```
 
 ## Key Files

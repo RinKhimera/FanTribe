@@ -51,7 +51,7 @@ export const LegalPageContent = ({
         variants={legalHeaderVariants}
         className={cn(
           "relative mb-12 overflow-hidden rounded-2xl",
-          "from-card via-card/80 to-card/60 bg-gradient-to-br",
+          "from-card via-card/80 to-card/60 bg-linear-to-br",
           "border-border/40 border",
           "p-8 sm:p-10",
         )}
@@ -61,14 +61,14 @@ export const LegalPageContent = ({
           <div
             className={cn(
               "absolute -top-16 -right-16 h-64 w-64 rounded-full",
-              "from-primary/10 bg-gradient-to-br to-transparent",
+              "from-primary/10 bg-linear-to-br to-transparent",
               "blur-3xl",
             )}
           />
           <div
             className={cn(
               "absolute -bottom-8 -left-8 h-48 w-48 rounded-full",
-              "from-primary/5 bg-gradient-to-tr to-transparent",
+              "from-primary/5 bg-linear-to-tr to-transparent",
               "blur-2xl",
             )}
           />
@@ -77,7 +77,7 @@ export const LegalPageContent = ({
             className={cn(
               "absolute inset-0 opacity-[0.015]",
               "bg-[linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)]",
-              "bg-[size:32px_32px]",
+              "bg-size-[32px_32px]",
             )}
           />
         </div>
@@ -96,7 +96,7 @@ export const LegalPageContent = ({
               }}
               className={cn(
                 "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl",
-                "from-primary/20 via-primary/10 to-primary/5 bg-gradient-to-br",
+                "from-primary/20 via-primary/10 to-primary/5 bg-linear-to-br",
                 "border-primary/20 border",
                 "shadow-primary/10 shadow-lg",
               )}
@@ -153,11 +153,11 @@ export const LegalPageContent = ({
                   whileTap="tap"
                   className={cn(
                     "group relative overflow-hidden rounded-xl",
-                    "from-muted/50 via-muted/30 bg-gradient-to-br to-transparent",
+                    "from-muted/50 via-muted/30 bg-linear-to-br to-transparent",
                     "border-border/40 border",
                     "p-4",
                     "transition-colors duration-300",
-                    "hover:border-primary/30 hover:from-primary/5 hover:via-primary/[0.02]",
+                    "hover:border-primary/30 hover:from-primary/5 hover:via-primary/2",
                     "cursor-pointer",
                   )}
                 >
@@ -165,7 +165,7 @@ export const LegalPageContent = ({
                   <div
                     className={cn(
                       "absolute inset-0 opacity-0 transition-opacity duration-300",
-                      "from-primary/5 bg-gradient-to-br to-transparent",
+                      "from-primary/5 bg-linear-to-br to-transparent",
                       "group-hover:opacity-100",
                     )}
                   />

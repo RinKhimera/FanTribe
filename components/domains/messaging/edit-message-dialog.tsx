@@ -136,7 +136,7 @@ export const EditMessageDialog = ({
                 !content.trim() ||
                 content.trim() === currentContent.trim()
               }
-              className="bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400"
+              className="bg-linear-to-r from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400"
             >
               {isPending ? (
                 <motion.div

@@ -29,7 +29,7 @@ export const PostLayout = ({
         "flex min-h-screen flex-col",
         "border-border/40 border-r border-l",
         "max-[500px]:border-0",
-        "max-[500px]:pb-[var(--mobile-nav-height)]",
+        "max-[500px]:pb-(--mobile-nav-height)",
       )}
     >
       {/* Sticky Frosted Header */}

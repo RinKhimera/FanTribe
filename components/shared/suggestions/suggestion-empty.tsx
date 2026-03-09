@@ -30,7 +30,7 @@ export const SuggestionEmpty = () => {
         <div
           className={cn(
             "relative h-16 w-16 rounded-full",
-            "from-primary/20 to-primary/5 bg-gradient-to-br",
+            "from-primary/20 to-primary/5 bg-linear-to-br",
             "flex items-center justify-center",
             "ring-primary/20 ring-1",
           )}

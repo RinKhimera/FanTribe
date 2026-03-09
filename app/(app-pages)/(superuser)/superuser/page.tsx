@@ -140,11 +140,11 @@ export default function SuperUserPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Pending Applications Card */}
             <Card className="group relative overflow-hidden transition-shadow duration-300 hover:shadow-md">
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 via-amber-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <CardHeader className="relative pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-orange-500 to-amber-500 text-white shadow-sm">
                     <UserPlus className="h-4 w-4" aria-hidden="true" />
                   </div>
                   Candidatures Créateur
@@ -217,11 +217,11 @@ export default function SuperUserPage() {
 
             {/* Pending Reports Card */}
             <Card className="group relative overflow-hidden transition-shadow duration-300 hover:shadow-md">
-              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-pink-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-linear-to-br from-rose-500/5 via-pink-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <CardHeader className="relative pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 text-white shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-rose-500 to-pink-500 text-white shadow-sm">
                     <AlertTriangle className="h-4 w-4" aria-hidden="true" />
                   </div>
                   Signalements

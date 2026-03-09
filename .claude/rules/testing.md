@@ -1,7 +1,9 @@
 ---
 paths:
   - "tests/**"
+  - "e2e/**"
   - "vitest.*.mts"
+  - "playwright.config.ts"
 ---
 
 # Testing
@@ -10,6 +12,7 @@ paths:
 
 - **Frontend**: `tests/frontend/` — Vitest + happy-dom + @testing-library
 - **Convex**: `tests/convex/` — Vitest + convex-test (node environment)
+- **E2E**: `e2e/` — Playwright + Clerk auth + Page Object Model
 - **Coverage**: 75% frontend, 65% backend (enforced in config)
 
 ## Patterns
@@ -25,6 +28,15 @@ await t.run(async (ctx) => { await ctx.db.insert("users", { ... }) })
 const result = await t.withIdentity({ tokenIdentifier: "test" })
   .query(api.users.getCurrentUser)
 ```
+
+## E2E (Playwright)
+
+- **Setup**: `@clerk/testing/playwright` for auth — `global.setup.ts` signs in 3 roles (user, creator, admin) and saves `storageState`
+- **Page Object Model**: `e2e/pages/` — one class per page, extends `BasePage`
+- **Projects**: `chromium` (public), `chromium-auth` (user), `chromium-creator`, `chromium-admin` — each loads matching storageState
+- **Env vars**: `E2E_CLERK_USER_USERNAME/PASSWORD`, `E2E_CLERK_CREATOR_*`, `E2E_CLERK_ADMIN_*`
+- **Run**: `bun run test:e2e` (uses dev server) — CI builds first (`bun run build && bun run start`)
+- **Assertions**: UI text in French — match exact strings (e.g., `"Fil d'actualité"`, `"Explorer"`)
 
 ## Testing Gotchas
 

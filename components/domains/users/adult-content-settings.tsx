@@ -66,7 +66,7 @@ export const AdultContentSettings = ({
 
       <DialogContent className="overflow-hidden sm:max-w-md">
         {/* Decorative gradient header */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-orange-500/10 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-orange-500/10 to-transparent" />
 
         <DialogHeader className="relative">
           <div className="flex items-center gap-3">

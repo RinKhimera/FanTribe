@@ -181,7 +181,7 @@ export const PrivacyContent = () => {
 
         <LegalSubSection title="3.3 Ce que nous ne faisons pas">
           <LegalHighlight variant="info">
-            <LegalText className="!text-foreground">
+            <LegalText className="text-foreground!">
               Nous ne vendons jamais vos données personnelles à des tiers. Nous
               ne partageons pas vos informations à des fins publicitaires
               tierces sans votre consentement explicite.
@@ -328,7 +328,7 @@ export const PrivacyContent = () => {
         title="9. Protection des mineurs"
       >
         <LegalHighlight variant="warning">
-          <LegalText className="!text-foreground">
+          <LegalText className="text-foreground!">
             FanTribe n&apos;est pas destiné aux personnes de moins de 18 ans.
             Nous ne collectons pas sciemment des données personnelles de
             mineurs. Si nous apprenons qu&apos;un mineur nous a fourni des

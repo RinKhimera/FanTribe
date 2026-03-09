@@ -128,7 +128,7 @@ export const TermsContent = () => {
 
         <LegalSubSection title="4.3 Contenu interdit">
           <LegalHighlight variant="warning">
-            <LegalText className="!text-foreground">
+            <LegalText className="text-foreground!">
               Les contenus suivants sont strictement interdits :
             </LegalText>
             <LegalList

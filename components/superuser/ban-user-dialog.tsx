@@ -98,7 +98,7 @@ export const BanUserDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md overflow-hidden p-0">
         {/* Header with warning accent */}
-        <div className="border-border/50 from-destructive/5 relative overflow-hidden border-b bg-gradient-to-br via-transparent to-transparent px-6 pt-6 pb-5">
+        <div className="border-border/50 from-destructive/5 relative overflow-hidden border-b bg-linear-to-br via-transparent to-transparent px-6 pt-6 pb-5">
           <div className="pointer-events-none absolute inset-0 opacity-30">
             <div className="bg-destructive/20 absolute -top-12 -right-12 h-32 w-32 rounded-full blur-3xl" />
           </div>

@@ -42,16 +42,16 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
                   }
                   className={cn(
                     "relative flex size-10 items-center justify-center rounded-full transition-colors md:size-12",
-                    isActive && "btn-premium shadow-[var(--shadow-gold-glow)]",
+                    isActive && "btn-premium shadow-(--shadow-gold-glow)",
                     isCompleted &&
-                      "border-2 border-[var(--gold-400)] bg-[var(--gold-400)]/10",
+                      "border-2 border-(--gold-400) bg-(--gold-400)/10",
                     !isActive &&
                       !isCompleted &&
                       "border-muted-foreground/30 bg-muted/50 border",
                   )}
                 >
                   {isCompleted ? (
-                    <Check className="size-5 text-[var(--gold-400)]" />
+                    <Check className="size-5 text-(--gold-400)" />
                   ) : (
                     <Icon
                       className={cn(
@@ -69,7 +69,7 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
                   className={cn(
                     "mt-2 hidden text-xs font-medium md:block",
                     isActive && "text-gold-gradient",
-                    isCompleted && "text-[var(--gold-400)]",
+                    isCompleted && "text-(--gold-400)",
                     !isActive && !isCompleted && "text-muted-foreground",
                   )}
                 >
@@ -84,7 +84,7 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
                     variants={stepperLineVariants}
                     initial="incomplete"
                     animate={isCompleted ? "complete" : "incomplete"}
-                    className="absolute inset-0 bg-gradient-to-r from-[var(--gold-400)] to-[var(--gold-500)]"
+                    className="absolute inset-0 bg-linear-to-r from-(--gold-400) to-(--gold-500)"
                   />
                 </div>
               )}

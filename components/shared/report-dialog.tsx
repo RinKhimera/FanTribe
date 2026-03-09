@@ -249,7 +249,7 @@ export const ReportDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-lg overflow-hidden p-0 sm:max-w-xl">
         {/* Header with gradient accent */}
-        <div className="border-border/50 from-primary/5 relative overflow-hidden border-b bg-gradient-to-br via-transparent to-transparent px-6 pt-6 pb-5">
+        <div className="border-border/50 from-primary/5 relative overflow-hidden border-b bg-linear-to-br via-transparent to-transparent px-6 pt-6 pb-5">
           {/* Subtle background pattern */}
           <div className="pointer-events-none absolute inset-0 opacity-30">
             <div className="bg-primary/20 absolute -top-12 -right-12 h-32 w-32 rounded-full blur-3xl" />

@@ -25,10 +25,10 @@ export const LockedContentOverlay = ({
       )}
     >
       {/* SECURITE: Gradient placeholder uniquement - pas d'image réelle */}
-      <div className="from-primary/20 via-primary/30 to-primary/40 absolute inset-0 bg-gradient-to-br" />
+      <div className="from-primary/20 via-primary/30 to-primary/40 absolute inset-0 bg-linear-to-br" />
 
       {/* Premium overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-black/20" />
 
       {/* Subtle pattern overlay */}
       <div className="absolute inset-0 opacity-[0.03]">

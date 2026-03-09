@@ -54,7 +54,7 @@ export const PLATFORM_CONFIG: Record<SocialPlatform, PlatformConfig> = {
     icon: Instagram,
     label: "Instagram",
     color: "text-pink-500",
-    bgColor: "bg-gradient-to-br from-pink-500/10 to-purple-500/10",
+    bgColor: "bg-linear-to-br from-pink-500/10 to-purple-500/10",
     placeholder: "https://instagram.com/username",
   },
   tiktok: {

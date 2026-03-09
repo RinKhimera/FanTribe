@@ -145,7 +145,7 @@ export const StepPersonalInfo = ({
                       </div>
                       <Input
                         placeholder="6XXXXXXXX"
-                        className="input-premium !rounded-l-none"
+                        className="input-premium rounded-l-none!"
                         maxLength={9}
                         {...field}
                         onChange={(e) => {
@@ -177,7 +177,7 @@ export const StepPersonalInfo = ({
                       </div>
                       <Input
                         placeholder="6XXXXXXXX"
-                        className="input-premium !rounded-l-none"
+                        className="input-premium rounded-l-none!"
                         maxLength={9}
                         {...field}
                         onChange={(e) => {
@@ -209,7 +209,7 @@ export const StepPersonalInfo = ({
                       </div>
                       <Input
                         placeholder="6XXXXXXXX"
-                        className="input-premium !rounded-l-none"
+                        className="input-premium rounded-l-none!"
                         maxLength={9}
                         {...field}
                         onChange={(e) => {

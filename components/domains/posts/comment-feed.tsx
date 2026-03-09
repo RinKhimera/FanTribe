@@ -57,7 +57,7 @@ export const CommentFeed = ({ postId }: { postId: Id<"posts"> }) => {
               </div>
             </div>
             <div className="mt-1 flex flex-col sm:ml-[52px]">
-              <div className="w-full text-base break-words">
+              <div className="w-full text-base wrap-break-word">
                 {comment.content
                   .split("\n")
                   .filter((line) => line.trim() !== "")

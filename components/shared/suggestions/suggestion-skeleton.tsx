@@ -31,13 +31,13 @@ const SkeletonCard = ({ index }: { index: number }) => (
         variants={shimmerVariants}
         initial="initial"
         animate="animate"
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
         style={{ width: "50%" }}
       />
     </div>
 
     {/* Gradient overlay */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
 
     {/* Avatar skeleton */}
     <div className="absolute top-1/2 left-4 -translate-y-1/2">
@@ -53,7 +53,7 @@ const SkeletonCard = ({ index }: { index: number }) => (
             variants={shimmerVariants}
             initial="initial"
             animate="animate"
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/15 to-transparent"
             style={{ width: "100%" }}
           />
         </div>
@@ -67,7 +67,7 @@ const SkeletonCard = ({ index }: { index: number }) => (
           variants={shimmerVariants}
           initial="initial"
           animate="animate"
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+          className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent"
           style={{ width: "100%" }}
         />
       </div>
@@ -76,7 +76,7 @@ const SkeletonCard = ({ index }: { index: number }) => (
           variants={shimmerVariants}
           initial="initial"
           animate="animate"
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+          className="absolute inset-0 bg-linear-to-r from-transparent via-white/15 to-transparent"
           style={{ width: "100%" }}
         />
       </div>
@@ -94,7 +94,7 @@ export const SuggestionSkeleton = () => {
             variants={shimmerVariants}
             initial="initial"
             animate="animate"
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
             style={{ width: "100%" }}
           />
         </div>
@@ -108,7 +108,7 @@ export const SuggestionSkeleton = () => {
                 variants={shimmerVariants}
                 initial="initial"
                 animate="animate"
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
                 style={{ width: "100%" }}
               />
             </div>

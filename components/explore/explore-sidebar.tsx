@@ -77,7 +77,7 @@ export const ExploreSidebar = () => {
         <div className="glass-card overflow-hidden rounded-xl">
           {/* Header */}
           <div className="border-border/40 flex items-center gap-2 border-b px-4 py-3">
-            <Crown className="size-4 text-[var(--gold-400)]" />
+            <Crown className="size-4 text-(--gold-400)" />
             <h3 className="text-sm font-semibold">Créateurs populaires</h3>
           </div>
 
@@ -120,7 +120,7 @@ export const ExploreSidebar = () => {
                           className={cn(
                             "flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                             index === 0
-                              ? "bg-[var(--gold-400)] text-[oklch(0.15_0.02_60)]"
+                              ? "bg-(--gold-400) text-[oklch(0.15_0.02_60)]"
                               : index === 1
                                 ? "bg-muted/60 text-foreground"
                                 : index === 2

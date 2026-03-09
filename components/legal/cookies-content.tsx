@@ -116,7 +116,7 @@ export const CookiesContent = () => {
         </LegalSubSection>
 
         <LegalHighlight variant="info">
-          <LegalText className="!text-foreground">
+          <LegalText className="text-foreground!">
             Ces cookies essentiels ne peuvent pas être désactivés car ils sont
             nécessaires au fonctionnement du site. Ils ne collectent aucune
             information à des fins marketing.
@@ -150,7 +150,7 @@ export const CookiesContent = () => {
             ]}
           />
           <LegalHighlight>
-            <LegalText className="!text-foreground">
+            <LegalText className="text-foreground!">
               Vercel Analytics est conçu pour respecter la vie privée : les
               données sont anonymisées et ne permettent pas de vous identifier
               personnellement.
@@ -232,7 +232,7 @@ export const CookiesContent = () => {
         </LegalSubSection>
 
         <LegalHighlight variant="warning">
-          <LegalText className="!text-foreground">
+          <LegalText className="text-foreground!">
             La désactivation de certains cookies peut affecter le fonctionnement
             de FanTribe. En particulier, la suppression des cookies essentiels
             vous déconnectera et nécessitera une nouvelle authentification.

@@ -36,7 +36,7 @@ export const TypingIndicator = ({
         >
           <Avatar className="size-6 ring-2 ring-amber-500/20">
             <AvatarImage src={otherParticipant?.image} alt="" />
-            <AvatarFallback className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-xs">
+            <AvatarFallback className="bg-linear-to-br from-amber-500/20 to-orange-500/20 text-xs">
               {otherParticipant?.name?.charAt(0) ?? "?"}
             </AvatarFallback>
           </Avatar>

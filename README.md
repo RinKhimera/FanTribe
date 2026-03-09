@@ -131,12 +131,13 @@ Une plateforme francophone dédiée aux créateurs et créatrices du marché afr
 
 ### DevOps & Qualité
 
-| Outil        | Usage                                         |
-| ------------ | --------------------------------------------- |
-| **Vercel**   | Hosting & déploiement continu                 |
-| **Vitest**   | Tests unitaires (happy-dom + convex-test)     |
-| **ESLint**   | Linting (zero warnings policy)                |
-| **Prettier** | Formatage (sans semi-colons, tri des imports) |
+| Outil          | Usage                                         |
+| -------------- | --------------------------------------------- |
+| **Vercel**     | Hosting & déploiement continu                 |
+| **Vitest**     | Tests unitaires (happy-dom + convex-test)     |
+| **Playwright** | Tests E2E (Clerk auth, Page Object Model)     |
+| **ESLint**     | Linting (zero warnings policy)                |
+| **Prettier**   | Formatage (sans semi-colons, tri des imports) |
 
 ---
 
@@ -264,7 +265,7 @@ fantribe/
 │   │   └── subscriptions/            # Gestion abonnements
 │   ├── (auth)/                       # Sign-in, Sign-up (Clerk)
 │   ├── (legal)/                      # Pages légales
-│   ├── api/bunny/                    # Route API Bunny uniquement
+│   ├── api/bunny/                    # Bunny presign route (webhooks → Convex HTTP Actions)
 │   ├── onboarding/                   # Onboarding 3 étapes
 │   └── welcome/                      # Page de bienvenue post-onboarding
 │
@@ -336,7 +337,7 @@ fantribe/
 │       ├── batch.ts                  # Batch processing
 │       └── messaging.ts             # Helpers messagerie
 │
-├── hooks/                            # 13 custom React hooks
+├── hooks/                            # 12 custom React hooks
 │   ├── useCurrentUser.ts            # Utilisateur courant
 │   ├── useBunnyUpload.ts            # Upload média Bunny CDN
 │   ├── useCinetpayPayment.ts        # Paiement CinetPay
@@ -358,10 +359,15 @@ fantribe/
 │
 ├── schemas/                          # Schémas Zod (validation formulaires)
 ├── types/                            # Types TS partagés (PostMedia, MessageProps, TipContext, etc.)
-└── tests/
-    ├── frontend/                     # Vitest + happy-dom + @testing-library
-    ├── convex/                       # Vitest + convex-test (node env)
-    └── helpers/                      # Utilitaires de test
+├── tests/
+│   ├── frontend/                     # Vitest + happy-dom + @testing-library
+│   ├── convex/                       # Vitest + convex-test (node env)
+│   └── helpers/                      # Utilitaires de test
+│
+└── e2e/                              # Tests E2E Playwright
+    ├── pages/                        # Page Object Model (1 classe/page)
+    ├── tests/                        # 15 specs (feed, profile, dashboard, etc.)
+    └── helpers/                      # Sélecteurs & utilitaires
 ```
 
 ---
@@ -454,6 +460,7 @@ bun run test:e2e
 
 - **Frontend** : Vitest + happy-dom + `@testing-library/react`
 - **Backend** : Vitest + `convex-test` (environnement node)
+- **E2E** : Playwright + `@clerk/testing/playwright` — Page Object Model, 3 rôles auth (user, creator, admin)
 
 ---
 

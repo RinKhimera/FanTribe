@@ -68,7 +68,7 @@ export const RevokeCreatorDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md overflow-hidden p-0">
         {/* Header with warning accent */}
-        <div className="border-border/50 relative overflow-hidden border-b bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent px-6 pt-6 pb-5">
+        <div className="border-border/50 relative overflow-hidden border-b bg-linear-to-br from-amber-500/10 via-amber-500/5 to-transparent px-6 pt-6 pb-5">
           <div className="pointer-events-none absolute inset-0 opacity-40">
             <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-amber-500/30 blur-3xl" />
           </div>

@@ -100,7 +100,7 @@ export const SuggestionSearch = ({
 
         {/* Animated underline */}
         <motion.div
-          className="from-primary/60 via-primary to-primary/60 absolute bottom-0 left-0 h-[2px] bg-gradient-to-r"
+          className="from-primary/60 via-primary to-primary/60 absolute bottom-0 left-0 h-[2px] bg-linear-to-r"
           initial={{ width: "0%" }}
           animate={{ width: value ? "100%" : "0%" }}
           transition={{ duration: 0.3, ease: "easeOut" }}
@@ -111,7 +111,7 @@ export const SuggestionSearch = ({
       <motion.div
         className={cn(
           "absolute inset-0 -z-10 rounded-2xl blur-2xl",
-          "from-primary/10 via-primary/5 bg-gradient-to-r to-transparent",
+          "from-primary/10 via-primary/5 bg-linear-to-r to-transparent",
         )}
         initial={{ opacity: 0 }}
         animate={{ opacity: value ? 0.6 : 0 }}

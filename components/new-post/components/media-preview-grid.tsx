@@ -73,7 +73,7 @@ function getItemClasses(
     case 1:
       return ""
     case 2:
-      return "aspect-[4/5]"
+      return "aspect-4/5"
     case 3:
       if (index === 0) return "row-span-2"
       return "aspect-square"

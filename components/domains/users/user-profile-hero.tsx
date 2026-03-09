@@ -139,7 +139,7 @@ export const UserProfileHero = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-foreground/90 mb-2 text-sm leading-relaxed break-words"
+            className="text-foreground/90 mb-2 text-sm leading-relaxed wrap-break-word"
           >
             {userProfile.bio}
           </motion.p>
