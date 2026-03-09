@@ -5,6 +5,7 @@ import { ImageIcon, Lock, Play, Video } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useCallback, useMemo, useState } from "react"
+import { EmptyState } from "@/components/shared/empty-state"
 import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { VideoViewerDialog } from "@/components/shared/video-viewer-dialog"
 import { api } from "@/convex/_generated/api"
@@ -255,19 +256,14 @@ export const UserGallery = ({
 
   if (userGallery.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center py-20"
-      >
-        <div className="glass-card mb-4 flex size-20 items-center justify-center rounded-2xl">
-          <ImageIcon className="text-muted-foreground size-10" />
-        </div>
-        <h3 className="text-lg font-semibold">Aucun média</h3>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Pas de médias pour le moment
-        </p>
-      </motion.div>
+      <EmptyState
+        icon={ImageIcon}
+        iconBg="bg-violet-500/10"
+        iconColor="text-violet-500"
+        accentGradient="from-violet-500/20 via-transparent to-transparent"
+        title="Aucun média"
+        description="Les photos et vidéos partagées apparaîtront ici"
+      />
     )
   }
 

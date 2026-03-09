@@ -1,17 +1,11 @@
 "use client"
 
-import { Camera, IdCard, Upload, X } from "lucide-react"
-import Image from "next/image"
+import { Camera, IdCard, Upload } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { CameraCapture } from "@/components/shared/camera-capture"
+import { MediaLightbox } from "@/components/shared/media-lightbox"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { useBunnyUpload } from "@/hooks"
 import { logger } from "@/lib/config"
 import { DocumentPreview } from "./document-preview"
@@ -41,7 +35,7 @@ export const DocumentUploadSection = ({
   const { uploadMedia } = useBunnyUpload()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   const uploadFile = async (file: File) => {
     setIsUploading(true)
@@ -117,39 +111,15 @@ export const DocumentUploadSection = ({
         <DocumentPreview
           url={uploadedDocument.url}
           onRemove={onRemove}
-          onViewFullscreen={() => setPreviewUrl(uploadedDocument.url)}
+          onViewFullscreen={() => setLightboxOpen(true)}
         />
 
-        {/* Fullscreen Dialog */}
-        <Dialog
-          open={previewUrl !== null}
-          onOpenChange={(open) => {
-            if (!open) setPreviewUrl(null)
-          }}
-        >
-          <DialogContent className="flex max-h-[90vh] max-w-[90vw] items-center justify-center border-none bg-black/90 p-0 backdrop-blur-xl">
-            <DialogTitle className="sr-only">Aperçu du document</DialogTitle>
-            <DialogClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-3 right-3 z-10 text-white hover:bg-white/20"
-                aria-label="Fermer l'aperçu"
-              >
-                <X className="size-5" />
-              </Button>
-            </DialogClose>
-            {previewUrl && (
-              <Image
-                src={previewUrl}
-                alt="Aperçu du document"
-                width={1200}
-                height={900}
-                className="max-h-[85vh] w-auto rounded object-contain"
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+        <MediaLightbox
+          slides={[{ src: uploadedDocument.url, alt: "Aperçu du document" }]}
+          index={0}
+          open={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
       </>
     )
   }

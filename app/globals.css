@@ -259,6 +259,13 @@ body {
   scrollbar-color: var(--primary) var(--muted);
 }
 
+/* Recharts — remove focus outline on chart containers */
+.recharts-responsive-container,
+.recharts-wrapper,
+.recharts-surface {
+  outline: none !important;
+}
+
 /* ============================================
    GLASSMORPHISM UTILITIES
    ============================================ */
@@ -536,4 +543,29 @@ body {
 .dark .input-premium:focus {
   border-color: var(--gold-400);
   box-shadow: 0 0 0 3px oklch(0.65 0.17 60 / 20%);
+}
+
+/* ============================================
+   AUTH PAGE ANIMATIONS
+   ============================================ */
+
+@keyframes auth-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-tagline-animate {
+    animation: auth-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .auth-tagline-animate-delay {
+    animation: auth-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  }
 }

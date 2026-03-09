@@ -127,8 +127,8 @@ export const CameraCapture = ({
 
   const videoConstraints = {
     facingMode: currentFacingMode,
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
   }
 
   return (
@@ -176,7 +176,7 @@ export const CameraCapture = ({
                     ref={webcamRef}
                     audio={false}
                     screenshotFormat="image/jpeg"
-                    screenshotQuality={0.9}
+                    screenshotQuality={1}
                     videoConstraints={videoConstraints}
                     onUserMediaError={handleUserMediaError}
                     className="aspect-[4/3] w-full object-cover"

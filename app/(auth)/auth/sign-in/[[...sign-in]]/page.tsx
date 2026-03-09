@@ -1,5 +1,5 @@
 import { SignIn } from "@clerk/nextjs"
-import { ArrowRight, Shield, Sparkles, Users } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ const SignInPage = () => {
           priority
           fill
         />
-        <div className="from-background/95 via-background/90 to-background/95 absolute inset-0 bg-gradient-to-b" />
+        <div className="from-background/95 via-background/90 to-background/95 absolute inset-0 bg-linear-to-b" />
       </div>
 
       <div className="relative grid min-h-screen lg:grid-cols-2">
@@ -34,12 +34,12 @@ const SignInPage = () => {
           </div>
 
           {/* Overlay avec dégradé */}
-          <div className="to-primary/30 absolute inset-0 bg-gradient-to-br from-black/70 via-black/50" />
+          <div className="to-primary/20 absolute inset-0 bg-linear-to-br from-black/80 via-black/60" />
 
           {/* Contenu */}
-          <div className="relative z-10 flex h-full flex-col justify-between p-8 xl:p-12">
+          <div className="relative z-10 flex h-full flex-col p-8 xl:p-12">
             {/* Logo */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               <Image
                 src="/images/logo.svg"
                 alt="FanTribe Logo"
@@ -49,70 +49,24 @@ const SignInPage = () => {
               />
             </div>
 
-            {/* Features */}
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/20 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm">
-                  <Users className="text-primary-foreground h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">
-                    Communauté engagée
-                  </h3>
-                  <p className="text-sm text-white/70">
-                    Connectez-vous avec des créateurs authentiques
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/20 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm">
-                  <Shield className="text-primary-foreground h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">
-                    Sécurité renforcée
-                  </h3>
-                  <p className="text-sm text-white/70">
-                    Vos données et contenus sont protégés
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/20 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl backdrop-blur-sm">
-                  <Sparkles className="text-primary-foreground h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">
-                    Contenus exclusifs
-                  </h3>
-                  <p className="text-sm text-white/70">
-                    Accédez à des créations uniques
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Témoignage */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-              <blockquote className="space-y-4">
-                <p className="text-lg leading-relaxed text-white/90">
-                  &ldquo;Plateforme intuitive et très sécurisée, parfaite pour
-                  partager du contenu exclusif et interagir directement avec mes
-                  abonnés.&rdquo;
+            {/* Tagline cinématique */}
+            <div className="flex flex-1 items-center">
+              <div className="max-w-md">
+                <h2 className="auth-tagline-animate text-4xl leading-tight font-bold tracking-tight text-white xl:text-5xl">
+                  Partagez.
+                  <br />
+                  <span className="text-gold-gradient">Monétisez.</span>
+                  <br />
+                  Inspirez.
+                </h2>
+                <p className="auth-tagline-animate-delay mt-4 text-lg text-white/60">
+                  La plateforme des créateurs africains.
                 </p>
-                <footer className="flex items-center gap-3">
-                  <div className="from-primary to-primary/50 h-10 w-10 rounded-full bg-gradient-to-br" />
-                  <div>
-                    <p className="font-medium text-white">Vanessa Elonguele</p>
-                    <p className="text-sm text-white/60">
-                      Créatrice de contenu
-                    </p>
-                  </div>
-                </footer>
-              </blockquote>
+              </div>
             </div>
+
+            {/* Spacer pour équilibre visuel */}
+            <div aria-hidden="true" />
           </div>
         </div>
 
@@ -146,18 +100,18 @@ const SignInPage = () => {
           {/* Zone du formulaire */}
           <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8 sm:px-6 lg:px-8">
             {/* Titre et description */}
-            <div className="mb-8 w-full max-w-[400px] text-center">
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <div className="mb-10 w-full max-w-100 text-center">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Bon retour parmi nous
               </h1>
               <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                Connectez-vous pour accéder à vos contenus exclusifs
+                Accédez à vos contenus favoris
               </p>
             </div>
 
             {/* Clerk SignIn Component */}
-            <div className="w-full max-w-[400px]">
-              <div className="border-border/50 bg-card/80 dark:border-border/30 dark:bg-card/50 overflow-hidden rounded-2xl border shadow-xl shadow-black/5 backdrop-blur-sm dark:shadow-black/20">
+            <div className="w-full max-w-100">
+              <div className="glass-card overflow-hidden rounded-2xl">
                 <SignIn
                   path="/auth/sign-in"
                   appearance={{
