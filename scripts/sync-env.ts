@@ -119,9 +119,13 @@ function cmdDiff() {
   }
 
   console.log("\n— Missing in .env.local (present on Vercel) —")
-  console.log(inVercelMissingLocal.length ? inVercelMissingLocal.join("\n") : "(none)")
+  console.log(
+    inVercelMissingLocal.length ? inVercelMissingLocal.join("\n") : "(none)",
+  )
   console.log("\n— Missing on Vercel (present in .env.local) —")
-  console.log(inLocalMissingVercel.length ? inLocalMissingVercel.join("\n") : "(none)")
+  console.log(
+    inLocalMissingVercel.length ? inLocalMissingVercel.join("\n") : "(none)",
+  )
   console.log("")
 }
 
