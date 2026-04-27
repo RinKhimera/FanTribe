@@ -1,3 +1,9 @@
+---
+paths:
+  - "convex/**"
+  - "components/domains/**"
+---
+
 # Business Logic
 
 ## Subscriptions
