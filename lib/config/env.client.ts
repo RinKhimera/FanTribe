@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { type ClientEnv, clientEnvSchema } from "@/lib/config/env.schemas"
 
 /**
  * ✅ VARIABLES CLIENT (NEXT_PUBLIC_*)
@@ -8,20 +8,6 @@ import { z } from "zod"
  * payment test mode) sont lues directement via process.env par leurs
  * modules respectifs — pas besoin de les valider ici.
  */
-const clientEnvSchema = z.object({
-  // Convex
-  NEXT_PUBLIC_CONVEX_URL: z
-    .string()
-    .url("NEXT_PUBLIC_CONVEX_URL must be a valid URL"),
-
-  // Clerk (Authentication)
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z
-    .string()
-    .startsWith(
-      "pk_",
-      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY must start with 'pk_'",
-    ),
-})
 
 /**
  * Variables d'environnement client validées et typées
@@ -33,7 +19,4 @@ export const clientEnv = clientEnvSchema.parse({
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 })
 
-/**
- * Type helper pour les variables d'environnement client
- */
-export type ClientEnv = z.infer<typeof clientEnvSchema>
+export type { ClientEnv }
