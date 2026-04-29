@@ -27,7 +27,6 @@
     "env:diff": "bun scripts/sync-env.ts diff"
   },
   "dependencies": {
-    "@clerk/clerk-sdk-node": "^5.1.6",
     "@clerk/localizations": "^3.37.5",
     "@clerk/nextjs": "^6.39.3",
     "@clerk/themes": "^2.4.57",
@@ -53,6 +52,7 @@
     "@radix-ui/react-visually-hidden": "^1.2.4",
     "@sentry/nextjs": "^10.50.0",
     "@tailwindcss/container-queries": "^0.1.1",
+    "cinetpay-js": "^0.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.36.1",
@@ -98,7 +98,6 @@
     "@types/node": "^25.6.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@types/uuid": "^11.0.0",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/coverage-v8": "^4.1.5",
     "convex-test": "^0.0.50",

@@ -9,36 +9,16 @@ import {
 } from "./_generated/server"
 import { getAuthenticatedUser } from "./lib/auth"
 import { createNotification } from "./lib/notifications"
-import { paginatedSubscriptionsValidator } from "./lib/validators"
+import {
+  paginatedSubscriptionsValidator,
+  subscriptionDocValidator,
+} from "./lib/validators"
 import { incrementUserStat } from "./userStats"
 
 // PUBLIC: obtenir la souscription entre deux utilisateurs (content_access par défaut)
 export const getFollowSubscription = query({
   args: { creatorId: v.id("users"), subscriberId: v.id("users") },
-  returns: v.union(
-    v.object({
-      _id: v.id("subscriptions"),
-      _creationTime: v.number(),
-      subscriber: v.id("users"),
-      creator: v.id("users"),
-      startDate: v.number(),
-      endDate: v.number(),
-      amountPaid: v.number(),
-      currency: v.union(v.literal("XAF"), v.literal("USD")),
-      renewalCount: v.number(),
-      lastUpdateTime: v.number(),
-      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(
-        v.literal("active"),
-        v.literal("expired"),
-        v.literal("canceled"),
-        v.literal("pending"),
-      ),
-      grantedByCreator: v.optional(v.boolean()),
-      bundlePurchase: v.optional(v.boolean()),
-    }),
-    v.null(),
-  ),
+  returns: v.union(subscriptionDocValidator, v.null()),
   handler: async (ctx, args) => {
     await getAuthenticatedUser(ctx)
 
@@ -56,29 +36,7 @@ export const getFollowSubscription = query({
 // PUBLIC: liste des souscriptions d'un abonné (content_access)
 export const listSubscriberSubscriptions = query({
   args: { subscriberId: v.id("users") },
-  returns: v.array(
-    v.object({
-      _id: v.id("subscriptions"),
-      _creationTime: v.number(),
-      subscriber: v.id("users"),
-      creator: v.id("users"),
-      startDate: v.number(),
-      endDate: v.number(),
-      amountPaid: v.number(),
-      currency: v.union(v.literal("XAF"), v.literal("USD")),
-      renewalCount: v.number(),
-      lastUpdateTime: v.number(),
-      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(
-        v.literal("active"),
-        v.literal("expired"),
-        v.literal("canceled"),
-        v.literal("pending"),
-      ),
-      grantedByCreator: v.optional(v.boolean()),
-      bundlePurchase: v.optional(v.boolean()),
-    }),
-  ),
+  returns: v.array(subscriptionDocValidator),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     if (user._id !== args.subscriberId) {
@@ -96,29 +54,7 @@ export const listSubscriberSubscriptions = query({
 // PUBLIC: liste des abonnés d'un créateur (content_access)
 export const listCreatorSubscribers = query({
   args: { creatorId: v.id("users") },
-  returns: v.array(
-    v.object({
-      _id: v.id("subscriptions"),
-      _creationTime: v.number(),
-      subscriber: v.id("users"),
-      creator: v.id("users"),
-      startDate: v.number(),
-      endDate: v.number(),
-      amountPaid: v.number(),
-      currency: v.union(v.literal("XAF"), v.literal("USD")),
-      renewalCount: v.number(),
-      lastUpdateTime: v.number(),
-      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(
-        v.literal("active"),
-        v.literal("expired"),
-        v.literal("canceled"),
-        v.literal("pending"),
-      ),
-      grantedByCreator: v.optional(v.boolean()),
-      bundlePurchase: v.optional(v.boolean()),
-    }),
-  ),
+  returns: v.array(subscriptionDocValidator),
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx)
     if (user._id !== args.creatorId) {
@@ -169,30 +105,7 @@ export const cancelSubscription = mutation({
 // INTERNAL: retrouver une souscription via transaction provider id
 export const getSubscriptionByTransactionId = internalQuery({
   args: { transactionId: v.string() },
-  returns: v.union(
-    v.object({
-      _id: v.id("subscriptions"),
-      _creationTime: v.number(),
-      subscriber: v.id("users"),
-      creator: v.id("users"),
-      startDate: v.number(),
-      endDate: v.number(),
-      amountPaid: v.number(),
-      currency: v.union(v.literal("XAF"), v.literal("USD")),
-      renewalCount: v.number(),
-      lastUpdateTime: v.number(),
-      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(
-        v.literal("active"),
-        v.literal("expired"),
-        v.literal("canceled"),
-        v.literal("pending"),
-      ),
-      grantedByCreator: v.optional(v.boolean()),
-      bundlePurchase: v.optional(v.boolean()),
-    }),
-    v.null(),
-  ),
+  returns: v.union(subscriptionDocValidator, v.null()),
   handler: async (ctx, args) => {
     // Recherche transaction (scan limité par index subscriber/creator si nécessaire)
     const tx = await ctx.db
@@ -272,28 +185,7 @@ export const getMyContentAccessSubscriptionsStats = query({
   returns: v.object({
     subscriptions: v.array(
       v.object({
-        _id: v.id("subscriptions"),
-        _creationTime: v.number(),
-        subscriber: v.id("users"),
-        creator: v.id("users"),
-        startDate: v.number(),
-        endDate: v.number(),
-        amountPaid: v.number(),
-        currency: v.union(v.literal("XAF"), v.literal("USD")),
-        renewalCount: v.number(),
-        lastUpdateTime: v.number(),
-        type: v.union(
-          v.literal("content_access"),
-          v.literal("messaging_access"),
-        ),
-        status: v.union(
-          v.literal("active"),
-          v.literal("expired"),
-          v.literal("canceled"),
-          v.literal("pending"),
-        ),
-        grantedByCreator: v.optional(v.boolean()),
-        bundlePurchase: v.optional(v.boolean()),
+        ...subscriptionDocValidator.fields,
         creatorUser: v.any(),
       }),
     ),
@@ -352,28 +244,7 @@ export const getMySubscribersStats = query({
   returns: v.object({
     subscribers: v.array(
       v.object({
-        _id: v.id("subscriptions"),
-        _creationTime: v.number(),
-        subscriber: v.id("users"),
-        creator: v.id("users"),
-        startDate: v.number(),
-        endDate: v.number(),
-        amountPaid: v.number(),
-        currency: v.union(v.literal("XAF"), v.literal("USD")),
-        renewalCount: v.number(),
-        lastUpdateTime: v.number(),
-        type: v.union(
-          v.literal("content_access"),
-          v.literal("messaging_access"),
-        ),
-        status: v.union(
-          v.literal("active"),
-          v.literal("expired"),
-          v.literal("canceled"),
-          v.literal("pending"),
-        ),
-        grantedByCreator: v.optional(v.boolean()),
-        bundlePurchase: v.optional(v.boolean()),
+        ...subscriptionDocValidator.fields,
         subscriberUser: v.any(),
       }),
     ),
@@ -832,30 +703,7 @@ export const canBuyMessagingSubscription = query({
  */
 export const getMessagingSubscription = query({
   args: { creatorId: v.id("users"), subscriberId: v.id("users") },
-  returns: v.union(
-    v.object({
-      _id: v.id("subscriptions"),
-      _creationTime: v.number(),
-      subscriber: v.id("users"),
-      creator: v.id("users"),
-      startDate: v.number(),
-      endDate: v.number(),
-      amountPaid: v.number(),
-      currency: v.union(v.literal("XAF"), v.literal("USD")),
-      renewalCount: v.number(),
-      lastUpdateTime: v.number(),
-      type: v.union(v.literal("content_access"), v.literal("messaging_access")),
-      status: v.union(
-        v.literal("active"),
-        v.literal("expired"),
-        v.literal("canceled"),
-        v.literal("pending"),
-      ),
-      grantedByCreator: v.optional(v.boolean()),
-      bundlePurchase: v.optional(v.boolean()),
-    }),
-    v.null(),
-  ),
+  returns: v.union(subscriptionDocValidator, v.null()),
   handler: async (ctx, args) => {
     const currentUser = await getAuthenticatedUser(ctx, { optional: true })
     if (!currentUser) return null
@@ -879,60 +727,8 @@ export const getSubscriptionStatus = query({
   returns: v.object({
     hasContentAccess: v.boolean(),
     hasMessagingAccess: v.boolean(),
-    contentSubscription: v.union(
-      v.object({
-        _id: v.id("subscriptions"),
-        _creationTime: v.number(),
-        subscriber: v.id("users"),
-        creator: v.id("users"),
-        startDate: v.number(),
-        endDate: v.number(),
-        amountPaid: v.number(),
-        currency: v.union(v.literal("XAF"), v.literal("USD")),
-        renewalCount: v.number(),
-        lastUpdateTime: v.number(),
-        type: v.union(
-          v.literal("content_access"),
-          v.literal("messaging_access"),
-        ),
-        status: v.union(
-          v.literal("active"),
-          v.literal("expired"),
-          v.literal("canceled"),
-          v.literal("pending"),
-        ),
-        grantedByCreator: v.optional(v.boolean()),
-        bundlePurchase: v.optional(v.boolean()),
-      }),
-      v.null(),
-    ),
-    messagingSubscription: v.union(
-      v.object({
-        _id: v.id("subscriptions"),
-        _creationTime: v.number(),
-        subscriber: v.id("users"),
-        creator: v.id("users"),
-        startDate: v.number(),
-        endDate: v.number(),
-        amountPaid: v.number(),
-        currency: v.union(v.literal("XAF"), v.literal("USD")),
-        renewalCount: v.number(),
-        lastUpdateTime: v.number(),
-        type: v.union(
-          v.literal("content_access"),
-          v.literal("messaging_access"),
-        ),
-        status: v.union(
-          v.literal("active"),
-          v.literal("expired"),
-          v.literal("canceled"),
-          v.literal("pending"),
-        ),
-        grantedByCreator: v.optional(v.boolean()),
-        bundlePurchase: v.optional(v.boolean()),
-      }),
-      v.null(),
-    ),
+    contentSubscription: v.union(subscriptionDocValidator, v.null()),
+    messagingSubscription: v.union(subscriptionDocValidator, v.null()),
   }),
   handler: async (ctx, args) => {
     let currentUser = null
