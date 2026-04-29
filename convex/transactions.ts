@@ -433,8 +433,7 @@ export const getTestTransactionsForDashboard = query({
       const subscriber =
         testSubscribers[Math.floor(Math.random() * testSubscribers.length)]
 
-      // Provider aléatoire (70% CinetPay, 30% Stripe pour simuler la réalité)
-      const provider = Math.random() < 0.7 ? "cinetpay" : "stripe"
+      const provider = "stripe"
 
       testTransactions.push({
         _id: `test_tx_${i}`,

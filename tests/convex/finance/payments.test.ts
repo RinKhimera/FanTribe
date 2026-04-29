@@ -35,7 +35,7 @@ describe("payments", () => {
     const result = await t.mutation(
       internal.internalActions.processPaymentAtomic,
       {
-        provider: "cinetpay",
+        provider: "stripe",
         providerTransactionId: "tx_unique_123",
         creatorId,
         subscriberId,
@@ -94,7 +94,7 @@ describe("payments", () => {
     const result1 = await t.mutation(
       internal.internalActions.processPaymentAtomic,
       {
-        provider: "cinetpay",
+        provider: "stripe",
         providerTransactionId: "tx_idempotent_123",
         creatorId,
         subscriberId,
@@ -107,7 +107,7 @@ describe("payments", () => {
     const result2 = await t.mutation(
       internal.internalActions.processPaymentAtomic,
       {
-        provider: "cinetpay",
+        provider: "stripe",
         providerTransactionId: "tx_idempotent_123",
         creatorId,
         subscriberId,

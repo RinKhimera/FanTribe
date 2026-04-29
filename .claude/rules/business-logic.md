@@ -8,7 +8,7 @@ paths:
 
 ## Subscriptions
 
-- Monthly model (1000 XAF/month), dual payment: CinetPay (mobile money) + Stripe (cards)
+- Monthly model (1000 XAF/month), payment via Stripe (cards). Mobile money provider à réintégrer.
 - States: `subscribe` → `renew` → `unsubscribe`
 - Types: `content_access` (posts) + `messaging_access` (DMs)
 
@@ -24,7 +24,7 @@ paths:
 - Presets: 500, 1000, 2500, 5000, 10000 XAF + custom (min 500 XAF)
 - Optional message (max 200 chars), private visibility
 - Commission: 70% creator / 30% platform (centralized in `convex/lib/constants.ts`)
-- Dual payment: CinetPay (mobile money) + Stripe (dynamic `price_data`)
+- Payment via Stripe (dynamic `price_data`). Mobile money provider à réintégrer.
 - Idempotent processing via `providerTransactionId` unique index
 - TipDialog component: `components/domains/tips/tip-dialog.tsx`
 

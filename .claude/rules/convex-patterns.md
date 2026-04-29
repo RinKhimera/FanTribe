@@ -79,7 +79,7 @@ const userId = identity.subject // ✅ JWT-verified Clerk user ID
 
 ## Payment Webhooks → Convex HTTP Actions
 
-Stripe and CinetPay webhooks are `internalAction` in `convex/stripeWebhook.ts` and `convex/cinetpayWebhook.ts`, routed via `http.route()` in `convex/http.ts`. Do NOT recreate them as Next.js API routes — they verify signatures server-side and call internal mutations directly.
+The Stripe webhook is an `internalAction` in `convex/stripeWebhook.ts`, routed via `http.route()` in `convex/http.ts`. Do NOT recreate it as a Next.js API route — it verifies the signature server-side and calls internal mutations directly.
 
 ## Error Handling
 

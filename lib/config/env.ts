@@ -11,8 +11,8 @@ import { type ServerEnv, serverEnvSchema } from "@/lib/config/env.schemas"
  *
  * Note: CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET, CONVEX_DEPLOYMENT sont
  * lus directement par leurs SDKs respectifs via process.env — pas besoin
- * de les valider ici. Les secrets Bunny/CinetPay/Stripe webhook sont
- * exclusivement dans le dashboard Convex.
+ * de les valider ici. Les secrets Bunny/Stripe webhook sont exclusivement
+ * dans le dashboard Convex.
  */
 
 /**

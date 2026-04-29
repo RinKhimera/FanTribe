@@ -6,7 +6,7 @@
 
 ### Key Architecture Patterns
 
-- **Convex Backend**: All database operations, real-time subscriptions, and server functions use Convex. Never write traditional API routes for data operations. Webhooks (Clerk, Stripe, CinetPay) are handled via Convex HTTP Actions in `convex/http.ts`.
+- **Convex Backend**: All database operations, real-time subscriptions, and server functions use Convex. Never write traditional API routes for data operations. Webhooks (Clerk, Stripe) are handled via Convex HTTP Actions in `convex/http.ts`.
 - **Route Groups**: App uses Next.js route groups: `(app-pages)` for authenticated content, `(auth)` for sign-in/up flows, `(superuser)` for admin functions
 - **Authentication Flow**: Clerk → Convex token exchange → user lookup via `tokenIdentifier` (see `convex/auth.config.ts`)
 - **French Localization**: All UI text and user-facing content MUST be in French
@@ -37,10 +37,6 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/auth/sign-up
 # Bunny CDN — All secrets managed in Convex dashboard only
 # See Convex env vars: BUNNY_STORAGE_ZONE, BUNNY_STORAGE_PASSWORD,
 # BUNNY_CDN_HOSTNAME, BUNNY_STREAM_LIBRARY_ID, BUNNY_STREAM_API_KEY, BUNNY_URL_TOKEN_KEY
-
-# CinetPay (African payment processor)
-NEXT_PUBLIC_CINETPAY_SITE_ID=
-NEXT_PUBLIC_CINETPAY_API_KEY=
 
 # Stripe (card payments)
 STRIPE_SECRET_KEY=
@@ -166,7 +162,7 @@ Key tables in `convex/schema.ts`:
 
 ### Subscription System
 
-- **Dual Payment Providers**: CinetPay (OM/MOMO) and Stripe (cards) for 1000 XAF/month
+- **Payment Provider**: Stripe (cards) for 1000 XAF/month. Mobile money provider à réintégrer.
 - **Subscription Types**: `content_access` (view posts) and `messaging_access` (DMs)
 - **Status Flow**: `pending` → `active` → `expired` (auto-expires after 30 days) or `canceled` (user initiated)
 - **Visibility Logic**: `subscribers_only` posts filter by active subscriptions (see `convex/posts.ts`)
@@ -189,13 +185,11 @@ Key tables in `convex/schema.ts`:
 
 ### Payment Integration
 
-- **CinetPay (Primary)**: African mobile money (Orange Money, MTN Mobile Money)
-  - Webhook: Convex HTTP Action at `/cinetpay` (in `convex/http.ts`) → `convex/cinetpayWebhook.ts` verifies HMAC + CinetPay API
-  - Return URL: Convex HTTP Action at `/cinetpay-return` → redirects user after payment
-  - Transaction ID stored in `transactions` table with `providerTransactionId`
-- **Stripe (Secondary)**: Card payments for international users
+- **Stripe**: Card payments
   - Webhook: Convex HTTP Action at `/stripe` (in `convex/http.ts`) → `convex/stripeWebhook.ts` verifies signature
-  - Both providers call `internal.internalActions.processPaymentAtomic` (internalMutation) to activate subscriptions
+  - Calls `internal.internalActions.processPaymentAtomic` (internalMutation) to activate subscriptions
+  - Transaction ID stored in `transactions` table with `providerTransactionId`
+- **Mobile Money**: provider à réintégrer (ancienne intégration CinetPay supprimée — nouvelle approche à venir)
 - **Test Mode**: `NEXT_PUBLIC_PAYMENT_TEST_MODE=true` (Next.js) + `PAYMENT_TEST_MODE=true` (Convex dashboard) enables `simulatePayment`/`simulateTip` actions
 - **Security**: Payment processing functions are `internalMutation` — not callable from browser. Only webhook handlers (signature-verified) and test-guarded actions can trigger them.
 
@@ -225,8 +219,7 @@ Defined in `convex/crons.ts`:
 - **Clerk**: Authentication with French localization (`frFR` in `app/layout.tsx`)
 - **Bunny CDN**: Video delivery and storage via Convex HTTP Actions (`convex/lib/bunny.ts`)
 - **Resend**: Email notifications for reports (`templates/report-email-template.tsx`)
-- **CinetPay**: Primary payment processor for African markets
-- **Stripe**: Secondary payment processor for card transactions
+- **Stripe**: Card payments (mobile money provider à réintégrer)
 
 ### State Management
 
@@ -290,8 +283,7 @@ lib/
 │   ├── create-initials.ts
 │   └── generate-random-string.ts
 ├── services/          # External service integrations
-│   ├── stripe.ts      # Stripe payment helpers
-│   └── cinetpay.ts    # CinetPay payment helpers
+│   └── stripe.ts      # Stripe payment helpers
 ├── ui/                # UI helper functions
 │   ├── index.ts
 │   └── get-status-badge.tsx

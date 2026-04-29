@@ -5,7 +5,7 @@
 
 ### Plateforme Sociale pour Créateurs de Contenu
 
-Une plateforme francophone dédiée aux créateurs et créatrices du marché africain, permettant de monétiser leur contenu via des abonnements et pourboires, avec support natif du paiement mobile money.
+Une plateforme francophone dédiée aux créateurs et créatrices du marché africain, permettant de monétiser leur contenu via des abonnements et pourboires.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react)](https://react.dev/)
@@ -53,8 +53,8 @@ Une plateforme francophone dédiée aux créateurs et créatrices du marché afr
 - **Monétisation**
   - Abonnements mensuels (1000 XAF/mois)
   - Pourboires (tips) avec montants prédéfinis (500–10 000 XAF) ou personnalisés
-  - Paiement Mobile Money (Orange Money, MTN) via CinetPay
   - Paiement par carte (Visa/Mastercard, Apple Pay, Google Pay) via Stripe
+  - Mobile Money (Orange Money, MTN) — provider à réintégrer
   - Commission : 70% créateur / 30% plateforme
   - Dashboard de performance avec statistiques
 
@@ -96,7 +96,7 @@ Une plateforme francophone dédiée aux créateurs et créatrices du marché afr
 
 **Fans & Abonnés** — Personnes souhaitant soutenir leurs créateurs favoris et accéder à du contenu exclusif.
 
-**Marché Cible** — Marché francophone africain (Cameroun principalement) avec support natif du mobile money (Orange Money, MTN Mobile Money).
+**Marché Cible** — Marché francophone africain (Cameroun principalement).
 
 ---
 
@@ -124,7 +124,6 @@ Une plateforme francophone dédiée aux créateurs et créatrices du marché afr
 | **Convex**    | Backend real-time (queries, mutations, actions, HTTP endpoints, crons) |
 | **Clerk**     | Authentification (OAuth, Email/Password, JWT tokens)                   |
 | **Bunny CDN** | Stockage images (HTTP Actions) + streaming vidéo (XHR direct)          |
-| **CinetPay**  | Paiements mobile money africains (webhooks via Convex HTTP Actions)    |
 | **Stripe**    | Paiements carte bancaire (webhooks via Convex HTTP Actions)            |
 | **Sentry**    | Monitoring et tracking d'erreurs                                       |
 | **Resend**    | Envoi d'emails transactionnels                                         |
@@ -180,10 +179,6 @@ CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/auth/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/auth/sign-up
 
-# CinetPay (Mobile Money)
-NEXT_PUBLIC_CINETPAY_SITE_ID=
-NEXT_PUBLIC_CINETPAY_API_KEY=
-
 # Stripe (Cartes) — STRIPE_WEBHOOK_SECRET dans le dashboard Convex
 STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
@@ -227,7 +222,7 @@ bun dev
 │  ├── Queries (lectures réactives)                   │
 │  ├── Mutations (écritures transactionnelles)        │
 │  ├── Actions (appels externes)                      │
-│  ├── HTTP Actions (webhooks Stripe/CinetPay/Bunny)  │
+│  ├── HTTP Actions (webhooks Stripe/Bunny)           │
 │  ├── Crons (expiration abonnements, queue notifs)   │
 │  └── Rate Limiter                                   │
 └──────────────────┬──────────────────────────────────┘
@@ -236,7 +231,6 @@ bun dev
 │  Services Externes                                  │
 │  ├── Clerk (Auth, webhooks)                         │
 │  ├── Bunny CDN (images + vidéo streaming)           │
-│  ├── CinetPay (mobile money OM/MOMO)                │
 │  ├── Stripe (cartes, Apple/Google Pay)              │
 │  ├── Sentry (monitoring)                            │
 │  └── Resend (emails)                                │
@@ -298,7 +292,6 @@ fantribe/
 │   ├── schema.ts                     # Modèle de données complet
 │   ├── http.ts                       # HTTP Actions (Bunny, CORS, webhooks)
 │   ├── stripeWebhook.ts             # Webhook Stripe (signature SDK)
-│   ├── cinetpayWebhook.ts           # Webhook CinetPay (HMAC-SHA256)
 │   ├── internalActions.ts           # Actions internes (processPaymentAtomic, etc.)
 │   ├── users.ts                      # Utilisateurs & onboarding
 │   ├── posts.ts                      # Publications & feed
@@ -340,7 +333,6 @@ fantribe/
 ├── hooks/                            # 12 custom React hooks
 │   ├── useCurrentUser.ts            # Utilisateur courant
 │   ├── useBunnyUpload.ts            # Upload média Bunny CDN
-│   ├── useCinetpayPayment.ts        # Paiement CinetPay
 │   ├── useDebounce.ts               # Debounce pour recherche
 │   ├── useDialogState.ts            # État des dialogs
 │   ├── useInfiniteScroll.ts         # Scroll infini
@@ -352,7 +344,7 @@ fantribe/
 ├── lib/
 │   ├── config/                       # env.client.ts, env.ts, logger.ts
 │   ├── formatters/                   # date/ (locale FR) + currency/ (XAF/USD)
-│   ├── services/                     # stripe.ts, cinetpay.ts
+│   ├── services/                     # stripe.ts
 │   ├── animations.ts                # Variants Motion
 │   ├── constants.ts                  # Constantes frontend
 │   └── utils.ts                      # cn() utility
@@ -376,16 +368,16 @@ fantribe/
 
 ### Providers Supportés
 
-#### CinetPay (Primaire — Mobile Money)
-
-- Orange Money, MTN Mobile Money, Moov Money, Wave
-- Webhook traité via Convex HTTP Actions (`cinetpayWebhook.ts`) avec HMAC-SHA256 + `crypto.timingSafeEqual`
-
-#### Stripe (Secondaire — Cartes)
+#### Stripe (Cartes)
 
 - Visa/Mastercard, Apple Pay, Google Pay
 - Webhook traité via Convex HTTP Actions (`stripeWebhook.ts`) avec signature SDK
 - Tips dynamiques via `price_data` (pas de `STRIPE_PRICE_ID` fixe)
+
+#### Mobile Money — provider à réintégrer
+
+- Orange Money, MTN Mobile Money, etc.
+- Ancienne intégration CinetPay supprimée — nouvelle approche à venir
 
 ### Tarification
 
@@ -435,7 +427,7 @@ accountType: "USER" | "CREATOR" | "SUPERUSER"
 - Rate limiting via `@convex-dev/rate-limiter`
 - Filtrage des utilisateurs bloqués
 - Erreurs bilingues (`createAppError()` — interne en anglais, `userMessage` en français)
-- Webhooks sécurisés (Stripe SDK verification, CinetPay HMAC-SHA256 + timing-safe compare)
+- Webhooks sécurisés (Stripe SDK verification)
 
 ---
 
@@ -493,7 +485,6 @@ bun run test:e2e
 2. Importer dans Vercel, configurer les variables d'environnement
 3. Configurer les webhooks :
    - **Stripe** → `https://<convex-deployment>.convex.site/stripe`
-   - **CinetPay** → URLs dérivées automatiquement de `NEXT_PUBLIC_CONVEX_URL`
    - **Clerk** → Route API Next.js standard
 
 ### Convex Production

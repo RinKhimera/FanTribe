@@ -25,7 +25,7 @@ Creator-focused social platform for the African market (French-speaking). Creato
 - **Backend**: Convex (real-time queries, mutations, actions, HTTP endpoints)
 - **Auth**: Clerk (webhooks, JWT tokens with `template: "convex"`)
 - **Styling**: Tailwind CSS 4 (OKLCH colors) + shadcn/ui + Motion (animations)
-- **Payments**: CinetPay (mobile money OM/MOMO) + Stripe (cards)
+- **Payments**: Stripe (cards) — mobile money provider à réintégrer (ancienne implémentation CinetPay supprimée)
 - **Media**: Bunny CDN via Convex HTTP Actions (images) + direct XHR (videos)
 - **Monitoring**: Sentry (errors) + Resend (email)
 - **Validation**: Zod (forms + env vars) + Convex validators (backend)
@@ -79,7 +79,7 @@ lib/
 ├── errors/               # Error helpers (getUserErrorMessage, etc.)
 ├── formatters/           # date/ (French locale) + currency/ (XAF/USD)
 ├── generators/           # ID/slug/username generators
-├── services/             # stripe.ts, cinetpay.ts
+├── services/             # stripe.ts
 ├── social-links/         # Social platform detection (GitHub, etc.)
 ├── svgs.tsx              # Inline SVG components
 ├── validators/           # Zod helpers (cross-form)
@@ -100,7 +100,6 @@ e2e/                      # Playwright E2E tests
 - `convex/schema.ts` — Data model (all tables, indexes, search indexes)
 - `convex/http.ts` — HTTP Actions (Bunny upload/delete, CORS, webhook routing)
 - `convex/stripeWebhook.ts` — Stripe webhook handler (`internalAction`, SDK signature verification)
-- `convex/cinetpayWebhook.ts` — CinetPay webhook handler (`internalAction`, HMAC-SHA256 + `crypto.timingSafeEqual`)
 - `convex/lib/auth.ts` — `getAuthenticatedUser()`, `requireSuperuser()`, `requireCreator()`
 - `convex/lib/errors.ts` — `createAppError(code, { userMessage })` bilingual errors
 - `convex/lib/validators.ts` — Shared validators (`postMediaValidator`, `userDocValidator`, `enrichedNotificationValidator`)
