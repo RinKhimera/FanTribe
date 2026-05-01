@@ -433,6 +433,30 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_creator_status", ["creatorId", "status"]),
 
+  cinetpayPayments: defineTable({
+    merchantTransactionId: v.string(),
+    paymentToken: v.string(),
+    notifyToken: v.string(),
+    subscriberId: v.id("users"),
+    creatorId: v.id("users"),
+    amount: v.number(),
+    currency: v.literal("XAF"),
+    intent: v.union(v.literal("subscribe"), v.literal("renew")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("succeeded"),
+      v.literal("failed"),
+    ),
+    cinetpayTransactionId: v.optional(v.string()),
+  })
+    .index("by_merchantTransactionId", ["merchantTransactionId"])
+    .index("by_subscriber_status", ["subscriberId", "status"]),
+
+  cinetpayAuthCache: defineTable({
+    accessToken: v.string(),
+    expiresAt: v.number(),
+  }),
+
   notifications: defineTable({
     type: v.union(
       v.literal("like"),

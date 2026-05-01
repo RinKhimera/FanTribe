@@ -12,6 +12,7 @@ const PaymentResultPage = (props: {
     provider?: string
     session_id?: string
     code?: string
+    mtx?: string
   }>
 }) => {
   const params = use(props.searchParams)

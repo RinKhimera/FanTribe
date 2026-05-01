@@ -1,3 +1,4 @@
+import { useAction } from "convex/react"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { toast } from "sonner"
@@ -5,20 +6,30 @@ import {
   simulateSubscriptionPayment,
   simulateTipPayment,
 } from "@/actions/simulate-payment"
+import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
 import { isPaymentTestMode } from "@/lib/config/payment-test"
-import { PaymentData, initializeCinetPayPayment } from "@/lib/services/cinetpay"
+
+export type PaymentData = {
+  creatorId: string
+  subscriberId: string
+  creatorUsername?: string
+  amount?: number
+  description?: string
+  customFields?: Record<string, string>
+}
 
 export const useCinetpayPayment = () => {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const initiateSubscription = useAction(api.cinetpay.initiateSubscription)
 
   const processPayment = async (paymentData: PaymentData) => {
     startTransition(async () => {
-      // Test mode: simulate payment without calling CinetPay
+      const isTip = paymentData.customFields?.type === "tip"
+
       if (isPaymentTestMode()) {
         try {
-          const isTip = paymentData.customFields?.type === "tip"
-
           const result = isTip
             ? await simulateTipPayment({
                 senderId:
@@ -59,16 +70,23 @@ export const useCinetpayPayment = () => {
         return
       }
 
-      // Production: call CinetPay
-      const result = await initializeCinetPayPayment(paymentData)
+      if (isTip) {
+        toast.error("Mobile Money pour les pourboires bientôt disponible", {
+          description: "Veuillez utiliser le paiement par carte.",
+        })
+        return
+      }
 
-      if (result.success && result.payment_url) {
-        router.push(result.payment_url)
-      } else {
+      try {
+        const result = await initiateSubscription({
+          creatorId: paymentData.creatorId as Id<"users">,
+        })
+        router.push(result.paymentUrl)
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Erreur inconnue"
         toast.error("Une erreur s'est produite !", {
-          description:
-            result.error ||
-            "Veuillez vérifier votre connexion internet et réessayer",
+          description: message,
         })
       }
     })

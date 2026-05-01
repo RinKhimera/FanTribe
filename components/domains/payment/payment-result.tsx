@@ -35,6 +35,7 @@ interface PaymentResultProps {
     provider?: string
     session_id?: string
     code?: string
+    mtx?: string
   }
   testMode: boolean
 }
@@ -235,17 +236,43 @@ const getCtaLabel = (state: PaymentState, username?: string): string => {
 // ---------------------------------------------------------------------------
 
 export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
-  const state = derivePaymentState(params)
+  // CinetPay path: webhook may not have fired yet — poll cinetpayPayments by mtx
+  // and resolve to providerTransactionId once status === "succeeded".
+  const isCinetpayPending =
+    params.provider === "cinetpay" && !!params.mtx && params.status === "success"
+  const cinetpayStatus = useQuery(
+    api.cinetpay.getStatusByMtx,
+    isCinetpayPending ? { merchantTransactionId: params.mtx! } : "skip",
+  )
+
+  const resolvedTransactionId =
+    isCinetpayPending && cinetpayStatus?.found
+      ? cinetpayStatus.cinetpayTransactionId
+      : params.transaction
+
+  const effectiveStatus =
+    isCinetpayPending && cinetpayStatus?.found && cinetpayStatus.status === "failed"
+      ? "failed"
+      : params.status
+
+  const state = derivePaymentState({ ...params, status: effectiveStatus })
   const config = STATE_CONFIG[state]
   const Icon = config.icon
 
-  // Backend fetch (optional — only when CinetPay providerTransactionId is available)
-  const canFetch = !!params.transaction && params.status === "success"
+  // Backend fetch (only when a providerTransactionId is resolved)
+  const canFetch = !!resolvedTransactionId && effectiveStatus === "success"
   const backendData = useQuery(
     api.transactions.getPaymentDetails,
-    canFetch ? { providerTransactionId: params.transaction! } : "skip",
+    canFetch ? { providerTransactionId: resolvedTransactionId! } : "skip",
   )
-  const isBackendLoading = canFetch && backendData === undefined
+
+  const isWebhookPending =
+    isCinetpayPending &&
+    effectiveStatus === "success" &&
+    (cinetpayStatus === undefined ||
+      (cinetpayStatus?.found && cinetpayStatus.status === "pending"))
+  const isBackendLoading =
+    canFetch && backendData === undefined && !isWebhookPending
   const hasDetails =
     backendData !== undefined && backendData !== null && backendData.found
 
@@ -347,15 +374,17 @@ export const PaymentResult = ({ params, testMode }: PaymentResultProps) => {
             </motion.p>
 
             {/* Transaction details */}
-            {(hasDetails || isBackendLoading) && (
+            {(hasDetails || isBackendLoading || isWebhookPending) && (
               <motion.div
                 variants={detailsReveal}
                 className="border-border/50 bg-muted/30 w-full overflow-hidden rounded-xl border backdrop-blur-sm"
               >
-                {isBackendLoading ? (
+                {isBackendLoading || isWebhookPending ? (
                   <div className="text-muted-foreground flex items-center justify-center gap-2 px-5 py-4 text-sm">
                     <Loader2 className="size-4 animate-spin" />
-                    Traitement en cours…
+                    {isWebhookPending
+                      ? "Confirmation du paiement…"
+                      : "Traitement en cours…"}
                   </div>
                 ) : hasDetails ? (
                   <div className="divide-border/50 divide-y text-sm">

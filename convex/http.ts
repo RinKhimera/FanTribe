@@ -135,6 +135,38 @@ http.route({
 })
 
 // ============================================================================
+// CINETPAY WEBHOOK
+// ============================================================================
+
+http.route({
+  path: "/cinetpay/webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch (error) {
+      console.error("CinetPay webhook: invalid JSON body", error)
+      return new Response("Invalid JSON", { status: 400 })
+    }
+
+    try {
+      const result = await ctx.runAction(
+        internal.cinetpayWebhook.handleNotification,
+        { body },
+      )
+      if (!result.success) {
+        return new Response(result.message, { status: 400 })
+      }
+      return new Response("ok", { status: 200 })
+    } catch (error) {
+      console.error("CinetPay webhook error:", error)
+      return new Response("Webhook error", { status: 500 })
+    }
+  }),
+})
+
+// ============================================================================
 // BUNNY CDN - CORS & Helpers
 // ============================================================================
 
